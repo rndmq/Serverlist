@@ -1,0 +1,30 @@
+local loadGui = loadstring(game:HttpGet("https://raw.githubusercontent.com/GhostDuckyy/UI-Libraries/main/Coasting%20Ui%20Lib/source.lua"))()
+local CoastingLibrary = loadGui
+local MainTab = CoastingLibrary:CreateTab("Main Features")
+local MainSection = MainTab:CreateSection("Main Options")
+local MovementSection = MainTab:CreateSection("Movement Options")
+MainSection:CreateButton("Infinite Train", function()
+    local args = {
+        [1] = math.huge
+    }
+    game:GetService("ReplicatedStorage"):WaitForChild("Event"):WaitForChild("Train"):FireServer(unpack(args))
+end)
+MainSection:CreateButton("Infinite Money", function()
+    local args = {
+        [1] = math.huge
+    }
+    game:GetService("ReplicatedStorage"):WaitForChild("Event"):WaitForChild("WinGain"):FireServer(unpack(args))
+end)
+MainSection:CreateButton("Infinite Enchant", function()
+    local args = {
+        [1] = 5800,
+        [2] = math.huge
+    }
+    game:GetService("ReplicatedStorage"):WaitForChild("Event"):WaitForChild("Enchanted"):FireServer(unpack(args))
+end)
+MovementSection:CreateSlider("WalkSpeed", 20, 150, 16, false, function(value)
+    local player = game.Players.LocalPlayer
+    if player and player.Character and player.Character:FindFirstChild("Humanoid") then
+        player.Character.Humanoid.WalkSpeed = value
+    end
+end)
