@@ -1,4 +1,11 @@
 local audioList = {
+    ["rbxassetid://71081254550638"] = "Letter",
+    ["rbxassetid://79620645432251"] = "parachute",
+    ["rbxassetid://137196412110476"] = "rhythm",
+    ["rbxassetid://97359990579315"] = "star",
+    ["rbxassetid://123055308466571"] = "freeze",
+    ["rbxassetid://134341741125537"] = "fast",
+    ["rbxassetid://96275618514815"] = "big",
     ["rbxassetid://105296771296553"] = "taco",
     ["rbxassetid://74519760787910"] = "icecream",
     ["rbxassetid://84081431371148"] = "roblox",
