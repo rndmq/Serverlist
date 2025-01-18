@@ -1,0 +1,373 @@
+local audioList = {
+    ["rbxassetid://105296771296553"] = "taco",
+    ["rbxassetid://74519760787910"] = "icecream",
+    ["rbxassetid://84081431371148"] = "roblox",
+    ["rbxassetid://100524824594994"] = "stop",
+    ["rbxassetid://91417194170360"] = "butter",
+    ["rbxassetid://88593116085830"] = "trophy",
+    ["rbxassetid://80385217078335"] = "breeze",
+    ["rbxassetid://88235986378090"] = "obby",
+    ["rbxassetid://104235623525296"] = "sunflower",
+    ["rbxassetid://115799775421163"] = "sandcastle",
+    ["rbxassetid://74976055205089"] = "donkey",
+    ["rbxassetid://108088860794702"] = "soccer",
+    ["rbxassetid://132787633980130"] = "tunnel",
+    ["rbxassetid://124665331869501"] = "mountain",
+    ["rbxassetid://77682580268754"] = "goldfish",
+    ["rbxassetid://123830919129049"] = "investigator",
+    ["rbxassetid://75106177581996"] = "paleontology",
+    ["rbxassetid://98502329620033"] = "killerwin",
+    ["rbxassetid://119113647052940"] = "home",
+    ["rbxassetid://137598040183607"] = "sand",
+    ["rbxassetid://95694662826735"] = "bell",
+    ["rbxassetid://92284211222288"] = "egg",
+    ["rbxassetid://134903542364401"] = "prank",
+    ["rbxassetid://140147749417131"] = "puzzle",
+    ["rbxassetid://139294623984571"] = "finger",
+    ["rbxassetid://82806592752128"] = "popcorn",
+    ["rbxassetid://132717290773469"] = "kangaroo",
+    ["rbxassetid://129607402440311"] = "umbrella",
+    ["rbxassetid://128391604826408"] = "volcanoes",
+    ["rbxassetid://94319890022262"] = "architecture",
+    ["rbxassetid://109259098237808"] = "adaptation",
+    ["rbxassetid://124914260492870"] = "winner",
+    ["rbxassetid://107910574197569"] = "goat",
+    ["rbxassetid://78627343871739"] = "lamp",
+    ["rbxassetid://125987789894961"] = "cloud",
+    ["rbxassetid://138206074023279"] = "hat",
+    ["rbxassetid://99470273409902"] = "nest",
+    ["rbxassetid://95229522974459"] = "yt",
+    ["rbxassetid://74593355640457"] = "sweater",
+    ["rbxassetid://83150229969781"] = "hunger",
+    ["rbxassetid://137147122995710"] = "pencil",
+    ["rbxassetid://111733187708873"] = "basket",
+    ["rbxassetid://131605276947849"] = "campfire",
+    ["rbxassetid://89834808188071"] = "lighthouse",
+    ["rbxassetid://126884711197689"] = "strawberry",
+    ["rbxassetid://74975815629515"] = "cornfield",
+    ["rbxassetid://79266363642832"] = "hedgehog",
+    ["rbxassetid://86901283172687"] = "mathematics",
+    ["rbxassetid://96166584957680"] = "civilization",
+    ["rbxassetid://72807751560041"] = "receipt",
+    ["rbxassetid://124143717825118"] = "ball",
+    ["rbxassetid://97903791249555"] = "pink",
+    ["rbxassetid://122520870995091"] = "rock",
+    ["rbxassetid://113380012617487"] = "cup",
+    ["rbxassetid://85521607548535"] = "mastermind",
+    ["rbxassetid://77547054571433"] = "happy",
+    ["rbxassetid://98955105225479"] = "cookie",
+    ["rbxassetid://93056622750750"] = "peanut",
+    ["rbxassetid://139557948351253"] = "family",
+    ["rbxassetid://104235623525296"] = "sunflower",
+    ["rbxassetid://74007460437081"] = "teacup",
+    ["rbxassetid://91815220795726"] = "treasure",
+    ["rbxassetid://130602185313027"] = "meteorology",
+    ["rbxassetid://90189688500987"] = "determination",
+    ["rbxassetid://76068138556546"] = "apple",
+    ["rbxassetid://92507791105008"] = "sock",
+    ["rbxassetid://140022535398604"] = "bag",
+    ["rbxassetid://118022850316547"] = "nuke",
+    ["rbxassetid://82385178682785"] = "special",
+    ["rbxassetid://103758042102604"] = "kite",
+    ["rbxassetid://90925828479167"] = "bed",
+    ["rbxassetid://128097028169781"] = "eat",
+    ["rbxassetid://125967328419015"] = "corn",
+    ["rbxassetid://109893431293769"] = "blue",
+    ["rbxassetid://112356846629167"] = "lava",
+    ["rbxassetid://121936464181983"] = "picnic",
+    ["rbxassetid://117606050520250"] = "shadow",
+    ["rbxassetid://137923163994499"] = "power",
+    ["rbxassetid://138961177988187"] = "jungle",
+    ["rbxassetid://87424319269709"] = "ladder",
+    ["rbxassetid://78932863369182"] = "snowflake",
+    ["rbxassetid://135698349603965"] = "chimney",
+    ["rbxassetid://97244336548113"] = "genius",
+    ["rbxassetid://85022858271571"] = "responsibility",
+    ["rbxassetid://94868965345027"] = "electricity",
+    ["rbxassetid://100951779498275"] = "creativity",
+    ["rbxassetid://123830919129049"] = "investigator",
+    ["rbxassetid://137890871051981"] = "deoxyribonucleic",
+    ["rbxassetid://116689047997536"] = "temperamental",
+    ["rbxassetid://76704275123922"] = "heterogeneous",
+    ["rbxassetid://87563369514930"] = "bureaucracy",
+        ["rbxassetid://117469893149160"] = "note",
+    ["rbxassetid://99712273768375"] = "bread",
+    ["rbxassetid://137705917601695"] = "window",
+    ["rbxassetid://125894367714210"] = "castle",
+    ["rbxassetid://84205347912963"] = "railroad",
+    ["rbxassetid://123373044547102"] = "scissors",
+    ["rbxassetid://127234780934018"] = "courage",
+    ["rbxassetid://138378925505166"] = "innovation",
+    ["rbxassetid://136749672053788"] = "exploration",
+    ["rbxassetid://93531347251311"] = "sun",
+    ["rbxassetid://119621576416339"] = "moon",
+    ["rbxassetid://138895673947797"] = "red",
+    ["rbxassetid://73603918411142"] = "bird",
+    ["rbxassetid://117373524370753"] = "simulator",
+    ["rbxassetid://123537409871290"] = "google",
+    ["rbxassetid://107342577656454"] = "chair",
+    ["rbxassetid://123048220176220"] = "purple",
+    ["rbxassetid://120955120229082"] = "butterfly",
+    ["rbxassetid://91217467072143"] = "pancakes",
+    ["rbxassetid://135340036638240"] = "dinosaur",
+    ["rbxassetid://132011922002701"] = "microscope",
+    ["rbxassetid://121939235569659"] = "engineering",
+    ["rbxassetid://114553026564026"] = "surveillance",
+    ["rbxassetid://130933715573370"] = "sagacious",
+    ["rbxassetid://86020500736542"] = "perfidious",
+    ["rbxassetid://91147817954177"] = "dog",
+    ["rbxassetid://104866748890118"] = "cake",
+    ["rbxassetid://84580821593519"] = "carrot",
+    ["rbxassetid://103937404536194"] = "rabbit",
+    ["rbxassetid://130186179632603"] = "yellow",
+    ["rbxassetid://140573927798510"] = "squirrel",
+    ["rbxassetid://121224857366620"] = "university",
+    ["rbxassetid://120067238409490"] = "landscape",
+    ["rbxassetid://127526810732029"] = "environment",
+    ["rbxassetid://129444474775753"] = "gauge",
+    ["rbxassetid://119136821360321"] = "box",
+    ["rbxassetid://111173263965772"] = "frog",
+    ["rbxassetid://71710051980093"] = "train",
+    ["rbxassetid://97453074220345"] = "rocket",
+    ["rbxassetid://113254093091209"] = "banana",
+    ["rbxassetid://129462541945579"] = "toothbrush",
+    ["rbxassetid://128102742044236"] = "carousel",
+    ["rbxassetid://83046189629611"] = "spectacular",
+    ["rbxassetid://88956077811874"] = "nonchalant",
+    ["rbxassetid://82544717166738"] = "handkerchief",
+    ["rbxassetid://133411003474766"] = "pet",
+    ["rbxassetid://82485110924018"] = "drum",
+    ["rbxassetid://121606935161900"] = "pizza",
+    ["rbxassetid://95896388099595"] = "bottle",
+    ["rbxassetid://127596414133537"] = "handshake",
+    ["rbxassetid://90210074376509"] = "skyscraper",
+    ["rbxassetid://120441866293286"] = "giraffe",
+    ["rbxassetid://95236318885162"] = "sustainability",
+    ["rbxassetid://127236059277103"] = "cytokinesis",
+    ["rbxassetid://127472072049394"] = "pot",
+    ["rbxassetid://94099190285898"] = "car",
+    ["rbxassetid://100818433387976"] = "book",
+    ["rbxassetid://139799210477845"] = "feather",
+    ["rbxassetid://77399156069057"] = "philosopher",
+    ["rbxassetid://129192607120990"] = "serendipity",
+    ["rbxassetid://118138261691211"] = "myriad",
+    ["rbxassetid://90160012590455"] = "rain",
+    ["rbxassetid://85162739553602"] = "cat",
+    ["rbxassetid://107610332815562"] = "green",
+    ["rbxassetid://76082909828068"] = "horror",
+    ["rbxassetid://71733539344911"] = "pineapple",
+    ["rbxassetid://76219584860302"] = "birthday",
+    ["rbxassetid://89301869032592"] = "technology",
+    ["rbxassetid://137150607700766"] = "unconstitutional",
+    ["rbxassetid://79952964693885"] = "parliamentary",
+    ["rbxassetid://99043420878578"] = "hot",
+    ["rbxassetid://115401616390208"] = "duck",
+    ["rbxassetid://135003613078729"] = "orange",
+    ["rbxassetid://119994677088327"] = "porcupine",
+    ["rbxassetid://101888437907842"] = "chat",
+    ["rbxassetid://123898475640970"] = "boat",
+    ["rbxassetid://86429908698367"] = "garden",
+    ["rbxassetid://106843294739996"] = "turtle",
+    ["rbxassetid://120900271083252"] = "friendship",
+    ["rbxassetid://87953987668718"] = "jellyfish",
+    ["rbxassetid://73764328672468"] = "flashlight",
+    ["rbxassetid://104817404930872"] = "enthusiasm",
+    ["rbxassetid://72217785322647"] = "discombobulate",
+    ["rbxassetid://122913996006183"] = "dragonfly",
+    ["rbxassetid://128031508637866"] = "look",
+    ["rbxassetid://127087944580351"] = "blanket",
+    ["rbxassetid://91604908544972"] = "snowstorm"
+}
+local SoundService = game:GetService("SoundService")
+local Players = game:GetService("Players")
+local function cleanAudioId(audioId)
+    local cleanId = audioId:gsub("%.%w+$", "")
+    if not cleanId:match("^rbxassetid://") then
+        cleanId = "rbxassetid://" .. cleanId:match("%d+")
+    end
+    return cleanId
+end
+local function createDraggableGui()
+    local player = Players.LocalPlayer
+    local gui = Instance.new("ScreenGui")
+    gui.Name = "CurrentWordGui"
+    gui.ResetOnSpawn = false
+    gui.Parent = player.PlayerGui
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, 200, 0, 100)
+    frame.Position = UDim2.new(0.5, -100, 0.2, -50)
+    frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    frame.BackgroundTransparency = 0.2
+    frame.BorderSizePixel = 2
+    frame.Active = true
+    frame.Draggable = false
+    frame.Parent = gui
+    local UICorner = Instance.new("UICorner")
+    UICorner.CornerRadius = UDim.new(0, 10)
+    UICorner.Parent = frame
+    local dragHandle = Instance.new("Frame")
+    dragHandle.Size = UDim2.new(1, 0, 0, 25)
+    dragHandle.Position = UDim2.new(0, 0, 0, 0)
+    dragHandle.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    dragHandle.BackgroundTransparency = 0
+    dragHandle.BorderSizePixel = 0
+    dragHandle.Parent = frame
+    local handleCorner = Instance.new("UICorner")
+    handleCorner.CornerRadius = UDim.new(0, 10)
+    handleCorner.Parent = dragHandle
+   
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Size = UDim2.new(1, 0, 1, 0)
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.Text = "Current Word"
+    titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    titleLabel.TextSize = 14
+    titleLabel.Font = Enum.Font.SourceSansBold
+    titleLabel.Parent = dragHandle
+    local textLabel = Instance.new("TextLabel")
+    textLabel.Size = UDim2.new(1, -20, 0.7, 0)
+    textLabel.Position = UDim2.new(0, 10, 0.3, 0)
+    textLabel.BackgroundTransparency = 1
+    textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    textLabel.TextSize = 24
+    textLabel.Font = Enum.Font.SourceSansBold
+    textLabel.Parent = frame
+    textLabel.TextWrapped = true
+    local shadowFrame = Instance.new("Frame")
+    shadowFrame.Size = frame.Size + UDim2.new(0, 4, 0, 4)
+    shadowFrame.Position = UDim2.new(0, -2, 0, -2)
+    shadowFrame.BackgroundColor3 = Color3.new(0, 0, 0)
+    shadowFrame.BackgroundTransparency = 0.7
+    shadowFrame.ZIndex = frame.ZIndex - 1
+    shadowFrame.Parent = frame
+    
+    local shadowUICorner = Instance.new("UICorner")
+    shadowUICorner.CornerRadius = UDim.new(0, 12)
+    shadowUICorner.Parent = shadowFrame
+    local UserInputService = game:GetService("UserInputService")
+    local dragging
+    local dragInput
+    local dragStart
+    local startPos
+
+    local function update(input)
+        local delta = input.Position - dragStart
+        frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
+                                 startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+
+    dragHandle.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+            
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    dragHandle.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            update(input)
+        end
+    end)
+    
+    return textLabel
+end
+local function ensureFileExists(filename)
+    local success = pcall(function()
+        readfile(filename)
+    end)
+    
+    if not success then
+        local initialContent = "-- Missing Audio Log\n-- Format: [\"rbxassetid://ID\"] = \"answer\",\n\n"
+        writefile(filename, initialContent)
+        print("Created new missing audio log file:", filename)
+    end
+end
+local function logUnknownAudio(audioId, soundName)
+    local file = "missing_audio.txt"
+    ensureFileExists(file)
+    
+    local cleanId = cleanAudioId(audioId)
+    local logFormat = string.format('    ["%s"] = "%s",\n', cleanId, soundName or "Unknown")
+    
+    local success, content = pcall(function()
+        return readfile(file)
+    end)
+    
+    if success then
+        if not content:find(cleanId, 1, true) then
+            appendfile(file, logFormat)
+            print("New missing audio logged:", cleanId, "Name:", soundName)
+        end
+    else
+        writefile(file, "-- Missing Audio Log\n-- Format: [\"rbxassetid://ID\"] = \"answer\",\n\n" .. logFormat)
+        print("Created new missing audio log with entry:", cleanId)
+    end
+end
+local function handlePlayingAudio(wordDisplay)
+    for _, sound in ipairs(SoundService:GetDescendants()) do
+        if sound:IsA("Sound") and sound.IsPlaying then
+            local audioId = cleanAudioId(sound.SoundId)
+            local text = audioList[audioId]
+            
+            if text and text ~= "" then
+                wordDisplay.Text = text
+            else
+                local soundName = sound.Name
+                if soundName and soundName ~= "Sound" then
+                    wordDisplay.Text = string.format("Missing: %s (%s)", soundName, audioId:match("%d+"))
+                    logUnknownAudio(audioId, soundName)
+                else
+                    local parentName = sound.Parent and sound.Parent.Name
+                    if parentName and parentName ~= "Sound" then
+                        wordDisplay.Text = string.format("Missing: %s (%s)", parentName, audioId:match("%d+"))
+                        logUnknownAudio(audioId, parentName)
+                    else
+                        wordDisplay.Text = string.format("Missing Audio: %s", audioId:match("%d+"))
+                        logUnknownAudio(audioId)
+                    end
+                end
+            end
+            
+            print("Audio detected:", audioId)
+            print("Text displayed:", wordDisplay.Text)
+            
+            wait(1)
+        end
+    end
+end
+local wordDisplay = createDraggableGui()
+local isRunning = false
+game:GetService("RunService").Heartbeat:Connect(function()
+    if not isRunning then
+        isRunning = true
+        local success, error = pcall(function()
+            handlePlayingAudio(wordDisplay)
+        end)
+        if not success then
+            print("Error in audio detection:", error)
+        end
+        isRunning = false
+    end
+end)
+
+game:GetService("StarterGui"):SetCore("SendNotification",{
+	Title = "Thank You For using my\nscript",
+	Text = "Ui is dragable by holding the title! Avaible on -Scriptblox-"
+})
+game:GetService("StarterGui"):SetCore("SendNotification",{
+	Title = "Open source script",
+	Text = "Any missing audio has been added to ur executor workspace."
+})
