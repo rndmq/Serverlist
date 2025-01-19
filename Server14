@@ -1,4 +1,4 @@
-local audioList = {
+local sounds = {
     ["rbxassetid://89754892968602"] = "nightmare",
     ["rbxassetid://83440017549613"] = "blueberry",
     ["rbxassetid://86108103686776"] = "revolution",
@@ -225,196 +225,212 @@ local audioList = {
     ["rbxassetid://127087944580351"] = "blanket",
     ["rbxassetid://91604908544972"] = "snowstorm"
 }
-local SoundService = game:GetService("SoundService")
-local Players = game:GetService("Players")
-local function cleanAudioId(audioId)
-    local cleanId = audioId:gsub("%.%w+$", "")
-    if not cleanId:match("^rbxassetid://") then
-        cleanId = "rbxassetid://" .. cleanId:match("%d+")
+
+local sounds_service = game:GetService("SoundService") 
+local plrs = game:GetService("Players")
+
+local function getID(id)
+    local clean = id:gsub("%.%w+$", "")
+    if not clean:match("^rbxassetid://") then
+        clean = "rbxassetid://" .. clean:match("%d+")  
     end
-    return cleanId
+    return clean
 end
-local function createDraggableGui()
-    local player = Players.LocalPlayer
+
+local function makeGui()
+    local p = plrs.LocalPlayer
     local gui = Instance.new("ScreenGui")
-    gui.Name = "CurrentWordGui"
+    gui.Name = "WordGui"
     gui.ResetOnSpawn = false
-    gui.Parent = player.PlayerGui
-    local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(0, 200, 0, 100)
-    frame.Position = UDim2.new(0.5, -100, 0.2, -50)
-    frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    frame.BackgroundTransparency = 0.2
-    frame.BorderSizePixel = 2
-    frame.Active = true
-    frame.Draggable = false
-    frame.Parent = gui
-    local UICorner = Instance.new("UICorner")
-    UICorner.CornerRadius = UDim.new(0, 10)
-    UICorner.Parent = frame
-    local dragHandle = Instance.new("Frame")
-    dragHandle.Size = UDim2.new(1, 0, 0, 25)
-    dragHandle.Position = UDim2.new(0, 0, 0, 0)
-    dragHandle.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    dragHandle.BackgroundTransparency = 0
-    dragHandle.BorderSizePixel = 0
-    dragHandle.Parent = frame
-    local handleCorner = Instance.new("UICorner")
-    handleCorner.CornerRadius = UDim.new(0, 10)
-    handleCorner.Parent = dragHandle
-   
-    local titleLabel = Instance.new("TextLabel")
-    titleLabel.Size = UDim2.new(1, 0, 1, 0)
-    titleLabel.BackgroundTransparency = 1
-    titleLabel.Text = "Current Word"
-    titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    titleLabel.TextSize = 14
-    titleLabel.Font = Enum.Font.SourceSansBold
-    titleLabel.Parent = dragHandle
-    local textLabel = Instance.new("TextLabel")
-    textLabel.Size = UDim2.new(1, -20, 0.7, 0)
-    textLabel.Position = UDim2.new(0, 10, 0.3, 0)
-    textLabel.BackgroundTransparency = 1
-    textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    textLabel.TextSize = 24
-    textLabel.Font = Enum.Font.SourceSansBold
-    textLabel.Parent = frame
-    textLabel.TextWrapped = true
-    local shadowFrame = Instance.new("Frame")
-    shadowFrame.Size = frame.Size + UDim2.new(0, 4, 0, 4)
-    shadowFrame.Position = UDim2.new(0, -2, 0, -2)
-    shadowFrame.BackgroundColor3 = Color3.new(0, 0, 0)
-    shadowFrame.BackgroundTransparency = 0.7
-    shadowFrame.ZIndex = frame.ZIndex - 1
-    shadowFrame.Parent = frame
+    gui.Parent = p.PlayerGui
     
-    local shadowUICorner = Instance.new("UICorner")
-    shadowUICorner.CornerRadius = UDim.new(0, 12)
-    shadowUICorner.Parent = shadowFrame
-    local UserInputService = game:GetService("UserInputService")
-    local dragging
+    local f = Instance.new("Frame")
+    f.Size = UDim2.new(0, 200, 0, 100) 
+    f.Position = UDim2.new(0.5, -100, 0.2, -50)
+    f.BackgroundColor3 = Color3.fromRGB(40,40,40)
+    f.BackgroundTransparency = 0.2
+    f.BorderSizePixel = 2
+    f.Active = true
+    f.Draggable = false 
+    f.Parent = gui
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 10)
+    corner.Parent = f
+    
+    local handle = Instance.new("Frame") 
+    handle.Size = UDim2.new(1,0,0,25)
+    handle.Position = UDim2.new(0,0,0,0)
+    handle.BackgroundColor3 = Color3.fromRGB(30,30,30)
+    handle.BackgroundTransparency = 0
+    handle.BorderSizePixel = 0
+    handle.Parent = f
+    
+    local handle_corner = Instance.new("UICorner")
+    handle_corner.CornerRadius = UDim.new(0,10)
+    handle_corner.Parent = handle
+    
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(1,0,1,0)
+    title.BackgroundTransparency = 1
+    title.Text = "Current Word"
+    title.TextColor3 = Color3.fromRGB(255,255,255) 
+    title.TextSize = 14
+    title.Font = Enum.Font.SourceSansBold
+    title.Parent = handle
+    
+    local txt = Instance.new("TextLabel")
+    txt.Size = UDim2.new(1,-20,0.7,0)
+    txt.Position = UDim2.new(0,10,0.3,0) 
+    txt.BackgroundTransparency = 1
+    txt.TextColor3 = Color3.fromRGB(255,255,255)
+    txt.TextSize = 24
+    txt.Font = Enum.Font.SourceSansBold
+    txt.Parent = f
+    txt.TextWrapped = true
+    
+    local shadow = Instance.new("Frame")
+    shadow.Size = f.Size + UDim2.new(0,4,0,4)
+    shadow.Position = UDim2.new(0,-2,0,-2)
+    shadow.BackgroundColor3 = Color3.new(0,0,0)
+    shadow.BackgroundTransparency = 0.7
+    shadow.ZIndex = f.ZIndex - 1
+    shadow.Parent = f
+    
+    local shadow_corner = Instance.new("UICorner")
+    shadow_corner.CornerRadius = UDim.new(0,12)
+    shadow_corner.Parent = shadow
+    
+    local UIS = game:GetService("UserInputService")
+    local drag
     local dragInput
     local dragStart
     local startPos
-
+    
     local function update(input)
         local delta = input.Position - dragStart
-        frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
-                                 startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        f.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
+                              startPos.Y.Scale, startPos.Y.Offset + delta.Y)
     end
-
-    dragHandle.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = true
+    
+    handle.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or 
+           input.UserInputType == Enum.UserInputType.Touch then
+            drag = true
             dragStart = input.Position
-            startPos = frame.Position
+            startPos = f.Position
             
             input.Changed:Connect(function()
                 if input.UserInputState == Enum.UserInputState.End then
-                    dragging = false
+                    drag = false
                 end
             end)
         end
     end)
-
-    dragHandle.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+    
+    handle.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or
+           input.UserInputType == Enum.UserInputType.Touch then
             dragInput = input
         end
     end)
-
-    UserInputService.InputChanged:Connect(function(input)
-        if input == dragInput and dragging then
+    
+    UIS.InputChanged:Connect(function(input)
+        if input == dragInput and drag then
             update(input)
         end
     end)
     
-    return textLabel
+    return txt
 end
-local function ensureFileExists(filename)
-    local success = pcall(function()
+
+local function makeLog(filename)
+    local ok = pcall(function()
         readfile(filename)
     end)
     
-    if not success then
-        local initialContent = "-- Missing Audio Log\n-- Format: [\"rbxassetid://ID\"] = \"answer\",\n\n"
-        writefile(filename, initialContent)
-        print("Created new missing audio log file:", filename)
+    if not ok then
+        writefile(filename, "")
+        print("New log file:", filename)
     end
 end
-local function logUnknownAudio(audioId, soundName)
-    local file = "missing_audio.txt"
-    ensureFileExists(file)
+
+local function logMissing(id, name)
+    local file = "missing.txt"
+    makeLog(file)
     
-    local cleanId = cleanAudioId(audioId)
-    local logFormat = string.format('    ["%s"] = "%s",\n', cleanId, soundName or "Unknown")
+    local clean = getID(id)
+    local fmt = string.format('    ["%s"] = "%s",\n', clean, name or "???")
     
-    local success, content = pcall(function()
+    local ok, content = pcall(function()
         return readfile(file)
     end)
     
-    if success then
-        if not content:find(cleanId, 1, true) then
-            appendfile(file, logFormat)
-            print("New missing audio logged:", cleanId, "Name:", soundName)
+    if ok then
+        if not content:find(clean, 1, true) then
+            appendfile(file, fmt)
+            print("Added:", clean, "Name:", name) 
         end
     else
-        writefile(file, "-- Missing Audio Log\n-- Format: [\"rbxassetid://ID\"] = \"answer\",\n\n" .. logFormat)
-        print("Created new missing audio log with entry:", cleanId)
+        writefile(file, fmt)
+        print("Created log with:", clean)
     end
 end
-local function handlePlayingAudio(wordDisplay)
-    for _, sound in ipairs(SoundService:GetDescendants()) do
+
+local function checkAudio(display)
+    for _, sound in ipairs(sounds_service:GetDescendants()) do
         if sound:IsA("Sound") and sound.IsPlaying then
-            local audioId = cleanAudioId(sound.SoundId)
-            local text = audioList[audioId]
+            local id = getID(sound.SoundId)
+            local txt = sounds[id]
             
-            if text and text ~= "" then
-                wordDisplay.Text = text
+            if txt and txt ~= "" then
+                display.Text = txt
             else
-                local soundName = sound.Name
-                if soundName and soundName ~= "Sound" then
-                    wordDisplay.Text = string.format("Missing: %s (%s)", soundName, audioId:match("%d+"))
-                    logUnknownAudio(audioId, soundName)
+                local name = sound.Name
+                if name and name ~= "Sound" then
+                    display.Text = string.format("Missing: %s (%s)", 
+                                               name, id:match("%d+"))
+                    logMissing(id, name)
                 else
-                    local parentName = sound.Parent and sound.Parent.Name
-                    if parentName and parentName ~= "Sound" then
-                        wordDisplay.Text = string.format("Missing: %s (%s)", parentName, audioId:match("%d+"))
-                        logUnknownAudio(audioId, parentName)
+                    local parent = sound.Parent and sound.Parent.Name
+                    if parent and parent ~= "Sound" then
+                        display.Text = string.format("Missing: %s (%s)",
+                                                   parent, id:match("%d+"))
+                        logMissing(id, parent)
                     else
-                        wordDisplay.Text = string.format("Missing Audio: %s", audioId:match("%d+"))
-                        logUnknownAudio(audioId)
+                        display.Text = string.format("Missing: %s", id:match("%d+"))
+                        logMissing(id)
                     end
                 end
             end
             
-            print("Audio detected:", audioId)
-            print("Text displayed:", wordDisplay.Text)
+            print("Found:", id)
+            print("Show:", display.Text)
             
             wait(1)
         end
     end
 end
-local wordDisplay = createDraggableGui()
-local isRunning = false
+
+local display = makeGui()
+local running = false
+
 game:GetService("RunService").Heartbeat:Connect(function()
-    if not isRunning then
-        isRunning = true
-        local success, error = pcall(function()
-            handlePlayingAudio(wordDisplay)
+    if not running then
+        running = true
+        pcall(function()
+            checkAudio(display)
         end)
-        if not success then
-            print("Error in audio detection:", error)
-        end
-        isRunning = false
+        running = false
     end
 end)
 
 game:GetService("StarterGui"):SetCore("SendNotification",{
-	Title = "Thank You For using my\nscript",
-	Text = "Ui is dragable by holding the title! Avaible on -Scriptblox-"
+    Title = "Thx for using the script!", 
+    Text = "Can be dragged from the title. It's in Scriptblox"
 })
+
 game:GetService("StarterGui"):SetCore("SendNotification",{
-	Title = "Open source script",
-	Text = "Any missing audio has been added to ur executor workspace."
+    Title = "Open source",
+    Text = "any missing audio, has been added to your executor workspace"  
 })
