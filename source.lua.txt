@@ -249,7 +249,6 @@ FloatingText.Text = "W"
 FloatingText.TextColor3 = Color3.fromRGB(255, 255, 255)
 FloatingText.TextSize = 20
 
--- Pastikan tabel exists
 if not Library.LibraryColorTable then
     Library.LibraryColorTable = {}
 end
@@ -259,24 +258,39 @@ table.insert(Library.LibraryColorTable, FloatingIcon)
 
 local Minimized = false
 local isDragging = false
-local lastValidPosition = UDim2.new(0, 100, 0, 100) -- Default position
+local lastValidPosition = UDim2.new(0, 100, 0, 100)
+
+-- Function untuk maximize UI
+local function MaximizeUI()
+    if Main then Main.Visible = true end
+    if Border then Border.Visible = true end
+    FloatingIcon.Visible = false
+    Minimized = false
+    
+    -- Set posisi Main ke posisi terakhir floating icon
+    if Main then
+        Main.Position = lastValidPosition
+    end
+end
+
+-- Function untuk minimize UI
+local function MinimizeUI()
+    if Main and Main.AbsolutePosition then
+        lastValidPosition = UDim2.new(0, Main.AbsolutePosition.X, 0, Main.AbsolutePosition.Y)
+    end
+    
+    FloatingIcon.Position = lastValidPosition
+    
+    if Main then Main.Visible = false end
+    if Border then Border.Visible = false end
+    
+    FloatingIcon.Visible = true
+    Minimized = true
+end
 
 MinimizeBtn.MouseButton1Click:Connect(function()
     if not Minimized then
-        -- Selalu gunakan posisi Main yang valid
-        if Main and Main.AbsolutePosition then
-            lastValidPosition = UDim2.new(0, Main.AbsolutePosition.X, 0, Main.AbsolutePosition.Y)
-        end
-        
-        FloatingIcon.Position = lastValidPosition
-        
-        -- Hide main UI
-        if Main then Main.Visible = false end
-        if Border then Border.Visible = false end
-        
-        -- Show floating icon
-        FloatingIcon.Visible = true
-        Minimized = true
+        MinimizeUI()
     end
 end)
 
@@ -290,10 +304,14 @@ local function MakeDraggableWithTracking(gui)
 
     local function update(input)
         local delta = input.Position - dragStart
-        gui.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
-                                startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-        -- Update lastValidPosition setiap kali posisi berubah
-        lastValidPosition = gui.Position
+        local newPosition = UDim2.new(
+            startPos.X.Scale, 
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale, 
+            startPos.Y.Offset + delta.Y
+        )
+        gui.Position = newPosition
+        lastValidPosition = newPosition
     end
 
     gui.InputBegan:Connect(function(input)
@@ -307,6 +325,11 @@ local function MakeDraggableWithTracking(gui)
                 if input.UserInputState == Enum.UserInputState.End then
                     dragging = false
                     isDragging = false
+                    
+                    -- Jika hampir tidak ada pergerakan, anggap sebagai click
+                    if (input.Position - dragStart).Magnitude < 5 then
+                        MaximizeUI()
+                    end
                 end
             end)
         end
@@ -327,32 +350,6 @@ end
 
 -- Apply draggable behavior
 MakeDraggableWithTracking(FloatingIcon)
-
--- Handle floating icon click
-FloatingIcon.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragStart = input.Position
-    end
-end)
-
-FloatingIcon.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        local dragEnd = input.Position
-        local dragDelta = (dragEnd - dragStart).Magnitude
-        
-        if dragDelta < 5 and not isDragging then  -- Tambahkan pengecekan isDragging
-            if Main then Main.Visible = true end
-            if Border then Border.Visible = true end
-            FloatingIcon.Visible = false
-            Minimized = false
-            
-            -- Set posisi Main ke posisi terakhir floating icon
-            if Main then
-                Main.Position = lastValidPosition
-            end
-        end
-    end
-end)
 local function CloseAllTabs()
     for i, v in pairs(Tabs:GetChildren()) do
         if v:IsA("Frame") then
