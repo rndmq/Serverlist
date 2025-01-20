@@ -199,7 +199,6 @@ TweenService:Create(Border, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.E
 table.insert(Library.LibraryColorTable, Border)
 table.insert(Library.LibraryColorTable, TabButtons)
 MakeDraggable(Topbar, Main)
--- Tambahkan setelah pembuatan Topbar
 local MinimizeBtn = Instance.new("ImageButton")
 MinimizeBtn.Name = "MinimizeBtn"
 MinimizeBtn.Parent = Topbar
