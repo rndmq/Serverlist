@@ -196,16 +196,15 @@ local MinimizeBtn = Instance.new("ImageButton")
 MinimizeBtn.Name = "MinimizeBtn"
 MinimizeBtn.Parent = Main
 MinimizeBtn.BackgroundTransparency = 1
-MinimizeBtn.Position = UDim2.new(1, -30, 0, 5) -- Posisi di pojok kanan atas
+MinimizeBtn.Position = UDim2.new(1, -30, 0, 5)
 MinimizeBtn.Size = UDim2.new(0, 20, 0, 20)
-MinimizeBtn.ZIndex = 10 -- Pastikan di atas elemen lain
+MinimizeBtn.ZIndex = 10
 MinimizeBtn.Image = "rbxassetid://3570695787"
 MinimizeBtn.ImageColor3 = Library.Theme.MainColor
 MinimizeBtn.ScaleType = Enum.ScaleType.Slice
 MinimizeBtn.SliceCenter = Rect.new(100, 100, 100, 100)
 MinimizeBtn.SliceScale = 0.050
 
--- Teks "-" pada tombol
 local MinIcon = Instance.new("TextLabel")
 MinIcon.Name = "MinIcon"
 MinIcon.Parent = MinimizeBtn
@@ -217,7 +216,6 @@ MinIcon.Text = "-"
 MinIcon.TextColor3 = Color3.fromRGB(255, 255, 255)
 MinIcon.TextSize = 20
 
--- Floating W icon (awalnya tersembunyi)
 local FloatingIcon = Instance.new("ImageButton")
 FloatingIcon.Name = "FloatingIcon"
 FloatingIcon.Parent = UILibrary
@@ -243,95 +241,59 @@ FloatingText.Text = "W"
 FloatingText.TextColor3 = Color3.fromRGB(255, 255, 255)
 FloatingText.TextSize = 20
 
--- Variabel untuk mengontrol status minimize
 local Minimized = false
+local isDragging = false
 
--- Fungsi untuk minimize
 MinimizeBtn.MouseButton1Click:Connect(function()
-    Minimized = not Minimized
+    Minimized = true
     
-    if Minimized then
-        -- Simpan posisi sebelum minimize
-        FloatingIcon.Position = UDim2.new(0, Main.AbsolutePosition.X, 0, Main.AbsolutePosition.Y)
-        
-        -- Sembunyikan main GUI
-        TweenService:Create(Main, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-            Size = UDim2.new(0, 450, 0, 0)
-        }):Play()
-        
-        -- Tampilkan floating icon
-        FloatingIcon.Visible = true
-    else
-        -- Maximize kembali
-        TweenService:Create(Main, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-            Size = UDim2.new(0, 450, 0, 250)
-        }):Play()
-        
+    -- Simpan posisi sebelum minimize
+    FloatingIcon.Position = UDim2.new(0, Main.AbsolutePosition.X, 0, Main.AbsolutePosition.Y)
+    
+    -- Sembunyikan main GUI dan tombol minimize
+    Main.Visible = false
+    
+    -- Tampilkan floating icon
+    FloatingIcon.Visible = true
+end)
+
+-- Fungsi untuk maximize saat floating icon diklik (hanya jika tidak sedang di-drag)
+FloatingIcon.MouseButton1Click:Connect(function()
+    if not isDragging then
+        Minimized = false
+        Main.Visible = true
         FloatingIcon.Visible = false
     end
 end)
 
--- Fungsi untuk maximize saat floating icon diklik
-FloatingIcon.MouseButton1Click:Connect(function()
-    Minimized = false
-    TweenService:Create(Main, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-        Size = UDim2.new(0, 450, 0, 250)
-    }):Play()
-    FloatingIcon.Visible = false
+-- Sistem drag yang lebih baik untuk floating icon
+local UserInputService = game:GetService("UserInputService")
+local dragStart
+local startPos
+
+FloatingIcon.MouseButton1Down:Connect(function(x, y)
+    isDragging = true
+    dragStart = Vector2.new(x, y)
+    startPos = FloatingIcon.Position
 end)
 
--- Buat floating icon bisa di drag
-MakeDraggable(FloatingIcon, FloatingIcon)
-TweenService:Create(Main, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 450, 0, 250)}):Play()
-TweenService:Create(Border, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageTransparency = 0}):Play()
-
-table.insert(Library.LibraryColorTable, Border)
-table.insert(Library.LibraryColorTable, TabButtons)
-MakeDraggable(Topbar, Main)
-
-local function CloseAllTabs()
-    for i, v in pairs(Tabs:GetChildren()) do
-        if v:IsA("Frame") then
-            v.Visible = false
-        end
+UserInputService.InputChanged:Connect(function(input)
+    if isDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - dragStart
+        FloatingIcon.Position = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
     end
-end
+end)
 
-local function ResetAllTabButtons()
-    for i, v in pairs(TabButtons:GetChildren()) do
-        if v:IsA("ImageButton") then
-            TweenService:Create(v, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageColor3 = Library.Theme.MainColor}):Play()
-        end
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        isDragging = false
     end
-end
-
-local function KeepFirstTabOpen()
-    for i, v in pairs(Tabs:GetChildren()) do
-        if v:IsA("Frame") then
-            if v.Name == (Library.FirstTab .. "Tab") then
-                v.Visible = true
-            else
-                v.Visible = false
-            end
-        end
-    end
-
-    for i, v in pairs(TabButtons:GetChildren()) do
-        if v:IsA("ImageButton") then
-            if v.Name:find(Library.FirstTab .. "TabButton") then
-                TweenService:Create(v, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 15)}):Play()
-            else
-                TweenService:Create(v, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageColor3 = Library.Theme.MainColor}):Play()
-            end
-        end
-    end
-end
-
-local function ToggleUI()
-    Library.UIOpen = not Library.UIOpen
-            
-    if Library.UIOpen then
-        TweenService:Create(Main, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 450, 0, 0)}):Play()
+end)
         TweenService:Create(Border, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageTransparency = 1}):Play()
     elseif not Library.UIOpen then
         TweenService:Create(Main, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 450, 0, 250)}):Play()
