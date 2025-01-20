@@ -350,16 +350,17 @@ local function MakeDraggableWithTracking(gui)
     local dragInput
     local dragStart
     local startPos
-    local hasDragged = false  -- Track if actual dragging has occurred
+    local hasDragged = false
+    local isDragComplete = false
     local minDragDistance = 5
 
     local function update(input)
         if not dragging or not input or not dragStart or not startPos then return end
         
         local delta = input.Position - dragStart
-        -- Check if we've exceeded the minimum drag distance
-        if not hasDragged and delta.Magnitude > minDragDistance then
+        if delta.Magnitude > minDragDistance then
             hasDragged = true
+            isDragComplete = true  -- Set flag when actual dragging occurs
         end
         
         local newPosition = UDim2.new(
@@ -372,6 +373,7 @@ local function MakeDraggableWithTracking(gui)
         References.lastValidPosition = newPosition
     end
     
+    -- Handle initial input
     gui.InputBegan:Connect(function(input)
         if input.UserInputType ~= Enum.UserInputType.MouseButton1 and 
            input.UserInputType ~= Enum.UserInputType.Touch then
@@ -382,8 +384,10 @@ local function MakeDraggableWithTracking(gui)
         dragStart = input.Position
         startPos = gui.Position
         References.isDragging = true
-        hasDragged = false  -- Reset drag state
+        hasDragged = false
+        isDragComplete = false  -- Reset drag completion flag
         
+        -- Track input end
         local connection
         connection = input.Changed:Connect(function()
             if input.UserInputState == Enum.UserInputState.End then
@@ -391,14 +395,18 @@ local function MakeDraggableWithTracking(gui)
                 References.isDragging = false
                 connection:Disconnect()
                 
-                -- Only open UI if no dragging occurred
-                if not hasDragged then
-                    MaximizeUI()
+                -- Only trigger UI if there was no dragging
+                if not isDragComplete then
+                    task.wait(0.1)  -- Small delay to ensure we're not in a drag
+                    if not isDragComplete then  -- Double check after delay
+                        MaximizeUI()
+                    end
                 end
             end
         end)
     end)
     
+    -- Track input changes
     gui.InputChanged:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseMovement or
            input.UserInputType == Enum.UserInputType.Touch then
@@ -406,9 +414,21 @@ local function MakeDraggableWithTracking(gui)
         end
     end)
     
+    -- Update position during drag
     UserInputService.InputChanged:Connect(function(input)
         if input == dragInput and dragging then
             update(input)
+        end
+    end)
+    
+    -- Prevent menu from opening during drag
+    gui.MouseButton1Down:Connect(function()
+        isDragComplete = false
+    end)
+    
+    gui.MouseButton1Up:Connect(function()
+        if hasDragged then
+            isDragComplete = true  -- Ensure we mark drag as complete
         end
     end)
 end
