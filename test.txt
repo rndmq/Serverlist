@@ -341,17 +341,19 @@ local function MinimizeUI()
 end
 
 -- Function untuk membuat objek draggable dengan tracking
+-- Function untuk membuat objek draggable dengan safety checks
 local function MakeDraggableWithTracking(gui)
     if not gui then return end
-
+    
     local dragging
     local dragInput
     local dragStart
     local startPos
+    local wasClicked = false  -- Track if the icon was clicked
 
     local function update(input)
         if not dragging or not input or not dragStart or not startPos then return end
-
+        
         local delta = input.Position - dragStart
         local newPosition = UDim2.new(
             startPos.X.Scale,
@@ -362,47 +364,53 @@ local function MakeDraggableWithTracking(gui)
         gui.Position = newPosition
         References.lastValidPosition = newPosition
     end
-
+    
     gui.InputBegan:Connect(function(input)
-        if input.UserInputType ~= Enum.UserInputType.MouseButton1 and
+        if input.UserInputType ~= Enum.UserInputType.MouseButton1 and 
            input.UserInputType ~= Enum.UserInputType.Touch then
             return
         end
-
+        
+        -- Mark the icon as clicked
+        wasClicked = true
+        
         dragging = true
         dragStart = input.Position
         startPos = gui.Position
         References.isDragging = true
-
+        
         local connection
         connection = input.Changed:Connect(function()
             if input.UserInputState == Enum.UserInputState.End then
                 dragging = false
                 References.isDragging = false
                 connection:Disconnect()
+                
+                if wasClicked and (input.Position - dragStart).Magnitude < 5 then
+                    -- Only maximize if the icon was clicked, not dragged
+                    MaximizeUI()
+                end
+                
+                -- Reset the click state
+                wasClicked = false
             end
         end)
     end)
-
-    gui.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = false
-            References.isDragging = false
-        end
-    end)
-
+    
     gui.InputChanged:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseMovement or
            input.UserInputType == Enum.UserInputType.Touch then
             dragInput = input
         end
     end)
-
+    
     UserInputService.InputChanged:Connect(function(input)
         if input == dragInput and dragging then
             update(input)
         end
     end)
+end
+
 
     gui.MouseButton1Click:Connect(function()
         -- Hanya buka UI jika tidak sedang di-drag
