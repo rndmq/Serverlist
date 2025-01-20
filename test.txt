@@ -382,8 +382,6 @@ local function MakeDraggableWithTracking(gui)
                 dragging = false
                 References.isDragging = false
                 connection:Disconnect()
-                
-                -- Hapus pemanggilan MaximizeUI() di sini
             end
         end)
     end)
@@ -398,6 +396,13 @@ local function MakeDraggableWithTracking(gui)
     UserInputService.InputChanged:Connect(function(input)
         if input == dragInput and dragging then
             update(input)
+        end
+    end)
+    
+    -- Mengatur agar klik pada ikon floating membuka UI jika UI minimized
+    gui.MouseButton1Click:Connect(function()
+        if References.Minimized then
+            MaximizeUI()  -- Pastikan UI dibuka jika minimized
         end
     end)
 end
