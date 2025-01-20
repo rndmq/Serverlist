@@ -351,6 +351,7 @@ local function MakeDraggableWithTracking(gui)
     local dragStart
     local startPos
     local wasClicked = false  -- Track if the icon was clicked
+    local minDragDistance = 5  -- Minimum distance to differentiate between click and drag
 
     local function update(input)
         if not dragging or not input or not dragStart or not startPos then return end
@@ -387,10 +388,9 @@ local function MakeDraggableWithTracking(gui)
                 References.isDragging = false
                 connection:Disconnect()
                 
-                -- Only minimize or open based on the distance of the drag
-                if wasClicked and (input.Position - dragStart).Magnitude < 5 then
-                    -- If the icon was clicked (not dragged), maximize UI
-                    MaximizeUI()
+                -- Only open UI if it's a click (drag distance is small)
+                if wasClicked and (input.Position - dragStart).Magnitude < minDragDistance then
+                    MaximizeUI()  -- Open the UI if it's a click
                 end
                 
                 -- Reset the click state
@@ -419,9 +419,6 @@ local function MakeDraggableWithTracking(gui)
         end
     end)
 end
-
-
-
 
 -- Fungsi utama untuk setup
 WaitForParent(function()
