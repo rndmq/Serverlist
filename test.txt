@@ -387,8 +387,9 @@ local function MakeDraggableWithTracking(gui)
                 References.isDragging = false
                 connection:Disconnect()
                 
+                -- Only minimize or open based on the distance of the drag
                 if wasClicked and (input.Position - dragStart).Magnitude < 5 then
-                    -- Only maximize if the icon was clicked, not dragged
+                    -- If the icon was clicked (not dragged), maximize UI
                     MaximizeUI()
                 end
                 
@@ -418,6 +419,7 @@ local function MakeDraggableWithTracking(gui)
         end
     end)
 end
+
 
 
 
