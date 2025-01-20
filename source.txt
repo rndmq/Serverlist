@@ -192,6 +192,28 @@ TabButtonLayout.Name = "TabButtonLayout"
 TabButtonLayout.Parent = TabButtons
 TabButtonLayout.FillDirection = Enum.FillDirection.Horizontal
 TabButtonLayout.SortOrder = Enum.SortOrder.LayoutOrder
+-- Services
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+
+-- Pastikan Library dan Main sudah didefinisikan sebelum kode ini
+if not Library then
+    Library = {
+        Theme = {
+            MainColor = Color3.fromRGB(255, 255, 255),
+            TextFont = Enum.Font.SourceSansBold,
+            EasingStyle = Enum.EasingStyle.Quad
+        }
+    }
+end
+
+if not UILibrary then
+    UILibrary = Instance.new("ScreenGui")
+    UILibrary.Name = "UILibrary"
+    UILibrary.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+end
+
+-- Tombol Minimize
 local MinimizeBtn = Instance.new("ImageButton")
 MinimizeBtn.Name = "MinimizeBtn"
 MinimizeBtn.Parent = Main
@@ -216,11 +238,12 @@ MinIcon.Text = "-"
 MinIcon.TextColor3 = Color3.fromRGB(255, 255, 255)
 MinIcon.TextSize = 20
 
+-- Floating Icon
 local FloatingIcon = Instance.new("ImageButton")
 FloatingIcon.Name = "FloatingIcon"
 FloatingIcon.Parent = UILibrary
 FloatingIcon.BackgroundTransparency = 1
-FloatingIcon.Position = UDim2.new(0, Mouse.X, 0, Mouse.Y)
+FloatingIcon.Position = UDim2.new(0, 100, 0, 100) -- Posisi default
 FloatingIcon.Size = UDim2.new(0, 40, 0, 40)
 FloatingIcon.Visible = false
 FloatingIcon.ZIndex = 50
@@ -241,36 +264,39 @@ FloatingText.Text = "W"
 FloatingText.TextColor3 = Color3.fromRGB(255, 255, 255)
 FloatingText.TextSize = 20
 
+-- Variables
 local Minimized = false
 local isDragging = false
+local dragStart
+local startPos
 
+-- Minimize Button Click Handler
 MinimizeBtn.MouseButton1Click:Connect(function()
-    Minimized = true
-    
-    -- Simpan posisi sebelum minimize
-    FloatingIcon.Position = UDim2.new(0, Main.AbsolutePosition.X, 0, Main.AbsolutePosition.Y)
-    
-    -- Sembunyikan main GUI dan tombol minimize
-    Main.Visible = false
-    
-    -- Tampilkan floating icon
-    FloatingIcon.Visible = true
+    if Main then
+        Minimized = true
+        
+        -- Save position before minimizing
+        local mainPos = Main.AbsolutePosition
+        FloatingIcon.Position = UDim2.new(0, mainPos.X, 0, mainPos.Y)
+        
+        -- Hide main GUI
+        Main.Visible = false
+        
+        -- Show floating icon
+        FloatingIcon.Visible = true
+    end
 end)
 
--- Fungsi untuk maximize saat floating icon diklik (hanya jika tidak sedang di-drag)
+-- Floating Icon Click Handler
 FloatingIcon.MouseButton1Click:Connect(function()
-    if not isDragging then
+    if not isDragging and Main then
         Minimized = false
         Main.Visible = true
         FloatingIcon.Visible = false
     end
 end)
 
--- Sistem drag yang lebih baik untuk floating icon
-local UserInputService = game:GetService("UserInputService")
-local dragStart
-local startPos
-
+-- Dragging System
 FloatingIcon.MouseButton1Down:Connect(function(x, y)
     isDragging = true
     dragStart = Vector2.new(x, y)
@@ -294,6 +320,12 @@ UserInputService.InputEnded:Connect(function(input)
         isDragging = false
     end
 end)
+
+-- Return the important elements if needed
+return {
+    MinimizeBtn = MinimizeBtn,
+    FloatingIcon = FloatingIcon
+}
 TweenService:Create(Main, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 450, 0, 250)}):Play()
 TweenService:Create(Border, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageTransparency = 0}):Play()
 
