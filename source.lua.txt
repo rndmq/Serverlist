@@ -255,64 +255,60 @@ table.insert(Library.LibraryColorTable, FloatingIcon)
 -- Track state
 local UIState = {
     Minimized = false,
-    LastPosition = UDim2.new(0, 100, 0, 100),
-    isDragging = false
+    isDragging = false,
+    dragStartTime = 0,
+    dragStartPosition = nil
 }
 
--- Function to update position
-local function UpdatePosition()
-    if Main and Main.AbsolutePosition then
-        UIState.LastPosition = UDim2.new(0, Main.AbsolutePosition.X, 0, Main.AbsolutePosition.Y)
-    end
-end
+-- Function to make objects draggable
+local function MakeDraggable(dragObject)
+    local start, startPos
 
--- Enhanced draggable function
-local function EnhancedMakeDraggable(dragObj, clickObj)
-    local dragStart = nil
-    local startPos = nil
-    local dragInput = nil
-    
-    clickObj.InputBegan:Connect(function(input)
+    local function update(input)
+        local delta = input.Position - start
+        local newPosition = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
+        dragObject.Position = newPosition
+    end
+
+    dragObject.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             UIState.isDragging = true
-            dragStart = input.Position
-            startPos = dragObj.Position
-            
+            UIState.dragStartTime = tick()
+            UIState.dragStartPosition = input.Position
+            start = input.Position
+            startPos = dragObject.Position
+
+            local connection
+            connection = UserInputService.InputChanged:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseMovement then
+                    update(input)
+                end
+            end)
+
             input.Changed:Connect(function()
                 if input.UserInputState == Enum.UserInputState.End then
                     UIState.isDragging = false
+                    connection:Disconnect()
                 end
             end)
         end
     end)
-    
-    dragObj.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement then
-            dragInput = input
-        end
-    end)
-    
-    UserInputService.InputChanged:Connect(function(input)
-        if input == dragInput and UIState.isDragging then
-            local delta = input.Position - dragStart
-            dragObj.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-            -- Update position after drag
-            if not UIState.Minimized then
-                UpdatePosition()
-            end
-        end
-    end)
 end
 
--- Apply enhanced draggable to both Main and FloatingIcon
-EnhancedMakeDraggable(Main, Main)
-EnhancedMakeDraggable(FloatingIcon, FloatingIcon)
+-- Apply draggable to both Main and FloatingIcon
+MakeDraggable(Main)
+MakeDraggable(FloatingIcon)
 
+-- Minimize button handler
 MinimizeBtn.MouseButton1Click:Connect(function()
     if not UIState.Minimized then
-        UpdatePosition() -- Update position before minimizing
-        FloatingIcon.Position = UIState.LastPosition
-        
+        local currentPos = Main.Position
+        FloatingIcon.Position = currentPos
         Main.Visible = false
         Border.Visible = false
         FloatingIcon.Visible = true
@@ -320,40 +316,28 @@ MinimizeBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- Handle floating icon click/drag
-local dragStartTime = 0
-local dragStartPos = Vector2.new(0, 0)
-
-FloatingIcon.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragStartTime = tick()
-        dragStartPos = UserInputService:GetMouseLocation()
-    end
-end)
-
+-- Floating icon click handler
 FloatingIcon.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        local dragTime = tick() - dragStartTime
-        local dragDist = (UserInputService:GetMouseLocation() - dragStartPos).Magnitude
+        local dragDuration = tick() - UIState.dragStartTime
+        local dragDistance = UIState.dragStartPosition and (input.Position - UIState.dragStartPosition).Magnitude or 0
         
-        if dragTime < 0.2 and dragDist < 5 then
-            -- It's a click, not a drag
+        -- Only treat as click if drag was short in duration and distance
+        if dragDuration < 0.2 and dragDistance < 5 then
             Main.Position = FloatingIcon.Position
             Main.Visible = true
             Border.Visible = true
             FloatingIcon.Visible = false
             UIState.Minimized = false
+            UIState.dragStartPosition = nil
         end
     end
 end)
-local function CloseAllTabs()
-    for i, v in pairs(Tabs:GetChildren()) do
-        if v:IsA("Frame") then
-            v.Visible = false
-        end
-    end
-end
 
+-- Reset drag state when mouse leaves
+FloatingIcon.MouseLeave:Connect(function()
+    UIState.dragStartPosition = nil
+end)
 local function ResetAllTabButtons()
     for i, v in pairs(TabButtons:GetChildren()) do
         if v:IsA("ImageButton") then
