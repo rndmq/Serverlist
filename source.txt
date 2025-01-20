@@ -199,6 +199,7 @@ TweenService:Create(Border, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.E
 table.insert(Library.LibraryColorTable, Border)
 table.insert(Library.LibraryColorTable, TabButtons)
 MakeDraggable(Topbar, Main)
+-- dari sni
 local MinimizeBtn = Instance.new("ImageButton")
 MinimizeBtn.Name = "MinimizeBtn"
 MinimizeBtn.Parent = Topbar
@@ -259,7 +260,7 @@ local savedPosition = nil
 
 MinimizeBtn.MouseButton1Click:Connect(function()
     if not Minimized then
-        -- Save the current position of the floating icon
+        -- Save the current position of the floating icon before minimizing
         savedPosition = FloatingIcon.Position
         
         -- Save position before minimizing
@@ -292,25 +293,20 @@ FloatingIcon.MouseButton1Up:Connect(function()
     
     if dragDelta < 5 then  -- If barely moved, consider it a click
         -- Restore previous position of the floating icon if it was minimized
-        if savedPosition then
-            FloatingIcon.Position = savedPosition
-        end
-        
         Main.Visible = true
         Border.Visible = true
         FloatingIcon.Visible = false
         Minimized = false
+        
+        -- Store the new position of the floating icon when it is restored
+        savedPosition = FloatingIcon.Position
+    else
+        -- Update the saved position when dragging the icon
+        savedPosition = FloatingIcon.Position
     end
 end)
 
-local function CloseAllTabs()
-    for i, v in pairs(Tabs:GetChildren()) do
-        if v:IsA("Frame") then
-            v.Visible = false
-        end
-    end
-end
-
+-- sampe sni
 local function ResetAllTabButtons()
     for i, v in pairs(TabButtons:GetChildren()) do
         if v:IsA("ImageButton") then
