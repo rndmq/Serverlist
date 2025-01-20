@@ -192,21 +192,111 @@ TabButtonLayout.Name = "TabButtonLayout"
 TabButtonLayout.Parent = TabButtons
 TabButtonLayout.FillDirection = Enum.FillDirection.Horizontal
 TabButtonLayout.SortOrder = Enum.SortOrder.LayoutOrder
+local MinimizeBtn = Instance.new("ImageButton")
+MinimizeBtn.Name = "MinimizeBtn"
+MinimizeBtn.Parent = Main
+MinimizeBtn.BackgroundTransparency = 1
+MinimizeBtn.Position = UDim2.new(1, -30, 0, 5) -- Posisi di pojok kanan atas
+MinimizeBtn.Size = UDim2.new(0, 20, 0, 20)
+MinimizeBtn.ZIndex = 10 -- Pastikan di atas elemen lain
+MinimizeBtn.Image = "rbxassetid://3570695787"
+MinimizeBtn.ImageColor3 = Library.Theme.MainColor
+MinimizeBtn.ScaleType = Enum.ScaleType.Slice
+MinimizeBtn.SliceCenter = Rect.new(100, 100, 100, 100)
+MinimizeBtn.SliceScale = 0.050
 
+-- Teks "-" pada tombol
+local MinIcon = Instance.new("TextLabel")
+MinIcon.Name = "MinIcon"
+MinIcon.Parent = MinimizeBtn
+MinIcon.BackgroundTransparency = 1
+MinIcon.Size = UDim2.new(1, 0, 1, 0)
+MinIcon.ZIndex = 11
+MinIcon.Font = Library.Theme.TextFont
+MinIcon.Text = "-"
+MinIcon.TextColor3 = Color3.fromRGB(255, 255, 255)
+MinIcon.TextSize = 20
+
+-- Floating W icon (awalnya tersembunyi)
+local FloatingIcon = Instance.new("ImageButton")
+FloatingIcon.Name = "FloatingIcon"
+FloatingIcon.Parent = UILibrary
+FloatingIcon.BackgroundTransparency = 1
+FloatingIcon.Position = UDim2.new(0, Mouse.X, 0, Mouse.Y)
+FloatingIcon.Size = UDim2.new(0, 40, 0, 40)
+FloatingIcon.Visible = false
+FloatingIcon.ZIndex = 50
+FloatingIcon.Image = "rbxassetid://3570695787"
+FloatingIcon.ImageColor3 = Library.Theme.MainColor
+FloatingIcon.ScaleType = Enum.ScaleType.Slice
+FloatingIcon.SliceCenter = Rect.new(100, 100, 100, 100)
+FloatingIcon.SliceScale = 0.050
+
+local FloatingText = Instance.new("TextLabel")
+FloatingText.Name = "FloatingText"
+FloatingText.Parent = FloatingIcon
+FloatingText.BackgroundTransparency = 1
+FloatingText.Size = UDim2.new(1, 0, 1, 0)
+FloatingText.ZIndex = 51
+FloatingText.Font = Library.Theme.TextFont
+FloatingText.Text = "W"
+FloatingText.TextColor3 = Color3.fromRGB(255, 255, 255)
+FloatingText.TextSize = 20
+
+-- Variabel untuk mengontrol status minimize
+local Minimized = false
+
+-- Fungsi untuk minimize
+MinimizeBtn.MouseButton1Click:Connect(function()
+    Minimized = not Minimized
+    
+    if Minimized then
+        -- Simpan posisi sebelum minimize
+        FloatingIcon.Position = UDim2.new(0, Main.AbsolutePosition.X, 0, Main.AbsolutePosition.Y)
+        
+        -- Sembunyikan main GUI
+        TweenService:Create(Main, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+            Size = UDim2.new(0, 450, 0, 0)
+        }):Play()
+        
+        -- Tampilkan floating icon
+        FloatingIcon.Visible = true
+    else
+        -- Maximize kembali
+        TweenService:Create(Main, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+            Size = UDim2.new(0, 450, 0, 250)
+        }):Play()
+        
+        FloatingIcon.Visible = false
+    end
+end)
+
+-- Fungsi untuk maximize saat floating icon diklik
+FloatingIcon.MouseButton1Click:Connect(function()
+    Minimized = false
+    TweenService:Create(Main, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+        Size = UDim2.new(0, 450, 0, 250)
+    }):Play()
+    FloatingIcon.Visible = false
+end)
+
+-- Buat floating icon bisa di drag
+MakeDraggable(FloatingIcon, FloatingIcon)
 TweenService:Create(Main, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 450, 0, 250)}):Play()
 TweenService:Create(Border, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageTransparency = 0}):Play()
 
 table.insert(Library.LibraryColorTable, Border)
 table.insert(Library.LibraryColorTable, TabButtons)
 MakeDraggable(Topbar, Main)
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Parent = game.CoreGui
 
-local Main = Instance.new("Frame")
-Main.Size = UDim2.new(0, 400, 0, 300)
-Main.Position = UDim2.new(0.5, -200, 0.5, -150)
-Main.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
-Main.Parent = ScreenGui
+local function CloseAllTabs()
+    for i, v in pairs(Tabs:GetChildren()) do
+        if v:IsA("Frame") then
+            v.Visible = false
+        end
+    end
+end
+
 local function ResetAllTabButtons()
     for i, v in pairs(TabButtons:GetChildren()) do
         if v:IsA("ImageButton") then
@@ -234,6 +324,18 @@ local function KeepFirstTabOpen()
                 TweenService:Create(v, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageColor3 = Library.Theme.MainColor}):Play()
             end
         end
+    end
+end
+
+local function ToggleUI()
+    Library.UIOpen = not Library.UIOpen
+            
+    if Library.UIOpen then
+        TweenService:Create(Main, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 450, 0, 0)}):Play()
+        TweenService:Create(Border, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageTransparency = 1}):Play()
+    elseif not Library.UIOpen then
+        TweenService:Create(Main, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 450, 0, 250)}):Play()
+        TweenService:Create(Border, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageTransparency = 0}):Play()
     end
 end
 
@@ -306,49 +408,6 @@ function Library:CreateTab(name)
     SectionPadding.Name = "SectionPadding"
     SectionPadding.Parent = NameTab
     SectionPadding.PaddingTop = UDim.new(0, 12)
-local isMinimized = false
-local minimizedIcon -- Ikon saat diminimalkan
-
--- Tombol Minimize (-)
-local minimizeButton = Instance.new("TextButton")
-minimizeButton.Size = UDim2.new(0, 30, 0, 30)
-minimizeButton.Position = UDim2.new(1, -35, 0, 5) -- Di pojok kanan atas `Main`
-minimizeButton.Text = "-"
-minimizeButton.TextScaled = true
-minimizeButton.BackgroundColor3 = Color3.new(1, 0.5, 0)
-minimizeButton.TextColor3 = Color3.new(1, 1, 1)
-minimizeButton.Parent = Main
-
--- Logika Minimizer
-minimizeButton.MouseButton1Click:Connect(function()
-    if isMinimized then
-        Main.Visible = true
-        minimizedIcon.Visible = false
-        isMinimized = false
-    else
-        Main.Visible = false
-        minimizedIcon.Visible = true
-        isMinimized = true
-    end
-end)
-
--- Ikon Saat Diminimalkan
-minimizedIcon = Instance.new("TextButton")
-minimizedIcon.Size = UDim2.new(0, 50, 0, 50)
-minimizedIcon.Position = UDim2.new(0, 10, 0, 10) -- Posisi ikon di layar
-minimizedIcon.Text = "W"
-minimizedIcon.TextScaled = true
-minimizedIcon.BackgroundColor3 = Color3.new(0, 0.5, 1)
-minimizedIcon.TextColor3 = Color3.new(1, 1, 1)
-minimizedIcon.Visible = false -- Tersembunyi saat GUI tidak diminimalkan
-minimizedIcon.Parent = UILibrary
-
--- Logika untuk memaksimalkan kembali
-minimizedIcon.MouseButton1Click:Connect(function()
-    Main.Visible = true
-    minimizedIcon.Visible = false
-    isMinimized = false
-end)
 
     NameTab.Visible = true
 
@@ -543,7 +602,7 @@ end)
 
             NameToggle.Name = (name .. "Toggle")
             NameToggle.Parent = SectionContent
-            NameToggle.BackgroundColor3 = Color3.fromRGB(255, 255, 255) 
+            NameToggle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
             NameToggle.BackgroundTransparency = 1.000
             NameToggle.Size = UDim2.new(0, 197, 0, 35)
             NameToggle.ZIndex = 5
@@ -749,7 +808,8 @@ end)
                 elseif Value.Text == "" or tonumber(Value.Text) >= maximumvalue then
                     Value.Text = maximumvalue
                 end
-    TweenService:Create(SliderIndicator, TweenInfo.new(0.02, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(((tonumber(Value.Text) or minimumvalue) - minimumvalue) / (maximumvalue - minimumvalue), 0, 1, 0)}):Play()
+    
+                TweenService:Create(SliderIndicator, TweenInfo.new(0.02, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(((tonumber(Value.Text) or minimumvalue) - minimumvalue) / (maximumvalue - minimumvalue), 0, 1, 0)}):Play()
                 callback(tonumber(Value.Text))
             end)
     
@@ -1553,7 +1613,7 @@ end)
                     if not gameprocessedevent then
                         if UserInputService:GetFocusedTextBox() then return end
                         if OldBind == Enum.KeyCode.Unknown.Name then return end
-             if JustBinded then JustBinded = false return end
+                        if JustBinded then JustBinded = false return end
 
                         local BindName = ((input.UserInputType ~= Enum.UserInputType.Keyboard and input.UserInputType.Name) or input.KeyCode.Name)
 
@@ -1603,5 +1663,3 @@ end)
 end
 
 return Library
-
-                
