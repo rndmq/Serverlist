@@ -192,34 +192,20 @@ TabButtonLayout.Name = "TabButtonLayout"
 TabButtonLayout.Parent = TabButtons
 TabButtonLayout.FillDirection = Enum.FillDirection.Horizontal
 TabButtonLayout.SortOrder = Enum.SortOrder.LayoutOrder
--- Services
-local TweenService = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
 
--- Pastikan Library dan Main sudah didefinisikan sebelum kode ini
-if not Library then
-    Library = {
-        Theme = {
-            MainColor = Color3.fromRGB(255, 255, 255),
-            TextFont = Enum.Font.SourceSansBold,
-            EasingStyle = Enum.EasingStyle.Quad
-        }
-    }
-end
+TweenService:Create(Main, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 450, 0, 250)}):Play()
+TweenService:Create(Border, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageTransparency = 0}):Play()
 
-if not UILibrary then
-    UILibrary = Instance.new("ScreenGui")
-    UILibrary.Name = "UILibrary"
-    UILibrary.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
-end
-
--- Tombol Minimize
+table.insert(Library.LibraryColorTable, Border)
+table.insert(Library.LibraryColorTable, TabButtons)
+MakeDraggable(Topbar, Main)
+-- Tambahkan setelah pembuatan Topbar
 local MinimizeBtn = Instance.new("ImageButton")
 MinimizeBtn.Name = "MinimizeBtn"
-MinimizeBtn.Parent = Main
+MinimizeBtn.Parent = Topbar
 MinimizeBtn.BackgroundTransparency = 1
-MinimizeBtn.Position = UDim2.new(1, -30, 0, 5)
-MinimizeBtn.Size = UDim2.new(0, 20, 0, 20)
+MinimizeBtn.Position = UDim2.new(1, -25, 0, 0)
+MinimizeBtn.Size = UDim2.new(0, 15, 0, 15)
 MinimizeBtn.ZIndex = 10
 MinimizeBtn.Image = "rbxassetid://3570695787"
 MinimizeBtn.ImageColor3 = Library.Theme.MainColor
@@ -236,14 +222,13 @@ MinIcon.ZIndex = 11
 MinIcon.Font = Library.Theme.TextFont
 MinIcon.Text = "-"
 MinIcon.TextColor3 = Color3.fromRGB(255, 255, 255)
-MinIcon.TextSize = 20
+MinIcon.TextSize = 16
 
--- Floating Icon
 local FloatingIcon = Instance.new("ImageButton")
 FloatingIcon.Name = "FloatingIcon"
 FloatingIcon.Parent = UILibrary
 FloatingIcon.BackgroundTransparency = 1
-FloatingIcon.Position = UDim2.new(0, 100, 0, 100) -- Posisi default
+FloatingIcon.Position = UDim2.new(0, 100, 0, 100)
 FloatingIcon.Size = UDim2.new(0, 40, 0, 40)
 FloatingIcon.Visible = false
 FloatingIcon.ZIndex = 50
@@ -264,75 +249,49 @@ FloatingText.Text = "W"
 FloatingText.TextColor3 = Color3.fromRGB(255, 255, 255)
 FloatingText.TextSize = 20
 
--- Variables
+table.insert(Library.LibraryColorTable, MinimizeBtn)
+table.insert(Library.LibraryColorTable, FloatingIcon)
+
 local Minimized = false
 local isDragging = false
-local dragStart
-local startPos
 
--- Minimize Button Click Handler
 MinimizeBtn.MouseButton1Click:Connect(function()
-    if Main then
-        Minimized = true
-        
+    if not Minimized then
         -- Save position before minimizing
         local mainPos = Main.AbsolutePosition
         FloatingIcon.Position = UDim2.new(0, mainPos.X, 0, mainPos.Y)
         
-        -- Hide main GUI
+        -- Hide main UI
         Main.Visible = false
+        Border.Visible = false
         
         -- Show floating icon
         FloatingIcon.Visible = true
+        Minimized = true
     end
 end)
 
--- Floating Icon Click Handler
-FloatingIcon.MouseButton1Click:Connect(function()
-    if not isDragging and Main then
-        Minimized = false
+-- Make floating icon draggable
+MakeDraggable(FloatingIcon, FloatingIcon)
+
+-- Maximize when floating icon is clicked (not dragged)
+local dragStart = nil
+
+FloatingIcon.MouseButton1Down:Connect(function()
+    dragStart = UserInputService:GetMouseLocation()
+end)
+
+FloatingIcon.MouseButton1Up:Connect(function()
+    local dragEnd = UserInputService:GetMouseLocation()
+    local dragDelta = (dragEnd - dragStart).Magnitude
+    
+    if dragDelta < 5 then  -- If barely moved, consider it a click
         Main.Visible = true
+        Border.Visible = true
         FloatingIcon.Visible = false
+        Minimized = false
     end
 end)
-
--- Dragging System
-FloatingIcon.MouseButton1Down:Connect(function(x, y)
-    isDragging = true
-    dragStart = Vector2.new(x, y)
-    startPos = FloatingIcon.Position
-end)
-
-UserInputService.InputChanged:Connect(function(input)
-    if isDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-        local delta = input.Position - dragStart
-        FloatingIcon.Position = UDim2.new(
-            startPos.X.Scale,
-            startPos.X.Offset + delta.X,
-            startPos.Y.Scale,
-            startPos.Y.Offset + delta.Y
-        )
-    end
-end)
-
-UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        isDragging = false
-    end
-end)
-
--- Return the important elements if needed
-return {
-    MinimizeBtn = MinimizeBtn,
-    FloatingIcon = FloatingIcon
-}
-TweenService:Create(Main, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 450, 0, 250)}):Play()
-TweenService:Create(Border, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageTransparency = 0}):Play()
-
-table.insert(Library.LibraryColorTable, Border)
-table.insert(Library.LibraryColorTable, TabButtons)
-MakeDraggable(Topbar, Main)
-
 local function CloseAllTabs()
     for i, v in pairs(Tabs:GetChildren()) do
         if v:IsA("Frame") then
