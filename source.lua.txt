@@ -73,37 +73,41 @@ local function RippleEffect(object)
         Ripple:Destroy()
     end)
 end
-local function MakeDraggable(dragObject)
-    local dragToggle = nil
-    local dragSpeed = 0.25
-    local dragStart = nil
-    local startPos = nil
 
-    local function updateInput(input)
-        local delta = input.Position - dragStart
-        local position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
-            startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-        TweenService:Create(dragObject, TweenInfo.new(dragSpeed), {Position = position}):Play()
+local function MakeDraggable(topbarobject, object)
+    local Dragging = nil
+    local DragInput = nil
+    local DragStart = nil
+    local StartPosition = nil
+    
+    local function Update(input)
+        local Delta = input.Position - DragStart
+        object.Position = UDim2.new(StartPosition.X.Scale, StartPosition.X.Offset + Delta.X, StartPosition.Y.Scale, StartPosition.Y.Offset + Delta.Y)
     end
-
-    dragObject.InputBegan:Connect(function(input)
-        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
-            dragToggle = true
-            dragStart = input.Position
-            startPos = dragObject.Position
+    
+    topbarobject.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            Dragging = true
+            DragStart = input.Position
+            StartPosition = object.Position
+            
             input.Changed:Connect(function()
                 if input.UserInputState == Enum.UserInputState.End then
-                    dragToggle = false
+                    Dragging = false
                 end
             end)
         end
     end)
-
-    UserInputService.InputChanged:Connect(function(input)
+    
+    topbarobject.InputChanged:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-            if dragToggle then
-                updateInput(input)
-            end
+            DragInput = input
+        end
+    end)
+    
+    UserInputService.InputChanged:Connect(function(input)
+        if input == DragInput and Dragging then
+            Update(input)
         end
     end)
 end
@@ -195,9 +199,10 @@ TweenService:Create(Border, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.E
 table.insert(Library.LibraryColorTable, Border)
 table.insert(Library.LibraryColorTable, TabButtons)
 MakeDraggable(Topbar, Main)
+-- Tambahkan setelah pembuatan Topbar
 local MinimizeBtn = Instance.new("ImageButton")
 MinimizeBtn.Name = "MinimizeBtn"
-MinimizeBtn.Parent = Topbar -- Pastikan Topbar sudah ada
+MinimizeBtn.Parent = Topbar
 MinimizeBtn.BackgroundTransparency = 1
 MinimizeBtn.Position = UDim2.new(1, -25, 0, 0)
 MinimizeBtn.Size = UDim2.new(0, 15, 0, 15)
@@ -221,7 +226,7 @@ MinIcon.TextSize = 16
 
 local FloatingIcon = Instance.new("ImageButton")
 FloatingIcon.Name = "FloatingIcon"
-FloatingIcon.Parent = UILibrary -- Pastikan UILibrary sudah ada
+FloatingIcon.Parent = UILibrary
 FloatingIcon.BackgroundTransparency = 1
 FloatingIcon.Position = UDim2.new(0, 100, 0, 100)
 FloatingIcon.Size = UDim2.new(0, 40, 0, 40)
@@ -244,57 +249,117 @@ FloatingText.Text = "W"
 FloatingText.TextColor3 = Color3.fromRGB(255, 255, 255)
 FloatingText.TextSize = 20
 
--- Track state
-local UIState = {
-    Minimized = false,
-    isDragging = false,
-    dragStartTime = 0
-}
+-- Pastikan tabel exists
+if not Library.LibraryColorTable then
+    Library.LibraryColorTable = {}
+end
 
--- Make both objects draggable
-MakeDraggable(Main)
-MakeDraggable(FloatingIcon)
+table.insert(Library.LibraryColorTable, MinimizeBtn)
+table.insert(Library.LibraryColorTable, FloatingIcon)
 
--- Minimize button handler
+local Minimized = false
+local isDragging = false
+local lastValidPosition = UDim2.new(0, 100, 0, 100) -- Default position
+
 MinimizeBtn.MouseButton1Click:Connect(function()
-    if not UIState.Minimized then
-        -- Save current position
-        FloatingIcon.Position = Main.Position
+    if not Minimized then
+        -- Selalu gunakan posisi Main yang valid
+        if Main and Main.AbsolutePosition then
+            lastValidPosition = UDim2.new(0, Main.AbsolutePosition.X, 0, Main.AbsolutePosition.Y)
+        end
+        
+        FloatingIcon.Position = lastValidPosition
         
         -- Hide main UI
-        Main.Visible = false
-        Border.Visible = false
+        if Main then Main.Visible = false end
+        if Border then Border.Visible = false end
         
         -- Show floating icon
         FloatingIcon.Visible = true
-        UIState.Minimized = true
+        Minimized = true
     end
 end)
 
--- Floating icon handlers
+-- Function untuk membuat objek draggable dengan position tracking
+local function MakeDraggableWithTracking(gui)
+    local UserInputService = game:GetService("UserInputService")
+    local dragging
+    local dragInput
+    local dragStart
+    local startPos
+
+    local function update(input)
+        local delta = input.Position - dragStart
+        gui.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
+                                startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        -- Update lastValidPosition setiap kali posisi berubah
+        lastValidPosition = gui.Position
+    end
+
+    gui.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = gui.Position
+            isDragging = true
+
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                    isDragging = false
+                end
+            end)
+        end
+    end)
+
+    gui.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            update(input)
+        end
+    end)
+end
+
+-- Apply draggable behavior
+MakeDraggableWithTracking(FloatingIcon)
+
+-- Handle floating icon click
 FloatingIcon.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        UIState.dragStartTime = tick()
+        dragStart = input.Position
     end
 end)
 
 FloatingIcon.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        local dragDuration = tick() - UIState.dragStartTime
+        local dragEnd = input.Position
+        local dragDelta = (dragEnd - dragStart).Magnitude
         
-        if dragDuration < 0.2 then
-            -- It's a click, restore the UI
-            Main.Position = FloatingIcon.Position
-            Main.Visible = true
-            Border.Visible = true
+        if dragDelta < 5 and not isDragging then  -- Tambahkan pengecekan isDragging
+            if Main then Main.Visible = true end
+            if Border then Border.Visible = true end
             FloatingIcon.Visible = false
-            UIState.Minimized = false
+            Minimized = false
+            
+            -- Set posisi Main ke posisi terakhir floating icon
+            if Main then
+                Main.Position = lastValidPosition
+            end
         end
     end
 end)
-
-table.insert(Library.LibraryColorTable, MinimizeBtn)
-table.insert(Library.LibraryColorTable, FloatingIcon)
+local function CloseAllTabs()
+    for i, v in pairs(Tabs:GetChildren()) do
+        if v:IsA("Frame") then
+            v.Visible = false
+        end
+    end
+end
 
 local function ResetAllTabButtons()
     for i, v in pairs(TabButtons:GetChildren()) do
