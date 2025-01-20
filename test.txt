@@ -350,7 +350,8 @@ local function MakeDraggableWithTracking(gui)
     local dragInput
     local dragStart
     local startPos
-    
+    local wasClicked = false  -- Track if the icon was clicked
+
     local function update(input)
         if not dragging or not input or not dragStart or not startPos then return end
         
@@ -371,6 +372,9 @@ local function MakeDraggableWithTracking(gui)
             return
         end
         
+        -- Mark the icon as clicked
+        wasClicked = true
+        
         dragging = true
         dragStart = input.Position
         startPos = gui.Position
@@ -382,6 +386,14 @@ local function MakeDraggableWithTracking(gui)
                 dragging = false
                 References.isDragging = false
                 connection:Disconnect()
+                
+                if wasClicked and (input.Position - dragStart).Magnitude < 5 then
+                    -- Only maximize if the icon was clicked, not dragged
+                    MaximizeUI()
+                end
+                
+                -- Reset the click state
+                wasClicked = false
             end
         end)
     end)
@@ -398,14 +410,15 @@ local function MakeDraggableWithTracking(gui)
             update(input)
         end
     end)
-    
-    -- Mengatur agar klik pada ikon floating membuka UI jika UI minimized
+
+    -- Function to open UI when the icon is clicked, even if it's minimized
     gui.MouseButton1Click:Connect(function()
         if References.Minimized then
-            MaximizeUI()  -- Pastikan UI dibuka jika minimized
+            MaximizeUI()
         end
     end)
 end
+
 
 
 -- Fungsi utama untuk setup
