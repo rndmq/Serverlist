@@ -199,38 +199,47 @@ TweenService:Create(Border, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.E
 table.insert(Library.LibraryColorTable, Border)
 table.insert(Library.LibraryColorTable, TabButtons)
 MakeDraggable(Topbar, Main)
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Parent = game.CoreGui
+
+local Main = Instance.new("Frame")
+Main.Size = UDim2.new(0, 400, 0, 300)
+Main.Position = UDim2.new(0.5, -200, 0.5, -150)
+Main.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+Main.Parent = ScreenGui
+
 local isMinimized = false
-local minimizedIcon 
+local minimizedIcon
+
+-- Tombol Minimize
 local minimizeButton = Instance.new("TextButton")
 minimizeButton.Size = UDim2.new(0, 30, 0, 30)
 minimizeButton.Position = UDim2.new(1, -40, 0, 5)
 minimizeButton.Text = "-"
-minimizeButton.TextScaled = true
 minimizeButton.BackgroundColor3 = Color3.new(1, 0.5, 0)
 minimizeButton.TextColor3 = Color3.new(1, 1, 1)
 minimizeButton.Parent = Main
-MouseButton1Click:Connect(function()
+
+minimizeButton.MouseButton1Click:Connect(function()
     if isMinimized then
-        
         Main.Visible = true
         minimizedIcon.Visible = false
         isMinimized = false
     else
-
         Main.Visible = false
         minimizedIcon.Visible = true
         isMinimized = true
     end
 end)
 
+-- Ikon Minimizer
 minimizedIcon = Instance.new("TextButton")
 minimizedIcon.Size = UDim2.new(0, 50, 0, 50)
 minimizedIcon.Position = UDim2.new(0, 10, 0, 10)
 minimizedIcon.Text = "W"
-minimizedIcon.TextScaled = true
 minimizedIcon.BackgroundColor3 = Color3.new(0, 0.5, 1)
 minimizedIcon.TextColor3 = Color3.new(1, 1, 1)
-minimizedIcon.Visible = false 
+minimizedIcon.Visible = false
 minimizedIcon.Parent = ScreenGui
 
 minimizedIcon.MouseButton1Click:Connect(function()
@@ -239,13 +248,6 @@ minimizedIcon.MouseButton1Click:Connect(function()
     isMinimized = false
 end)
 
-local function CloseAllTabs()
-    for i, v in pairs(Tabs:GetChildren()) do
-        if v:IsA("Frame") then
-            v.Visible = false
-        end
-    end
-end
 
 local function ResetAllTabButtons()
     for i, v in pairs(TabButtons:GetChildren()) do
