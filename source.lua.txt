@@ -207,48 +207,6 @@ Main.Size = UDim2.new(0, 400, 0, 300)
 Main.Position = UDim2.new(0.5, -200, 0.5, -150)
 Main.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
 Main.Parent = ScreenGui
-
-local isMinimized = false
-local minimizedIcon
-
--- Tombol Minimize
-local minimizeButton = Instance.new("TextButton")
-minimizeButton.Size = UDim2.new(0, 30, 0, 30)
-minimizeButton.Position = UDim2.new(1, -40, 0, 5)
-minimizeButton.Text = "-"
-minimizeButton.BackgroundColor3 = Color3.new(1, 0.5, 0)
-minimizeButton.TextColor3 = Color3.new(1, 1, 1)
-minimizeButton.Parent = Main
-
-minimizeButton.MouseButton1Click:Connect(function()
-    if isMinimized then
-        Main.Visible = true
-        minimizedIcon.Visible = false
-        isMinimized = false
-    else
-        Main.Visible = false
-        minimizedIcon.Visible = true
-        isMinimized = true
-    end
-end)
-
--- Ikon Minimizer
-minimizedIcon = Instance.new("TextButton")
-minimizedIcon.Size = UDim2.new(0, 50, 0, 50)
-minimizedIcon.Position = UDim2.new(0, 10, 0, 10)
-minimizedIcon.Text = "W"
-minimizedIcon.BackgroundColor3 = Color3.new(0, 0.5, 1)
-minimizedIcon.TextColor3 = Color3.new(1, 1, 1)
-minimizedIcon.Visible = false
-minimizedIcon.Parent = ScreenGui
-
-minimizedIcon.MouseButton1Click:Connect(function()
-    Main.Visible = true
-    minimizedIcon.Visible = false
-    isMinimized = false
-end)
-
-
 local function ResetAllTabButtons()
     for i, v in pairs(TabButtons:GetChildren()) do
         if v:IsA("ImageButton") then
@@ -360,6 +318,49 @@ function Library:CreateTab(name)
     SectionPadding.Name = "SectionPadding"
     SectionPadding.Parent = NameTab
     SectionPadding.PaddingTop = UDim.new(0, 12)
+local isMinimized = false
+local minimizedIcon -- Ikon saat diminimalkan
+
+-- Tombol Minimize (-)
+local minimizeButton = Instance.new("TextButton")
+minimizeButton.Size = UDim2.new(0, 30, 0, 30)
+minimizeButton.Position = UDim2.new(1, -35, 0, 5) -- Di pojok kanan atas `Main`
+minimizeButton.Text = "-"
+minimizeButton.TextScaled = true
+minimizeButton.BackgroundColor3 = Color3.new(1, 0.5, 0)
+minimizeButton.TextColor3 = Color3.new(1, 1, 1)
+minimizeButton.Parent = Main
+
+-- Logika Minimizer
+minimizeButton.MouseButton1Click:Connect(function()
+    if isMinimized then
+        Main.Visible = true
+        minimizedIcon.Visible = false
+        isMinimized = false
+    else
+        Main.Visible = false
+        minimizedIcon.Visible = true
+        isMinimized = true
+    end
+end)
+
+-- Ikon Saat Diminimalkan
+minimizedIcon = Instance.new("TextButton")
+minimizedIcon.Size = UDim2.new(0, 50, 0, 50)
+minimizedIcon.Position = UDim2.new(0, 10, 0, 10) -- Posisi ikon di layar
+minimizedIcon.Text = "W"
+minimizedIcon.TextScaled = true
+minimizedIcon.BackgroundColor3 = Color3.new(0, 0.5, 1)
+minimizedIcon.TextColor3 = Color3.new(1, 1, 1)
+minimizedIcon.Visible = false -- Tersembunyi saat GUI tidak diminimalkan
+minimizedIcon.Parent = UILibrary
+
+-- Logika untuk memaksimalkan kembali
+minimizedIcon.MouseButton1Click:Connect(function()
+    Main.Visible = true
+    minimizedIcon.Visible = false
+    isMinimized = false
+end)
 
     NameTab.Visible = true
 
