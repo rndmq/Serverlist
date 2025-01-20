@@ -199,7 +199,6 @@ TweenService:Create(Border, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.E
 table.insert(Library.LibraryColorTable, Border)
 table.insert(Library.LibraryColorTable, TabButtons)
 MakeDraggable(Topbar, Main)
--- dari sni
 local MinimizeBtn = Instance.new("ImageButton")
 MinimizeBtn.Name = "MinimizeBtn"
 MinimizeBtn.Parent = Topbar
@@ -315,7 +314,14 @@ UserInputService.InputEnded:Connect(function(input)
         isDragging = false
     end
 end)
--- sampe sni
+local function CloseAllTabs()
+    for i, v in pairs(Tabs:GetChildren()) do
+        if v:IsA("Frame") then
+            v.Visible = false
+        end
+    end
+end
+
 local function ResetAllTabButtons()
     for i, v in pairs(TabButtons:GetChildren()) do
         if v:IsA("ImageButton") then
