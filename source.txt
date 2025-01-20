@@ -254,18 +254,17 @@ table.insert(Library.LibraryColorTable, FloatingIcon)
 
 local Minimized = false
 local isDragging = false
-
--- Variable to store the position before minimization
-local savedPosition = nil
+local lastFloatingPosition = UDim2.new(0, 100, 0, 100)  -- Default position
 
 MinimizeBtn.MouseButton1Click:Connect(function()
     if not Minimized then
-        -- Save the current position of the floating icon before minimizing
-        savedPosition = FloatingIcon.Position
-        
-        -- Save position before minimizing
-        local mainPos = Main.AbsolutePosition
-        FloatingIcon.Position = UDim2.new(0, mainPos.X, 0, mainPos.Y)
+        -- Use last position if it exists, otherwise use current main position
+        if Minimized then
+            FloatingIcon.Position = lastFloatingPosition
+        else
+            local mainPos = Main.AbsolutePosition
+            FloatingIcon.Position = UDim2.new(0, mainPos.X, 0, mainPos.Y)
+        end
         
         -- Hide main UI
         Main.Visible = false
@@ -278,34 +277,44 @@ MinimizeBtn.MouseButton1Click:Connect(function()
 end)
 
 -- Make floating icon draggable
-MakeDraggable(FloatingIcon, FloatingIcon)
-
--- Maximize when floating icon is clicked (not dragged)
 local dragStart = nil
+local startPos
 
 FloatingIcon.MouseButton1Down:Connect(function()
+    isDragging = true
     dragStart = UserInputService:GetMouseLocation()
+    startPos = FloatingIcon.Position
 end)
 
-FloatingIcon.MouseButton1Up:Connect(function()
-    local dragEnd = UserInputService:GetMouseLocation()
-    local dragDelta = (dragEnd - dragStart).Magnitude
-    
-    if dragDelta < 5 then  -- If barely moved, consider it a click
-        -- Restore previous position of the floating icon if it was minimized
-        Main.Visible = true
-        Border.Visible = true
-        FloatingIcon.Visible = false
-        Minimized = false
-        
-        -- Store the new position of the floating icon when it is restored
-        savedPosition = FloatingIcon.Position
-    else
-        -- Update the saved position when dragging the icon
-        savedPosition = FloatingIcon.Position
+UserInputService.InputChanged:Connect(function(input)
+    if isDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - dragStart
+        local newPosition = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
+        FloatingIcon.Position = newPosition
+        lastFloatingPosition = newPosition  -- Save the last position
     end
 end)
 
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        local dragEnd = UserInputService:GetMouseLocation()
+        local dragDelta = (dragEnd - dragStart).Magnitude
+        
+        if dragDelta < 5 and Minimized then  -- If barely moved and was minimized
+            Main.Visible = true
+            Border.Visible = true
+            FloatingIcon.Visible = false
+            Minimized = false
+            lastFloatingPosition = FloatingIcon.Position  -- Save position before hiding
+        end
+        isDragging = false
+    end
+end)
 -- sampe sni
 local function ResetAllTabButtons()
     for i, v in pairs(TabButtons:GetChildren()) do
