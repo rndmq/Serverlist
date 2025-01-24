@@ -552,7 +552,7 @@ function Library:CreateTab(name)
         local SectionContent = Instance.new("ScrollingFrame")
         local SectionContentLayout = Instance.new("UIListLayout")
 
-        local SectionElements = {}
+local SectionElements = {}
 
         NameSection.Name = (name .. "Section")
         NameSection.Parent = NameTab
@@ -646,6 +646,58 @@ function Library:CreateTab(name)
                 ChangeText = ChangeText
             }
         end
+-- Function to update dropdown options dynamically
+function SectionElements:UpdateDropdown(name, newOptions)
+    -- Find dropdown by name
+    local Dropdown = SectionContent:FindFirstChild(name .. "Dropdown")
+    if Dropdown then
+        local DropdownContent = Dropdown:FindFirstChild("DropdownContent")
+        if DropdownContent then
+            -- Clear old options
+            for _, child in pairs(DropdownContent:GetChildren()) do
+                if child:IsA("TextButton") then
+                    child:Destroy()
+                end
+            end
+            
+            -- Add new options
+            for _, option in ipairs(newOptions) do
+                local OptionButton = Instance.new("TextButton")
+                OptionButton.Name = option
+                OptionButton.Text = option
+                OptionButton.Parent = DropdownContent
+                OptionButton.Size = UDim2.new(1, 0, 0, 25)
+                OptionButton.BackgroundTransparency = 1
+                OptionButton.Font = Library.Theme.TextFont
+                OptionButton.TextSize = 14
+                OptionButton.TextColor3 = Color3.new(1, 1, 1)
+                
+                -- Callback for option click
+                OptionButton.MouseButton1Click:Connect(function()
+                    callback(option)
+                end)
+            end
+        end
+    end
+end
+
+-- Function to update label text dynamically
+function SectionElements:UpdateLabel(name, newText)
+    local Label = SectionContent:FindFirstChild(name .. "Label")
+    if Label then
+        -- Animate text change
+        TweenService:Create(Label, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 1}):Play()
+        wait(0.3)
+        Label.Text = newText
+        TweenService:Create(Label, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 0}):Play()
+    end
+end
+
+-- Example usage for the new functions
+local dropdownOptions = {"Option 1", "Option 2", "Option 3"}
+SectionElements:UpdateDropdown("ExampleDropdown", dropdownOptions)
+
+SectionElements:UpdateLabel("ExampleLabel", "Updated Label Text")
 
         function SectionElements:CreateButton(name, callback)
             local NameButton = Instance.new("Frame")
@@ -946,7 +998,7 @@ function Library:CreateTab(name)
             
             CircleSelector.InputBegan:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    Sliding(input)
+                       Sliding(input)
                 end
             end)
         
@@ -1262,7 +1314,8 @@ function Library:CreateTab(name)
             end
     
             ColorH = 1 - (math.clamp(HueSelection.AbsolutePosition.Y - Hue.AbsolutePosition.Y, 0, Hue.AbsoluteSize.Y) / Hue.AbsoluteSize.Y)
-            ColorS = (math.clamp(ColorSelection.AbsolutePosition.X - Color.AbsolutePosition.X, 0, Color.AbsoluteSize.X) / Color.AbsoluteSize.X)
+            ColorS = (math.
+clamp(ColorSelection.AbsolutePosition.X - Color.AbsolutePosition.X, 0, Color.AbsoluteSize.X) / Color.AbsoluteSize.X)
             ColorV = 1 - (math.clamp(ColorSelection.AbsolutePosition.Y - Color.AbsolutePosition.Y, 0, Color.AbsoluteSize.Y) / Color.AbsoluteSize.Y)
     
             ColorPickerToggle.ImageColor3 = presetcolor
@@ -1572,28 +1625,7 @@ function Library:CreateTab(name)
                 Refresh = Refresh
             }
         end
-function Library:UpdateDropdown(dropdown, newOptions)
-    -- Bersihkan semua opsi lama
-    for _, child in pairs(dropdown.Holder:GetChildren()) do
-        if child:IsA("TextButton") then
-            child:Destroy()
-        end
-    end
-    
-    -- Tambahkan opsi baru
-    for _, option in ipairs(newOptions) do
-        local OptionButton = Instance.new("TextButton")
-        OptionButton.Parent = dropdown.Holder
-        OptionButton.Text = option
-        OptionButton.BackgroundColor3 = Library.Theme.BackgroundColor
-        OptionButton.Size = UDim2.new(1, 0, 0, 25)
-        OptionButton.ZIndex = 5
-        -- Callback untuk klik tombol
-        OptionButton.MouseButton1Click:Connect(function()
-            dropdown.Callback(option)
-        end)
-    end
-end
+
         function SectionElements:CreateKeybind(name, presetbind, keyboardonly, holdmode, callback)
             local NameKeybind = Instance.new("Frame")
             local Title = Instance.new("TextLabel")
@@ -1685,7 +1717,7 @@ end
             Title.Text = name
             Title.TextColor3 = Color3.fromRGB(255, 255, 255)
             Title.TextSize = 15.000
-            Title.TextXAlignment = Enum.TextXAlignment.Left
+      Title.TextXAlignment = Enum.TextXAlignment.Left
 
             KeybindButtonBorder.Name = "KeybindButtonBorder"
             KeybindButtonBorder.Parent = NameKeybind
@@ -1803,3 +1835,7 @@ end
 end
 
 return Library
+
+        
+
+
