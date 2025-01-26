@@ -266,19 +266,19 @@ local originalMainSize
 
 local function MaximizeUI()
     local floatingIconTween = TweenService:Create(FloatingIcon, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-        Size = UDim2.new(0, 0, 0, 0)  -- Mengecil hingga hilang
+        Size = UDim2.new(0, 0, 0, 0)
     })
     floatingIconTween:Play()
     
     if Main then 
         Main.Visible = true
-        Main.Size = UDim2.new(0, 50, 0, 50)  -- Mulai dari ukuran kecil
+        Main.Size = UDim2.new(0, 50, 0, 50)
         Main.Transparency = 1
         
         local mainTween = TweenService:Create(Main, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-            Size = originalMainSize or UDim2.new(0.5, 0, 0.5, 0),  -- Kembalikan ke ukuran asli
+            Size = originalMainSize or UDim2.new(0.5, 0, 0.5, 0),
             Position = lastValidPosition,
-            Transparency = 0  -- Kembalikan ke solid
+            Transparency = 0
         })
         mainTween:Play()
     end
@@ -292,11 +292,23 @@ local function MaximizeUI()
             Transparency = 0
         })
         borderTween:Play()
+        
+        -- Pastikan Border memiliki sudut melengkung
+        if Border:IsA("Frame") then
+            Border.BackgroundColor3 = Library.Theme.MainColor
+            Border.BorderSizePixel = 2  -- Atur ketebalan border
+            Border.BorderColor3 = Library.Theme.MainColor
+            
+            -- Tambahkan UICorner untuk sudut melengkung
+            local corner = Instance.new("UICorner")
+            corner.CornerRadius = UDim.new(0.1, 0)  -- Sudut melengkung 10%
+            corner.Parent = Border
+        end
     end
     
     task.delay(0.3, function()
         FloatingIcon.Visible = false
-        FloatingIcon.Size = UDim2.new(0, 40, 0, 40)  -- Kembalikan ke ukuran default
+        FloatingIcon.Size = UDim2.new(0, 40, 0, 40)
     end)
     
     Minimized = false
@@ -313,25 +325,45 @@ local function MinimizeUI()
     
     if Main then 
         local mainTween = TweenService:Create(Main, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-            Size = UDim2.new(0, 50, 0, 50),  -- Mengecil ke ukuran kecil
+            Size = UDim2.new(0, 50, 0, 50),
             Position = lastValidPosition,
-            Transparency = 1  -- Membuat transparan
+            Transparency = 1
         })
         mainTween:Play()
+        
+        -- Pastikan Main memiliki sudut melengkung
+        if not Main:FindFirstChildOfClass("UICorner") then
+            local corner = Instance.new("UICorner")
+            corner.CornerRadius = UDim.new(0.1, 0)  -- Sudut melengkung 10%
+            corner.Parent = Main
+        end
     end
     
     if Border then 
         local borderTween = TweenService:Create(Border, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-            Size = UDim2.new(0, 50, 0, 50),  -- Sesuaikan dengan Main
+            Size = UDim2.new(0, 50, 0, 50),
             Position = lastValidPosition,
             Transparency = 1
         })
         borderTween:Play()
+        
+        -- Pastikan Border memiliki sudut melengkung
+        if Border:IsA("Frame") then
+            Border.BackgroundColor3 = Library.Theme.MainColor
+            Border.BorderSizePixel = 2
+            Border.BorderColor3 = Library.Theme.MainColor
+            
+            if not Border:FindFirstChildOfClass("UICorner") then
+                local corner = Instance.new("UICorner")
+                corner.CornerRadius = UDim.new(0.1, 0)  -- Sudut melengkung 10%
+                corner.Parent = Border
+            end
+        end
     end
     
     FloatingIcon.Position = lastValidPosition
     local floatingIconTween = TweenService:Create(FloatingIcon, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-        Size = UDim2.new(0, 40, 0, 40)  -- Ukuran default FloatingIcon
+        Size = UDim2.new(0, 40, 0, 40)
     })
     floatingIconTween:Play()
     
