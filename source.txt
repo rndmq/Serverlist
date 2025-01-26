@@ -266,25 +266,28 @@ local originalMainSize
 
 local function MaximizeUI()
     local floatingIconTween = TweenService:Create(FloatingIcon, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-        Size = UDim2.new(0, 0, 0, 0)
+        Size = UDim2.new(0, 0, 0, 0)  -- Mengecil hingga hilang
     })
     floatingIconTween:Play()
     
     if Main then 
         Main.Visible = true
-        Main.Size = UDim2.new(0, 50, 0, 50)
+        Main.Size = UDim2.new(0, 50, 0, 50)  -- Mulai dari ukuran kecil
         Main.Transparency = 1
         
         local mainTween = TweenService:Create(Main, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-            Size = originalMainSize or UDim2.new(0.5, 0, 0.5, 0),
+            Size = originalMainSize or UDim2.new(0.5, 0, 0.5, 0),  -- Kembalikan ke ukuran asli
             Position = lastValidPosition,
-            Transparency = 0
+            Transparency = 0  -- Kembalikan ke solid
         })
         mainTween:Play()
     end
     
     if Border then 
         Border.Visible = true
+        Border.Size = originalMainSize or UDim2.new(0.5, 0, 0.5, 0)
+        Border.Position = lastValidPosition
+        
         local borderTween = TweenService:Create(Border, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
             Transparency = 0
         })
@@ -293,6 +296,7 @@ local function MaximizeUI()
     
     task.delay(0.3, function()
         FloatingIcon.Visible = false
+        FloatingIcon.Size = UDim2.new(0, 40, 0, 40)  -- Kembalikan ke ukuran default
     end)
     
     Minimized = false
@@ -309,15 +313,17 @@ local function MinimizeUI()
     
     if Main then 
         local mainTween = TweenService:Create(Main, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-            Size = UDim2.new(0, 50, 0, 50),
+            Size = UDim2.new(0, 50, 0, 50),  -- Mengecil ke ukuran kecil
             Position = lastValidPosition,
-            Transparency = 1
+            Transparency = 1  -- Membuat transparan
         })
         mainTween:Play()
     end
     
     if Border then 
         local borderTween = TweenService:Create(Border, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            Size = UDim2.new(0, 50, 0, 50),  -- Sesuaikan dengan Main
+            Position = lastValidPosition,
             Transparency = 1
         })
         borderTween:Play()
@@ -325,7 +331,7 @@ local function MinimizeUI()
     
     FloatingIcon.Position = lastValidPosition
     local floatingIconTween = TweenService:Create(FloatingIcon, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-        Size = UDim2.new(0, 50, 0, 50)
+        Size = UDim2.new(0, 40, 0, 40)  -- Ukuran default FloatingIcon
     })
     floatingIconTween:Play()
     
