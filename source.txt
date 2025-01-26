@@ -281,28 +281,12 @@ local function MaximizeUI()
             Transparency = 0
         })
         mainTween:Play()
-    end
-    
-    if Border then 
-        Border.Visible = true
-        Border.Size = Main.Size  -- Sesuaikan ukuran Border dengan ukuran Main
-        Border.Position = lastValidPosition
         
-        local borderTween = TweenService:Create(Border, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-            Transparency = 0
-        })
-        borderTween:Play()
-        
-        -- Pastikan Border memiliki sudut melengkung
-        if Border:IsA("Frame") then
-            Border.BackgroundColor3 = Library.Theme.MainColor
-            Border.BorderSizePixel = 2  -- Atur ketebalan border
-            Border.BorderColor3 = Library.Theme.MainColor
-            
-            -- Tambahkan UICorner untuk sudut melengkung
+        -- Pastikan Main memiliki sudut melengkung
+        if not Main:FindFirstChildOfClass("UICorner") then
             local corner = Instance.new("UICorner")
             corner.CornerRadius = UDim.new(0.1, 0)  -- Sudut melengkung 10%
-            corner.Parent = Border
+            corner.Parent = Main
         end
     end
     
@@ -339,28 +323,6 @@ local function MinimizeUI()
         end
     end
     
-    if Border then 
-        local borderTween = TweenService:Create(Border, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-            Size = UDim2.new(0, 50, 0, 50),
-            Position = lastValidPosition,
-            Transparency = 1
-        })
-        borderTween:Play()
-        
-        -- Pastikan Border memiliki sudut melengkung
-        if Border:IsA("Frame") then
-            Border.BackgroundColor3 = Library.Theme.MainColor
-            Border.BorderSizePixel = 2
-            Border.BorderColor3 = Library.Theme.MainColor
-            
-            if not Border:FindFirstChildOfClass("UICorner") then
-                local corner = Instance.new("UICorner")
-                corner.CornerRadius = UDim.new(0.1, 0)  -- Sudut melengkung 10%
-                corner.Parent = Border
-            end
-        end
-    end
-    
     FloatingIcon.Position = lastValidPosition
     local floatingIconTween = TweenService:Create(FloatingIcon, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
         Size = UDim2.new(0, 40, 0, 40)
@@ -369,12 +331,12 @@ local function MinimizeUI()
     
     task.delay(0.3, function()
         if Main then Main.Visible = false end
-        if Border then Border.Visible = false end
         FloatingIcon.Visible = true
     end)
     
     Minimized = true
 end
+
 
 
 MinimizeBtn.MouseButton1Click:Connect(function()
