@@ -261,6 +261,7 @@ table.insert(Library.LibraryColorTable, FloatingIcon)
 local Minimized = false
 local isDragging = false
 local lastValidPosition = UDim2.new(0, 100, 0, 100)
+local floatingIconSize = UDim2.new(0.1, 0, 0.1, 0) -- Ukuran akhir saat mengecil
 
 local function tweenElement(element, properties, duration, easingStyle, easingDirection)
     local tweenInfo = TweenInfo.new(duration, easingStyle or Enum.EasingStyle.Quad, easingDirection or Enum.EasingDirection.Out)
@@ -279,7 +280,6 @@ local function MaximizeUI()
 
     if Main then
         Main.Position = lastValidPosition
-        Main.Size = UDim2.new(0, 0, 0, 0)
         tweenElement(Main, {Size = UDim2.new(0.5, 0, 0.5, 0)}, 0.5)
     end
 end
@@ -292,7 +292,7 @@ local function MinimizeUI()
     FloatingIcon.Position = lastValidPosition
 
     if Main then
-        local tween = tweenElement(Main, {Size = UDim2.new(0, 0, 0, 0)}, 0.5)
+        local tween = tweenElement(Main, {Size = floatingIconSize}, 0.5)
         tween.Completed:Wait()
         Main.Visible = false
     end
@@ -372,6 +372,7 @@ local function CloseAllTabs()
         end
     end
 end
+
 
 
 local function ResetAllTabButtons()
