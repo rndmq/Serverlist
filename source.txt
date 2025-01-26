@@ -199,203 +199,163 @@ TweenService:Create(Border, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.E
 table.insert(Library.LibraryColorTable, Border)
 table.insert(Library.LibraryColorTable, TabButtons)
 MakeDraggable(Topbar, Main)
--- Pastikan Library dan UILibrary sudah ada
-if not getgenv().Library then 
-    getgenv().Library = {
-        Theme = {
-            MainColor = Color3.fromRGB(255, 255, 255),
-            TextFont = Enum.Font.SourceSans
-        },
-        LibraryColorTable = {}
-    }
+-- Tambahkan setelah pembuatan Topbar
+local MinimizeBtn = Instance.new("ImageButton")
+MinimizeBtn.Name = "MinimizeBtn"
+MinimizeBtn.Parent = Topbar
+MinimizeBtn.BackgroundTransparency = 1
+MinimizeBtn.Position = UDim2.new(1, -25, 0, 0)
+MinimizeBtn.Size = UDim2.new(0, 15, 0, 15)
+MinimizeBtn.ZIndex = 10
+MinimizeBtn.Image = "rbxassetid://3570695787"
+MinimizeBtn.ImageColor3 = Library.Theme.MainColor
+MinimizeBtn.ScaleType = Enum.ScaleType.Slice
+MinimizeBtn.SliceCenter = Rect.new(100, 100, 100, 100)
+MinimizeBtn.SliceScale = 0.050
+
+local MinIcon = Instance.new("TextLabel")
+MinIcon.Name = "MinIcon"
+MinIcon.Parent = MinimizeBtn
+MinIcon.BackgroundTransparency = 1
+MinIcon.Size = UDim2.new(1, 0, 1, 0)
+MinIcon.ZIndex = 11
+MinIcon.Font = Library.Theme.TextFont
+MinIcon.Text = "-"
+MinIcon.TextColor3 = Color3.fromRGB(255, 255, 255)
+MinIcon.TextSize = 16
+
+local FloatingIcon = Instance.new("ImageButton")
+FloatingIcon.Name = "FloatingIcon"
+FloatingIcon.Parent = UILibrary
+FloatingIcon.BackgroundTransparency = 1
+FloatingIcon.Position = UDim2.new(0, 100, 0, 100)
+FloatingIcon.Size = UDim2.new(0, 40, 0, 40)
+FloatingIcon.Visible = false
+FloatingIcon.ZIndex = 50
+FloatingIcon.Image = "rbxassetid://3570695787"
+FloatingIcon.ImageColor3 = Library.Theme.MainColor
+FloatingIcon.ScaleType = Enum.ScaleType.Slice
+FloatingIcon.SliceCenter = Rect.new(100, 100, 100, 100)
+FloatingIcon.SliceScale = 0.050
+
+local TweenService = game:GetService("TweenService")
+
+local FloatingText = Instance.new("TextLabel")
+FloatingText.Name = "FloatingText"
+FloatingText.Parent = FloatingIcon
+FloatingText.BackgroundTransparency = 1
+FloatingText.Size = UDim2.new(1, 0, 1, 0)
+FloatingText.ZIndex = 51
+FloatingText.Font = Library.Theme.TextFont
+FloatingText.Text = "W"
+FloatingText.TextColor3 = Color3.fromRGB(255, 255, 255)
+FloatingText.TextSize = 20
+
+if not Library.LibraryColorTable then
+    Library.LibraryColorTable = {}
 end
 
-local UserInputService = game:GetService("UserInputService")
+table.insert(Library.LibraryColorTable, MinimizeBtn)
+table.insert(Library.LibraryColorTable, FloatingIcon)
 
--- Fungsi untuk memastikan parent exists
-local function WaitForParent(callback)
-    local tries = 0
-    local maxTries = 50
-    
-    local function CheckParent()
-        if tries >= maxTries then return false end
-        tries = tries + 1
-        
-        if Topbar and UILibrary and Main and Border then
-            callback()
-            return true
-        end
-        
-        task.wait(0.1)
-        return CheckParent()
-    end
-    
-    task.spawn(CheckParent)
+local Minimized = false
+local isDragging = false
+local lastValidPosition = UDim2.new(0, 100, 0, 100)
+
+local function tweenElement(element, properties, duration, easingStyle, easingDirection)
+    local tweenInfo = TweenInfo.new(duration, easingStyle or Enum.EasingStyle.Quad, easingDirection or Enum.EasingDirection.Out)
+    local tween = TweenService:Create(element, tweenInfo, properties)
+    tween:Play()
+    return tween
 end
 
--- Kumpulkan semua references yang akan digunakan
-local References = {
-    Minimized = false,
-    isDragging = false,
-    lastValidPosition = UDim2.new(0, 100, 0, 100),
-    Elements = {}
-}
-
--- Function untuk membuat UI elements
-local function CreateElements()
-    -- Minimize Button
-    local MinimizeBtn = Instance.new("ImageButton")
-    MinimizeBtn.Name = "MinimizeBtn"
-    MinimizeBtn.Parent = Topbar
-    MinimizeBtn.BackgroundTransparency = 1
-    MinimizeBtn.Position = UDim2.new(1, -25, 0, 0)
-    MinimizeBtn.Size = UDim2.new(0, 15, 0, 15)
-    MinimizeBtn.ZIndex = 10
-    MinimizeBtn.Image = "rbxassetid://3570695787"
-    MinimizeBtn.ImageColor3 = Library.Theme.MainColor
-    MinimizeBtn.ScaleType = Enum.ScaleType.Slice
-    MinimizeBtn.SliceCenter = Rect.new(100, 100, 100, 100)
-    MinimizeBtn.SliceScale = 0.050
-    
-    local MinIcon = Instance.new("TextLabel")
-    MinIcon.Name = "MinIcon"
-    MinIcon.Parent = MinimizeBtn
-    MinIcon.BackgroundTransparency = 1
-    MinIcon.Size = UDim2.new(1, 0, 1, 0)
-    MinIcon.ZIndex = 11
-    MinIcon.Font = Library.Theme.TextFont
-    MinIcon.Text = "-"
-    MinIcon.TextColor3 = Color3.fromRGB(255, 255, 255)
-    MinIcon.TextSize = 16
-    
-    -- Floating Icon
-    local FloatingIcon = Instance.new("ImageButton")
-    FloatingIcon.Name = "FloatingIcon"
-    FloatingIcon.Parent = UILibrary
-    FloatingIcon.BackgroundTransparency = 1
-    FloatingIcon.Position = References.lastValidPosition
-    FloatingIcon.Size = UDim2.new(0, 40, 0, 40)
-    FloatingIcon.Visible = false
-    FloatingIcon.ZIndex = 50
-    FloatingIcon.Image = "rbxassetid://3570695787"
-    FloatingIcon.ImageColor3 = Library.Theme.MainColor
-    FloatingIcon.ScaleType = Enum.ScaleType.Slice
-    FloatingIcon.SliceCenter = Rect.new(100, 100, 100, 100)
-    FloatingIcon.SliceScale = 0.050
-    
-    local FloatingText = Instance.new("TextLabel")
-    FloatingText.Name = "FloatingText"
-    FloatingText.Parent = FloatingIcon
-    FloatingText.BackgroundTransparency = 1
-    FloatingText.Size = UDim2.new(1, 0, 1, 0)
-    FloatingText.ZIndex = 51
-    FloatingText.Font = Library.Theme.TextFont
-    FloatingText.Text = "W"
-    FloatingText.TextColor3 = Color3.fromRGB(255, 255, 255)
-    FloatingText.TextSize = 20
-    
-    -- Store references
-    References.Elements.MinimizeBtn = MinimizeBtn
-    References.Elements.FloatingIcon = FloatingIcon
-    
-    -- Add to Library color table
-    table.insert(Library.LibraryColorTable, MinimizeBtn)
-    table.insert(Library.LibraryColorTable, FloatingIcon)
-    
-    return MinimizeBtn, FloatingIcon
-end
-
--- Function untuk maximize UI dengan safety checks
 local function MaximizeUI()
-    if not Main or not Border then return end
-    
-    Main.Visible = true
-    Border.Visible = true
-    
-    if References.Elements.FloatingIcon then
-        References.Elements.FloatingIcon.Visible = false
+    if Main and Border then
+        Main.Visible = true
+        Border.Visible = true
     end
-    
-    References.Minimized = false
-    
+    FloatingIcon.Visible = false
+    Minimized = false
+
     if Main then
-        Main.Position = References.lastValidPosition
+        Main.Position = lastValidPosition
+        Main.Size = UDim2.new(0, 0, 0, 0)
+        tweenElement(Main, {Size = UDim2.new(0.5, 0, 0.5, 0)}, 0.5)
     end
 end
 
--- Function untuk minimize UI dengan safety checks
 local function MinimizeUI()
-    if not Main or not Border then return end
-    
     if Main and Main.AbsolutePosition then
-        References.lastValidPosition = UDim2.new(0, Main.AbsolutePosition.X, 0, Main.AbsolutePosition.Y)
+        lastValidPosition = UDim2.new(0, Main.AbsolutePosition.X, 0, Main.AbsolutePosition.Y)
     end
-    
-    if References.Elements.FloatingIcon then
-        References.Elements.FloatingIcon.Position = References.lastValidPosition
-        References.Elements.FloatingIcon.Visible = true
+
+    FloatingIcon.Position = lastValidPosition
+
+    if Main then
+        local tween = tweenElement(Main, {Size = UDim2.new(0, 0, 0, 0)}, 0.5)
+        tween.Completed:Wait()
+        Main.Visible = false
     end
-    
-    Main.Visible = false
-    Border.Visible = false
-    References.Minimized = true
+
+    if Border then
+        Border.Visible = false
+    end
+
+    FloatingIcon.Visible = true
+    Minimized = true
 end
 
--- Function untuk membuat objek draggable dengan safety checks
+MinimizeBtn.MouseButton1Click:Connect(function()
+    if not Minimized then
+        MinimizeUI()
+    end
+end)
+
 local function MakeDraggableWithTracking(gui)
-    if not gui then return end
-    
+    local UserInputService = game:GetService("UserInputService")
     local dragging
     local dragInput
     local dragStart
     local startPos
-    
+
     local function update(input)
-        if not dragging or not input or not dragStart or not startPos then return end
-        
         local delta = input.Position - dragStart
         local newPosition = UDim2.new(
-            startPos.X.Scale,
+            startPos.X.Scale, 
             startPos.X.Offset + delta.X,
-            startPos.Y.Scale,
+            startPos.Y.Scale, 
             startPos.Y.Offset + delta.Y
         )
         gui.Position = newPosition
-        References.lastValidPosition = newPosition
+        lastValidPosition = newPosition
     end
-    
+
     gui.InputBegan:Connect(function(input)
-        if input.UserInputType ~= Enum.UserInputType.MouseButton1 and 
-           input.UserInputType ~= Enum.UserInputType.Touch then
-            return
-        end
-        
-        dragging = true
-        dragStart = input.Position
-        startPos = gui.Position
-        References.isDragging = true
-        
-        local connection
-        connection = input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                dragging = false
-                References.isDragging = false
-                connection:Disconnect()
-                
-                if dragStart and (input.Position - dragStart).Magnitude < 5 then
-                    MaximizeUI()
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = gui.Position
+            isDragging = true
+
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                    isDragging = false
+
+                    if (input.Position - dragStart).Magnitude < 5 then
+                        MaximizeUI()
+                    end
                 end
-            end
-        end)
+            end)
+        end
     end)
-    
+
     gui.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement or
-           input.UserInputType == Enum.UserInputType.Touch then
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
             dragInput = input
         end
     end)
-    
+
     UserInputService.InputChanged:Connect(function(input)
         if input == dragInput and dragging then
             update(input)
@@ -403,18 +363,16 @@ local function MakeDraggableWithTracking(gui)
     end)
 end
 
--- Fungsi utama untuk setup
-WaitForParent(function()
-    local MinimizeBtn, FloatingIcon = CreateElements()
-    
-    MinimizeBtn.MouseButton1Click:Connect(function()
-        if not References.Minimized then
-            MinimizeUI()
+MakeDraggableWithTracking(FloatingIcon)
+
+local function CloseAllTabs()
+    for i, v in pairs(Tabs:GetChildren()) do
+        if v:IsA("Frame") then
+            v.Visible = false
         end
-    end)
-    
-    MakeDraggableWithTracking(FloatingIcon)
-end)
+    end
+end
+
 
 local function ResetAllTabButtons()
     for i, v in pairs(TabButtons:GetChildren()) do
@@ -552,7 +510,7 @@ function Library:CreateTab(name)
         local SectionContent = Instance.new("ScrollingFrame")
         local SectionContentLayout = Instance.new("UIListLayout")
 
-local SectionElements = {}
+        local SectionElements = {}
 
         NameSection.Name = (name .. "Section")
         NameSection.Parent = NameTab
@@ -646,58 +604,6 @@ local SectionElements = {}
                 ChangeText = ChangeText
             }
         end
--- Function to update dropdown options dynamically
-function SectionElements:UpdateDropdown(name, newOptions)
-    -- Find dropdown by name
-    local Dropdown = SectionContent:FindFirstChild(name .. "Dropdown")
-    if Dropdown then
-        local DropdownContent = Dropdown:FindFirstChild("DropdownContent")
-        if DropdownContent then
-            -- Clear old options
-            for _, child in pairs(DropdownContent:GetChildren()) do
-                if child:IsA("TextButton") then
-                    child:Destroy()
-                end
-            end
-            
-            -- Add new options
-            for _, option in ipairs(newOptions) do
-                local OptionButton = Instance.new("TextButton")
-                OptionButton.Name = option
-                OptionButton.Text = option
-                OptionButton.Parent = DropdownContent
-                OptionButton.Size = UDim2.new(1, 0, 0, 25)
-                OptionButton.BackgroundTransparency = 1
-                OptionButton.Font = Library.Theme.TextFont
-                OptionButton.TextSize = 14
-                OptionButton.TextColor3 = Color3.new(1, 1, 1)
-                
-                -- Callback for option click
-                OptionButton.MouseButton1Click:Connect(function()
-                    callback(option)
-                end)
-            end
-        end
-    end
-end
-
--- Function to update label text dynamically
-function SectionElements:UpdateLabel(name, newText)
-    local Label = SectionContent:FindFirstChild(name .. "Label")
-    if Label then
-        -- Animate text change
-        TweenService:Create(Label, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 1}):Play()
-        wait(0.3)
-        Label.Text = newText
-        TweenService:Create(Label, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 0}):Play()
-    end
-end
-
--- Example usage for the new functions
-local dropdownOptions = {"Option 1", "Option 2", "Option 3"}
-SectionElements:UpdateDropdown("ExampleDropdown", dropdownOptions)
-
-SectionElements:UpdateLabel("ExampleLabel", "Updated Label Text")
 
         function SectionElements:CreateButton(name, callback)
             local NameButton = Instance.new("Frame")
@@ -998,7 +904,7 @@ SectionElements:UpdateLabel("ExampleLabel", "Updated Label Text")
             
             CircleSelector.InputBegan:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                       Sliding(input)
+                    Sliding(input)
                 end
             end)
         
@@ -1314,8 +1220,7 @@ SectionElements:UpdateLabel("ExampleLabel", "Updated Label Text")
             end
     
             ColorH = 1 - (math.clamp(HueSelection.AbsolutePosition.Y - Hue.AbsolutePosition.Y, 0, Hue.AbsoluteSize.Y) / Hue.AbsoluteSize.Y)
-            ColorS = (math.
-clamp(ColorSelection.AbsolutePosition.X - Color.AbsolutePosition.X, 0, Color.AbsoluteSize.X) / Color.AbsoluteSize.X)
+            ColorS = (math.clamp(ColorSelection.AbsolutePosition.X - Color.AbsolutePosition.X, 0, Color.AbsoluteSize.X) / Color.AbsoluteSize.X)
             ColorV = 1 - (math.clamp(ColorSelection.AbsolutePosition.Y - Color.AbsolutePosition.Y, 0, Color.AbsoluteSize.Y) / Color.AbsoluteSize.Y)
     
             ColorPickerToggle.ImageColor3 = presetcolor
@@ -1717,7 +1622,7 @@ clamp(ColorSelection.AbsolutePosition.X - Color.AbsolutePosition.X, 0, Color.Abs
             Title.Text = name
             Title.TextColor3 = Color3.fromRGB(255, 255, 255)
             Title.TextSize = 15.000
-      Title.TextXAlignment = Enum.TextXAlignment.Left
+            Title.TextXAlignment = Enum.TextXAlignment.Left
 
             KeybindButtonBorder.Name = "KeybindButtonBorder"
             KeybindButtonBorder.Parent = NameKeybind
@@ -1835,7 +1740,3 @@ clamp(ColorSelection.AbsolutePosition.X - Color.AbsolutePosition.X, 0, Color.Abs
 end
 
 return Library
-
-        
-
-
