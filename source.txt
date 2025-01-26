@@ -290,6 +290,11 @@ local function MaximizeUI()
         end
     end
     
+    -- Menghapus atau menyembunyikan Border jika tidak diperlukan
+    if Border then 
+        Border.Visible = false  -- Sembunyikan Border
+    end
+    
     task.delay(0.3, function()
         FloatingIcon.Visible = false
         FloatingIcon.Size = UDim2.new(0, 40, 0, 40)
@@ -323,6 +328,11 @@ local function MinimizeUI()
         end
     end
     
+    -- Menghapus atau menyembunyikan Border jika tidak diperlukan
+    if Border then 
+        Border.Visible = false  -- Sembunyikan Border
+    end
+    
     FloatingIcon.Position = lastValidPosition
     local floatingIconTween = TweenService:Create(FloatingIcon, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
         Size = UDim2.new(0, 40, 0, 40)
@@ -336,6 +346,7 @@ local function MinimizeUI()
     
     Minimized = true
 end
+
 
 
 
