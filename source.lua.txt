@@ -199,7 +199,10 @@ TweenService:Create(Border, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.E
 table.insert(Library.LibraryColorTable, Border)
 table.insert(Library.LibraryColorTable, TabButtons)
 MakeDraggable(Topbar, Main)
--- Tambahkan setelah pembuatan Topbar
+
+
+local TweenService = game:GetService("TweenService")
+
 local MinimizeBtn = Instance.new("ImageButton")
 MinimizeBtn.Name = "MinimizeBtn"
 MinimizeBtn.Parent = Topbar
@@ -259,34 +262,93 @@ table.insert(Library.LibraryColorTable, FloatingIcon)
 local Minimized = false
 local isDragging = false
 local lastValidPosition = UDim2.new(0, 100, 0, 100)
+local originalMainSize
 
--- Function untuk maximize UI
 local function MaximizeUI()
-    if Main then Main.Visible = true end
-    if Border then Border.Visible = true end
-    FloatingIcon.Visible = false
-    Minimized = false
+    local floatingIconTween = TweenService:Create(FloatingIcon, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        Size = UDim2.new(0, 0, 0, 0)
+    })
+    floatingIconTween:Play()
     
-    -- Set posisi Main ke posisi terakhir floating icon
-    if Main then
-        Main.Position = lastValidPosition
+    if Main then 
+        Main.Visible = true
+        Main.Size = UDim2.new(0, 50, 0, 50)
+        Main.Transparency = 1
+        
+        local mainTween = TweenService:Create(Main, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            Size = originalMainSize or UDim2.new(0.5, 0, 0.5, 0),
+            Position = lastValidPosition,
+            Transparency = 0
+        })
+        mainTween:Play()
+        
+        -- Pastikan Main memiliki sudut melengkung
+        if not Main:FindFirstChildOfClass("UICorner") then
+            local corner = Instance.new("UICorner")
+            corner.CornerRadius = UDim.new(0.1, 0)  -- Sudut melengkung 10%
+            corner.Parent = Main
+        end
     end
+    
+    -- Menghapus atau menyembunyikan Border jika tidak diperlukan
+    if Border then 
+        Border.Visible = false  -- Sembunyikan Border
+    end
+    
+    task.delay(0.3, function()
+        FloatingIcon.Visible = false
+        FloatingIcon.Size = UDim2.new(0, 40, 0, 40)
+    end)
+    
+    Minimized = false
 end
 
--- Function untuk minimize UI
 local function MinimizeUI()
     if Main and Main.AbsolutePosition then
         lastValidPosition = UDim2.new(0, Main.AbsolutePosition.X, 0, Main.AbsolutePosition.Y)
+        
+        if not originalMainSize then
+            originalMainSize = Main.Size
+        end
+    end
+    
+    if Main then 
+        local mainTween = TweenService:Create(Main, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            Size = UDim2.new(0, 50, 0, 50),
+            Position = lastValidPosition,
+            Transparency = 1
+        })
+        mainTween:Play()
+        
+        -- Pastikan Main memiliki sudut melengkung
+        if not Main:FindFirstChildOfClass("UICorner") then
+            local corner = Instance.new("UICorner")
+            corner.CornerRadius = UDim.new(0.1, 0)  -- Sudut melengkung 10%
+            corner.Parent = Main
+        end
+    end
+    
+    -- Menghapus atau menyembunyikan Border jika tidak diperlukan
+    if Border then 
+        Border.Visible = false  -- Sembunyikan Border
     end
     
     FloatingIcon.Position = lastValidPosition
+    local floatingIconTween = TweenService:Create(FloatingIcon, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        Size = UDim2.new(0, 40, 0, 40)
+    })
+    floatingIconTween:Play()
     
-    if Main then Main.Visible = false end
-    if Border then Border.Visible = false end
+    task.delay(0.3, function()
+        if Main then Main.Visible = false end
+        FloatingIcon.Visible = true
+    end)
     
-    FloatingIcon.Visible = true
     Minimized = true
 end
+
+
+
 
 MinimizeBtn.MouseButton1Click:Connect(function()
     if not Minimized then
@@ -294,7 +356,6 @@ MinimizeBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- Function untuk membuat objek draggable dengan position tracking
 local function MakeDraggableWithTracking(gui)
     local UserInputService = game:GetService("UserInputService")
     local dragging
@@ -326,7 +387,6 @@ local function MakeDraggableWithTracking(gui)
                     dragging = false
                     isDragging = false
                     
-                    -- Jika hampir tidak ada pergerakan, anggap sebagai click
                     if (input.Position - dragStart).Magnitude < 5 then
                         MaximizeUI()
                     end
@@ -348,8 +408,8 @@ local function MakeDraggableWithTracking(gui)
     end)
 end
 
--- Apply draggable behavior
 MakeDraggableWithTracking(FloatingIcon)
+
 local function CloseAllTabs()
     for i, v in pairs(Tabs:GetChildren()) do
         if v:IsA("Frame") then
