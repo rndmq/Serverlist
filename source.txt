@@ -285,7 +285,7 @@ local function MaximizeUI()
     
     if Border then 
         Border.Visible = true
-        Border.Size = originalMainSize or UDim2.new(0.5, 0, 0.5, 0)
+        Border.Size = Main.Size  -- Sesuaikan ukuran Border dengan ukuran Main
         Border.Position = lastValidPosition
         
         local borderTween = TweenService:Create(Border, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
@@ -375,6 +375,7 @@ local function MinimizeUI()
     
     Minimized = true
 end
+
 
 MinimizeBtn.MouseButton1Click:Connect(function()
     if not Minimized then
