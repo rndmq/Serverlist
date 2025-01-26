@@ -138,7 +138,9 @@ Main.ImageColor3 = Library.Theme.BackgroundColor
 Main.ScaleType = Enum.ScaleType.Slice
 Main.SliceCenter = Rect.new(100, 100, 100, 100)
 Main.SliceScale = 0.050
-
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 10)
+UICorner.Parent = Main
 Border.Name = "Border"
 Border.Parent = Main
 Border.BackgroundColor3 = Library.Theme.MainColor
@@ -150,7 +152,7 @@ Border.ImageColor3 = Library.Theme.MainColor
 Border.ScaleType = Enum.ScaleType.Slice
 Border.SliceCenter = Rect.new(100, 100, 100, 100)
 Border.SliceScale = 0.050
-Border.ImageTransparency = 1
+Border.ImageTransparency = 0
 
 Topbar.Name = "Topbar"
 Topbar.Parent = Main
