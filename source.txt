@@ -261,47 +261,83 @@ table.insert(Library.LibraryColorTable, FloatingIcon)
 local Minimized = false
 local isDragging = false
 local lastValidPosition = UDim2.new(0, 100, 0, 100)
-local floatingIconSize = UDim2.new(0.1, 0, 0.1, 0) -- Ukuran akhir saat mengecil
 
-local function tweenElement(element, properties, duration, easingStyle, easingDirection)
-    local tweenInfo = TweenInfo.new(duration, easingStyle or Enum.EasingStyle.Quad, easingDirection or Enum.EasingDirection.Out)
-    local tween = TweenService:Create(element, tweenInfo, properties)
-    tween:Play()
-    return tween
-end
-
+-- Fungsi untuk maximize UI dengan animasi
 local function MaximizeUI()
-    if Main and Border then
+    -- Animasi untuk FloatingIcon
+    local floatingIconTween = TweenService:Create(FloatingIcon, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        Size = UDim2.new(0, 0, 0, 0)  -- Mengecil hingga hilang
+    })
+    floatingIconTween:Play()
+    
+    -- Tampilkan dan animasikan Main
+    if Main then 
         Main.Visible = true
+        Main.Size = UDim2.new(0, 50, 0, 50)  -- Mulai dari ukuran kecil
+        Main.Transparency = 1
+        
+        local mainTween = TweenService:Create(Main, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            Size = UDim2.new(1, 0, 1, 0),  -- Kembalikan ke ukuran asli
+            Position = lastValidPosition,
+            Transparency = 0  -- Kembalikan ke solid
+        })
+        mainTween:Play()
+    end
+    
+    -- Animasi Border
+    if Border then 
         Border.Visible = true
+        local borderTween = TweenService:Create(Border, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            Transparency = 0
+        })
+        borderTween:Play()
     end
-    FloatingIcon.Visible = false
+    
+    -- Sembunyikan FloatingIcon setelah animasi
+    task.delay(0.3, function()
+        FloatingIcon.Visible = false
+    end)
+    
     Minimized = false
-
-    if Main then
-        Main.Position = lastValidPosition
-        tweenElement(Main, {Size = UDim2.new(0.5, 0, 0.5, 0)}, 0.5)
-    end
 end
 
+-- Fungsi untuk minimize UI dengan animasi
 local function MinimizeUI()
     if Main and Main.AbsolutePosition then
         lastValidPosition = UDim2.new(0, Main.AbsolutePosition.X, 0, Main.AbsolutePosition.Y)
     end
-
+    
+    -- Animasi untuk Main dan Border
+    if Main then 
+        local mainTween = TweenService:Create(Main, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            Size = UDim2.new(0, 50, 0, 50),  -- Mengecil ke ukuran kecil
+            Position = lastValidPosition,
+            Transparency = 1  -- Membuat transparan
+        })
+        mainTween:Play()
+    end
+    
+    if Border then 
+        local borderTween = TweenService:Create(Border, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            Transparency = 1
+        })
+        borderTween:Play()
+    end
+    
+    -- Animasi untuk FloatingIcon
     FloatingIcon.Position = lastValidPosition
-
-    if Main then
-        local tween = tweenElement(Main, {Size = floatingIconSize}, 0.5)
-        tween.Completed:Wait()
-        Main.Visible = false
-    end
-
-    if Border then
-        Border.Visible = false
-    end
-
-    FloatingIcon.Visible = true
+    local floatingIconTween = TweenService:Create(FloatingIcon, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        Size = UDim2.new(0, 50, 0, 50)  -- Sesuaikan ukuran ikon
+    })
+    floatingIconTween:Play()
+    
+    -- Sembunyikan setelah animasi
+    task.delay(0.3, function()
+        if Main then Main.Visible = false end
+        if Border then Border.Visible = false end
+        FloatingIcon.Visible = true
+    end)
+    
     Minimized = true
 end
 
@@ -311,6 +347,7 @@ MinimizeBtn.MouseButton1Click:Connect(function()
     end
 end)
 
+-- Function untuk membuat objek draggable dengan position tracking
 local function MakeDraggableWithTracking(gui)
     local UserInputService = game:GetService("UserInputService")
     local dragging
@@ -341,7 +378,8 @@ local function MakeDraggableWithTracking(gui)
                 if input.UserInputState == Enum.UserInputState.End then
                     dragging = false
                     isDragging = false
-
+                    
+                    -- Jika hampir tidak ada pergerakan, anggap sebagai click
                     if (input.Position - dragStart).Magnitude < 5 then
                         MaximizeUI()
                     end
@@ -363,6 +401,7 @@ local function MakeDraggableWithTracking(gui)
     end)
 end
 
+-- Apply draggable behavior
 MakeDraggableWithTracking(FloatingIcon)
 
 local function CloseAllTabs()
@@ -372,8 +411,6 @@ local function CloseAllTabs()
         end
     end
 end
-
-
 
 local function ResetAllTabButtons()
     for i, v in pairs(TabButtons:GetChildren()) do
