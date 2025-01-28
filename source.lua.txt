@@ -812,167 +812,173 @@ function Library:CreateTab(name)
                 SetState = SetState
             }
         end
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
 
-        function SectionElements:CreateSlider(name, minimumvalue, maximumvalue, presetvalue, precisevalue, callback)
-            local NameSlider = Instance.new("Frame")
-            local Title = Instance.new("TextLabel")
-            local SliderBackground = Instance.new("ImageLabel")
-            local SliderIndicator = Instance.new("ImageLabel")
-            local CircleSelector = Instance.new("ImageLabel")
-            local SliderValue = Instance.new("ImageLabel")
-            local Value = Instance.new("TextBox")
+function SectionElements:CreateSlider(name, minimumvalue, maximumvalue, presetvalue, precisevalue, callback)
+    local NameSlider = Instance.new("Frame")
+    local Title = Instance.new("TextLabel")
+    local SliderBackground = Instance.new("ImageLabel")
+    local SliderIndicator = Instance.new("ImageLabel")
+    local CircleSelector = Instance.new("ImageLabel")
+    local SliderValue = Instance.new("ImageLabel")
+    local Value = Instance.new("TextBox")
 
-            local SliderDragging = false
-            local StartingValue = presetvalue
-    
-            if StartingValue == nil then
-                StartingValue = presetvalue
-            end
+    local SliderDragging = false
+    local StartingValue = presetvalue
 
-            NameSlider.Name = (name .. "Slider")
-            NameSlider.Parent = SectionContent
-            NameSlider.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-            NameSlider.BackgroundTransparency = 1.000
-            NameSlider.Position = UDim2.new(0, 0, 0.497237563, 0)
-            NameSlider.Size = UDim2.new(0, 197, 0, 50)
-            NameSlider.ZIndex = 5
-            
-            Title.Name = "Title"
-            Title.Parent = NameSlider
-            Title.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-            Title.BackgroundTransparency = 1.000
-            Title.BorderColor3 = Color3.fromRGB(27, 42, 53)
-            Title.Position = UDim2.new(0, 12, 0, 0)
-            Title.Size = UDim2.new(0, 121, 0, 35)
-            Title.ZIndex = 5
-            Title.Font = Library.Theme.TextFont
-            Title.Text = name
-            Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-            Title.TextSize = 15.000
-            Title.TextXAlignment = Enum.TextXAlignment.Left
-            
-            SliderBackground.Name = "SliderBackground"
-            SliderBackground.Parent = NameSlider
-            SliderBackground.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
-            SliderBackground.BackgroundTransparency = 1.000
-            SliderBackground.Position = UDim2.new(0.0600000359, 0, 0.699999988, 0)
-            SliderBackground.Size = UDim2.new(0, 169, 0, 4)
-            SliderBackground.ZIndex = 5
-            SliderBackground.Image = "rbxassetid://3570695787"
-            SliderBackground.ImageColor3 = Color3.fromRGB(55, 55, 55)
-            SliderBackground.ScaleType = Enum.ScaleType.Slice
-            SliderBackground.SliceCenter = Rect.new(100, 100, 100, 100)
-            SliderBackground.SliceScale = 0.150
-            
-            SliderIndicator.Name = "SliderIndicator"
-            SliderIndicator.Parent = SliderBackground
-            SliderIndicator.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
-            SliderIndicator.BackgroundTransparency = 1.000
-            SliderIndicator.Size = UDim2.new(((StartingValue or minimumvalue) - minimumvalue) / (maximumvalue - minimumvalue), 0, 1, 0)
-            SliderIndicator.ZIndex = 5
-            SliderIndicator.Image = "rbxassetid://3570695787"
-            SliderIndicator.ImageColor3 = Library.Theme.MainColor
-            SliderIndicator.ScaleType = Enum.ScaleType.Slice
-            SliderIndicator.SliceCenter = Rect.new(100, 100, 100, 100)
-            SliderIndicator.SliceScale = 0.150
-            
-            CircleSelector.Name = "CircleSelector"
-            CircleSelector.Parent = SliderIndicator
-            CircleSelector.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-            CircleSelector.BackgroundTransparency = 1.000
-            CircleSelector.Position = UDim2.new(0.986565471, -7, 0.75, -7)
-            CircleSelector.Size = UDim2.new(0, 12, 0, 12)
-            CircleSelector.ZIndex = 5
-            CircleSelector.Image = "rbxassetid://3570695787"
-            
-            SliderValue.Name = "SliderValue"
-            SliderValue.Parent = NameSlider
-            SliderValue.BackgroundColor3 = Color3.fromRGB(65, 65, 65)
-            SliderValue.BackgroundTransparency = 1.000
-            SliderValue.Position = UDim2.new(0.764771521, -12, 0.400000006, -12)
-            SliderValue.Size = UDim2.new(0, 42, 0, 19)
-            SliderValue.ZIndex = 5
-            SliderValue.Image = "rbxassetid://3570695787"
-            SliderValue.ImageColor3 = Color3.fromRGB(65, 65, 65)
-            SliderValue.ScaleType = Enum.ScaleType.Slice
-            SliderValue.SliceCenter = Rect.new(100, 100, 100, 100)
-            SliderValue.SliceScale = 0.030
-            
-            Value.Name = "Value"
-            Value.Parent = SliderValue
-            Value.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-            Value.BackgroundTransparency = 1.000
-            Value.Size = UDim2.new(1, 0, 1, 0)
-            Value.ZIndex = 5
-            Value.Font = Library.Theme.TextFont
-            Value.Text = tostring(StartingValue or precisevalue and tonumber(string.format("%.2f", StartingValue)))
-            Value.TextColor3 = Color3.fromRGB(255, 255, 255)
-            Value.TextSize = 14.000
+    NameSlider.Name = (name .. "Slider")
+    NameSlider.Parent = SectionContent
+    NameSlider.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    NameSlider.BackgroundTransparency = 1.000
+    NameSlider.Position = UDim2.new(0, 0, 0.497237563, 0)
+    NameSlider.Size = UDim2.new(0, 197, 0, 50)
+    NameSlider.ZIndex = 5
 
-            local function Sliding(input)
-                local SliderPosition = UDim2.new(math.clamp((input.Position.X - SliderBackground.AbsolutePosition.X) / SliderBackground.AbsoluteSize.X, 0, 1), 0, 1, 0)
-                TweenService:Create(SliderIndicator, TweenInfo.new(0.02, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = SliderPosition}):Play()
-    
-                local NonSliderPreciseValue = math.floor(((SliderPosition.X.Scale * maximumvalue) / maximumvalue) * (maximumvalue - minimumvalue) + minimumvalue)
-                local SliderPreciseValue = ((SliderPosition.X.Scale * maximumvalue) / maximumvalue) * (maximumvalue - minimumvalue) + minimumvalue
-    
-                local SlidingValue = (precisevalue and SliderPreciseValue or NonSliderPreciseValue)
-                SlidingValue = tonumber(string.format("%.2f", SlidingValue))
-    
-                Value.Text = tostring(SlidingValue)
-                callback(SlidingValue)
-            end
-    
-            Value.FocusLost:Connect(function()
-                if not tonumber(Value.Text) then
-                    Value.Text = tostring(StartingValue or precisevalue and tonumber(string.format("%.2f", StartingValue)))
-                elseif Value.Text == "" or tonumber(Value.Text) <= minimumvalue then
-                    Value.Text = minimumvalue
-                elseif Value.Text == "" or tonumber(Value.Text) >= maximumvalue then
-                    Value.Text = maximumvalue
-                end
-    
-                TweenService:Create(SliderIndicator, TweenInfo.new(0.02, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(((tonumber(Value.Text) or minimumvalue) - minimumvalue) / (maximumvalue - minimumvalue), 0, 1, 0)}):Play()
-                callback(tonumber(Value.Text))
-            end)
-    
-            CircleSelector.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    SliderDragging = true
-                end
-            end)
-            
-            CircleSelector.InputEnded:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    SliderDragging = false
-                end
-            end)
-            
-            CircleSelector.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    Sliding(input)
-                end
-            end)
-        
-            UserInputService.InputChanged:Connect(function(input)
-                if SliderDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-                    Sliding(input)
-                end
-            end)
+    Title.Name = "Title"
+    Title.Parent = NameSlider
+    Title.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    Title.BackgroundTransparency = 1.000
+    Title.Position = UDim2.new(0, 12, 0, 0)
+    Title.Size = UDim2.new(0, 121, 0, 35)
+    Title.ZIndex = 5
+    Title.Font = Library.Theme.TextFont
+    Title.Text = name
+    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Title.TextSize = 15.000
+    Title.TextXAlignment = Enum.TextXAlignment.Left
 
-            local function SetSliderValue(value)
-                Value.Text = value
-                TweenService:Create(SliderIndicator, TweenInfo.new(0.02, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(((tonumber(Value.Text) or minimumvalue) - minimumvalue) / (maximumvalue - minimumvalue), 0, 1, 0)}):Play()
-                callback(tonumber(Value.Text))
-            end
+    SliderBackground.Name = "SliderBackground"
+    SliderBackground.Parent = NameSlider
+    SliderBackground.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
+    SliderBackground.BackgroundTransparency = 1.000
+    SliderBackground.Position = UDim2.new(0.0600000359, 0, 0.699999988, 0)
+    SliderBackground.Size = UDim2.new(0, 169, 0, 4)
+    SliderBackground.ZIndex = 5
+    SliderBackground.Image = "rbxassetid://3570695787"
+    SliderBackground.ImageColor3 = Color3.fromRGB(55, 55, 55)
+    SliderBackground.ScaleType = Enum.ScaleType.Slice
+    SliderBackground.SliceCenter = Rect.new(100, 100, 100, 100)
+    SliderBackground.SliceScale = 0.150
 
-            callback(StartingValue)
-            table.insert(Library.LibraryColorTable, SliderIndicator)
+    SliderIndicator.Name = "SliderIndicator"
+    SliderIndicator.Parent = SliderBackground
+    SliderIndicator.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
+    SliderIndicator.BackgroundTransparency = 1.000
+    SliderIndicator.Size = UDim2.new(((StartingValue or minimumvalue) - minimumvalue) / (maximumvalue - minimumvalue), 0, 1, 0)
+    SliderIndicator.ZIndex = 5
+    SliderIndicator.Image = "rbxassetid://3570695787"
+    SliderIndicator.ImageColor3 = Library.Theme.MainColor
+    SliderIndicator.ScaleType = Enum.ScaleType.Slice
+    SliderIndicator.SliceCenter = Rect.new(100, 100, 100, 100)
+    SliderIndicator.SliceScale = 0.150
 
-            return {
-                SetSliderValue = SetSliderValue
-            }
+    CircleSelector.Name = "CircleSelector"
+    CircleSelector.Parent = SliderIndicator
+    CircleSelector.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    CircleSelector.BackgroundTransparency = 1.000
+    CircleSelector.Position = UDim2.new(0.986565471, -7, 0.75, -7)
+    CircleSelector.Size = UDim2.new(0, 12, 0, 12)
+    CircleSelector.ZIndex = 5
+    CircleSelector.Image = "rbxassetid://3570695787"
+
+    SliderValue.Name = "SliderValue"
+    SliderValue.Parent = NameSlider
+    SliderValue.BackgroundColor3 = Color3.fromRGB(65, 65, 65)
+    SliderValue.BackgroundTransparency = 1.000
+    SliderValue.Position = UDim2.new(0.764771521, -12, 0.400000006, -12)
+    SliderValue.Size = UDim2.new(0, 42, 0, 19)
+    SliderValue.ZIndex = 5
+    SliderValue.Image = "rbxassetid://3570695787"
+    SliderValue.ImageColor3 = Color3.fromRGB(65, 65, 65)
+    SliderValue.ScaleType = Enum.ScaleType.Slice
+    SliderValue.SliceCenter = Rect.new(100, 100, 100, 100)
+    SliderValue.SliceScale = 0.030
+
+    Value.Name = "Value"
+    Value.Parent = SliderValue
+    Value.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    Value.BackgroundTransparency = 1.000
+    Value.Size = UDim2.new(1, 0, 1, 0)
+    Value.ZIndex = 5
+    Value.Font = Library.Theme.TextFont
+    Value.Text = tostring(StartingValue or precisevalue and tonumber(string.format("%.2f", StartingValue)))
+    Value.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Value.TextSize = 14.000
+
+    -- Tween untuk membuat lingkaran membesar saat ditekan
+    local function enlargeCircle()
+        TweenService:Create(CircleSelector, TweenInfo.new(0.1), {Size = UDim2.new(0, 18, 0, 18)}):Play()
+    end
+
+    -- Kembalikan ukuran lingkaran setelah dilepas
+    local function shrinkCircle()
+        TweenService:Create(CircleSelector, TweenInfo.new(0.1), {Size = UDim2.new(0, 12, 0, 12)}):Play()
+    end
+
+    -- Slider dragging logic (Mouse or Touch)
+    local function Sliding(input)
+        local SliderPosition
+        if input.UserInputType == Enum.UserInputType.Touch then
+            SliderPosition = UDim2.new(math.clamp((input.Position.X - SliderBackground.AbsolutePosition.X) / SliderBackground.AbsoluteSize.X, 0, 1), 0, 1, 0)
+        elseif input.UserInputType == Enum.UserInputType.MouseMovement then
+            SliderPosition = UDim2.new(math.clamp((input.Position.X - SliderBackground.AbsolutePosition.X) / SliderBackground.AbsoluteSize.X, 0, 1), 0, 1, 0)
         end
+
+        TweenService:Create(SliderIndicator, TweenInfo.new(0.02, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = SliderPosition}):Play()
+
+        local NonSliderPreciseValue = math.floor(((SliderPosition.X.Scale * maximumvalue) / maximumvalue) * (maximumvalue - minimumvalue) + minimumvalue)
+        local SliderPreciseValue = ((SliderPosition.X.Scale * maximumvalue) / maximumvalue) * (maximumvalue - minimumvalue) + minimumvalue
+
+        local SlidingValue = (precisevalue and SliderPreciseValue or NonSliderPreciseValue)
+        SlidingValue = tonumber(string.format("%.2f", SlidingValue))
+
+        Value.Text = tostring(SlidingValue)
+        callback(SlidingValue)
+    end
+
+    -- Ketika lingkaran ditekan
+    CircleSelector.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            SliderDragging = true
+            enlargeCircle()  -- Perbesar lingkaran
+            Sliding(input)   -- Mulai geser slider
+        end
+    end)
+
+    -- Ketika lingkaran dilepas
+    CircleSelector.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            SliderDragging = false
+            shrinkCircle()   -- Kembalikan ukuran lingkaran
+        end
+    end)
+
+    -- Update slider saat mouse atau touch digerakkan
+    UserInputService.InputChanged:Connect(function(input)
+        if SliderDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            -- Mengabaikan batasan posisi, slider akan terus digerakkan meskipun keluar dari garis slider
+            Sliding(input)
+        end
+    end)
+
+    -- Handle text box focus lost (untuk memperbaiki nilai input)
+    Value.FocusLost:Connect(function()
+        if not tonumber(Value.Text) then
+            Value.Text = tostring(StartingValue or precisevalue and tonumber(string.format("%.2f", StartingValue)))
+        elseif Value.Text == "" or tonumber(Value.Text) <= minimumvalue then
+            Value.Text = minimumvalue
+        elseif Value.Text == "" or tonumber(Value.Text) >= maximumvalue then
+            Value.Text = maximumvalue
+        end
+
+        TweenService:Create(SliderIndicator, TweenInfo.new(0.02, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(((tonumber(Value.Text) or minimumvalue) - minimumvalue) / (maximumvalue - minimumvalue), 0, 1, 0)}):Play()
+        callback(tonumber(Value.Text))
+    end)
+
+    callback(StartingValue)
+end
+
 
         function SectionElements:CreateColorPicker(name, presetcolor, callback)
             local NameColorPicker = Instance.new("Frame")
