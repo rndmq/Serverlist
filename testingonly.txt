@@ -907,7 +907,7 @@ function SectionElements:CreateSlider(name, minimumvalue, maximumvalue, presetva
     Value.TextSize = 14.000
 
     local function UpdateSlider(input)
-        -- posisi slider
+        -- Menghitung posisi slider berdasarkan input
         local SliderPosition = UDim2.new(math.clamp((input.Position.X - SliderBackground.AbsolutePosition.X) / SliderBackground.AbsoluteSize.X, 0, 1), 0, 1, 0)
         TweenService:Create(SliderIndicator, TweenInfo.new(0.02, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = SliderPosition}):Play()
 
@@ -929,12 +929,13 @@ function SectionElements:CreateSlider(name, minimumvalue, maximumvalue, presetva
             Value.Text = tostring(maximumvalue)
         end
 
-        -- Perbarui indikator
+        -- Perbarui indikator dengan nilai yang valid
         local normalizedValue = (tonumber(Value.Text) - minimumvalue) / (maximumvalue - minimumvalue)
         TweenService:Create(SliderIndicator, TweenInfo.new(0.02, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(normalizedValue, 0, 1, 0)}):Play()
         callback(tonumber(Value.Text))
     end)
 
+    -- Perbesar lingkaran saat klik
     CircleSelector.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             SliderDragging = true
@@ -943,20 +944,23 @@ function SectionElements:CreateSlider(name, minimumvalue, maximumvalue, presetva
         end
     end)
     
+    -- Kembalikan ukuran lingkaran setelah dilepas
     CircleSelector.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             SliderDragging = false
-            -- Kembalikan ukuran lingkaran setelah dilepas
+            -- Kembalikan ukuran lingkaran
             TweenService:Create(CircleSelector, TweenInfo.new(0.1), {Size = UDim2.new(0, 12, 0, 12)}):Play()
         end
     end)
-    
+
+    -- Update slider saat digeser
     CircleSelector.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             UpdateSlider(input)
         end
     end)
 
+    -- Saat mouse bergerak, perbarui posisi slider
     UserInputService.InputChanged:Connect(function(input)
         if SliderDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
             UpdateSlider(input)
@@ -977,6 +981,7 @@ function SectionElements:CreateSlider(name, minimumvalue, maximumvalue, presetva
         SetSliderValue = SetSliderValue
     }
 end
+
 
 
         function SectionElements:CreateColorPicker(name, presetcolor, callback)
