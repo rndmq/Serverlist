@@ -812,9 +812,6 @@ function Library:CreateTab(name)
                 SetState = SetState
             }
         end
-
-local TweenService = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 
@@ -909,12 +906,10 @@ function SectionElements:CreateSlider(name, minimumvalue, maximumvalue, presetva
     Value.TextColor3 = Color3.fromRGB(255, 255, 255)
     Value.TextSize = 14.000
 
-    -- Tween untuk membuat lingkaran membesar saat ditekan
     local function enlargeCircle()
         TweenService:Create(CircleSelector, TweenInfo.new(0.1), {Size = UDim2.new(0, 18, 0, 18)}):Play()
     end
 
-    -- Kembalikan ukuran lingkaran setelah dilepas
     local function shrinkCircle()
         TweenService:Create(CircleSelector, TweenInfo.new(0.1), {Size = UDim2.new(0, 12, 0, 12)}):Play()
     end
@@ -940,16 +935,15 @@ function SectionElements:CreateSlider(name, minimumvalue, maximumvalue, presetva
         callback(SlidingValue)
     end
 
-    -- Ketika lingkaran ditekan
     CircleSelector.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             SliderDragging = true
-            enlargeCircle()  -- Perbesar lingkaran
-            Sliding(input)   -- Mulai geser slider
+            enlargeCircle()  
+            Sliding(input)   
         end
     end)
 
-    -- Ketika lingkaran dilepas
+    
     CircleSelector.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             SliderDragging = false
@@ -957,14 +951,16 @@ function SectionElements:CreateSlider(name, minimumvalue, maximumvalue, presetva
         end
     end)
 
-    -- Update slider saat mouse atau touch digerakkan
     UserInputService.InputChanged:Connect(function(input)
         if SliderDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-            Sliding(input)
+            
+            if input.Position.X >= SliderBackground.AbsolutePosition.X and input.Position.X <= (SliderBackground.AbsolutePosition.X + SliderBackground.AbsoluteSize.X) then
+                Sliding(input)
+            end
         end
     end)
 
-    -- Handle text box focus lost (untuk memperbaiki nilai input)
+    -- Handle text box
     Value.FocusLost:Connect(function()
         if not tonumber(Value.Text) then
             Value.Text = tostring(StartingValue or precisevalue and tonumber(string.format("%.2f", StartingValue)))
@@ -980,6 +976,7 @@ function SectionElements:CreateSlider(name, minimumvalue, maximumvalue, presetva
 
     callback(StartingValue)
 end
+
 
 
 
