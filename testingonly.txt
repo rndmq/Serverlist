@@ -823,6 +823,7 @@ function SectionElements:CreateSlider(name, minimumvalue, maximumvalue, presetva
     local Value = Instance.new("TextBox")
 
     local SliderDragging = false
+    local SliderHovering = false
     local StartingValue = presetvalue or minimumvalue
 
     NameSlider.Name = (name .. "Slider")
@@ -864,7 +865,6 @@ function SectionElements:CreateSlider(name, minimumvalue, maximumvalue, presetva
     SliderIndicator.Parent = SliderBackground
     SliderIndicator.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
     SliderIndicator.BackgroundTransparency = 1.000
-    -- Normalized size calculation
     SliderIndicator.Size = UDim2.new((StartingValue - minimumvalue) / (maximumvalue - minimumvalue), 0, 1, 0)
     SliderIndicator.ZIndex = 5
     SliderIndicator.Image = "rbxassetid://3570695787"
@@ -906,11 +906,12 @@ function SectionElements:CreateSlider(name, minimumvalue, maximumvalue, presetva
     Value.TextColor3 = Color3.fromRGB(255, 255, 255)
     Value.TextSize = 14.000
 
-    local function Sliding(input)
+    local function UpdateSlider(input)
+        -- posisi slider
         local SliderPosition = UDim2.new(math.clamp((input.Position.X - SliderBackground.AbsolutePosition.X) / SliderBackground.AbsoluteSize.X, 0, 1), 0, 1, 0)
         TweenService:Create(SliderIndicator, TweenInfo.new(0.02, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = SliderPosition}):Play()
 
-        -- Perhitungan nilai slider yang tidak terbatas pada 500
+        -- Menghitung nilai slider
         local SliderPreciseValue = SliderPosition.X.Scale * (maximumvalue - minimumvalue) + minimumvalue
         local SlidingValue = precisevalue and SliderPreciseValue or math.floor(SliderPreciseValue)
 
@@ -928,7 +929,7 @@ function SectionElements:CreateSlider(name, minimumvalue, maximumvalue, presetva
             Value.Text = tostring(maximumvalue)
         end
 
-        -- Perbarui indikator dengan nilai yang valid
+        -- Perbarui indikator
         local normalizedValue = (tonumber(Value.Text) - minimumvalue) / (maximumvalue - minimumvalue)
         TweenService:Create(SliderIndicator, TweenInfo.new(0.02, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(normalizedValue, 0, 1, 0)}):Play()
         callback(tonumber(Value.Text))
@@ -937,24 +938,28 @@ function SectionElements:CreateSlider(name, minimumvalue, maximumvalue, presetva
     CircleSelector.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             SliderDragging = true
+            -- Memperbesar lingkaran saat ditekan
+            TweenService:Create(CircleSelector, TweenInfo.new(0.1), {Size = UDim2.new(0, 16, 0, 16)}):Play()
         end
     end)
     
     CircleSelector.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             SliderDragging = false
+            -- Kembalikan ukuran lingkaran setelah dilepas
+            TweenService:Create(CircleSelector, TweenInfo.new(0.1), {Size = UDim2.new(0, 12, 0, 12)}):Play()
         end
     end)
     
     CircleSelector.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            Sliding(input)
+            UpdateSlider(input)
         end
     end)
 
     UserInputService.InputChanged:Connect(function(input)
         if SliderDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-            Sliding(input)
+            UpdateSlider(input)
         end
     end)
 
@@ -972,6 +977,7 @@ function SectionElements:CreateSlider(name, minimumvalue, maximumvalue, presetva
         SetSliderValue = SetSliderValue
     }
 end
+
 
         function SectionElements:CreateColorPicker(name, presetcolor, callback)
             local NameColorPicker = Instance.new("Frame")
