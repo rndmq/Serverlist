@@ -821,11 +821,13 @@ function SectionElements:CreateSlider(name, minimumvalue, maximumvalue, presetva
     local CircleSelector = Instance.new("ImageLabel")
     local SliderValue = Instance.new("ImageLabel")
     local Value = Instance.new("TextBox")
+    local TweenService = game:GetService("TweenService")
+    local UserInputService = game:GetService("UserInputService")
 
     local SliderDragging = false
-    local SliderHovering = false
     local StartingValue = presetvalue or minimumvalue
 
+    -- Setup UI components (keeping your original UI setup code)
     NameSlider.Name = (name .. "Slider")
     NameSlider.Parent = SectionContent
     NameSlider.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -906,79 +908,103 @@ function SectionElements:CreateSlider(name, minimumvalue, maximumvalue, presetva
     Value.TextColor3 = Color3.fromRGB(255, 255, 255)
     Value.TextSize = 14.000
 
+    -- Enhanced drag functionality
     local function UpdateSlider(input)
-        -- Menghitung posisi slider berdasarkan input
-        local SliderPosition = UDim2.new(math.clamp((input.Position.X - SliderBackground.AbsolutePosition.X) / SliderBackground.AbsoluteSize.X, 0, 1), 0, 1, 0)
-        TweenService:Create(SliderIndicator, TweenInfo.new(0.02, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = SliderPosition}):Play()
-
-        -- Menghitung nilai slider
-        local SliderPreciseValue = SliderPosition.X.Scale * (maximumvalue - minimumvalue) + minimumvalue
-        local SlidingValue = precisevalue and SliderPreciseValue or math.floor(SliderPreciseValue)
-
-        Value.Text = tostring(SlidingValue)
-        callback(SlidingValue)
+        local mousePosition = input.Position.X
+        local sliderStart = SliderBackground.AbsolutePosition.X
+        local sliderWidth = SliderBackground.AbsoluteSize.X
+        
+        -- Calculate normalized position (0 to 1)
+        local normalizedPosition = math.clamp((mousePosition - sliderStart) / sliderWidth, 0, 1)
+        
+        -- Calculate actual value
+        local newValue = math.floor(minimumvalue + (normalizedPosition * (maximumvalue - minimumvalue)))
+        if precisevalue then
+            newValue = minimumvalue + (normalizedPosition * (maximumvalue - minimumvalue))
+        end
+        
+        -- Update UI
+        TweenService:Create(SliderIndicator, TweenInfo.new(0.02, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+            Size = UDim2.new(normalizedPosition, 0, 1, 0)
+        }):Play()
+        
+        Value.Text = string.format("%.0f", newValue)
+        callback(newValue)
     end
 
-    Value.FocusLost:Connect(function()
-        local userValue = tonumber(Value.Text)
-        if not userValue then
-            Value.Text = tostring(StartingValue)
-        elseif userValue < minimumvalue then
-            Value.Text = tostring(minimumvalue)
-        elseif userValue > maximumvalue then
-            Value.Text = tostring(maximumvalue)
-        end
+    -- Enhanced circle interaction
+    local function EnlargeCircle()
+        TweenService:Create(CircleSelector, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {
+            Size = UDim2.new(0, 16, 0, 16),
+            Position = UDim2.new(1, -9, 0.75, -9)
+        }):Play()
+    end
 
-        -- Perbarui indikator dengan nilai yang valid
-        local normalizedValue = (tonumber(Value.Text) - minimumvalue) / (maximumvalue - minimumvalue)
-        TweenService:Create(SliderIndicator, TweenInfo.new(0.02, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(normalizedValue, 0, 1, 0)}):Play()
-        callback(tonumber(Value.Text))
-    end)
+    local function ShrinkCircle()
+        TweenService:Create(CircleSelector, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {
+            Size = UDim2.new(0, 12, 0, 12),
+            Position = UDim2.new(1, -7, 0.75, -7)
+        }):Play()
+    end
 
-    -- Perbesar lingkaran saat klik
+    -- Input handling
     CircleSelector.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             SliderDragging = true
-            -- Memperbesar lingkaran saat ditekan
-            TweenService:Create(CircleSelector, TweenInfo.new(0.1), {Size = UDim2.new(0, 16, 0, 16)}):Play()
-        end
-    end)
-    
-    -- Kembalikan ukuran lingkaran setelah dilepas
-    CircleSelector.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            SliderDragging = false
-            -- Kembalikan ukuran lingkaran
-            TweenService:Create(CircleSelector, TweenInfo.new(0.1), {Size = UDim2.new(0, 12, 0, 12)}):Play()
-        end
-    end)
-
-    -- Update slider saat digeser
-    CircleSelector.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            EnlargeCircle()
             UpdateSlider(input)
         end
     end)
 
-    -- Saat mouse bergerak, perbarui posisi slider
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            if SliderDragging then
+                SliderDragging = false
+                ShrinkCircle()
+            end
+        end
+    end)
+
     UserInputService.InputChanged:Connect(function(input)
-        if SliderDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-            UpdateSlider(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement then
+            if SliderDragging then
+                UpdateSlider(input)
+            end
         end
     end)
 
-    local function SetSliderValue(value)
-        Value.Text = tostring(value)
-        local normalizedValue = (value - minimumvalue) / (maximumvalue - minimumvalue)
-        TweenService:Create(SliderIndicator, TweenInfo.new(0.02, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(normalizedValue, 0, 1, 0)}):Play()
-        callback(value)
-    end
+    -- TextBox handling
+    Value.FocusLost:Connect(function()
+        local userValue = tonumber(Value.Text)
+        if userValue then
+            userValue = math.clamp(userValue, minimumvalue, maximumvalue)
+            local normalizedValue = (userValue - minimumvalue) / (maximumvalue - minimumvalue)
+            
+            TweenService:Create(SliderIndicator, TweenInfo.new(0.02, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                Size = UDim2.new(normalizedValue, 0, 1, 0)
+            }):Play()
+            
+            Value.Text = string.format("%.0f", userValue)
+            callback(userValue)
+        else
+            Value.Text = tostring(StartingValue)
+        end
+    end)
 
+    -- Set initial value
     callback(StartingValue)
     table.insert(Library.LibraryColorTable, SliderIndicator)
 
+    -- Public interface
     return {
-        SetSliderValue = SetSliderValue
+        SetValue = function(value)
+            local normalizedValue = (value - minimumvalue) / (maximumvalue - minimumvalue)
+            TweenService:Create(SliderIndicator, TweenInfo.new(0.02, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                Size = UDim2.new(normalizedValue, 0, 1, 0)
+            }):Play()
+            Value.Text = string.format("%.0f", value)
+            callback(value)
+        end
     }
 end
 
