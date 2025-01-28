@@ -815,6 +815,8 @@ function Library:CreateTab(name)
 
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
 
 function SectionElements:CreateSlider(name, minimumvalue, maximumvalue, presetvalue, precisevalue, callback)
     local NameSlider = Instance.new("Frame")
@@ -917,9 +919,15 @@ function SectionElements:CreateSlider(name, minimumvalue, maximumvalue, presetva
         TweenService:Create(CircleSelector, TweenInfo.new(0.1), {Size = UDim2.new(0, 12, 0, 12)}):Play()
     end
 
-    -- Slider dragging logic
+    -- Slider dragging logic (Mouse or Touch)
     local function Sliding(input)
-        local SliderPosition = UDim2.new(math.clamp((input.Position.X - SliderBackground.AbsolutePosition.X) / SliderBackground.AbsoluteSize.X, 0, 1), 0, 1, 0)
+        local SliderPosition
+        if input.UserInputType == Enum.UserInputType.Touch then
+            SliderPosition = UDim2.new(math.clamp((input.Position.X - SliderBackground.AbsolutePosition.X) / SliderBackground.AbsoluteSize.X, 0, 1), 0, 1, 0)
+        elseif input.UserInputType == Enum.UserInputType.MouseMovement then
+            SliderPosition = UDim2.new(math.clamp((input.Position.X - SliderBackground.AbsolutePosition.X) / SliderBackground.AbsoluteSize.X, 0, 1), 0, 1, 0)
+        end
+
         TweenService:Create(SliderIndicator, TweenInfo.new(0.02, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = SliderPosition}):Play()
 
         local NonSliderPreciseValue = math.floor(((SliderPosition.X.Scale * maximumvalue) / maximumvalue) * (maximumvalue - minimumvalue) + minimumvalue)
@@ -934,7 +942,7 @@ function SectionElements:CreateSlider(name, minimumvalue, maximumvalue, presetva
 
     -- Ketika lingkaran ditekan
     CircleSelector.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             SliderDragging = true
             enlargeCircle()  -- Perbesar lingkaran
             Sliding(input)   -- Mulai geser slider
@@ -943,15 +951,15 @@ function SectionElements:CreateSlider(name, minimumvalue, maximumvalue, presetva
 
     -- Ketika lingkaran dilepas
     CircleSelector.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             SliderDragging = false
             shrinkCircle()   -- Kembalikan ukuran lingkaran
         end
     end)
 
-    -- Update slider saat mouse digerakkan
+    -- Update slider saat mouse atau touch digerakkan
     UserInputService.InputChanged:Connect(function(input)
-        if SliderDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        if SliderDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
             Sliding(input)
         end
     end)
@@ -972,6 +980,7 @@ function SectionElements:CreateSlider(name, minimumvalue, maximumvalue, presetva
 
     callback(StartingValue)
 end
+
 
 
 
