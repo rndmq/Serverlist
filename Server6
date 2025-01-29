@@ -1,5 +1,12 @@
+local loadGui = loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/source.lua.txt"))()
+local CoastingLibrary = loadGui
+
+local Tab = CoastingLibrary:CreateTab("Auto Answer")
+local Section = Tab:CreateSection("Controls")
+
 local answers = {
-    "treadmill", "samsung", "leopard", "multiple", "rectangle", "americanfootball", "wednesday", "weddingdress", "knife", "Master bedroom", "Cable stripping machine", "Philip Sherman", "The Great Wall of China",
+    "treadmill", "samsung", "leopard", "multiple", "rectangle", "americanfootball", "wednesday", "weddingdress", 
+    "knife", "Master bedroom", "Cable stripping machine", "Philip Sherman", "The Great Wall of China",
     "Michael Jordan", "Girl With A Pearl Earring", "Invincibility", "Rectangular prism", "Steering wheel",
     "Daily dose of internet", "Taking out the trash", "scientific calculator", "Tamago kake gohan",
     "Amazon Prime Video", "inflatable party decorations", "Police Car", "precious gemstone", "sportswear",
@@ -18,17 +25,50 @@ local answers = {
     "Centimeter", "Dumbells", "Christopher Robin", "Sweet Potato", "Cherry Blossom",
     "Hippopotomonstrosesquippedaliophobia", "Vitamin B12", "gaming chair", "Saxophone", "Wisdom Teeth",
     "Harley Quinn", "Frozen Water Bottle", "Hermit Crab", "Galapagos tortoise", "Mountain Everest",
-    "Macadamia Nuts", "flower", "rock", "americancheese", "steak", "pig", "angry", "taylorswift","kreekcraft",  "refrigerator handle", "Electric Bass Guitar", "Rubber Duckie", "German", "colacola", "apple", "lemonade","toiletpaper", "headphone" ,"captainamerica","facebook", "strawberry" ," mouth"
+    "Macadamia Nuts", "flower", "rock", "americancheese", "steak", "pig", "angry", "taylorswift","kreekcraft",  
+    "refrigerator handle", "Electric Bass Guitar", "Rubber Duckie", "German", "colacola", "apple", "lemonade",
+    "toiletpaper", "headphone", "captainamerica", "facebook", "strawberry", "mouth"
 }
 
 local ReplicaSignal = game:GetService("ReplicatedStorage"):WaitForChild("ReplicaRemoteEvents"):WaitForChild("Replica_ReplicaSignal")
 
-for _, answer in ipairs(answers) do
-    local args = {
-        [1] = 2,
-        [2] = "Answer",
-        [3] = answer
-    }
+local sendingAnswers = false
+local randomizedSending = false
+local delayTime = 10
+
+Section:CreateDropdown("Select Delay", {
+    "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23"
+}, 10, function(selected)
+    delayTime = tonumber(selected)
+end)
+
+Section:CreateToggle("Auto Answer", function(state)
+    sendingAnswers = state
+    if sendingAnswers then
+        while sendingAnswers and not randomizedSending do
+            local answer = answers[math.random(1, #answers)]
+            local args = { [1] = 2, [2] = "Answer", [3] = answer }
+            ReplicaSignal:FireServer(unpack(args))
+            wait(delayTime)
+        end
+    end
+end)
+
+Section:CreateButton("Send Answer", function()
+    local answer = answers[math.random(1, #answers)]
+    local args = { [1] = 2, [2] = "Answer", [3] = answer }
     ReplicaSignal:FireServer(unpack(args))
-    print("Mengirim:", answer)
-end
+end)
+
+Section:CreateToggle("Randomized Delay Answer", function(state)
+    randomizedSending = state
+    if randomizedSending then
+        while randomizedSending do
+            local randomDelay = math.random(5, 15)
+            local answer = answers[math.random(1, #answers)]
+            local args = { [1] = 2, [2] = "Answer", [3] = answer }
+            ReplicaSignal:FireServer(unpack(args))
+            wait(randomDelay)
+        end
+    end
+end)
