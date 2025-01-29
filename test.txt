@@ -1,0 +1,676 @@
+local loadGui = loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/source.lua.txt"))()
+local CoastingLibrary = loadGui
+local MainTab = CoastingLibrary:CreateTab("Main")
+local DupeEquipTab = CoastingLibrary:CreateTab("Main²")
+local AutomaticallyTab = CoastingLibrary:CreateTab("Automatically")
+local RebirthSection = AutomaticallyTab:CreateSection("Rebirth")
+local UpgradeSection = AutomaticallyTab:CreateSection("Upgrades")
+local MainSection = MainTab:CreateSection("Main Features")
+
+local HttpService = game:GetService("HttpService")
+local TeleportService = game:GetService("TeleportService")
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local StarterGui = game:GetService("StarterGui")
+
+-- Fungsi yang lebih aman untuk menghindari deteksi
+local function secureHook(func, callback)
+    local hooked = hookfunction(func, callback)
+    return hooked
+end
+
+-- Fungsi untuk memanipulasi remote calls tanpa deteksi
+local function secureRemoteCall(remoteName, callback)
+    local remote = ReplicatedStorage:WaitForChild(remoteName)
+    local originalFunction = remote.FireServer or remote.InvokeServer
+    secureHook(originalFunction, function(self, ...)
+        -- Menghindari print statement, hanya memanggil callback
+        return callback(self, ...)
+    end)
+end
+local isFiring = false
+
+-- Function to fire touch interests
+local function fireTouchInterests()
+    while isFiring do
+        local folder = workspace:FindFirstChild("FolderEnergia")
+        if folder then
+            for _, object in ipairs(folder:GetChildren()) do
+                local touchInterest = object:FindFirstChild("TouchInterest")
+                if touchInterest then
+                    firetouchinterest(object, game.Players.LocalPlayer.Character.HumanoidRootPart, 0)
+                    -- Small wait to prevent overload but still appear instant
+                    task.wait(0.01)
+                    firetouchinterest(object, game.Players.LocalPlayer.Character.HumanoidRootPart, 1)
+                end
+            end
+        end
+        task.wait() -- Prevents script from freezing
+    end
+end
+
+-- Create the toggle
+MainSection:CreateLabel("Note", "In space world.")
+MainSection:CreateToggle("Auto take crystal", function(state)
+    isFiring = state
+    if state then
+        fireTouchInterests()
+    end
+end)
+
+
+MainSection:CreateButton("Free pet", function()
+local args = {
+    [1] = "kotwica"
+}
+
+game:GetService("ReplicatedStorage"):WaitForChild("RedeemCode"):InvokeServer(unpack(args))
+task.wait(1)
+local args = {
+    [1] = "eska"
+}
+
+game:GetService("ReplicatedStorage"):WaitForChild("RedeemCode"):InvokeServer(unpack(args))
+end)
+-- Auto hop berdasarkan moderator detection
+MainSection:CreateToggle("Auto Super Tap", function(state)
+    getgenv().autoTap = state
+    while getgenv().autoTap do
+        -- Panggil remote SuperTap secara langsung
+        local args = {}
+        game:GetService("ReplicatedStorage").TappingRemote.SuperTap:FireServer(unpack(args))
+        task.wait(1) -- Gunakan delay kecil untuk menghindari lag
+    end
+end)
+
+MainSection:CreateToggle("Auto Spin", function(state)
+    getgenv().autoSpin = state
+    while getgenv().autoSpin do
+        -- Gunakan FireServer untuk Daily Spinner
+        game:GetService("ReplicatedStorage"):WaitForChild("DailySpinner"):WaitForChild("Spin"):InvokeServer()
+        wait(0.2)
+    end
+end)
+
+local autoCraftEnabled = false
+local craftTypes = { "Golden", "Diamond", "Rainbow", "Dark-Matter", "Ascended", "Max"}
+
+MainSection:CreateToggle("Auto Craft Pet", function(state)
+    autoCraftEnabled = state
+    while autoCraftEnabled do
+        local playerPets = game:GetService("Players").LocalPlayer.Pets:GetChildren()
+        for _, pet in ipairs(playerPets) do
+            for _, craftType in ipairs(craftTypes) do
+                local args = { [1] = pet.Name, [2] = craftType }
+                game:GetService("ReplicatedStorage"):WaitForChild("EggHatchingRemote"):WaitForChild("CraftPet"):InvokeServer(unpack(args))
+            end
+        end
+        task.wait(0.05)
+        if not autoCraftEnabled then break end
+    end
+end)
+
+local autoClickEnabled = false 
+MainSection:CreateToggle("Auto Clicker", function(state) 
+    autoClickEnabled = state 
+    while autoClickEnabled do 
+        game:GetService("ReplicatedStorage"):WaitForChild("TappingRemote"):WaitForChild("Tap"):FireServer() 
+        task.wait(0.1) 
+        if not autoClickEnabled then break end 
+    end 
+end)
+
+local rebirthList = { "x1", "x5", "x10", "x25", "x50", "x100", "x250", "500", "x1k", "x2.5k", "x5k", "x10k", "x25k", "x50k", "x100k", "x250k", "x500k", "x1m", "x5m", "x10m", "x50m", "x100m", "500m", "x1b", "x10b", "x100b", "x1t", "x10t", "x99t", "x500t", "x1qd", "x2.5qd", "x10qd", "x50qd", "x500qd", "x5qn", "x50qn"} 
+local selectedRebirth = nil 
+RebirthSection:CreateDropdown("Auto Rebirth", rebirthList, 1, function(option) 
+    selectedRebirth = option 
+end)
+
+local autoRebirthEnabled = false 
+RebirthSection:CreateToggle("Auto Rebirth", function(state) 
+    autoRebirthEnabled = state 
+    while autoRebirthEnabled do 
+        if selectedRebirth then 
+            local rebirthValue = 0
+            if selectedRebirth == "x1" then rebirthValue = 1 
+            elseif selectedRebirth == "x5" then rebirthValue = 5 
+            elseif selectedRebirth == "x10" then rebirthValue = 10 
+            elseif selectedRebirth == "x25" then rebirthValue = 25 
+            elseif selectedRebirth == "x50" then rebirthValue = 50 
+            elseif selectedRebirth == "x100" then rebirthValue = 100 
+            elseif selectedRebirth == "x250" then rebirthValue = 250 
+            elseif selectedRebirth == "x1k" then rebirthValue = 1000 
+            elseif selectedRebirth == "x2.5k" then rebirthValue = 2500 
+            elseif selectedRebirth == "x5k" then rebirthValue = 5000 
+            elseif selectedRebirth == "x10k" then rebirthValue = 10000 
+            elseif selectedRebirth == "x25k" then rebirthValue = 25000 
+            elseif selectedRebirth == "x50k" then rebirthValue = 50000 
+            elseif selectedRebirth == "x100k" then rebirthValue = 100000 
+            elseif selectedRebirth == "x250k" then rebirthValue = 250000 
+            elseif selectedRebirth == "x500k" then rebirthValue = 500000 
+            elseif selectedRebirth == "x1m" then rebirthValue = 1000000 
+            elseif selectedRebirth == "x5m" then rebirthValue = 5000000 
+            elseif selectedRebirth == "x10m" then rebirthValue = 10000000 
+            elseif selectedRebirth == "x50m" then rebirthValue = 50000000 
+            elseif selectedRebirth == "x100m" then rebirthValue = 100000000 
+            elseif selectedRebirth == "x1b" then rebirthValue = 1000000000 
+            elseif selectedRebirth == "x10b" then rebirthValue = 10000000000 
+            elseif selectedRebirth == "x100b" then rebirthValue = 100000000000 
+            elseif selectedRebirth == "x1t" then rebirthValue = 1000000000000 
+            elseif selectedRebirth == "x10t" then rebirthValue = 10000000000000 
+            elseif selectedRebirth == "x99t" then rebirthValue = 99000000000000 
+            elseif selectedRebirth == "x500t" then rebirthValue = 500000000000000 
+            elseif selectedRebirth == "x1qd" then rebirthValue = 1000000000000000 
+            elseif selectedRebirth == "x2.5qd" then rebirthValue = 2500000000000000 
+            elseif selectedRebirth == "x10qd" then rebirthValue = 10000000000000000 
+            elseif selectedRebirth == "x50qd" then rebirthValue = 50000000000000000 
+            elseif selectedRebirth == "x500qd" then rebirthValue = 500000000000000000 
+            elseif selectedRebirth == "x5qi" then rebirthValue = 5000000000000000000 
+            elseif selectedRebirth == "x50qi" then rebirthValue = 50000000000000000000 
+            elseif selectedRebirth == "x100qi" then rebirthValue = 100000000000000000000 
+            elseif selectedRebirth == "x500qi" then rebirthValue = 500000000000000000000 
+            elseif selectedRebirth == "x1sx" then rebirthValue = 1000000000000000000000
+            end
+            local args = { [1] = rebirthValue }
+            game:GetService("ReplicatedStorage"):WaitForChild("Rebirth"):FireServer(unpack(args))
+        end 
+        task.wait(math.random(0.1,0.5))
+        if not autoRebirthEnabled then break end 
+    end 
+end)
+
+local EggSection = MainTab:CreateSection("Egg")
+EggSection:CreateLabel("Note", "To open Robux Egg require you to have\n2000 clicks first")
+local eggList = {} 
+for _, egg in next, workspace.Eggs:GetChildren() do 
+    table.insert(eggList, egg.Name) 
+end 
+local selectedEgg = nil 
+EggSection:CreateDropdown("Select Egg", eggList, 1, function(option) 
+    selectedEgg = option 
+end) 
+local autoOpenEggs = false 
+EggSection:CreateToggle("Auto Open Eggs", function(state) 
+    autoOpenEggs = state 
+    while autoOpenEggs and selectedEgg do 
+        local args = {workspace.Eggs:FindFirstChild(selectedEgg)} 
+        game:GetService("ReplicatedStorage"):WaitForChild("EggHatchingRemote"):WaitForChild("HatchServer"):InvokeServer(unpack(args)) 
+        task.wait(0) 
+        if not autoOpenEggs then break end 
+    end 
+end) 
+
+EggSection:CreateLabel("Note", "Pets appear after rejoining") 
+EggSection:CreateButton("Rejoin", function()
+    local Notification = Instance.new("BindableFunction")
+    
+    function Notification.OnInvoke(response)
+        if response == "Yes" then
+            game:GetService("TeleportService"):Teleport(game.PlaceId, game:GetService("Players").LocalPlayer)
+        end
+    end
+    
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Confirmation",
+        Text = "Are you sure you want to rejoin?",
+        Duration = 5,
+        Callback = Notification,
+        Button1 = "Yes",
+        Button2 = "No"
+    })
+end)
+
+-- Perbaikan untuk Delete Pet System
+local deletePetList = {}
+local function refreshDeletePetList()
+    deletePetList = {}
+    local player = game:GetService("Players").LocalPlayer
+    if player and player:FindFirstChild("Pets") then
+        local seenPets = {}
+        for _, pet in ipairs(player.Pets:GetChildren()) do
+            if pet and pet.Name and not seenPets[pet.Name] then
+                seenPets[pet.Name] = true
+                table.insert(deletePetList, pet.Name)
+            end
+        end
+    end
+    
+    if #deletePetList == 0 then
+        table.insert(deletePetList, "No Pets Available")
+    end
+end
+
+refreshDeletePetList()
+local selectedPetToDelete = nil
+
+-- Create new dropdown with validated list
+EggSection:CreateDropdown("Select Pet to Delete", deletePetList, 1, function(option)
+    if option ~= "No Pets Available" then
+        selectedPetToDelete = option
+    end
+end)
+
+EggSection:CreateButton("Delete Pet", function()
+    if selectedPetToDelete then
+        local args = {
+            [1] = selectedPetToDelete,
+            [2] = false
+        }
+        game:GetService("ReplicatedStorage"):WaitForChild("EggHatchingRemote"):WaitForChild("DeletePet"):FireServer(unpack(args))
+        refreshDeletePetList()
+    end
+end)
+
+local autoDeletePetsEnabled = false
+EggSection:CreateToggle("Auto Delete Pets", function(state)
+    autoDeletePetsEnabled = state
+    while autoDeletePetsEnabled do
+        if selectedPetToDelete and selectedPetToDelete ~= "No Pets Available" then
+            local args = {
+                [1] = selectedPetToDelete,
+                [2] = false
+            }
+            game:GetService("ReplicatedStorage"):WaitForChild("EggHatchingRemote"):WaitForChild("DeletePet"):FireServer(unpack(args))
+        end
+        task.wait(0)
+        if not autoDeletePetsEnabled then break end
+    end
+end)
+local DupeSection = DupeEquipTab:CreateSection("Duplicate Equip Pets") 
+DupeSection:CreateLabel("Note", "Equip 1 best pet to appear on menu") 
+local selectedPet = nil 
+local petList = {} 
+
+local function refreshPetList() 
+    petList = {} 
+    local playerPetsFolder = workspace:FindFirstChild("_PlayerPets") 
+    if playerPetsFolder then
+        local playerFolder = playerPetsFolder:FindFirstChild(game.Players.LocalPlayer.Name) 
+        if playerFolder then
+            for _, pet in pairs(playerFolder:GetChildren()) do 
+                if pet:IsA("Model") and pet:FindFirstChild("Name") then
+                    table.insert(petList, pet.Name or "Unknown Pet") 
+                elseif pet.Name then
+                    table.insert(petList, pet.Name)
+                else
+                    table.insert(petList, "Unnamed Pet")
+                end
+            end
+        end
+    end
+    if #petList == 0 then
+        table.insert(petList, "No Pets Found")
+    end
+
+    -- Buat dropdown baru dengan list yang sudah diperbarui
+    local selectedPet = nil 
+local petList = {}
+local petDropdown = nil -- Untuk menyimpan referensi dropdown
+
+local function refreshPetList() 
+    petList = {} 
+    local playerPetsFolder = workspace:FindFirstChild("_PlayerPets") 
+    if playerPetsFolder then
+        local playerFolder = playerPetsFolder:FindFirstChild(game.Players.LocalPlayer.Name) 
+        if playerFolder then
+            for _, pet in pairs(playerFolder:GetChildren()) do 
+                if pet:IsA("Model") and pet:FindFirstChild("Name") then
+                    table.insert(petList, pet.Name or "Unknown Pet") 
+                elseif pet.Name then
+                    table.insert(petList, pet.Name)
+                else
+                    table.insert(petList, "Unnamed Pet")
+                end
+            end
+        end
+    end
+    if #petList == 0 then
+        table.insert(petList, "No Pets Found")
+    end
+
+    -- Jika dropdown sudah ada, refresh dengan data baru
+    if petDropdown then
+        petDropdown.Refresh(petList, 1, function(option)
+            if option ~= "No Pets Found" then 
+                selectedPet = option
+            end
+        end)
+    else
+        -- Buat dropdown baru jika belum ada
+        petDropdown = DupeSection:CreateDropdown("Select Pet", petList, 1, function(option)
+            if option ~= "No Pets Found" then 
+                selectedPet = option
+            end
+        end)
+    end
+end 
+
+-- Panggil pertama kali untuk membuat dropdown awal
+refreshPetList() 
+
+-- Tombol refresh akan memanggil refresh pada dropdown yang sudah ada
+DupeSection:CreateButton("Refresh Pet List", function() 
+    refreshPetList() 
+end)
+
+local autoEquipPets = false 
+DupeSection:CreateToggle("Auto Equip Selected Pets", function(state) 
+    autoEquipPets = state 
+    while autoEquipPets and selectedPet and selectedPet ~= "No Pets Found" do 
+        local args = {selectedPet} 
+        game:GetService("ReplicatedStorage"):WaitForChild("EggHatchingRemote"):WaitForChild("EquipPet"):InvokeServer(unpack(args)) 
+        task.wait(0) 
+        if not autoEquipPets then break end 
+    end 
+end)
+local selectedLocation = nil
+local locationsList = {}
+
+-- Function to get all portal locations
+local function getPortalLocations()
+    local portalFolder = workspace:FindFirstChild("Portals")
+    if portalFolder then
+        local locationsFolder = portalFolder:FindFirstChild("Locations")
+        if locationsFolder then
+            -- Clear existing locations
+            table.clear(locationsList)
+            
+            -- Get all location names
+            for _, location in ipairs(locationsFolder:GetChildren()) do
+                table.insert(locationsList, location.Name)
+            end
+            
+            return locationsList
+        end
+    end
+    return {"No locations found"}
+end
+local tpSection = DupeEquipTab:CreateSection("Teleport") 
+-- Create the dropdown
+tpSection:CreateDropdown("Select Location", getPortalLocations(), 1, function(selected)
+    selectedLocation = selected
+end)
+
+-- Function to teleport
+local function teleportToLocation()
+    if selectedLocation then
+        local portalFolder = workspace:FindFirstChild("Portals")
+        if portalFolder then
+            local locationsFolder = portalFolder:FindFirstChild("Locations")
+            if locationsFolder then
+                local targetLocation = locationsFolder:FindFirstChild(selectedLocation)
+                if targetLocation then
+                    local player = game.Players.LocalPlayer
+                    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                        player.Character.HumanoidRootPart.CFrame = targetLocation.CFrame
+                    end
+                end
+            end
+        end
+    end
+end
+
+-- Create the teleport button
+tpSection:CreateButton("Teleport", function()
+    teleportToLocation()
+end)
+
+local upgradeTypes = { "HatchSpeed", "More Gems", "Jump", "Inventory", "More Taps", "Luck", "Speed", "MaxPets" } 
+for _, upgrade in ipairs(upgradeTypes) do 
+    local autoUpgrade = false 
+    UpgradeSection:CreateToggle("Auto Upgrade " .. upgrade, function(bool) 
+        autoUpgrade = bool 
+        while autoUpgrade do 
+            local args = {upgrade} 
+            game:GetService("ReplicatedStorage"):WaitForChild("Upgrade"):InvokeServer(unpack(args)) 
+            task.wait(0) 
+            if not autoUpgrade then break end 
+        end 
+    end) 
+end
+
+MainSection:CreateToggle("Auto Claim Normal Pass", function(state)
+    getgenv().autoNormalPass = state
+    while getgenv().autoNormalPass do
+        for i = 1, 22 do
+            local args = {
+                [1] = "Normal Pass",
+                [2] = i
+            }
+            game:GetService("ReplicatedStorage"):WaitForChild("Season Pass"):WaitForChild("Claim"):InvokeServer(unpack(args))
+            wait(0.5)
+        end
+        wait(1)
+    end
+end)
+MainSection:CreateLabel("Note", "still require u super pass")
+MainSection:CreateToggle("Auto Claim Super Pass", function(state)
+    getgenv().autoSuperPass = state
+    while getgenv().autoSuperPass do
+        for i = 1, 22 do
+            local args = {
+                [1] = "Super Pass",
+                [2] = i
+            }
+            game:GetService("ReplicatedStorage"):WaitForChild("Season Pass"):WaitForChild("Claim"):InvokeServer(unpack(args))
+            wait(0.5)
+        end
+        wait(1)
+    end
+end)
+local MiscTab = CoastingLibrary:CreateTab("Misc")
+local MiscSection = MiscTab:CreateSection("Misc")
+
+local WalkspeedEnabled = false
+local CurrentWalkspeed = 16
+
+MiscSection:CreateSlider("Walkspeed", 16, 250, 16, false, function(value)
+    CurrentWalkspeed = value
+    if WalkspeedEnabled then
+        local player = game.Players.LocalPlayer
+        if player and player.Character and player.Character:FindFirstChild("Humanoid") then
+            player.Character.Humanoid.WalkSpeed = value
+        end
+    end
+end)
+
+MiscSection:CreateToggle("Enable Walkspeed", function(bool)
+    WalkspeedEnabled = bool
+    local player = game.Players.LocalPlayer
+    spawn(function()
+        while WalkspeedEnabled do
+            if player and player.Character and player.Character:FindFirstChild("Humanoid") then
+                player.Character.Humanoid.WalkSpeed = CurrentWalkspeed
+            end
+            wait(0)
+        end
+        if player and player.Character and player.Character:FindFirstChild("Humanoid") then
+            player.Character.Humanoid.WalkSpeed = 16
+        end
+    end)
+end)
+MiscSection:CreateToggle("Anti-AFK", function(state)
+    if state then
+        print("Afk: Turned on!")
+        local VirtualUser = game:GetService("VirtualUser")
+        game.Players.LocalPlayer.Idled:Connect(function()
+            VirtualUser:CaptureController()
+            VirtualUser:ClickButton2(Vector2.new())
+            print("AFK: Active!")
+        end)
+    else
+        print("Afk: off")
+    end
+end)
+
+MiscSection:CreateToggle("White Screen", function(state)
+    if state then
+        local whiteScreen = Instance.new("ScreenGui")
+        whiteScreen.Name = "WhiteScreen"
+        whiteScreen.IgnoreGuiInset = true
+        whiteScreen.Parent = game.CoreGui
+
+        local frame = Instance.new("Frame", whiteScreen)
+        frame.Size = UDim2.new(1, 0, 1, 0)
+        frame.Position = UDim2.new(0, 0, 0, 0)
+        frame.BackgroundColor3 = Color3.new(1, 1, 1)
+        frame.BorderSizePixel = 0
+
+        frame.ZIndex = 0
+    else
+        if game.CoreGui:FindFirstChild("WhiteScreen") then
+            game.CoreGui.WhiteScreen:Destroy()
+        end
+    end
+end)
+MiscSection:CreateButton("FPS Booster", function()
+    local Notification = Instance.new("BindableFunction")
+
+    function Notification.OnInvoke(response)
+        if response == "Yes" then
+            local Lighting = game:GetService("Lighting")
+            local Players = game:GetService("Players")
+
+            for _, v in ipairs(Lighting:GetChildren()) do
+                if v:IsA("PostEffect") then
+                    v:Destroy()
+                end
+            end
+
+            Lighting.GlobalShadows = false
+            Lighting.FogEnd = 9e9
+            Lighting.Brightness = 2
+
+            local function handleInstance(instance)
+                if instance:IsA("BasePart") then
+                    local player = Players.LocalPlayer
+                    if player and player.Character and instance:IsDescendantOf(player.Character) then
+                        return
+                    end
+                    instance.Material = Enum.Material.SmoothPlastic
+                    instance.Reflectance = 0
+                end
+                if instance:IsA("Texture") or instance:IsA("Decal") then
+                    local player = Players.LocalPlayer
+                    if player and player.Character and instance:IsDescendantOf(player.Character) then
+                        return
+                    end
+                    instance.Transparency = 1
+                end
+            end
+
+            for _, instance in ipairs(workspace:GetDescendants()) do
+                handleInstance(instance)
+            end
+
+            local terrain = workspace:FindFirstChild("Terrain")
+            if terrain then
+                terrain.WaterWaveSize = 0
+                terrain.WaterWaveSpeed = 0
+                terrain.WaterReflectance = 0
+                terrain.WaterTransparency = 1
+            end
+
+            settings().Physics.AllowSleep = true
+            settings().Rendering.QualityLevel = 1
+            settings().Rendering.EagerBulkExecution = false
+            settings().Rendering.TextureQuality = Enum.TextureQuality.Low
+
+            game:GetService("StarterGui"):SetCore("SendNotification", {
+                Title = "Success",
+                Text = "FPS Booster applied successfully!",
+                Duration = 2
+            })
+        end
+    end
+
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Confirmation",
+        Text = "Do you want to apply FPS Booster?",
+        Duration = 5,
+        Callback = Notification,
+        Button1 = "Yes",
+        Button2 = "No"
+    })
+end)
+
+game:GetService("StarterGui"):SetCore("SendNotification",{
+    Title = "Notice",
+    Text = "This script can be found on rscripts.net and scriptblox. other than\nthat is re-upload"
+})
+
+-- Perbaikan untuk hook metamethod agar tidak menghalangi tombol game
+local function hookMetamethodSecure()
+    local oldNamecall = nil
+    oldNamecall = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
+        local method = getnamecallmethod()
+        local args = {...}
+        
+        -- Hanya intercept remote calls yang spesifik untuk fitur script
+        if (method == "FireServer" or method == "InvokeServer") then
+            -- Daftar remote yang perlu di-hook
+            local hookedRemotes = {
+                "TappingRemote",
+                "SuperTap",
+                "DailySpinner",
+                "EggHatchingRemote",
+                "Season Pass"
+            }
+            
+            -- Cek apakah remote saat ini perlu di-hook
+            local needsHook = false
+            for _, remoteName in ipairs(hookedRemotes) do
+                if typeof(self) == "Instance" and self.Name:find(remoteName) then
+                    needsHook = true
+                    break
+                end
+            end
+            
+            -- Jika tidak perlu di-hook, biarkan berjalan normal
+            if not needsHook then
+                return oldNamecall(self, ...)
+            end
+        end
+        
+        -- Return original call untuk semua case lainnya
+        return oldNamecall(self, ...)
+    end))
+end
+
+-- Call the secure hook
+hookMetamethodSecure() 
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "CustomNotification"
+ScreenGui.Parent = game.CoreGui
+local Frame = Instance.new("Frame")
+Frame.Size = UDim2.new(0, 300, 0, 50)
+Frame.Position = UDim2.new(1, -320, 1, -100)
+Frame.AnchorPoint = Vector2.new(1, 1)
+Frame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+Frame.BackgroundTransparency = 0.2
+Frame.Parent = ScreenGui
+local TextLabel = Instance.new("TextLabel")
+TextLabel.Size = UDim2.new(1, -50, 1, 0)
+TextLabel.Position = UDim2.new(0, 50, 0, 0)
+TextLabel.Font = Enum.Font.SourceSansBold
+TextLabel.Text = "Thank you for using my script!\nif you don't mind give me a like on the website"
+TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TextLabel.TextSize = 16
+TextLabel.TextXAlignment = Enum.TextXAlignment.Left
+TextLabel.TextYAlignment = Enum.TextYAlignment.Center
+TextLabel.BackgroundTransparency = 1
+TextLabel.Parent = Frame
+local ImageLabel = Instance.new("ImageLabel")
+ImageLabel.Size = UDim2.new(0, 40, 0, 40)
+ImageLabel.Position = UDim2.new(0, 5, 0.5, -20)
+ImageLabel.Image = "rbxassetid://316605349"
+ImageLabel.BackgroundTransparency = 1
+ImageLabel.Parent = Frame
+Frame.Position = UDim2.new(1, 0, 1, -100)
+Frame:TweenPosition(UDim2.new(1, -320, 1, -100), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.5, true)
+
+wait(6)
+
+Frame:TweenPosition(UDim2.new(1, 0, 1, -100), Enum.EasingDirection.In, Enum.EasingStyle.Quad, 0.5, true)
+wait(0.5)
+ScreenGui:Destroy()
