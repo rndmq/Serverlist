@@ -1409,7 +1409,8 @@ end
             local DropdownContentLayout = Instance.new("UIListLayout")
 
             local DropdownToggled = true
-            local SelectedOption = options[presetoption]
+            table.insert(options, 1, "None")
+    local SelectedOption = options[1]
 
             NameDropdown.Name = (name .. "Dropdown")
             NameDropdown.Parent = SectionContent
