@@ -94,6 +94,30 @@ local Button = MainTab:CreateButton({
         loadstring(game:HttpGet("https://pastebin.com/raw/fwRPNCxW"))()
    end,
 })
+   
+local MainTab = Window:CreateTab("universal", nil) -- Title, Image
+local MainSection = MainTab:CreateSection("universal")
+
+local Button = MainTab:CreateButton({
+   Name = "Infinite Yield",
+   Callback = function()
+        loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
+   end,
+})
+
+
+local Button = MainTab:CreateButton({
+   Name = "trolling Hub",
+   Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/cnPthPiGon/RamDRuomFirirueieiid8didj/refs/heads/main/Fe%20sus%20hub"))()
+   end,
+})
+
+local Tab = Window:CreateTab("Info", nil) -- Title, Image
+
+local Paragraph = Tab:CreateParagraph({Title = "info", Content = "By mrbest6317"})
+
+local Paragraph = Tab:CreateParagraph({Title = "Info", Content = "Discord Server : https://discord.gg/AU4CnDTbxt"})local Paragraph = Tab:CreateParagraph({Title = "Credits", Content = "thanks to rndm for fixing the script"})
 
 if game.PlaceId == 2607868379 then -- Arsenal
     local ArsenalTab = Window:CreateTab("Arsenal")
@@ -632,29 +656,4 @@ elseif game.PlaceId == 2916758764 then -- Hide and Seek Extreme
        print("Hey")
        end,
     })
-   
-local MainTab = Window:CreateTab("universal", nil) -- Title, Image
-local MainSection = MainTab:CreateSection("universal")
-
-local Button = MainTab:CreateButton({
-   Name = "Infinite Yield",
-   Callback = function()
-        loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
-   end,
-})
-
-
-local Button = MainTab:CreateButton({
-   Name = "trolling Hub",
-   Callback = function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/cnPthPiGon/RamDRuomFirirueieiid8didj/refs/heads/main/Fe%20sus%20hub"))()
-   end,
-})
-
-local Tab = Window:CreateTab("Info", nil) -- Title, Image
-
-local Paragraph = Tab:CreateParagraph({Title = "info", Content = "By mrbest6317"})
-
-local Paragraph = Tab:CreateParagraph({Title = "Info", Content = "Discord Server : https://discord.gg/AU4CnDTbxt"})local Paragraph = Tab:CreateParagraph({Title = "Credits", Content = "thanks to rndm for fixing the script"})
-
 
