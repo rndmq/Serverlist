@@ -135,7 +135,7 @@ elseif game.PlaceId == 6261586777 then -- Piggy
     local Button = PiggyTab:CreateButton({
        Name = "Piggy",
        Callback = function()
-       loadstring(game:HttpGet('https://raw.githubusercontent.com/anandadefa/Loader/refs/heads/main/loader.lua'))()
+       loadstring(game:HttpGet("https://raw.githubusercontent.com/anandadefa/Loader/refs/heads/main/loader.lua"))()
        end,
     })
 
@@ -177,7 +177,7 @@ elseif game.PlaceId == 6152642114 then -- Shindo Life
     local Button = ShindoLifeTab:CreateButton({
        Name = "Auto farm",
        Callback = function()
-       loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/ahmadsgamer2/Script--Game/main/Script%20Game"))()
+       loadstring(game:HttpGet("https://raw.githubusercontent.com/ahmadsgamer2/Script--Game/main/Script%20Game"))()
        end,
     })
 
@@ -197,7 +197,7 @@ elseif game.PlaceId == 243360221 then -- Dungeon Quest
     local Button = DungeonQuestTab:CreateButton({
        Name = "Dungeon Quest",
        Callback = function()
-       loadstring(game:HttpGet('https://raw.githubusercontent.com/acsu123/HOHO_H/main/Loading_UI'))()
+       loadstring(game:HttpGet("https://raw.githubusercontent.com/acsu123/HOHO_H/main/Loading_UI"))()
        end,
     })
 
@@ -207,7 +207,7 @@ elseif game.PlaceId == 303427120 then -- Jailbreak
     local Button = JailbreakTab:CreateButton({
        Name = "cata hub",
        Callback = function()
-       loadstring(game:HttpGet('https://weinzspace.com/cata/hub.lua'))()
+       loadstring(game:HttpGet("https://weinzspace.com/cata/hub.lua"))()
        end,
     })
 
@@ -227,7 +227,7 @@ elseif game.PlaceId == 763106014 then -- Natural Disaster Survival
     local Button = NaturalDisasterSurvivalTab:CreateButton({
        Name = "ZeeroxHub",
        Callback = function()
-       loadstring(game:HttpGet('https://raw.githubusercontent.com/RunDTM/ZeeroxHub/main/Loader.lua'))()
+       loadstring(game:HttpGet("https://raw.githubusercontent.com/RunDTM/ZeeroxHub/main/Loader.lua"))()
        end,
     })
 
@@ -237,7 +237,7 @@ elseif game.PlaceId == 1658616937 then -- Flee the Facility
     local Button = FleeTheFacilityTab:CreateButton({
        Name = "Spimine",
        Callback = function()
-       loadstring(game:HttpGet('https://raw.githubusercontent.com/antisocialb2/SPIMINE-FLEETHEFACILITY/main/script.lua'))()
+       loadstring(game:HttpGet('https://raw.githubusercontent.com/antisocialb2/SPIMINE-FLEETHEFACILITY/main/script.lua"))()
        end,
     })
 
@@ -263,19 +263,19 @@ elseif game.PlaceId == 4878686481 then -- Bee Swarm Simulator
     local Button = BeeSwarmSimulatorTab:CreateButton({
        Name = "kronhub",
        Callback = function()
-       loadstring(game:HttpGet('https://raw.githubusercontent.com/DevKron/Kron_Hub/refs/heads/main/version_1.0'))()
+       loadstring(game:HttpGet("https://raw.githubusercontent.com/DevKron/Kron_Hub/refs/heads/main/version_1.0"))()
        end,
     })
     local Button = BeeSwarmSimulatorTab:CreateButton({
        Name = "atlasHub",
        Callback = function()
-       loadstring(game:HttpGet('https://raw.githubusercontent.com/Chris8889/atlasbss/main/script.lua'))()
+       loadstring(game:HttpGet("https://raw.githubusercontent.com/Chris8889/atlasbss/main/script.lua"))()
        end,
     })
     local Button = BeeSwarmSimulatorTab:CreateButton({
        Name = "HistyHub",
        Callback = function()
-       loadstring(game:HttpGet('https://raw.githubusercontent.com/scriptpastebin/raw/main/Histy'))()
+       loadstring(game:HttpGet("https://raw.githubusercontent.com/scriptpastebin/raw/main/Histy"))()
        end,
     })
 elseif game.PlaceId == 586749480 then -- Vehicle Legends
@@ -304,7 +304,7 @@ elseif game.PlaceId == 191413249 then -- Flood Escape 2
     local Button = FloodEscape2Tab:CreateButton({
        Name = "Flood escape 2",
        Callback = function()
-       loadstring(game:HttpGet('https://raw.githubusercontent.com/Ruinins/scripts/main/Multiple%20scripts%20for%20FE2'))()
+       loadstring(game:HttpGet("https://raw.githubusercontent.com/Ruinins/scripts/main/Multiple%20scripts%20for%20FE2"))()
        end,
     })
 
@@ -324,19 +324,19 @@ elseif game.PlaceId == 631892440 then -- Build A Boat For Treasure
     local Button = BuildABoatForTreasureTab:CreateButton({
        Name = "1201for",
        Callback = function()
-       loadstring(game:HttpGet('https://raw.githubusercontent.com/1201for/littlegui/main/Build-A-Boat'))()
+       loadstring(game:HttpGet("https://raw.githubusercontent.com/1201for/littlegui/main/Build-A-Boat"))()
        end,
     })
     local Button = BuildABoatForTreasureTab:CreateButton({
        Name = "artherHub",
        Callback = function()
-       loadstring(game:HttpGet('https://api.luarmor.net/files/v3/loaders/2529a5f9dfddd5523ca4e22f21cceffa.lua'))()
+       loadstring(game:HttpGet("https://api.luarmor.net/files/v3/loaders/2529a5f9dfddd5523ca4e22f21cceffa.lua"))()
        end,
     })
     local Button = BuildABoatForTreasureTab:CreateButton({
        Name = "autoBuild",
        Callback = function()
-       loadstring(game:HttpGet(("https://raw.githubusercontent.com/catblox1346/StensUIReMake/main/Script/StensUIRemakev2.0.0"), true))()
+       loadstring(game:HttpGet(('https://raw.githubusercontent.com/catblox1346/StensUIReMake/main/Script/StensUIRemakev2.0.0'), true))()
        end,
     })
 
@@ -372,7 +372,7 @@ elseif game.PlaceId == 195498200 then -- Dragon Adventures
     local Button = DragonAdventuresTab:CreateButton({
        Name = "ImpHub",
        Callback = function()
-       loadstring(game:HttpGet('https://raw.githubusercontent.com/alan11ago/Hub/refs/heads/main/ImpHub.lua'))()
+       loadstring(game:HttpGet("https://raw.githubusercontent.com/alan11ago/Hub/refs/heads/main/ImpHub.lua"))()
        end,
     })
     local Button = DragonAdventuresTab:CreateButton({
@@ -388,7 +388,7 @@ elseif game.PlaceId == 467313030 then -- Zombie Attack
     local Button = ZombieAttackTab:CreateButton({
        Name = "CrazyFui",
        Callback = function()
-       loadstring(game:HttpGet('https://raw.githubusercontent.com/crazyfuy/ghost-hub/main/Loader.lua'))()
+       loadstring(game:HttpGet("https://raw.githubusercontent.com/crazyfuy/ghost-hub/main/Loader.lua"))()
        end,
     })
     local Button = ZombieAttackTab:CreateButton({
@@ -417,7 +417,7 @@ elseif game.PlaceId == 4546769788 then -- King Legacy
     local Button = KingLegacyTab:CreateButton({
        Name = "ZeeHub",
        Callback = function()
-       loadstring(game:HttpGet('https://zuwz.me/Ls-Zee-Hub-KL'))()
+       loadstring(game:HttpGet("https://zuwz.me/Ls-Zee-Hub-KL"))()
        end,
     })
     local Button = KingLegacyTab:CreateButton({
@@ -433,7 +433,7 @@ elseif game.PlaceId == 149300737 then -- Prison Life
     local Button = PrisonLifeTab:CreateButton({
        Name = "Nexus Hub",
        Callback = function()
-       loadstring(game:HttpGet('https://raw.githubusercontent.com/GwnStefano/NexusHub/main/Main'), true))()
+       loadstring(game:HttpGet(('https://raw.githubusercontent.com/GwnStefano/NexusHub/main/Main'), true))()
        end,
     })
     local Button = PrisonLifeTab:CreateButton({
@@ -449,7 +449,7 @@ elseif game.PlaceId == 206702380 then -- SharkBite
     local Button = SharkBiteTab:CreateButton({
        Name = "Sharkbite",
        Callback = function()
-       loadstring(game:HttpGet('https://raw.githubusercontent.com/Luces245434/script/main/sharkbite2'))()
+       loadstring(game:HttpGet("https://raw.githubusercontent.com/Luces245434/script/main/sharkbite2"))()
        end,
     })
 
