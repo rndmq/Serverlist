@@ -247,7 +247,7 @@ elseif game.PlaceId == 183364845 then -- Speed Run 4
     local Button = SpeedRun4Tab:CreateButton({
        Name = "Dragonismcode",
        Callback = function()
-       loadstring(game:HttpGet(('https://raw.githubusercontent.com/dragonismcode/robloxscripts/main/speedrun4.lua'), true))()
+       loadstring(game:HttpGet(('https://raw.githubusercontent.com/dragonismcode/robloxscripts/main/speedrun4.lua'),true))()
        end,
     })
 
@@ -257,7 +257,7 @@ elseif game.PlaceId == 4878686481 then -- Bee Swarm Simulator
     local Button = BeeSwarmSimulatorTab:CreateButton({
        Name = "VerbalHub",
        Callback = function()
-       loadstring(game:HttpGet("https://raw.githubusercontent.com/VerbalHubz/Verbal-Hub/refs/heads/main/Bee%20Swarm%20Sim.Lua",true))()
+       loadstring(game:HttpGet('https://raw.githubusercontent.com/VerbalHubz/Verbal-Hub/refs/heads/main/Bee%20Swarm%20Sim.Lua')true))()
        end,
     })
     local Button = BeeSwarmSimulatorTab:CreateButton({
@@ -336,7 +336,7 @@ elseif game.PlaceId == 631892440 then -- Build A Boat For Treasure
     local Button = BuildABoatForTreasureTab:CreateButton({
        Name = "autoBuild",
        Callback = function()
-       loadstring(game:HttpGet(("https://raw.githubusercontent.com/catblox1346/StensUIReMake/main/Script/StensUIRemakev2.0.0") ,true))()
+       loadstring(game:HttpGet(("https://raw.githubusercontent.com/catblox1346/StensUIReMake/main/Script/StensUIRemakev2.0.0"),true))()
        end,
     })
 
@@ -433,13 +433,13 @@ elseif game.PlaceId == 149300737 then -- Prison Life
     local Button = PrisonLifeTab:CreateButton({
        Name = "Nexus Hub",
        Callback = function()
-       loadstring(game:HttpGet("https://raw.githubusercontent.com/GwnStefano/NexusHub/main/Main") ,true))()
+       loadstring(game:HttpGet("https://raw.githubusercontent.com/GwnStefano/NexusHub/main/Main"),true))()
        end,
     })
     local Button = PrisonLifeTab:CreateButton({
        Name = "AdminFe",
        Callback = function()
-       loadstring(game:HttpGet(('https://raw.githubusercontent.com/XTheMasterX/Scripts/Main/PrisonLife') ,true))()
+       loadstring(game:HttpGet(('https://raw.githubusercontent.com/XTheMasterX/Scripts/Main/PrisonLife'),true))()
        end,
     })
 
