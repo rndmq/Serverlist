@@ -269,13 +269,13 @@ elseif game.PlaceId == 4878686481 then -- Bee Swarm Simulator
     local Button = BeeSwarmSimulatorTab:CreateButton({
        Name = "atlasHub",
        Callback = function()
-       loadstring(game:HttpGet("https://raw.githubusercontent.com/Chris8889/atlasbss/main/script.lua"))()
+       loadstring(game:HttpGet('https://raw.githubusercontent.com/Chris8889/atlasbss/main/script.lua'))()
        end,
     })
     local Button = BeeSwarmSimulatorTab:CreateButton({
        Name = "HistyHub",
        Callback = function()
-       loadstring(game:HttpGet("https://raw.githubusercontent.com/scriptpastebin/raw/main/Histy"))() 
+       loadstring(game:HttpGet('https://raw.githubusercontent.com/scriptpastebin/raw/main/Histy'))()
        end,
     })
 
@@ -656,4 +656,9 @@ elseif game.PlaceId == 2916758764 then -- Hide and Seek Extreme
        print("Hey")
        end,
     })
-
+    else
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Notice",
+        Text = "Not Supported Games."
+    })
+end
