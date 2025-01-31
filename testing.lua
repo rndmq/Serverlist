@@ -155,7 +155,7 @@ elseif game.PlaceId == 366400023 then -- Tower of Hell
        end,
     })
 
-elseif game.PlaceId == 417215597 then -- Murder Mystery 2
+elseif game.PlaceId == 142823291 then -- Murder Mystery 2
     local MurderMystery2Tab = Window:CreateTab("Murder Mystery 2")
     local Section = MurderMystery2Tab:CreateSection("Script list")
     local Button = MurderMystery2Tab:CreateButton({
@@ -241,7 +241,7 @@ elseif game.PlaceId == 1658616937 then -- Flee the Facility
        end,
     })
 
-elseif game.PlaceId == 142823291 then -- Speed Run 4
+elseif game.PlaceId == 183364845 then -- Speed Run 4
     local SpeedRun4Tab = Window:CreateTab("Speed Run 4")
     local Section = SpeedRun4Tab:CreateSection("Script list")
     local Button = SpeedRun4Tab:CreateButton({
@@ -295,6 +295,7 @@ elseif game.PlaceId == 758099204 then -- Escape Room
     local Button = EscapeRoomTab:CreateButton({
        Name = "Button Example",
        Callback = function()
+       print("Hey")
        end,
     })
 
@@ -341,7 +342,7 @@ elseif game.PlaceId == 3482120195 then -- Ninja Legends
     local Button = NinjaLegendsTab:CreateButton({
        Name = "Proxima Hub",
        Callback = function()
-       loadstring(game:HttpGet("https://raw.githubusercontent.com/TrixAde/Proxima-Hub/main/Main.lua"))()       
+       loadstring(game:HttpGet("https://raw.githubusercontent.com/TrixAde/Proxima-Hub/main/Main.lua"))()
        end,
     })
 
@@ -502,7 +503,7 @@ elseif game.PlaceId == 195498200 then -- Dragon Adventures
     local Button = DragonAdventuresTab:CreateButton({
        Name = "NeuronHub",
        Callback = function()
-       loadstring(game:HttpGet("https://raw.githubusercontent.com/Yumiara/Python/main/Main.lua"))(); 
+       loadstring(game:HttpGet("https://raw.githubusercontent.com/Yumiara/Python/main/Main.lua"))()
        end,
     })
 
@@ -541,13 +542,13 @@ elseif game.PlaceId == 4546769788 then -- King Legacy
     local Button = KingLegacyTab:CreateButton({
        Name = "ZeeHub",
        Callback = function()
-       loadstring(game:HttpGet('https://zuwz.me/Ls-Zee-Hub-KL'))() 
+       loadstring(game:HttpGet('https://zuwz.me/Ls-Zee-Hub-KL'))()
        end,
     })
     local Button = KingLegacyTab:CreateButton({
        Name = "HulkHub",
        Callback = function()
-       loadstring(game:HttpGet"https://raw.githubusercontent.com/HULKUexe/mobileX/main/FreeScript.lua")() 
+       loadstring(game:HttpGet("https://raw.githubusercontent.com/HULKUexe/mobileX/main/FreeScript.lua"))()
        end,
     })
 
