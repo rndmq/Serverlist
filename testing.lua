@@ -559,6 +559,7 @@ elseif game.PlaceId == 2840070148 then -- Time Travel Adventures
     local Button = TimeTravelAdventuresTab:CreateButton({
        Name = "Button Example",
        Callback = function()
+       print("Hey")
        end,
     })
 
@@ -568,6 +569,7 @@ elseif game.PlaceId == 6053088507 then -- Superhero Tycoon
     local Button = SuperheroTycoonTab:CreateButton({
        Name = "Button Example",
        Callback = function()
+       print("Hey")
        end,
     })
 
@@ -577,6 +579,7 @@ elseif game.PlaceId == 2552494531 then -- Pet Simulator X
     local Button = PetSimulatorXTab:CreateButton({
        Name = "Button Example",
        Callback = function()
+       print("Hey")
        end,
     })
 
@@ -586,6 +589,7 @@ elseif game.PlaceId == 1286980859 then -- The Wild West
     local Button = TheWildWestTab:CreateButton({
        Name = "Button Example",
        Callback = function()
+       print("Hey")
        end,
     })
 
@@ -595,6 +599,7 @@ elseif game.PlaceId == 171177310 then -- Dragon Ball Z: Final Stand
     local Button = DragonBallZFinalStandTab:CreateButton({
        Name = "Button Example",
        Callback = function()
+       print("Hey")
        end,
     })
 
@@ -604,6 +609,7 @@ elseif game.PlaceId == 4781735222 then -- Deathrun
     local Button = DeathrunTab:CreateButton({
        Name = "Button Example",
        Callback = function()
+       print("Hey")
        end,
     })
 
@@ -613,6 +619,7 @@ elseif game.PlaceId == 6062060725 then -- Obby Creator
     local Button = ObbyCreatorTab:CreateButton({
        Name = "Button Example",
        Callback = function()
+       print("Hey")
        end,
     })
 
@@ -622,6 +629,7 @@ elseif game.PlaceId == 2916758764 then -- Hide and Seek Extreme
     local Button = HideAndSeekExtremeTab:CreateButton({
        Name = "Button Example",
        Callback = function()
+       print("Hey")
        end,
     })
    
