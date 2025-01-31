@@ -5,23 +5,23 @@ local Window = Rayfield:CreateWindow({
    LoadingTitle = "Loading Script Hub",
    LoadingSubtitle = "By mrbest6317",
    ConfigurationSaving = {
-      Enabled = true,
+      Enabled =  true,
       FolderName = nil, -- Create a custom folder for your hub/game
       FileName = "Player Changer"
    },
    Discord = {
-      Enabled = true,
+      Enabled =  true,
       Invite = "AU4CnDTbxt", -- The Discord invite code, do not include discord.gg/. E.g. discord.gg/ABCD would be ABCD
-      RememberJoins = true -- Set this to false to make them join the discord every time they load it up
+      RememberJoins =  true -- Set this to false to make them join the discord every time they load it up
    },
-   KeySystem = false, -- Set this to true to use our key system
+   KeySystem = false, -- Set this to  true to use our key system
    KeySettings = {
       Title = "Untitled",
       Subtitle = "Key System",
       Note = "No method of obtaining the key is provided",
       FileName = "Key", -- It is recommended to use something unique as other scripts using Rayfield may overwrite your key file
-      SaveKey = true, -- The user's key will be saved, but if you change the key, they will be unable to use your script
-      GrabKeyFromSite = false, -- If this is true, set Key below to the RAW site you would like Rayfield to get the key from
+      SaveKey =  true, -- The user's key will be saved, but if you change the key, they will be unable to use your script
+      GrabKeyFromSite = false, -- If this is  true, set Key below to the RAW site you would like Rayfield to get the key from
       Key = {"Hello"} -- List of keys that will be accepted by the system, can be RAW file links (pastebin, github etc) or simple strings ("hello","key22")
    }
 })
@@ -227,7 +227,7 @@ elseif game.PlaceId == 763106014 then -- Natural Disaster Survival
     local Button = NaturalDisasterSurvivalTab:CreateButton({
        Name = "ZeeroxHub",
        Callback = function()
-       loadstring(game:HttpGet'https://raw.githubusercontent.com/RunDTM/ZeeroxHub/main/Loader.lua'))()
+       loadstring(game:HttpGet('https://raw.githubusercontent.com/RunDTM/ZeeroxHub/main/Loader.lua'))()
        end,
     })
 
@@ -247,7 +247,7 @@ elseif game.PlaceId == 183364845 then -- Speed Run 4
     local Button = SpeedRun4Tab:CreateButton({
        Name = "Dragonismcode",
        Callback = function()
-       loadstring(game:HttpGet(('https://raw.githubusercontent.com/dragonismcode/robloxscripts/main/speedrun4.lua'),true))()
+       loadstring(game:HttpGet(('https://raw.githubusercontent.com/dragonismcode/robloxscripts/main/speedrun4.lua'),  true))()
        end,
     })
 
@@ -257,7 +257,7 @@ elseif game.PlaceId == 4878686481 then -- Bee Swarm Simulator
     local Button = BeeSwarmSimulatorTab:CreateButton({
        Name = "VerbalHub",
        Callback = function()
-       loadstring(game:HttpGet('https://raw.githubusercontent.com/VerbalHubz/Verbal-Hub/refs/heads/main/Bee%20Swarm%20Sim.Lua')true))()
+       loadstring(game:HttpGet('https://raw.githubusercontent.com/VerbalHubz/Verbal-Hub/refs/heads/main/Bee%20Swarm%20Sim.Lua'), true))()
        end,
     })
     local Button = BeeSwarmSimulatorTab:CreateButton({
@@ -336,7 +336,7 @@ elseif game.PlaceId == 631892440 then -- Build A Boat For Treasure
     local Button = BuildABoatForTreasureTab:CreateButton({
        Name = "autoBuild",
        Callback = function()
-       loadstring(game:HttpGet(("https://raw.githubusercontent.com/catblox1346/StensUIReMake/main/Script/StensUIRemakev2.0.0"),true))()
+       loadstring(game:HttpGet(("https://raw.githubusercontent.com/catblox1346/StensUIReMake/main/Script/StensUIRemakev2.0.0"), true))()
        end,
     })
 
@@ -433,13 +433,13 @@ elseif game.PlaceId == 149300737 then -- Prison Life
     local Button = PrisonLifeTab:CreateButton({
        Name = "Nexus Hub",
        Callback = function()
-       loadstring(game:HttpGet("https://raw.githubusercontent.com/GwnStefano/NexusHub/main/Main"),true))()
+       loadstring(game:HttpGet('https://raw.githubusercontent.com/GwnStefano/NexusHub/main/Main'), true))()
        end,
     })
     local Button = PrisonLifeTab:CreateButton({
        Name = "AdminFe",
        Callback = function()
-       loadstring(game:HttpGet(('https://raw.githubusercontent.com/XTheMasterX/Scripts/Main/PrisonLife'),true))()
+       loadstring(game:HttpGet(('https://raw.githubusercontent.com/XTheMasterX/Scripts/Main/PrisonLife'), true))()
        end,
     })
 
@@ -449,7 +449,7 @@ elseif game.PlaceId == 206702380 then -- SharkBite
     local Button = SharkBiteTab:CreateButton({
        Name = "Sharkbite",
        Callback = function()
-       loadstring(game:HttpGet(('https://raw.githubusercontent.com/Luces245434/script/main/sharkbite2'))()
+       loadstring(game:HttpGet('https://raw.githubusercontent.com/Luces245434/script/main/sharkbite2'))()
        end,
     })
 
