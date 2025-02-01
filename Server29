@@ -304,7 +304,7 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server6"))()
-elseif game.PlaceId == 16453656684 then
+elseif game.PlaceId == 16993432698 then
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
         Text = "Enjoy the script!",
@@ -460,7 +460,11 @@ else
     Text = game.Name .. " isn't Supported :(",
     Duration = 5
 })
-
+game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Information",
+        Text = "If this game should be supported, Please Report it to me!",
+        Duration = 5
+    })
     task.wait(2)
     game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "But",
