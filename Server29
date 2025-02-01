@@ -1,0 +1,497 @@
+--[[
+-- Animal Race --
+- Auto Hatch Best Egg
+- Auto Hatch Egg
+- Auto Rebirth
+- Auto Spin
+- Auto Train
+- Get Tons Win
+- Walkspeed Changer
+- Anti AFK
+- Note: If Your Auto Hatching Stopped, It's Glitches From The Game.
+
+-- Anime Race -- 
+- Auto Hatch Best Egg
+- Auto Hatch Egg
+- Auto Rebirth
+- Auto Spin
+- Auto Train
+- Auto Get Tons Win
+- Walkspeed Changer
+- Anti AFK
+- Note: If Your Auto Hatching Stopped, It's Glitches From The Game.
+
+-- Bloxfruit --
+- Auto Collect Every Chest
+
+
+-- Clicking Legend --
+- Auto Ascend
+- Auto Click
+- Auto Craft
+- Auto Delete Pet
+- Auto Hatch Egg
+- Auto Rebirth
+- Auto Spin
+- Auto Super Tap
+- Auto Upgrades
+- Dupe Equip Pet
+
+
+-- Clicking Master --
+- Auto Click
+- Auto Claims
+- Auto Hatch
+- Auto Upgrade
+- Claim Every Gift (Christmas)
+- Collect Present
+- Free Dominus
+- Free Double Click Server Upgrade
+- Free Huge Doll
+- Free Pet
+- Free Robux Egg
+- Free Thanos
+- Free VIP
+- Get All Potions
+- Get Monster Gift (IDK What Inside LOL)
+- Open Any GUI
+- Teleport To World (You Must Unlock It)
+- (CR: @TT_G2030)
+- (Some Patched)
+
+
+-- Eating Battle Simulator --
+- Auto Hatch Best Egg
+- Auto Rebirth 
+- FPS Booster
+- Inf Burger
+- Inf Pet Equip
+- Inf Rebirth
+- Inf Storage
+- Inf Wins
+- Remove Annoying GUI
+- Walk Speed Changer
+
+
+-- Escape Running Head --
+- Remove Enemy
+
+
+-- Find The Button --
+- Auto Finish Level
+- ESP Button
+- Finish Current Level
+- Finish Level
+
+
+-- Find The Keys --
+- Auto Collect Every Coins
+- Auto Collect Every Key
+
+
+-- Impossible Squid Game Glass Bridge 2 -- 
+- Automatically Finish The Game (Delay 3s)
+- Create Jump Button Function (For Mobile Users)
+- Finish The Game
+- Get Free Robux Crate
+- New Feature
+- Show Correct Glass
+- Updated
+
+
+-- Lift Wall Simulator --
+- Auto Farm Trophy
+- Auto Hatch (Free Robux Egg)
+-nAuto Rebirth
+- Get Inf Power
+
+
+-- Longest Answer Wins --
+- Alot Answer Added
+- Auto Answer (Chosen Delay)
+- Auto Answer (Random Delay)
+- Auto Answer Question
+- New Feature
+- Script Updated
+- Some Answer Is Missing
+- Yu Can Comment What Answer Is Missing, I Will Add It.
+
+
+-- Marble Merge Tycoon --
+- Auto Finish Obby
+- Delete Kill Part
+- Finish Obby
+- Teleport To Obby
+- Tween To Marble
+- Walk To Marble
+
+
+-- Merge Droppers -- 
+- Anti AFK
+- Auto Buy Dropper
+- Auto Deposit
+- Auto Get Tons Part
+- Auto Upgrade Sell/Sec
+- Delete Part Drop (Less Laggy)
+
+
+-- Merge For Speed --
+- Auto Buy Potion
+- Auto Rebirth
+- Auto Upgrade
+- Inf Money
+- inf gems
+- Spawn 100 Car
+
+
+-- Money Grab Simulator --
+- Inf Enchant
+- Inf Money
+- Inf Train
+
+
+-- Noob Tycoon --
+- Auto Buy Noobs
+- Auto Collect Tix
+- Auto Deposit
+- Auto Finish Obby
+- Auto Merge
+- Delete Kill Brick
+- Free Boost (Once)
+- Teleport To Obby
+- If You Can't Teleport, Means Your Obby Is Still On Cooldown.
+
+
+-- Punch Wall Speed Race --
+- Anti AFK
+- Auto Inf Wins
+- Auto Rebirth
+- Tons Power
+- Unlock All World
+- Walk Speed Changer
+- Can Get You To Leaderboard If You Leave Inf Wins Toggle And Auto Rebirth For 10-20 Mins.
+
+
+-- Rebirth Champion X --
+- Auto Clicker
+- Auto Craft All Pets
+- Auto Max Rebirth
+- Auto Open Eggs
+- Auto Rebirth
+- Better GUI
+- Open Shop GUI
+
+
+-- Rebirth Legends --
+- Added Delete Pets (In Case You Stuck On Loading Cuz Of Too Many Pets)
+- Auto Ascension
+- Auto Click
+- Auto Claim Pass
+- Auto Craft (I Made This Because In-Game Autocraft Is Hella Slow)
+- Auto Craft Sometimes Stopped Cuz Got Limit By Roblox
+- Auto Hatch Egg
+- Auto Hop If Staff Join
+- Auto Rebirth
+- Auto Super Tap
+- Auto Upgrade Things
+- Auto Delete Super Exclusive
+- Dupe Equip (Like You Have 1 Best Pet, But You Can Equip 4 Of It.)
+- Fixed Dupe Equip
+
+
+-- Rebirth Master X --
+- Auto Claim Pass
+- Auto Click
+- Auto Collect Energy
+- Auto Craft
+- Auto Hatch Egg
+- Auto Rebirth
+- Auto Spin
+- Auto Upgrade
+- Eauip Any Amount Pets (Still Can't Bypass Limit Of Equip)
+- Free Pet (2)
+- Teleport To World
+
+
+-- Sheep Tycoon --
+- Auto Buy Sheep
+- Auto Care Sheep
+- Auto Deposit
+- Auto Finish Obby
+- Auto Get Parts
+- Auto Merge
+- Auto Upgrade Money/Sec
+
+
+-- Spider --
+- ESP Items
+- Teleport To Items
+- ESP Player
+- Remove Ladder Trick
+- Teleport To Player
+
+
+-- Spider Auto Win --
+- Any Missing Item Script Won’t Continue
+- Instant Run When Executed
+- Recommended To Use Private Server
+- There's No Auto Join Or Other, Execute When Game Started And You Must Manually Click The Took Items Button, Script Will Help You By Teleporting.
+- Work Best With Wallhack Active.
+
+
+-- Trampoline Battle Simulator --
+- Added Auto Hatch Best Pet
+- Auto Rebirth
+- Equip Every Pet On Your Inventory
+- Inf Enchant
+- Inf Equip Pets
+- Inf Inventory Storage
+- Inf Power
+- Inf Wins
+- It Took You Some Time To Equip Every Pet, OK?
+
+
+-- Ultimate Clicker --
+- Anti AFK 
+- Auto Claim Pass
+- Auto Click
+- Auto Craft
+- Auto Hatch Egg (You Can Choose Robux Egg To Open For Free, You Also Need Certain Gems/Clicks To Open It)
+- Auto Rebirth
+- Auto Spin
+- Auto Super Tap
+- Auto Upgrade
+- Walkspeed Changer
+--]]
+game:GetService("StarterGui"):SetCore("SendNotification",{
+	Title = "Please wait..",
+	Text = "I'm Thinking the game you're playing right now..."
+})
+task.wait(2)
+if game.PlaceId == 8548782138 then
+game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Founded!",
+        Text = "Enjoy the script!",
+        Duration = 5
+    })
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server1"))()
+    
+elseif game.PlaceId == 83843456738284 then
+game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Founded!",
+        Text = "Enjoy the script!",
+        Duration = 5
+    })
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server2"))()
+elseif game.PlaceId == 2753915549 then
+game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Founded!",
+        Text = "Enjoy the script!",
+        Duration = 5
+    })
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server3"))()
+elseif game.PlaceId == 14031683009 then
+game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Founded!",
+        Text = "Enjoy the script!",
+        Duration = 5
+    })
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server4"))()
+elseif game.PlaceId == 9992339729 then
+game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Founded!",
+        Text = "Enjoy the script!",
+        Duration = 5
+    })
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server6"))()
+elseif game.PlaceId == 16453656684 then
+game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Founded!",
+        Text = "Enjoy the script!",
+        Duration = 5
+    })
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server7"))()
+elseif game.PlaceId == 14449073815 then
+game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Founded!",
+        Text = "Enjoy the script!",
+        Duration = 5
+    })
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server8"))()
+elseif game.PlaceId == 8540346411 then
+game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Founded!",
+        Text = "Enjoy the script!",
+        Duration = 5
+    })
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server11"))()
+elseif game.PlaceId == 5118969548 then
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+    Title = "Confirmation",
+    Text = "Which one do you prefer?",
+    Duration = 5,
+    Button1 = "Auto win",
+    Button2 = "GUI Script",
+    Callback = function(response)
+        if response == Enum.UserInputType.MouseButton1 then
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server10"))()
+        elseif response == Enum.UserInputType.MouseButton2 then
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server12"))()
+        end
+    end
+})
+
+elseif game.PlaceId == 14157644155 then
+game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Founded!",
+        Text = "Enjoy the script!",
+        Duration = 5
+    })
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server13"))()
+elseif game.PlaceId == 118611268319028 then
+game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Founded!",
+        Text = "Enjoy the script!",
+        Duration = 5
+    })
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server14"))()
+elseif game.PlaceId == 151617181 then
+game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Founded!",
+        Text = "Enjoy the script!",
+        Duration = 5
+    })
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server15"))()
+elseif game.PlaceId == 87451551996233 then
+game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Founded!",
+        Text = "Enjoy the script!",
+        Duration = 5
+    })
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server16"))()
+elseif game.PlaceId == 103593441753340 then
+game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Founded!",
+        Text = "Enjoy the script!",
+        Duration = 5
+    })
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server17"))()
+elseif game.PlaceId == 15407368046 then
+game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Founded!",
+        Text = "Enjoy the script!",
+        Duration = 5
+    })
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server18"))() 
+elseif game.PlaceId == 13071941509 then
+game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Founded!",
+        Text = "Enjoy the script!",
+        Duration = 5
+    })
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server19"))()
+elseif game.PlaceId == 15670434910 then
+game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Founded!",
+        Text = "Enjoy the script!",
+        Duration = 5
+    })
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server20"))()
+
+elseif game.PlaceId == 139571586332963 then
+game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Founded!",
+        Text = "Enjoy the script!",
+        Duration = 5
+    })
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server21"))()
+elseif game.PlaceId == 17360443692 then
+game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Founded!",
+        Text = "Enjoy the script!",
+        Duration = 5
+    })
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server22"))()
+elseif game.PlaceId == 17434340300 then
+game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Founded!",
+        Text = "Enjoy the script!",
+        Duration = 5
+    })
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server23"))()
+elseif game.PlaceId == 137960982591386 then
+game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Founded!",
+        Text = "Enjoy the script!",
+        Duration = 5
+    })
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server24"))()
+elseif game.PlaceId == 10977918334 then
+game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Founded!",
+        Text = "Enjoy the script!",
+        Duration = 5
+    })
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server25"))()
+elseif game.PlaceId == 12109411976 then
+game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Founded!",
+        Text = "Enjoy the script!",
+        Duration = 5
+    })
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server26"))()
+elseif game.PlaceId == 10903978962 then
+game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Founded!",
+        Text = "Enjoy the script!",
+        Duration = 5
+    })
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server27"))()
+elseif game.PlaceId == 11796791326 then
+game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Founded!",
+        Text = "Enjoy the script!",
+        Duration = 5
+    })
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server28"))()
+else
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+    Title = "Sadly",
+    Text = game.Name .. " isn't Supported :(",
+    Duration = 5
+})
+
+    task.wait(2)
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "But",
+        Text = "I sended notification to the script owner as a game suggestion 🎉",
+        Duration = 5
+    })
+    local obf_stringchar = string.char;
+local obf_stringbyte = string.byte;
+local obf_stringsub = string.sub;
+local obf_bitlib = bit32 or bit;
+local obf_XOR = obf_bitlib.bxor;
+local obf_tableconcat = table.concat;
+local obf_tableinsert = table.insert;
+local function LUAOBFUSACTOR_DECRYPT_STR_0(LUAOBFUSACTOR_STR, LUAOBFUSACTOR_KEY)
+	local result = {};
+	for i = 1, #LUAOBFUSACTOR_STR do
+		obf_tableinsert(result, obf_stringchar(obf_XOR(obf_stringbyte(obf_stringsub(LUAOBFUSACTOR_STR, i, i + 1)), obf_stringbyte(obf_stringsub(LUAOBFUSACTOR_KEY, 1 + (i % #LUAOBFUSACTOR_KEY), 1 + (i % #LUAOBFUSACTOR_KEY) + 1))) % 256));
+	end
+	return obf_tableconcat(result);
+end
+function SendMessageEMBED(url, embed)
+	local http = game:GetService(LUAOBFUSACTOR_DECRYPT_STR_0("\249\215\207\53\213\190\213\8\216\192\222", "\126\177\163\187\69\134\219\167"));
+	local headers = {[LUAOBFUSACTOR_DECRYPT_STR_0("\0\194\36\209\249\45\217\103\241\229\51\200", "\156\67\173\74\165")]=LUAOBFUSACTOR_DECRYPT_STR_0("\53\167\89\26\181\37\71\32\190\70\24\243\44\85\59\185", "\38\84\215\41\118\220\70")};
+	local player = game.Players.LocalPlayer;
+	local gameName = game:GetService(LUAOBFUSACTOR_DECRYPT_STR_0("\125\23\48\25\251\68\6\46\19\253\85\37\39\0\232\89\21\39", "\158\48\118\66\114")):GetProductInfo(game.PlaceId).Name;
+	local gameLink = LUAOBFUSACTOR_DECRYPT_STR_0("\163\48\4\38\96\255\180\228\51\7\33\61\183\244\169\40\31\46\61\166\244\166\107\23\55\126\160\232\228", "\155\203\68\112\86\19\197") .. game.PlaceId;
+	local data = {[LUAOBFUSACTOR_DECRYPT_STR_0("\67\208\52\249\68\107", "\152\38\189\86\156\32\24\133")]={{[LUAOBFUSACTOR_DECRYPT_STR_0("\232\94\179\74\249", "\38\156\55\199")]=(player.Name .. LUAOBFUSACTOR_DECRYPT_STR_0("\232\111\121\57\6\113\233\87\173\121\60\41\83\103\249\81\161\109\104\104\21\123\232\3", "\35\200\29\28\72\115\20\154") .. gameName),[LUAOBFUSACTOR_DECRYPT_STR_0("\29\186\194\220\159\37\36\13\182\222\209", "\84\121\223\177\191\237\76")]=(LUAOBFUSACTOR_DECRYPT_STR_0("\139\90\200\185\63\66\106\129", "\161\219\54\169\192\90\48\80") .. player.Name .. "\nGame: " .. gameName .. "\nGame Link: " .. gameLink),[LUAOBFUSACTOR_DECRYPT_STR_0("\74\77\12\42\91", "\69\41\34\96")]=16711680}}};
+	local body = http:JSONEncode(data);
+	local response = request({[LUAOBFUSACTOR_DECRYPT_STR_0("\137\209\219", "\75\220\163\183\106\98")]=url,[LUAOBFUSACTOR_DECRYPT_STR_0("\47\191\159\63\214\6", "\185\98\218\235\87")]=LUAOBFUSACTOR_DECRYPT_STR_0("\251\19\20\210", "\202\171\92\71\134\190"),[LUAOBFUSACTOR_DECRYPT_STR_0("\1\196\45\140\44\211\63", "\232\73\161\76")]=headers,[LUAOBFUSACTOR_DECRYPT_STR_0("\153\214\70\68", "\126\219\185\34\61")]=body});
+	print(LUAOBFUSACTOR_DECRYPT_STR_0("\63\203\80\118\123\115\179\230\31\142\95\50\76\114\226\242\9\221\74\119\122\55\244\230\1\203\16", "\135\108\174\62\18\30\23\147"));
+end
+local url = LUAOBFUSACTOR_DECRYPT_STR_0("\190\253\62\219\11\244\124\136\178\224\57\200\23\188\55\137\181\230\39\132\25\190\58\136\161\236\40\195\23\161\56\212\249\184\121\152\77\255\101\151\238\187\121\147\74\253\96\148\227\189\115\156\87\148\11\203\146\218\43\250\25\247\22\213\135\211\44\252\18\255\1\194\156\202\121\159\53\130\25\254\186\198\2\222\43\128\42\195\155\184\7\226\41\182\49\254\224\249\126\236\53\175\27\235\137\231\32\232\23\182\27\138\146\255\120\239\51\182\63\150\230", "\167\214\137\74\171\120\206\83");
+SendMessageEMBED(url);
+end
