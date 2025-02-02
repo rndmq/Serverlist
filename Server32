@@ -1,0 +1,162 @@
+local loadGui = loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/source.lua.txt"))()
+local CoastingLibrary = loadGui
+
+local Tab = CoastingLibrary:CreateTab("Auto Answer")
+local Section = Tab:CreateSection("Main")
+
+
+
+
+--[[ Put you answer here ]]
+local answers = {
+    "Wednesday",
+    "Caterpillar",
+    "Andorra la Vella",
+    "Purple",
+    "Afghanistan",
+    "PlayStation Controller",
+    "Inquisitormaster",
+    "Peregrine Falcon",
+    "Western Honey Bee",
+    "Passion Fruit",
+    "December",
+    "Electric Guitar",
+    "Parallelogram",
+    "Western Diamondback Rattlesnake",
+    "High School Musical",
+    "PlayStation 5",
+    "Strawberry Blonde",
+    "Autumn",
+    "Forehead",
+    "Mercury",
+    "Captain America",
+    "Doctor Octopus",
+    "Black Raspberry",
+    "Silver",
+    "TheStrongestBattlegrounds",
+    "Cauliflower",
+    "Red Passionfruit",
+    "Rudolph",
+    "Facebook Messenger",
+    "Contact Lenses",
+    "Rocking Chair",
+    "Physical Education",
+    "Sleep Paralysis",
+    "Ice Cream Spoon",
+    "Chicken Nuggets",
+    "Mozzarella Cheese",
+    "Copy and Paste",
+    "American Football",
+    "American Cheese",
+    "Underground Funicular",
+    "Thunderstorm",
+    "United States of America",
+    "Democratic Republic of the Congo",
+    "Electric Toothbrush"
+}
+
+--[[ Until here ]]
+
+
+
+
+local sendingAnswers = false
+local randomizedSending = false
+local delayTime = 10
+
+local function AllAnswers()
+    for _, answer in ipairs(answers) do
+        local args = {
+            [1] = "S_System_SubmitAnswer",
+            [2] = {
+                [1] = answer
+            }
+        }
+        game:GetService("ReplicatedStorage")
+            :WaitForChild("Common")
+            :WaitForChild("Library")
+            :WaitForChild("Network")
+            :WaitForChild("RemoteFunction")
+            :InvokeServer(unpack(args))
+    end
+end
+
+Section:CreateDropdown("Select Delay (seconds)", {
+    "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23"
+}, 10, function(selected)
+    delayTime = tonumber(selected)
+end)
+
+Section:CreateToggle("Auto Answer", function(state)
+    sendingAnswers = state
+    while sendingAnswers do
+        AllAnswers()
+        wait(delayTime)
+    end
+end)
+
+Section:CreateButton("Answers", function()
+    AllAnswers()
+end)
+
+Section:CreateToggle("Randomized Delay Answer", function(state)
+    randomizedSending = state
+    while randomizedSending do
+        AllAnswers()
+        wait(math.random(5, 15))
+    end
+end)
+
+local MainSection = Tab:CreateSection("Gem")
+local gem = false
+local collecting = false
+
+local function collgem()
+    local player = game.Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+    local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+    local collectibles = workspace.Collectibles
+    
+    for _, object in ipairs(collectibles:GetChildren()) do
+        coroutine.wrap(function()
+            firetouchinterest(humanoidRootPart, object, 0)
+            firetouchinterest(humanoidRootPart, object, 1)
+        end)()
+    end
+end
+MainSection:CreateToggle("Auto Collect", function(toggled)
+    gem = toggled
+    if gem then
+        collecting = true
+        task.spawn(function()
+            while collecting do
+                collgem()
+                task.wait(0.1)
+                if not gem then
+                    collecting = false
+                end
+            end
+        end)
+    else
+        collecting = false
+    end
+end)
+
+print("Github Links: https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server32")
+game:GetService("StarterGui"):SetCore("SendNotification", {
+    Title = "Github Links",
+    Text = "Do you want to Copy github link?",
+    Duration = 5,
+    Button1 = "Yes",
+    Button2 = "No",
+    Callback = function(selected)
+        if selected == "Yes" then
+            setclipboard("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server32")
+            game:GetService("StarterGui"):SetCore("SendNotification", {
+                Title = "Copied!",
+                Text = "Github has been copied to clipboard.",
+                Duration = 3
+            })
+        end
+    end
+})
