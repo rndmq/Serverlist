@@ -1,0 +1,159 @@
+local loadGui = loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/source.lua.txt"))()
+local CoastingLibrary = loadGui
+
+local Tab = CoastingLibrary:CreateTab("Auto Answer")
+local Section = Tab:CreateSection("Main")
+
+local answers = {
+    "BUN", "ROSE", "PO", "SAD", "LIP", "BUN", "GO", "RC", "PEA", "AX", "AX", "RED", "SEA", "LG", "PAN",
+    "OKA", "PE", "CD", "GA", "HAM", "LION", "US", "FB", "HAIL", "TREE", "OAK", "MAY", "MARS", "BED",
+    "TIN", "NUT", "ANT", "BAT", "GUM", "PAN", "PEN", "RR", "GOLF", "TAG", "CRAB", "OX", "SD", "RP",
+    "GRU", "TV", "F1", "AC", "HEN", "TOD", "M", "AX", "UKE", "YAM", "NEO", "ID", "OX", "EEL", "RV",
+    "AX", "DK", "GD", "BJ", "TV", "AX", "RH", "MM", "RUN", "FIG", "DS", "YU", "PJ", "LIP", "IO", "OJ",
+    "BED", "BK", "TV", "FLY", "DRC", "PEN", "TV", "K9", "HEX", "ID", "KID", "TUB", "PC", "DJ", "BOA",
+    "R", "PIE", "PEA", "TIA", "AC", "TP", "OX", "DV"
+}
+
+local ReplicaSignal = game:GetService("ReplicatedStorage"):WaitForChild("ReplicaRemoteEvents"):WaitForChild("Replica_ReplicaSignal")
+
+local sendingAnswers = false
+local randomizedSending = false
+local delayTime = 10
+
+local function Answer()
+    for _, answer in ipairs(answers) do
+        local args = { [1] = 2, [2] = "Answer", [3] = answer }
+        ReplicaSignal:FireServer(unpack(args))
+    end
+end
+
+Section:CreateDropdown("Select Delay (seconds)", {
+    "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23"
+}, 10, function(selected)
+    delayTime = tonumber(selected)
+end)
+
+Section:CreateToggle("Auto Answer", function(state)
+    sendingAnswers = state
+    while sendingAnswers do
+        Answer()
+        wait(delayTime)
+    end
+end)
+
+Section:CreateButton("Answers", function()
+    Answer()
+end)
+
+Section:CreateToggle("Randomized Delay Answer", function(state)
+    randomizedSending = state
+    while randomizedSending do
+        Answer()
+        wait(math.random(5, 15))
+    end
+end)
+
+--[[ ---- Asnwer + Question ↓ ]]--
+--[[
+    ["Name A Hairstyle"] = "BUN",
+    ["Name A Flower"] = "ROSE",
+    ["Name A Boy Name That Begins With P"] = "PO",
+    ["Name An Emotion You Have Felt"] = "SAD",
+    ["Name A Body Part On Your Face"] = "LIP",
+    ["What Do People Put On A Hamburger?"] = "BUN",
+    ["Name A Board Game"] = "GO",
+    ["Name A Soda Drink"] = "RC",
+    ["Name A Vegetable"] = "PEA",
+    ["Name An Old Fashioned Weapon"] = "AX",
+    ["Name A Tool That Farmer Uses"] = "AX",
+    ["Name A Color"] = "RED",
+    ["Name A Place That You Can Swim"] = "SEA",
+    ["Name A Phone Brand"] = "LG",
+    ["What Can You Use To Cook Food?"] = "PAN",
+    ["Name A Type Of Cheese"] = "OKA",
+    ["Name A Class You Would Take In School"] = "PE",
+    ["Name Something That You Can Listen To Music With"] = "CD",
+    ["Name A Language"] = "GA",
+    ["What Toppings Do People Put On Pizza?"] = "HAM",
+    ["Name An Animal That Begins With Letter L"] = "LION",
+    ["Name A Country"] = "US",
+    ["Name A Social Media Platform"] = "FB",
+    ["Name A Natural Disaster"] = "HAIL",
+    ["Name Something That You Can Climb"] = "TREE",
+    ["Name A Tree Type"] = "OAK",
+    ["Name A Month With 31 Days"] = "MAY",
+    ["Name A Planet In Our Solar System"] = "MARS",
+    ["Name A Thing That You Can Sit On"] = "BED",
+    ["Name A Type Of Metal"] = "TIN",
+    ["Name A Type Of Nut"] = "NUT",
+    ["Name An Animal That Moves Slowly"] = "ANT",
+    ["Name A Thing That Can Be Found In A Cave"] = "BAT",
+    ["Name An Ice Cream Flavour"] = "GUM",
+    ["Name A Thing That Can Be Found In A Kitchen"] = "PAN",
+    ["Name A Classroom Object"] = "PEN",
+    ["Name A Car Brand"] = "RR",
+    ["Name A Sport That Has A Ball In It"] = "GOLF",
+    ["Name An Outdoor Game"] = "TAG",
+    ["Name A Sea Creature"] = "CRAB",
+    ["Name A Farm Animal"] = "OX",
+    ["Name A School Subject"] = "PE",
+    ["Name A Famous Landmark"] = "ID",
+    ["Name A Musical Instrument"] = "UKE",
+    ["Name A Fruit"] = "FIG",
+    ["Name A Three Letter Word"] = "RUN",
+    ["Name Something That Uses Batteries"] = "TV",
+    ["Name A Type Of House Pet"] = "CAT",
+    ["Name A Toy"] = "YOYO",
+    ["Name A Cartoon Character"] = "BOB",
+    ["Name A Shape"] = "DOT",
+    ["Name A Clothing Material"] = "FUR",
+    ["Name A Popular Fast Food Restaurant"] = "KFC",
+    ["Name A Christmas Decoration"] = "BOW",
+    ["Name A Currency"] = "YEN",
+    ["Name A Kind Of Jewelry"] = "RING",
+    ["Name A Type Of Transportation"] = "BUS",
+    ["Name A Kind Of Weather"] = "SUN",
+    ["Name A Type Of Shoe"] = "FLAT",
+    ["Name A Mythical Creature"] = "IMP",
+    ["Name A Holiday"] = "EID",
+    ["Name A Musical Genre"] = "POP",
+    ["Name A Type Of Meat"] = "HAM",
+    ["Name A School Supply"] = "INK",
+    ["Name A Type Of Bread"] = "RYE",
+    ["Name A Type Of Dance"] = "TAP",
+    ["Name A Kind Of Doctor"] = "ENT",
+    ["Name A Kind Of Hat"] = "CAP",
+    ["Name A Kind Of Fish"] = "COD",
+    ["Name A Dessert"] = "PIE",
+    ["Name A Type Of Fabric"] = "WOOL",
+    ["Name A Breakfast Food"] = "EGG",
+    ["Name A Kind Of Pasta"] = "MAC",
+    ["Name A Type Of Soup"] = "RAMEN",
+    ["Name A Type Of Bird"] = "OWL",
+    ["Name A Candy"] = "M&M",
+    ["Name A Beverage"] = "TEA",
+    ["Name A Kitchen Appliance"] = "OVEN",
+    ["Name A Type Of Sandwich"] = "SUB",
+    ["Name A Reptile"] = "BOA",
+    ["Name A Board Game Piece"] = "PAWN",
+    ["Name A Kind Of Tree"] = "MAPLE",
+    ["Name A Precious Gemstone"] = "TOPAZ",
+    ["Name A Kind Of Cookie"] = "OREO",
+    ["Name A Type Of Bug"] = "ANT",
+    ["Name A Type Of Doctor"] = "VET",
+    ["Name A Fairy Tale Character"] = "ELF",
+    ["Name A Superhero"] = "HULK",
+    ["Name A Popular TV Show"] = "FBI",
+    ["Name A Comic Book Villain"] = "JOKER",
+    ["Name A Video Game Character"] = "MARIO",
+    ["Name A Superpower"] = "FLY",
+    ["Name A Type Of Dance"] = "WALTZ",
+    ["Name A Kind Of Cheese"] = "CHEDDAR",
+    ["Name A Popular Singer"] = "DRAKE",
+    ["Name A Musical Instrument"] = "HARP",
+    ["Name A Type Of Dog"] = "LAB",
+    ["Name A Kind Of Flower"] = "LILY",
+    ["Name A Kind Of Tree"] = "OAK",
+    ["Name A Type Of Fish"] = "TROUT",
+    ["Name A Type Of Berry"] = "FIG",
+    ["Name A Kind Of Cereal"] = "OATS" ]]--
