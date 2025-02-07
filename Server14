@@ -1,5 +1,334 @@
+--[[ plz don't just stole and adding a key system 😭]]--
+
+local plrs = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+--[[ ↓↓ you can change like title or smth okay ↓↓  ]]--
+local function teller()
+    local p = plrs.LocalPlayer
+    local gui = Instance.new("ScreenGui")
+    gui.Name = "teller"
+    gui.ResetOnSpawn = false
+    gui.Parent = p.PlayerGui    
+    local f = Instance.new("Frame")
+    f.Size = UDim2.new(0, 200, 0, 100) 
+    f.Position = UDim2.new(0.5, -100, 0.2, -50)
+    f.BackgroundColor3 = Color3.fromRGB(40,40,40)
+    f.BackgroundTransparency = 0.2
+    f.BorderSizePixel = 2
+    f.Active = true
+    f.Draggable = false 
+    f.Parent = gui    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 10)
+    corner.Parent = f  
+    local handle = Instance.new("Frame") 
+    handle.Size = UDim2.new(1,0,0,25)
+    handle.Position = UDim2.new(0,0,0,0)
+    handle.BackgroundColor3 = Color3.fromRGB(30,30,30)
+    handle.BackgroundTransparency = 0
+    handle.BorderSizePixel = 0
+    handle.Parent = f    
+    local handle_corner = Instance.new("UICorner")
+    handle_corner.CornerRadius = UDim.new(0,10)
+    handle_corner.Parent = handle    
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(1,0,1,0)
+    title.BackgroundTransparency = 1
+    title.Text = "helper" --[[ edit ur title here ]]--
+    title.TextColor3 = Color3.fromRGB(255,255,255) 
+    title.TextSize = 14
+    title.Font = Enum.Font.SourceSansBold
+    title.Parent = handle    
+    local txt = Instance.new("TextLabel")
+    txt.Size = UDim2.new(1,-20,0.7,0)
+    txt.Position = UDim2.new(0,10,0.3,0) 
+    txt.BackgroundTransparency = 1
+    txt.TextColor3 = Color3.fromRGB(255,255,255)
+    txt.TextSize = 24 --[[change ur text size ]]--
+    txt.Font = Enum.Font.SourceSansBold
+    txt.Parent = f
+    txt.TextWrapped = true    
+    local shadow = Instance.new("Frame")
+    shadow.Size = f.Size + UDim2.new(0,4,0,4)
+    shadow.Position = UDim2.new(0,-2,0,-2)
+    shadow.BackgroundColor3 = Color3.new(0,0,0)
+    shadow.BackgroundTransparency = 0.7
+    shadow.ZIndex = f.ZIndex - 1
+    shadow.Parent = f    
+    local shadow_corner = Instance.new("UICorner")
+    shadow_corner.CornerRadius = UDim.new(0,12)
+    shadow_corner.Parent = shadow    
+    --[[ ignore (drag syst) ]]--
+    local drag
+    local dragInput
+    local dragStart
+    local startPos
+        local function update(input)
+        local delta = input.Position - dragStart
+        f.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
+                              startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end    
+    handle.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or 
+           input.UserInputType == Enum.UserInputType.Touch then
+            drag = true
+            dragStart = input.Position
+            startPos = f.Position            
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    drag = false
+                end
+            end)
+        end
+    end)    
+    handle.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or
+           input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)    
+    UIS.InputChanged:Connect(function(input)
+        if input == dragInput and drag then
+            update(input)
+        end
+    end)
+    
+    return txt
+end
+
+
+--[[ ↓↓ add missing word here ↓↓ ]]--
+local words = {
+    "taco",
+    "icecream",
+    "roblox",
+    "stop",
+    "butter",
+    "trophy",
+    "breeze",
+    "obby",
+    "sunflower",
+    "sandcastle",
+    "donkey",
+    "soccer",
+    "tunnel",
+    "mountain",
+    "goldfish",
+    "investigator",
+    "paleontology",
+    "killerwin",
+    "home",
+    "sand",
+    "bell",
+    "egg",
+    "prank",
+    "puzzle",
+    "finger",
+    "popcorn",
+    "kangaroo",
+    "umbrella",
+    "volcanoes",
+    "architecture",
+    "adaptation",
+    "winner",
+    "goat",
+    "lamp",
+    "cloud",
+    "hat",
+    "nest",
+    "yt",
+    "sweater",
+    "hunger",
+    "pencil",
+    "basket",
+    "campfire",
+    "lighthouse",
+    "strawberry",
+    "cornfield",
+    "hedgehog",
+    "mathematics",
+    "civilization",
+    "receipt",
+    "ball",
+    "pink",
+    "rock",
+    "cup",
+    "mastermind",
+    "happy",
+    "cookie",
+    "peanut",
+    "family",
+    "sunflower",
+    "teacup",
+    "treasure",
+    "meteorology",
+    "determination",
+    "apple",
+    "sock",
+    "bag",
+    "nuke",
+    "special",
+    "kite",
+    "bed",
+    "eat",
+    "corn",
+    "blue",
+    "lava",
+    "picnic",
+    "shadow",
+    "power",
+    "jungle",
+    "ladder",
+    "snowflake",
+    "chimney",
+    "genius",
+    "responsibility",
+    "electricity",
+    "creativity",
+    "investigator",
+    "deoxyribonucleic",
+    "temperamental",
+    "heterogeneous",
+    "bureaucracy",
+    "note",
+    "bread",
+    "window",
+    "castle",
+    "railroad",
+    "scissors",
+    "courage",
+    "innovation",
+    "exploration",
+    "sun",
+    "moon",
+    "red",
+    "bird",
+    "simulator",
+    "google",
+    "chair",
+    "purple",
+    "butterfly",
+    "pancakes",
+    "dinosaur",
+    "microscope",
+    "engineering",
+    "surveillance",
+    "sagacious",
+    "perfidious",
+    "dog",
+    "cake",
+    "carrot",
+    "rabbit",
+    "yellow",
+    "squirrel",
+    "university",
+    "landscape",
+    "environment",
+    "gauge",
+    "box",
+    "frog",
+    "train",
+    "rocket",
+    "banana",
+    "toothbrush",
+    "carousel",
+    "spectacular",
+    "nonchalant",
+    "handkerchief",
+    "pet",
+    "drum",
+    "pizza",
+    "bottle",
+    "handshake",
+    "skyscraper",
+    "giraffe",
+    "sustainability",
+    "cytokinesis",
+    "pot",
+    "car",
+    "book",
+    "feather",
+    "philosopher",
+    "serendipity",
+    "myriad",
+    "rain",
+    "cat",
+    "green",
+    "horror",
+    "pineapple",
+    "birthday",
+    "technology",
+    "unconstitutional",
+    "parliamentary",
+    "hot",
+    "duck",
+    "orange",
+    "porcupine",
+    "chat",
+    "boat",
+    "garden",
+    "turtle",
+    "friendship",
+    "jellyfish",
+    "flashlight",
+    "enthusiasm",
+    "discombobulate",
+    "dragonfly",
+    "look",
+    "blanket",
+    "snowstorm"
+}
+
+
+
+local uniqueWords = {}
+
+local filteredWords = {}
+for _, word in pairs(words) do
+    local lowerWord = word:lower()
+    if not uniqueWords[lowerWord] then
+        table.insert(filteredWords, word)
+        
+        uniqueWords[lowerWord] = true
+        
+    end
+end
+
+words = filteredWords
+local wordLabel = teller()
+local function updateSuggestions(inputText)
+
+    local currentText = inputText:lower():gsub("%s+", "")
+    
+    if currentText == "" then
+        wordLabel.Text = "Type something plz"
+        return
+    end
+    local matches = {}
+    for _, word in ipairs(words) do
+        if word:lower():sub(1, #currentText) == currentText then
+            table.insert(matches, word)
+        end
+    end
+    if #matches > 0 then
+        table.sort(matches)
+        wordLabel.Text = table.concat(matches, "\n")
+    else
+    
+        wordLabel.Text = "idk, add this word to my table plz"
+    end
+end
+local typingText = workspace.Map.Functional.Screen.SurfaceGui.MainFrame.MainGameContainer.MainTxtContainer:WaitForChild("TypingText")
+
+typingText:GetPropertyChangedSignal("Text"):Connect(function()
+    updateSuggestions(typingText.Text)
+end)
 
 game:GetService("StarterGui"):SetCore("SendNotification",{
-    Title = "Notice",
-    Text = "This script already patched, im sorry! i will try make a new one if i could"
-}
+    Title = "Open source",
+    Text = "add missing word to your helper :)"  
+})
+game:GetService("StarterGui"):SetCore("SendNotification",{
+    Title = "hey",
+    Text = "This script will only help you with spelling. (some word stil missing soo)"  
+})
