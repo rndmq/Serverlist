@@ -352,6 +352,7 @@ local words = {
 "fun",
 "garden",
 "gauge",
+"waterfall",
 "genius",
 "giraffe",
 "goat",
@@ -389,6 +390,7 @@ local words = {
 "Letter",
 "light",
 "lighthouse",
+"spectacular",
 "look",
 "mastermind",
 "mathematics",
@@ -479,7 +481,9 @@ local words = {
 "volcanoes",
 "window",
 "winner",
+"key",
 "yellow",
+"steam",
 "youtube"
 }
 
@@ -531,8 +535,4 @@ end)
 game:GetService("StarterGui"):SetCore("SendNotification",{
     Title = "Open source",
     Text = "add missing word to your helper :)"  
-})
-game:GetService("StarterGui"):SetCore("SendNotification",{
-    Title = "hey",
-    Text = "This script will only help you with spelling. (some word stil missing soo)"  
 })
