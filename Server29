@@ -355,7 +355,7 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server13"))()
-elseif game.PlaceId == 118611268319028 then
+elseif game.PlaceId == 105055747082176 then
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
         Text = "Enjoy the script!",
