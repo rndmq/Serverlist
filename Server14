@@ -392,7 +392,11 @@ local words = {
 "key",
 "yellow",
 "steam",
-"youtube"
+"youtube",
+"honeycomb",
+"achievement",
+"tantamount", 
+"sagacious"
 }
 
 local uniqueWords = {}
@@ -518,7 +522,7 @@ local function sendGradualInput(word)
         local currentPart = word:sub(1, i)
         local args = { [1] = "updateAnswer", [2] = currentPart }
         ReplicatedStorage:WaitForChild("Events"):WaitForChild("GameEvent"):FireServer(unpack(args))
-        task.wait(0.3) -- change legit mode delay
+        task.wait(0.1) -- change legit mode delay
     end
     
     local args = { [1] = "submitAnswer", [2] = word }
