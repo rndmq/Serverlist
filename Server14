@@ -396,7 +396,11 @@ local words = {
 "honeycomb",
 "achievement",
 "tantamount", 
-"sagacious"
+"sagacious",
+"kaleidoscope",
+"forest",
+"hydroelectric",
+"pen"
 }
 
 local uniqueWords = {}
