@@ -513,20 +513,36 @@ local function teller()
 end
 
 local isTyping = false
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local function sendGradualInput(word)
     if isTyping then return end
     isTyping = true
-    
-    -- current input
+    -- safety handled
+    local args = { [1] = "updateAnswer", [2] = word }
+    ReplicatedStorage:WaitForChild("Events"):WaitForChild("GameEvent"):FireServer(unpack(args))
     local typingText = workspace.Map.Functional.Screen.SurfaceGui.MainFrame.MainGameContainer.MainTxtContainer:WaitForChild("TypingText")
+    local playerText = workspace.Map.Functional.Screen.SurfaceGui.MainFrame.MainGameContainer.MainTxtContainer:WaitForChild("PlayerText")
     local startIndex = #typingText.Text + 1
     
-    for i = startIndex, #word do
-        local currentPart = word:sub(1, i)
-        local args = { [1] = "updateAnswer", [2] = currentPart }
-        ReplicatedStorage:WaitForChild("Events"):WaitForChild("GameEvent"):FireServer(unpack(args))
-        task.wait(0.1) -- change legit mode delay
+    -- Check if it's local player's turn
+    if playerText.Text == Players.LocalPlayer.Name then
+        for i = startIndex, #word do
+            local currentPart = word:sub(1, i)
+            local args = { [1] = "updateAnswer", [2] = currentPart }
+            ReplicatedStorage:WaitForChild("Events"):WaitForChild("GameEvent"):FireServer(unpack(args))
+            -- Update board text for visual feedback
+            typingText.Text = currentPart
+            task.wait(0.2)
+        end
+    else
+        for i = startIndex, #word do
+            local currentPart = word:sub(1, i)
+            local args = { [1] = "updateAnswer", [2] = currentPart }
+            ReplicatedStorage:WaitForChild("Events"):WaitForChild("GameEvent"):FireServer(unpack(args))
+            task.wait(0.2)
+        end
     end
     
     local args = { [1] = "submitAnswer", [2] = word }
@@ -551,17 +567,23 @@ local function updateSuggestions(inputText)
         end
     end
 
+    local playerText = workspace.Map.Functional.Screen.SurfaceGui.MainFrame.MainGameContainer.MainTxtContainer:WaitForChild("PlayerText")
+    local isLocalPlayerTurn = (playerText.Text == Players.LocalPlayer.Name)
+
     if #matches == 1 then
         local word = matches[1]
         if selectedMode == "instant" then
-            local args = { [1] = "submitAnswer", [2] = word }
+            local args = { [1] = "updateAnswer", [2] = word }
+            ReplicatedStorage:WaitForChild("Events"):WaitForChild("GameEvent"):FireServer(unpack(args))
+            task.wait(0.1)
+            args = { [1] = "submitAnswer", [2] = word }
             ReplicatedStorage:WaitForChild("Events"):WaitForChild("GameEvent"):FireServer(unpack(args))
             wordLabel.Text = "✔️ Answered: " .. word
         elseif selectedMode == "legit" and not isTyping then
             task.spawn(function()
                 sendGradualInput(word)
             end)
-            wordLabel.Text = "🔄 Typing: " .. word
+            wordLabel.Text = isLocalPlayerTurn and "🔄 Typing: " .. word or "🔄 Typing: " .. word
         else -- normal
             wordLabel.Text = "Found: " .. word
         end
