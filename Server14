@@ -1,4 +1,5 @@
 --[[ Don't stole my code and adding your credit, atleast use mine ]]--
+--[[ idk if legit glitched and made into instant ]]--
 local plrs = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -526,7 +527,7 @@ local function sendGradualInput(word)
     local playerText = workspace.Map.Functional.Screen.SurfaceGui.MainFrame.MainGameContainer.MainTxtContainer:WaitForChild("PlayerText")
     local startIndex = #typingText.Text + 1
     
-    -- Check if it's local player's turn
+    -- Check if it local player turn (glitches)
     if playerText.Text == Players.LocalPlayer.Name then
         for i = startIndex, #word do
             local currentPart = word:sub(1, i)
