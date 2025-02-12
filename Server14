@@ -607,3 +607,7 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
     Title = "Open Source",
     Text = "Helper: Sometimes i can be wrong sorry :<"
 })
+game:GetService("StarterGui"):SetCore("SendNotification", {
+    Title = "Just want tell you",
+    Text = "Normal mode only show the word. Thanks"
+})
