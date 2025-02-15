@@ -8,6 +8,7 @@ local selectedMode = "normal" -- change ur mode here
 
 
 local words = {
+    "noob",
     "taco",
     "icecream",
     "roblox",
