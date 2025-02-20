@@ -1007,7 +1007,7 @@ function SectionElements:CreateTextBox(name, characterLimit, placeholderText, ca
     InputBox.Parent = NameTextBox
     InputBox.BackgroundColor3 = Color3.fromRGB(65, 65, 65)
     InputBox.BackgroundTransparency = 0.100
-    InputBox.Position = UDim2.new(0, 10, 0, 28)
+    InputBox.Position = UDim2.new(0, 10, 0, 18)
     InputBox.Size = UDim2.new(1, -20, 0, 22)
     InputBox.ZIndex = 5
     InputBox.Font = Library.Theme.TextFont
