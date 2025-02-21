@@ -130,7 +130,7 @@ Main.Name = "Main"
 Main.Parent = UILibrary
 Main.BackgroundColor3 = Library.Theme.BackgroundColor
 Main.BackgroundTransparency = 1.000
-Main.Position = UDim2.new(0.590086579, 0, 0.563882053, 0)
+Main.Position = UDim2.new(0.5, -225, 0.5, -125)
 Main.Size = UDim2.new(0, 450, 0, 0)
 Main.ZIndex = 2
 Main.Image = "rbxassetid://3570695787"
@@ -989,12 +989,12 @@ function SectionElements:CreateTextBox(name, characterLimit, placeholderText, ca
     NameTextBox.BackgroundTransparency = 1.000
     NameTextBox.Size = UDim2.new(1, -10, 0, 50)
     NameTextBox.ZIndex = 5
-
+    
     Title.Name = "Title"
     Title.Parent = NameTextBox
     Title.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     Title.BackgroundTransparency = 1.000
-    Title.Position = UDim2.new(0, 10, 0, 0)  -- Adjusted Y position to 0
+    Title.Position = UDim2.new(0, 10, 0, -20)
     Title.Size = UDim2.new(1, -24, 0, 20)
     Title.ZIndex = 5
     Title.Font = Library.Theme.TextFont
@@ -1007,7 +1007,7 @@ function SectionElements:CreateTextBox(name, characterLimit, placeholderText, ca
     InputBox.Parent = NameTextBox
     InputBox.BackgroundColor3 = Color3.fromRGB(65, 65, 65)
     InputBox.BackgroundTransparency = 0.100
-    InputBox.Position = UDim2.new(0, 10, 0, 20)  -- Adjusted Y position to 20
+    InputBox.Position = UDim2.new(0, 10, 0, 28)
     InputBox.Size = UDim2.new(1, -20, 0, 22)
     InputBox.ZIndex = 5
     InputBox.Font = Library.Theme.TextFont
@@ -1016,7 +1016,7 @@ function SectionElements:CreateTextBox(name, characterLimit, placeholderText, ca
     InputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
     InputBox.TextSize = 14.000
     InputBox.TextXAlignment = Enum.TextXAlignment.Left
-
+    
     InputBox:GetPropertyChangedSignal("Text"):Connect(function()
         if #InputBox.Text > characterLimit then
             InputBox.Text = InputBox.Text:sub(1, characterLimit)
@@ -1025,9 +1025,11 @@ function SectionElements:CreateTextBox(name, characterLimit, placeholderText, ca
             callback(InputBox.Text ~= "" and InputBox.Text or placeholderText)
         end
     end)
-
+    
     return NameTextBox, InputBox or ""
 end
+
+
         function SectionElements:CreateColorPicker(name, presetcolor, callback)
             local NameColorPicker = Instance.new("Frame")
             local Title = Instance.new("TextLabel")
