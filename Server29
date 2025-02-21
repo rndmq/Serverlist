@@ -262,13 +262,349 @@
 - Auto Super Tap
 - Auto Upgrade
 - Walkspeed Changer
+
+-- Muscle Legends --
+- auto buy pet
+- auto hatch crystal
+- lock position 
+- auto spin
+- auto farm weight and other else
+- teleport to island
+- auto rebirth target
+- auto rebirth
+- auto claim gift
+
+oh yea don't need to turn on the auto farm weight etc for faster weight you can just turn on faster wight farm only
+-- Muscle Legends --
+
+
+-- Mega Clicker --
+- Auto click
+- auto super tap
+- auto claim pass
+- auto hatch egg
+- auto delete pet
+- dupe equip (equip pet u had)
+- auto rebirth
+- auto upgrade 
+- anti afk
+-- Mega Clicker --
+
+-- Be A Centipede --
+- Instant change ur eat range (Might be laggy)
+- Slowy change ur eat range (Less lag)
+- Walk to food
+- Auto spin
+- auto hatch egg
+- auto claim gift
+-- Be A Centipede --
+
+-- Auto Answer Question --
+- Shortest answer wins
+- Answer current question
+- Randomized delay answer question
+
+-- Additional Notes --
+- Again, I took the answer from Google.
+- Feel free to take the script and add some more answers by yourself.
+
+-- Pet Tappers! --
+- Auto super tap
+- Auto click
+- Auto hop server if a mod is on your server
+- Auto hatch (3 options: normal, fast, ultra-fast)
+  - If it’s still slow, turn on fast and ultra-fast for 2-5 hatches per second
+- Auto claim pass
+- Auto rebirth
+- Auto upgrade
+- Dupe equip
+
+-- Notes --
+- Stop spamming requests, please. You’re just flooding the webhook (1.5k).
+- Most requested: Brookhaven (weird)
+
+-- Pet Tappers! [Release] --
+- Done fully automatically (executor must support hookfunction)
+- Auto clicker
+- Auto hatch egg
+- Auto collect orb
+- Delete egg animation
+- Teleport to world
+
+-- Request Function V3.5 --
+- Anti-spam request (enchanted)
+- Anti-repeating message
+- Anti-link
+- If you get 10x bans, you will be banned permanently.
+
+-- Dinosaur Race --
+- Auto hatch egg
+- Auto hatch event egg
+- Auto equip best pet
+- Delete obstacles
+- Delete notification
+- Auto get free wins
+- Lock position
+- Auto free spin
+- Auto rebirth>
+
+-- Scary Spelling --
+- Just type something when it is your turn, and it will show the word that is on the list.
+- If words are missing, just take the script and add it to the table, okay?
+- Script link: [https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server14](https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server14)
+
+-- New Update!! --
+- **Normal mode**: Use the old feature
+- **Legit mode**: Auto-type legit when the Helper exactly knows the words
+- **Instant mode**: Instant answer when the Helper knows the word
+
+-- Notes --
+- Please stop typing when the label is: `..word typing`
+- **Legit type**: From another person's view, they would see you manually typing (not instant). If instant, it’s like your word is "Engi" but you already corrected it. If legit, it will type automatically, but on your view, it didn’t type, while on others, it actually does.
+
+-- Ninja legends --
+- Auto swing
+- Auto spin
+- Auto sell (best world x35 coins)
+- Redeem all codes
+- Remove coins effect (less lag)
+- Claim every chest
+- Lock position
+- Auto buy belt, sword, ranks, shuriken, skills
+- Teleport to an island
+- Unlock all islands
+- Auto open crystal
+
+-- Dojo --
+- Auto upgrade sensei
+- Auto upgrade ninja
+- Auto upgrade capacity
+- Auto collect ninjutsus
+
+-- Additional Features --
+- Anti AFK
+- Walk speed changer
+- Jump power changer
+
+-- Ninja Legends 2 --
+- Auto sell
+- Auto swing
+- Auto evolve
+- Lock position
+- Teleport to rings
+- Remove coins effect
+- Auto buy saber
+- Auto buy skill
+- Auto buy crystal
+- Auto buy power
+- Delete target turret
+- Claim every chest
+- Redeem all codes
+- Teleport to planet
+- Teleport to every planet
+- Auto open orb
+
+-- Cat Clicker 2 --
+- Auto click cat
+- Auto rebirth
+- Auto get fish (instant 20k)
+  - 20k is the limit set by the game (idk why)
+- Auto upgrade clicks
+- Auto upgrade fish currency
+- Auto upgrade everything
+- Anti AFK
+
+-- Find the Button 2 --
+- Free wins (kinda slow because the event added a 5-second delay)
+- Get free wins
+- Finish level (walk)
+- Finish level (teleport)
+- ESP button
+- Anti AFK
+
+-- Planet Clicking Sim --
+- Auto click
+- Auto rebirth
+- Auto level up
+- Auto spin rank
+- Auto claim playtime gift
+- Auto upgrade things
+- Auto hatch egg
+- Pet visual (change into gold/rainbow)
+- Auto upgrade minions
+- Minions upgrade visual change
+- Auto spin aura
+- Stop at selected aura
+- Teleport to world
+- Anti AFK
+
+-- Arm Wrestling Sim --
+- **More updates tomorrow!**
+- Auto train bicep, knuckle, and others
+- Auto delete arms
+- Auto delete pet
+- Auto lock
+- And many other things
+- Auto fight boss
+- Auto hatch egg
+- Auto claim pass
+- Auto claim free gift
+- Auto rebirth
+- Auto super rebirth
+- Auto farmer (auto harvest, auto plant)
+- Teleport to merchant
+- Auto spin
+- Auto roll aura
+
+-- Pirate Event --
+- Auto fight boss
+- Auto click
+- Auto click train
+- Auto join trial
+- Auto claim Pirate playtime reward
+- Anti AFK
+
+-- Be a Rocket --
+- **Note**: Your executor must support hookfunction.
+- **Usage**: Free money. You must launch for the first time, and if you turn on the toggle after, you will get tons of money.
+- Free money reset button (to reset your event, e.g., before you got 1B, and that will be saved until you click the reset button). Everything needs to be done manually for the event, like auto-buy 1 floor, but you need to buy 1 floor manually first.
+
+-- Features --
+- Select delay
+- Free money
+- Auto buy rocket
+- Auto buy 1 floor, 3 floor
+- Auto rebirth
+- Auto open crate
+
+-- The 1% Squid Game Glass Bridge --
+- Destroy incorrect glass
+- Auto win
+- Free spin
+- Delete request favorite
+- Instant proximity prompt
+- Teleport to trophy (obby)
+- Delete kill part
+- Anti AFK
+
+-- Egg Tapper --
+- Auto click
+- Auto mastery
+- Auto super rebirth
+- Auto hatch egg
+- Auto upgrade spawn & world
+- Free gamepass
+- Give gamepass to selected (requires token)
+- Give gamepass to everyone (requires token)
+
+-- Tapping Mayhem --
+- Auto click
+- Auto mastery
+- Auto super rebirth (idk if it exists)
+- Auto hatch egg
+- Auto claim gift
+- Auto upgrade
+- Give to everyone gamepass (GP)
+- Give to selected player gamepass (GP)
+- Buy all gamepasses
+- Buy season pass
+- Free token & many more
+
+-- Note for Dev --
+- Don’t you dare let other games shut this game down -_-
+
+-- Pet Hatchers --
+- Infinity coins
+- Free gems
+- Redeem every code
+- Select amount you want (coins)
+  - You better just type/click on the text box! (only numbers)
+- Auto hatch egg
+
+-- Ultra Hatching Simulator X --
+- Auto click
+- Auto hatch egg
+- Auto claim gift
+- Auto upgrade
+- Free token, etc. (in total 17 free gamepasses – I’m too lazy to write all)
+
+-- Slushy Tapper --
+- Auto click
+- Auto mastery
+- Auto hatch egg
+- Free gamepass (GP)
+- Gift everyone a gamepass (GP)
+
+-- Pet Hatching Simulator 99 --
+- Auto click
+- Auto mastery
+- Auto upgrade
+- Get free OP pets
+- Free tokens
+- Free gems
+- Free potion
+- Free Robux egg
+
+-- Godly Tappers 99 --
+- Auto click
+- Auto mastery
+- Auto hatch egg
+- Auto upgrade
+- Auto claim daily gift
+- Free token
+- Free gems
+- Free potion
+- Free pet
+- Skip adventure
+
+-- Clicking Legacy X --
+- Auto click
+- Auto click boss
+- Auto mastery
+- Auto hatch egg
+- Auto upgrade
+- Free token
+- Free gems
+- Free potion
+- Free Robux egg
+- Gamepass (GP) giver
+- Skip adventur
+
+-- Shoot Race Simulator --
+- Auto train
+- Auto fight
+- Auto spin
+- Auto claim daily reward
+- Auto hatch egg (you can choose the Robux one)
 --]]
+local W = 88
+local CT = " Main Loader Made By Rndm "
+local NT = " Note: This Loader is keyless, if you found this with key it's a skid :) "
+
+local function L()
+    return string.rep("-", W)
+end
+
+local function CCL(T)
+    local Ls = math.floor((W - #T) / 2)
+    local Rs = W - (#T + Ls)
+    return string.rep("-", Ls) .. T .. string.rep("-", Rs)
+end
+
+print(L())
+print(L())
+print(CCL(CT))
+print(L())
+print(CCL(NT))
+print(L())
+
+
 game:GetService("StarterGui"):SetCore("SendNotification",{
 	Title = "Please wait..",
 	Text = "I'm Thinking the game you're playing right now..."
 })
 task.wait(2)
-if game.PlaceId == 8548782138 then
+if game.PlaceId == 8548782138 then --[[ [🪐MARS🪐] Rebirth Legends]]--
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
         Text = "Enjoy the script!",
@@ -276,34 +612,42 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server1"))()
     
-elseif game.PlaceId == 83843456738284 then
+elseif game.PlaceId == 83843456738284 then --[[ [🖱️X500 CLICKS] Clicking Legends]]--
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
         Text = "Enjoy the script!",
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server2"))()
-elseif game.PlaceId == 2753915549 then
+    
+    
+elseif game.PlaceId == 2753915549 then --[[ Blox Fruit ]]--
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
         Text = "Enjoy the script!",
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server3"))()
-elseif game.PlaceId == 14031683009 then
+    
+    
+elseif game.PlaceId == 14031683009 then --[[ [💖VALENTINES] Clicking Masters ]]--
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
         Text = "Enjoy the script!",
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server4"))()
-elseif game.PlaceId == 4162410081 then
+    
+    
+elseif game.PlaceId == 4162410081 then --[[ Longest Answer Wins [NEW QUESTIONS] ]]--
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
         Text = "Enjoy the script!",
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server6"))()
+    
+    
 elseif game.PlaceId == 11702500452 then
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
@@ -311,13 +655,17 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server6"))()
-elseif game.PlaceId == 16993432698 then
+    
+    
+elseif game.PlaceId == 16993432698 then --[[ Impossible Squid Game! Glass Bridge 2 ]]--
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
         Text = "Enjoy the script!",
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server7"))()
+    
+    
 elseif game.PlaceId == 13987158269 then
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
@@ -325,6 +673,8 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server7"))()
+    
+    
 elseif game.PlaceId == 14449073815 then
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
@@ -332,6 +682,8 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server8"))()
+    
+    
 elseif game.PlaceId == 8540346411 then
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
@@ -339,6 +691,8 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server11"))()
+    
+    
 elseif game.PlaceId == 5118969548 then
     game:GetService("StarterGui"):SetCore("SendNotification", {
     Title = "Confirmation",
@@ -362,6 +716,8 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server13"))()
+    
+    
 elseif game.PlaceId == 105055747082176 then
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
@@ -369,6 +725,8 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server14"))()
+    
+    
 elseif game.PlaceId == 151617181 then
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
@@ -376,6 +734,8 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server15"))()
+    
+    
 elseif game.PlaceId == 87451551996233 then
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
@@ -383,6 +743,8 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server16"))()
+    
+    
 elseif game.PlaceId == 103593441753340 then
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
@@ -390,6 +752,8 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server17"))()
+    
+    
 elseif game.PlaceId == 82775216869079 then
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
@@ -397,13 +761,17 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server17"))()
+    
+    
 elseif game.PlaceId == 15407368046 then
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
         Text = "Enjoy the script!",
         Duration = 5
     })
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server18"))() 
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server18"))()
+    
+    
 elseif game.PlaceId == 13071941509 then
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
@@ -411,6 +779,8 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server19"))()
+    
+    
 elseif game.PlaceId == 15670434910 then
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
@@ -419,6 +789,7 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server20"))()
 
+
 elseif game.PlaceId == 139571586332963 then
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
@@ -426,6 +797,8 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server21"))()
+    
+    
 elseif game.PlaceId == 17360443692 then
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
@@ -433,6 +806,8 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server22"))()
+    
+    
 elseif game.PlaceId == 17434340300 then
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
@@ -440,6 +815,8 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server23"))()
+    
+    
 elseif game.PlaceId == 137960982591386 then
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
@@ -447,6 +824,8 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server24"))()
+    
+    
 elseif game.PlaceId == 10977918334 then
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
@@ -454,6 +833,8 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server25"))()
+    
+    
 elseif game.PlaceId == 12109411976 then
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
@@ -461,6 +842,8 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server26"))()
+    
+    
 elseif game.PlaceId == 10903978962 then
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
@@ -468,6 +851,8 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server27"))()
+    
+    
 elseif game.PlaceId == 11796791326 then
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
@@ -475,6 +860,8 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server28"))()
+    
+    
 elseif game.PlaceId == 3623096087 then
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
@@ -482,6 +869,8 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server30"))()
+    
+    
 elseif game.PlaceId == 17262329365 then
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
@@ -489,6 +878,8 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server31"))()
+    
+    
 elseif game.PlaceId == 11966456877 then
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
@@ -496,6 +887,8 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server32"))()
+    
+    
 elseif game.PlaceId == 18209375211 then
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
@@ -503,6 +896,8 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server33"))()
+    
+    
 elseif game.PlaceId == 4508456371 then
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
@@ -510,6 +905,8 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server34"))()
+    
+    
 elseif game.PlaceId == 11634857608 then
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
@@ -517,6 +914,8 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server34"))()
+    
+    
 elseif game.PlaceId == 11634858101 then
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
@@ -524,6 +923,8 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server34"))()
+    
+    
 elseif game.PlaceId == 79632310311199 then
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
@@ -531,6 +932,8 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server35"))()
+    
+    
 elseif game.PlaceId == 126814777423735 then
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
@@ -538,6 +941,7 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server36"))()
+    
 elseif game.PlaceId == 115194955246652 then
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
@@ -545,6 +949,8 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server36"))()
+    
+    
 elseif game.PlaceId == 137190931122767 then
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
@@ -552,6 +958,8 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server37"))()
+    
+    
 elseif game.PlaceId == 3956818381 then
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
@@ -559,6 +967,8 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server38"))()
+    
+    
 elseif game.PlaceId == 5977280685 then
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
@@ -566,6 +976,8 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server39"))()
+    
+    
 elseif game.PlaceId == 18436975282 then
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
@@ -573,6 +985,8 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server40"))()
+    
+    
 elseif game.PlaceId == 92103258466845 then
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
@@ -580,6 +994,8 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server41"))()
+    
+    
 elseif game.PlaceId == 111709514047700 then
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
@@ -587,6 +1003,8 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server42"))()
+    
+    
 elseif game.PlaceId == 13127800756 then
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
@@ -594,6 +1012,8 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server43"))()
+    
+    
 elseif game.PlaceId == 113031007956446 then
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
@@ -601,6 +1021,8 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server44"))()
+    
+    
 elseif game.PlaceId == 115545680589612 then
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
@@ -608,6 +1030,8 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server45"))()
+    
+    
 elseif game.PlaceId == 123345140331667 then
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
@@ -615,6 +1039,8 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server46"))()
+    
+    
 elseif game.PlaceId == 90248862651939 then
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
@@ -622,6 +1048,8 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server47"))()
+    
+    
 elseif game.PlaceId == 88924215126511 then
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
@@ -629,6 +1057,8 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server48"))()
+    
+    
 elseif game.PlaceId == 12768405553 then
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
@@ -636,6 +1066,8 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server49"))()
+    
+    
 elseif game.PlaceId == 120990752515555 then
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
@@ -643,6 +1075,8 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server50"))()
+    
+    
 elseif game.PlaceId == 94640462621211 then
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
@@ -650,6 +1084,8 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server51"))()
+    
+    
 elseif game.PlaceId == 120673375096966 then
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
@@ -657,6 +1093,8 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server52"))()
+    
+    
 elseif game.PlaceId == 17757552010 then
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
@@ -664,6 +1102,8 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server53"))()
+    
+    
 elseif game.PlaceId == 18402709794 then
 game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Founded!",
@@ -671,6 +1111,8 @@ game:GetService("StarterGui"):SetCore("SendNotification", {
         Duration = 5
     })
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server54"))()
+    
+    
 else
     game:GetService("StarterGui"):SetCore("SendNotification", {
     Title = "Sadly",
