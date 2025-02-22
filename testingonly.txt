@@ -1587,6 +1587,15 @@ function SectionElements:CreateMultiDropdown(name, options, minSelect, maxSelect
     local selectedOptions = {}
     local isDropdownOpen = false
 
+    local function tableFind(tbl, val)
+        for i, v in ipairs(tbl) do
+            if v == val then
+                return i
+            end
+        end
+        return nil
+    end
+
     MultiDropdown.Name = name .. "MultiDropdown"
     MultiDropdown.Parent = SectionContent
     MultiDropdown.BackgroundTransparency = 1.000
@@ -1628,8 +1637,9 @@ function SectionElements:CreateMultiDropdown(name, options, minSelect, maxSelect
         OptionButton.TextSize = 14.000
 
         OptionButton.MouseButton1Click:Connect(function()
-            if table.find(selectedOptions, option) then
-                table.remove(selectedOptions, table.find(selectedOptions, option))
+            local index = tableFind(selectedOptions, option)
+            if index then
+                table.remove(selectedOptions, index)
             elseif #selectedOptions < maxSelect then
                 table.insert(selectedOptions, option)
             end
