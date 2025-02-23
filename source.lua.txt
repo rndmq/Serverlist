@@ -1639,7 +1639,8 @@ function SectionElements:CreateMultiDropdown(name, options, minSelect, maxSelect
     
     local DropdownToggled = false
     local SelectedOptions = presetOptions or {}
-    local SelectedCountLabel = Instance.new("TextLabel")
+    local minSelect = tonumber(minSelect) or 1 -- Pastikan number
+    local maxSelect = tonumber(maxSelect) or (#options or 0) -- Pastikan number dan fallback jika options kosong
 
     NameDropdown.Name = (name .. "MultiDropdown")
     NameDropdown.Parent = SectionContent
@@ -1657,7 +1658,7 @@ function SectionElements:CreateMultiDropdown(name, options, minSelect, maxSelect
     TitleToggle.Size = UDim2.new(0, 167, 0, 30)
     TitleToggle.ZIndex = 7
     TitleToggle.Font = Library.Theme.TextFont
-    TitleToggle.Text = name .. " - " .. (#SelectedOptions .. "/" .. maxSelect)
+    TitleToggle.Text = name .. " - " .. #SelectedOptions .. "/" .. maxSelect -- Perbaiki konkatenasi
     TitleToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
     TitleToggle.TextSize = 15.000
     TitleToggle.TextXAlignment = Enum.TextXAlignment.Left
@@ -1681,12 +1682,14 @@ function SectionElements:CreateMultiDropdown(name, options, minSelect, maxSelect
     DropdownContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
     local function UpdateTitle()
-        TitleToggle.Text = name .. " - " .. (#SelectedOptions .. "/" .. maxSelect)
-        callback(SelectedOptions)
+        TitleToggle.Text = name .. " - " .. #SelectedOptions .. "/" .. maxSelect
+        if callback then
+            callback(SelectedOptions)
+        end
     end
 
     local function ResetAllDropdownItems()
-        for i, v in pairs(Dropdown:GetChildren()) do
+        for _, v in pairs(Dropdown:GetChildren()) do
             if v:IsA("TextButton") then
                 if table.find(SelectedOptions, v.Text) then
                     TweenService:Create(v, TweenInfo.new(0.25, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {TextColor3 = Library.Theme.MainColor}):Play()
@@ -1698,7 +1701,7 @@ function SectionElements:CreateMultiDropdown(name, options, minSelect, maxSelect
     end
 
     local function ClearAllDropdownItems()
-        for i, v in pairs(Dropdown:GetChildren()) do
+        for _, v in pairs(Dropdown:GetChildren()) do
             if v:IsA("TextButton") then
                 v:Destroy()
             end
@@ -1708,7 +1711,7 @@ function SectionElements:CreateMultiDropdown(name, options, minSelect, maxSelect
     local function PopulateDropdown()
         ClearAllDropdownItems()
         
-        for i, v in pairs(options) do
+        for _, v in pairs(options or {}) do -- Pastikan options tidak nil
             local NameButton = Instance.new("TextButton")
             
             NameButton.Name = (v .. "DropdownButton")
@@ -1771,10 +1774,10 @@ function SectionElements:CreateMultiDropdown(name, options, minSelect, maxSelect
     end)
 
     local function Refresh(newOptions, newMinSelect, newMaxSelect, newPresetOptions)
-        options = newOptions
-        minSelect = newMinSelect
-        maxSelect = newMaxSelect
-        SelectedOptions = newPresetOptions or {}
+        options = newOptions or options
+        minSelect = tonumber(newMinSelect) or minSelect
+        maxSelect = tonumber(newMaxSelect) or maxSelect
+        SelectedOptions = newPresetOptions or SelectedOptions
         UpdateTitle()
         if DropdownToggled then
             PopulateDropdown()
@@ -1782,6 +1785,7 @@ function SectionElements:CreateMultiDropdown(name, options, minSelect, maxSelect
             TweenService:Create(Dropdown, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 165, 0, DropdownContentLayout.AbsoluteContentSize.Y)}):Play()
         end
     end
+
     UpdateTitle()
     return {
         Refresh = Refresh,
