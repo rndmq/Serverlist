@@ -7,7 +7,26 @@ local CoreGui = game:GetService("CoreGui")
 
 local LocalPlayer = game:GetService("Players").LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
+local LocalPlayer = game:GetService("Players").LocalPlayer
+local Mouse = LocalPlayer:GetMouse()
 
+local Settings = {}
+local function LoadSettings()
+    if isfile("IdkWhatToPutHere.json") then
+        Settings = HttpService:JSONDecode(readfile("IdkWhatToPutHere.json")) or {}
+    else
+        Settings = {
+            Toggles = {},
+            Dropdowns = {},
+            MultiDropdowns = {}
+        }
+    end
+end
+LoadSettings()
+
+local function SaveSettings()
+    writefile("IdkWhatToPutHere.json", HttpService:JSONEncode(Settings))
+end
 ContentProvider:PreloadAsync({"rbxassetid://3570695787", "rbxassetid://2708891598", "rbxassetid://4155801252", "rbxassetid://4695575676", "rbxassetid://4155801252"})
 
 local Library = {
@@ -722,7 +741,10 @@ function Library:CreateTab(name)
             local TickCover = Instance.new("Frame")
 
             local Toggled = false
-
+local toggleKey = NameTab.Name .. "_" .. NameSection.Name .. "_" .. name
+if Settings.Toggles[toggleKey] ~= nil then
+    Toggled = Settings.Toggles[toggleKey]
+end
             NameToggle.Name = (name .. "Toggle")
             NameToggle.Parent = SectionContent
             NameToggle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -785,20 +807,22 @@ function Library:CreateTab(name)
             TickCover.ZIndex = 5
 
             local function SetState(state)
-                if state then
+    Toggled = state
+    if state then
                     TweenService:Create(Title, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
                     TweenService:Create(TickCover, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Position = UDim2.new(0.5, 0, 0.5, 0), Size = UDim2.new(0, 0, 0, 0)}):Play()
                     TweenService:Create(CheckboxOutline, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {ImageColor3 = Library.Theme.MainColor}):Play()
                     TweenService:Create(CheckboxTicked, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {ImageColor3 = Library.Theme.MainColor}):Play()
-                elseif not state then
+                else
                     TweenService:Create(Title, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {TextColor3 = Color3.fromRGB(185, 185, 185)}):Play()
                     TweenService:Create(TickCover, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Position = UDim2.new(0.5, -7, 0.5, -7), Size = UDim2.new(0, 14, 0, 14)}):Play()
                     TweenService:Create(CheckboxOutline, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {ImageColor3 = Color3.fromRGB(65, 65, 65)}):Play()
                     TweenService:Create(CheckboxTicked, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {ImageColor3 = Color3.fromRGB(65, 65, 65)}):Play()
 				end
-				
-                callback(Toggled)
-			end
+    Settings.Toggles[toggleKey] = Toggled
+    SaveSettings()
+    callback(Toggled)
+end
 			
 			Toggle.MouseButton1Down:Connect(function()
                 Toggled = not Toggled
@@ -1457,9 +1481,12 @@ end
             local DropdownContentLayout = Instance.new("UIListLayout")
 
             local DropdownToggled = true
+            local dropdownKey = NameTab.Name .. "_" .. NameSection.Name .. "_" .. name
             table.insert(options, 1, "None")
-    local SelectedOption = options[1]
-
+    local SelectedOption = options[presetoption] or options[1]
+if Settings.Dropdowns[dropdownKey] then
+    SelectedOption = Settings.Dropdowns[dropdownKey]
+end
             NameDropdown.Name = (name .. "Dropdown")
             NameDropdown.Parent = SectionContent
             NameDropdown.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -1545,12 +1572,14 @@ end
                 end
 
                 NameButton.MouseButton1Down:Connect(function()
-                    SelectedOption = v
-                    ResetAllDropdownItems()
-                    TitleToggle.Text = (name .. " - " .. SelectedOption)
-                    TweenService:Create(NameButton, TweenInfo.new(0.35, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {TextColor3 = Library.Theme.MainColor}):Play()
-                    callback(NameButton.Text)
-                end)
+    SelectedOption = v
+    ResetAllDropdownItems()
+    TitleToggle.Text = (name .. " - " .. SelectedOption)
+    TweenService:Create(NameButton, TweenInfo.new(0.35, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {TextColor3 = Library.Theme.MainColor}):Play()
+    Settings.Dropdowns[dropdownKey] = SelectedOption -- Baris baru
+    SaveSettings()                                  -- Baris baru
+    callback(NameButton.Text)
+end)
 
                 NameButton.InputBegan:Connect(function(input)
                     if input.UserInputType == Enum.UserInputType.MouseMovement then
@@ -1580,10 +1609,9 @@ end
             end)
 
             local function Refresh(newoptions, newpresetoption, newcallback)
-                ClearAllDropdownItems()
-
-                local SelectedOption = newoptions[newpresetoption]
-                TitleToggle.Text = (name .. " - " .. SelectedOption)
+    ClearAllDropdownItems()
+    local SelectedOption = newoptions[newpresetoption] or newoptions[1] 
+    TitleToggle.Text = (name .. " - " .. SelectedOption)
 
                 for i, v in pairs(newoptions) do
                     local NameButton = Instance.new("TextButton")
@@ -1626,7 +1654,9 @@ end
                     end)
                 end
             end
-
+Settings.Dropdowns[dropdownKey] = SelectedOption -- Tambah di akhir sebelum return
+    SaveSettings()
+end
             return {
                 Refresh = Refresh
             }
@@ -1639,7 +1669,12 @@ function SectionElements:CreateMultiDropdown(name, options, minSelect, maxSelect
     
     local DropdownToggled = false
     local SelectedOptions = presetOptions or {}
-    local SelectedCountLabel = Instance.new("TextLabel")
+    local multiDropdownKey = NameTab.Name .. "_" .. NameSection.Name .. "_" .. name
+    if Settings.MultiDropdowns[multiDropdownKey] then
+    SelectedOptions = Settings.MultiDropdowns[multiDropdownKey]
+end
+    local minSelect = tonumber(minSelect) or 1
+    local maxSelect = tonumber(maxSelect) or (#options or 0)
 
     NameDropdown.Name = (name .. "MultiDropdown")
     NameDropdown.Parent = SectionContent
@@ -1657,7 +1692,7 @@ function SectionElements:CreateMultiDropdown(name, options, minSelect, maxSelect
     TitleToggle.Size = UDim2.new(0, 167, 0, 30)
     TitleToggle.ZIndex = 7
     TitleToggle.Font = Library.Theme.TextFont
-    TitleToggle.Text = name .. " - " .. (#SelectedOptions .. "/" .. maxSelect)
+    TitleToggle.Text = name .. " - " .. #SelectedOptions .. "/" .. maxSelect
     TitleToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
     TitleToggle.TextSize = 15.000
     TitleToggle.TextXAlignment = Enum.TextXAlignment.Left
@@ -1681,12 +1716,15 @@ function SectionElements:CreateMultiDropdown(name, options, minSelect, maxSelect
     DropdownContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
     local function UpdateTitle()
-        TitleToggle.Text = name .. " - " .. (#SelectedOptions .. "/" .. maxSelect)
+    TitleToggle.Text = name .. " - " .. #SelectedOptions .. "/" .. maxSelect
+    Settings.MultiDropdowns[multiDropdownKey] = SelectedOptions
+    SaveSettings()                                     
+    if callback then
         callback(SelectedOptions)
     end
-
+end
     local function ResetAllDropdownItems()
-        for i, v in pairs(Dropdown:GetChildren()) do
+        for _, v in pairs(Dropdown:GetChildren()) do
             if v:IsA("TextButton") then
                 if table.find(SelectedOptions, v.Text) then
                     TweenService:Create(v, TweenInfo.new(0.25, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {TextColor3 = Library.Theme.MainColor}):Play()
@@ -1698,7 +1736,7 @@ function SectionElements:CreateMultiDropdown(name, options, minSelect, maxSelect
     end
 
     local function ClearAllDropdownItems()
-        for i, v in pairs(Dropdown:GetChildren()) do
+        for _, v in pairs(Dropdown:GetChildren()) do
             if v:IsA("TextButton") then
                 v:Destroy()
             end
@@ -1708,7 +1746,7 @@ function SectionElements:CreateMultiDropdown(name, options, minSelect, maxSelect
     local function PopulateDropdown()
         ClearAllDropdownItems()
         
-        for i, v in pairs(options) do
+        for _, v in pairs(options or {}) do -- Pastikan options tidak nil
             local NameButton = Instance.new("TextButton")
             
             NameButton.Name = (v .. "DropdownButton")
@@ -1771,17 +1809,19 @@ function SectionElements:CreateMultiDropdown(name, options, minSelect, maxSelect
     end)
 
     local function Refresh(newOptions, newMinSelect, newMaxSelect, newPresetOptions)
-        options = newOptions
-        minSelect = newMinSelect
-        maxSelect = newMaxSelect
-        SelectedOptions = newPresetOptions or {}
-        UpdateTitle()
-        if DropdownToggled then
-            PopulateDropdown()
-            TweenService:Create(NameDropdown, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 197, 0, 35 + DropdownContentLayout.AbsoluteContentSize.Y)}):Play()
-            TweenService:Create(Dropdown, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 165, 0, DropdownContentLayout.AbsoluteContentSize.Y)}):Play()
-        end
+    options = newOptions or options
+    minSelect = tonumber(newMinSelect) or minSelect
+    maxSelect = tonumber(newMaxSelect) or maxSelect
+    SelectedOptions = newPresetOptions or {}
+    UpdateTitle()
+
+    if DropdownToggled then
+        PopulateDropdown()
+        TweenService:Create(NameDropdown, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 197, 0, 35 + DropdownContentLayout.AbsoluteContentSize.Y)}):Play()
+        TweenService:Create(Dropdown, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 165, 0, DropdownContentLayout.AbsoluteContentSize.Y)}):Play()
     end
+end
+
     UpdateTitle()
     return {
         Refresh = Refresh,
