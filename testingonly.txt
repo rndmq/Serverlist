@@ -510,13 +510,14 @@ coroutine.wrap(function()
 end)()
 
 
-function Library:CreateTab(name, gameId)
+function Library:CreateTab(name)
     local NameTab = Instance.new("Frame")
     local NameTabButton = Instance.new("ImageButton")
     local Title = Instance.new("TextLabel")
     local SectionLayout = Instance.new("UIListLayout")
     local SectionPadding = Instance.new("UIPadding")
     
+    local gameId = tostring(game.PlaceId)
     local TabElements = { GameId = gameId }
     Library.TabCount = Library.TabCount + 1
 
@@ -752,7 +753,7 @@ function SectionElements:CreateToggle(name, callback)
             local CheckboxTicked = Instance.new("ImageLabel")
             local TickCover = Instance.new("Frame")
 
-            local gameId = self.GameId -- Ambil gameId dari SectionElements
+            local gameId = self.GameId
             if not Settings[gameId] then Settings[gameId] = {} end
             local Toggled = (Settings[gameId][name] ~= nil and Settings[gameId][name]) or false
 
