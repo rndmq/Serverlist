@@ -9,16 +9,39 @@ local CoreGui = game:GetService("CoreGui")
 local LocalPlayer = game:GetService("Players").LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 local Settings = {}
+
 local function LoadSettings()
-    if isfile("IdkWhatToPutHere.json") then
-        Settings = HttpService:JSONDecode(readfile("IdkWhatToPutHere.json"))
+    local success, result
+    
+    if pcall(function() return isfile("IdkWhatToPutHere.json") end) then
+        success, result = pcall(function()
+            return HttpService:JSONDecode(readfile("IdkWhatToPutHere.json"))
+        end)
+        if success and type(result) == "table" then
+            Settings = result
+        else
+            warn("Failed to load settings or invalid JSON, using empty table.")
+            Settings = {}
+        end
     else
+        warn("Executor does not support file reading, settings will not be loaded from file.")
         Settings = {}
     end
 end
 LoadSettings()
+
 local function SaveSettings()
-    writefile("IdkWhatToPutHere.json", HttpService:JSONEncode(Settings))
+    if not Settings then
+        warn("Settings is nil, reinitializing to empty table.")
+        Settings = {}
+    end
+    
+    local success, err = pcall(function()
+        writefile("IdkWhatToPutHere.json", HttpService:JSONEncode(Settings))
+    end)
+    if not success then
+        warn("Failed to save settings: " .. tostring(err) .. ". Settings will not persist.")
+    end
 end
 ContentProvider:PreloadAsync({"rbxassetid://3570695787", "rbxassetid://2708891598", "rbxassetid://4155801252", "rbxassetid://4695575676", "rbxassetid://4155801252"})
 
