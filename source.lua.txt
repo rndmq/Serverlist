@@ -1,3 +1,4 @@
+
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local HttpService = game:GetService("HttpService")
@@ -7,7 +8,38 @@ local CoreGui = game:GetService("CoreGui")
 
 local LocalPlayer = game:GetService("Players").LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
+local Settings = {}
 
+local function LoadSettings()
+    if isfile("IdkWhatToPutHere.json") then
+        local success, result = pcall(function()
+            return HttpService:JSONDecode(readfile("IdkWhatToPutHere.json"))
+        end)
+        if success and type(result) == "table" then
+            Settings = result
+        else
+            Settings = {}
+            pcall(function()
+                writefile("IdkWhatToPutHere.json", HttpService:JSONEncode(Settings))
+            end)
+        end
+    else
+        Settings = {}
+        pcall(function()
+            writefile("IdkWhatToPutHere.json", HttpService:JSONEncode(Settings))
+        end)
+    end
+end
+LoadSettings()
+
+local function SaveSettings()
+    if not Settings then
+        Settings = {}
+    end
+    pcall(function()
+        writefile("IdkWhatToPutHere.json", HttpService:JSONEncode(Settings))
+    end)
+end
 ContentProvider:PreloadAsync({"rbxassetid://3570695787", "rbxassetid://2708891598", "rbxassetid://4155801252", "rbxassetid://4695575676", "rbxassetid://4155801252"})
 
 local Library = {
@@ -485,7 +517,8 @@ function Library:CreateTab(name)
     local SectionLayout = Instance.new("UIListLayout")
     local SectionPadding = Instance.new("UIPadding")
     
-    local TabElements = {}
+    local gameId = tostring(game.PlaceId)
+    local TabElements = { GameId = gameId }
     Library.TabCount = Library.TabCount + 1
 
     if Library.TabCount == 1 then
@@ -518,7 +551,7 @@ function Library:CreateTab(name)
     Title.Size = UDim2.new(1, 0, 1, 0)
     Title.ZIndex = 2
     Title.Font = Library.Theme.TextFont
-    Title.Text =  name
+    Title.Text = name
     Title.TextColor3 = Color3.fromRGB(255, 255, 255)
     Title.TextSize = 15.000
 
@@ -544,7 +577,6 @@ function Library:CreateTab(name)
     NameTabButton.MouseButton1Down:Connect(function()
         CloseAllTabs()
         ResetAllTabButtons()
-
         NameTab.Visible = true
         TweenService:Create(NameTabButton, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 15)}):Play()
     end)
@@ -556,7 +588,7 @@ function Library:CreateTab(name)
         local SectionContent = Instance.new("ScrollingFrame")
         local SectionContentLayout = Instance.new("UIListLayout")
 
-        local SectionElements = {}
+        local SectionElements = { GameId = self.GameId }
 
         NameSection.Name = (name .. "Section")
         NameSection.Parent = NameTab
@@ -713,7 +745,7 @@ function Library:CreateTab(name)
             table.insert(Library.LibraryColorTable, ButtonRounded)
         end
 
-        function SectionElements:CreateToggle(name, callback)
+function SectionElements:CreateToggle(name, callback)
             local NameToggle = Instance.new("Frame")
             local Title = Instance.new("TextLabel")
             local Toggle = Instance.new("TextButton")
@@ -721,7 +753,9 @@ function Library:CreateTab(name)
             local CheckboxTicked = Instance.new("ImageLabel")
             local TickCover = Instance.new("Frame")
 
-            local Toggled = false
+            local gameId = self.GameId
+            if not Settings[gameId] then Settings[gameId] = {} end
+            local Toggled = (Settings[gameId][name] ~= nil and Settings[gameId][name]) or false
 
             NameToggle.Name = (name .. "Toggle")
             NameToggle.Parent = SectionContent
@@ -790,19 +824,24 @@ function Library:CreateTab(name)
                     TweenService:Create(TickCover, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Position = UDim2.new(0.5, 0, 0.5, 0), Size = UDim2.new(0, 0, 0, 0)}):Play()
                     TweenService:Create(CheckboxOutline, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {ImageColor3 = Library.Theme.MainColor}):Play()
                     TweenService:Create(CheckboxTicked, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {ImageColor3 = Library.Theme.MainColor}):Play()
-                elseif not state then
+                else
                     TweenService:Create(Title, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {TextColor3 = Color3.fromRGB(185, 185, 185)}):Play()
                     TweenService:Create(TickCover, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Position = UDim2.new(0.5, -7, 0.5, -7), Size = UDim2.new(0, 14, 0, 14)}):Play()
                     TweenService:Create(CheckboxOutline, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {ImageColor3 = Color3.fromRGB(65, 65, 65)}):Play()
                     TweenService:Create(CheckboxTicked, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {ImageColor3 = Color3.fromRGB(65, 65, 65)}):Play()
-				end
-				
+                end
+                Toggled = state
+                if not Settings[gameId] then Settings[gameId] = {} end
+                Settings[gameId][name] = Toggled
+                SaveSettings()
                 callback(Toggled)
-			end
-			
-			Toggle.MouseButton1Down:Connect(function()
+            end
+
+            SetState(Toggled)
+
+            Toggle.MouseButton1Down:Connect(function()
                 Toggled = not Toggled
-				SetState(Toggled)
+                SetState(Toggled)
             end)
 
             table.insert(Library.LibraryColorTable, CheckboxOutline)
@@ -1456,9 +1495,11 @@ end
             local Dropdown = Instance.new("ImageLabel")
             local DropdownContentLayout = Instance.new("UIListLayout")
 
+            local gameId = self.GameId -- Ambil gameId dari SectionElements
             local DropdownToggled = true
             table.insert(options, 1, "None")
-    local SelectedOption = options[1]
+            if not Settings[gameId] then Settings[gameId] = {} end
+            local SelectedOption = Settings[gameId][name] or options[presetoption] or options[1]
 
             NameDropdown.Name = (name .. "Dropdown")
             NameDropdown.Parent = SectionContent
@@ -1515,16 +1556,14 @@ end
                         v:Destroy()
                     end
                 end
-
                 DropdownToggled = true
                 TweenService:Create(TitleToggle, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
                 TweenService:Create(NameDropdown, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 197, 0, 35)}):Play()
                 TweenService:Create(Dropdown, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 165, 0, 0)}):Play()
             end
 
-            for i, v in pairs(options) do
+for i, v in pairs(options) do
                 local NameButton = Instance.new("TextButton")
-
                 NameButton.Name = (v .. "DropdownButton")
                 NameButton.Parent = Dropdown
                 NameButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -1535,20 +1574,19 @@ end
                 NameButton.AutoButtonColor = false
                 NameButton.Font = Library.Theme.TextFont
                 NameButton.Text = v
-                NameButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+                NameButton.TextColor3 = (v == SelectedOption) and Library.Theme.MainColor or Color3.fromRGB(255, 255, 255)
                 NameButton.TextSize = 15.000
 
                 table.insert(Library.LibraryColorTable, NameButton)
-
-                if v == SelectedOption then
-                    NameButton.TextColor3 = Library.Theme.MainColor
-                end
 
                 NameButton.MouseButton1Down:Connect(function()
                     SelectedOption = v
                     ResetAllDropdownItems()
                     TitleToggle.Text = (name .. " - " .. SelectedOption)
                     TweenService:Create(NameButton, TweenInfo.new(0.35, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {TextColor3 = Library.Theme.MainColor}):Play()
+                    if not Settings[gameId] then Settings[gameId] = {} end
+                    Settings[gameId][name] = SelectedOption
+                    SaveSettings()
                     callback(NameButton.Text)
                 end)
 
@@ -1567,27 +1605,23 @@ end
             
             TitleToggle.MouseButton1Down:Connect(function()
                 DropdownToggled = not DropdownToggled
-            
                 if DropdownToggled then
                     TweenService:Create(TitleToggle, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
                     TweenService:Create(NameDropdown, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 197, 0, 35)}):Play()
                     TweenService:Create(Dropdown, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 165, 0, 0)}):Play()
-                elseif not DropdownToggled then
+                else
                     TweenService:Create(TitleToggle, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(185, 185, 185)}):Play()
                     TweenService:Create(NameDropdown, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 197, 0, 35 + DropdownContentLayout.AbsoluteContentSize.Y)}):Play()
                     TweenService:Create(Dropdown, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 165, 0, DropdownContentLayout.AbsoluteContentSize.Y)}):Play()
                 end
             end)
 
-            local function Refresh(newoptions, newpresetoption, newcallback)
+local function Refresh(newoptions, newpresetoption, newcallback)
                 ClearAllDropdownItems()
-
-                local SelectedOption = newoptions[newpresetoption]
+                local SelectedOption = Settings[gameId][name] or newoptions[newpresetoption] or newoptions[1]
                 TitleToggle.Text = (name .. " - " .. SelectedOption)
-
                 for i, v in pairs(newoptions) do
                     local NameButton = Instance.new("TextButton")
-    
                     NameButton.Name = (v .. "Button")
                     NameButton.Parent = Dropdown
                     NameButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -1598,27 +1632,26 @@ end
                     NameButton.AutoButtonColor = false
                     NameButton.Font = Library.Theme.TextFont
                     NameButton.Text = v
-                    NameButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+                    NameButton.TextColor3 = (v == SelectedOption) and Library.Theme.MainColor or Color3.fromRGB(255, 255, 255)
                     NameButton.TextSize = 15.000
-    
-                    if v == SelectedOption then
-                        NameButton.TextColor3 = Library.Theme.MainColor
-                    end
-    
+
                     NameButton.MouseButton1Down:Connect(function()
                         SelectedOption = v
                         ResetAllDropdownItems()
                         TitleToggle.Text = (name .. " - " .. SelectedOption)
                         TweenService:Create(NameButton, TweenInfo.new(0.35, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {TextColor3 = Library.Theme.MainColor}):Play()
+                        if not Settings[gameId] then Settings[gameId] = {} end
+                        Settings[gameId][name] = SelectedOption
+                        SaveSettings()
                         newcallback(NameButton.Text)
                     end)
-    
+
                     NameButton.InputBegan:Connect(function(input)
                         if input.UserInputType == Enum.UserInputType.MouseMovement then
                             TweenService:Create(NameButton, TweenInfo.new(0.35, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {BackgroundTransparency = 0.95}):Play()
                         end
                     end)
-    
+
                     NameButton.InputEnded:Connect(function(input)
                         if input.UserInputType == Enum.UserInputType.MouseMovement then
                             TweenService:Create(NameButton, TweenInfo.new(0.35, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {BackgroundTransparency = 1}):Play()
