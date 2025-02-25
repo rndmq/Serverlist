@@ -805,9 +805,9 @@ function SectionElements:CreateToggle(name, callback, tooltipText)
     CheckboxTicked.Parent = Toggle
     CheckboxTicked.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     CheckboxTicked.BackgroundTransparency = 1.000
-    CheckboxTicked.Position = UDim2.new(0.5, -12, 0, -12)
+    CheckboxTicked.Position = UDim2.new(0.5, -12, 0.5, -12)
     CheckboxTicked.Size = UDim2.new(0, 24, 0, 24)
-    CheckboxTicked.ZIndex = 5
+    CheckboxTicked.ZIndex = 6
     CheckboxTicked.Image = "rbxassetid://5416796675"
     CheckboxTicked.ImageColor3 = Color3.fromRGB(65, 65, 65)
 
@@ -817,16 +817,16 @@ function SectionElements:CreateToggle(name, callback, tooltipText)
     TickCover.BorderSizePixel = 0
     TickCover.Position = UDim2.new(0.5, -7, 0.5, -7)
     TickCover.Size = UDim2.new(0, 14, 0, 14)
-    TickCover.ZIndex = 5
+    TickCover.ZIndex = 7
 
     if tooltipText then
         Tooltip = Instance.new("TextLabel")
         Tooltip.Name = "Tooltip"
         Tooltip.Parent = NameToggle
         Tooltip.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        Tooltip.Position = UDim2.new(0, 13, 0, -30)
+        Tooltip.Position = UDim2.new(0, 13, 0, -35)
         Tooltip.Size = UDim2.new(0, 0, 0, 20)
-        Tooltip.ZIndex = 6
+        Tooltip.ZIndex = 10
         Tooltip.Font = Library.Theme.TextFont
         Tooltip.Text = tooltipText
         Tooltip.TextColor3 = Color3.fromRGB(0, 0, 0)
