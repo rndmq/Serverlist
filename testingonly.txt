@@ -607,7 +607,7 @@ function Library:CreateTab(name)
         else
             for _, v in pairs(TabButtons:GetChildren()) do
                 if v:IsA("ImageButton") then
-                    TweenService:Create(v, TweenInfo.new(0.2, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                    TweenService:Create(v, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
                         ImageColor3 = Library.Theme.MainColor
                     }):Play()
                 end
@@ -626,14 +626,14 @@ function Library:CreateTab(name)
         for _, child in pairs(NameTab:GetChildren()) do
             if child:IsA("ImageLabel") and child.Name:match("Section$") then
                 local darkenedColor = DarkenObjectColor(Library.Theme.MainColor, 15)
-                TweenService:Create(child, TweenInfo.new(0.2, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                TweenService:Create(child, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
                     ImageColor3 = darkenedColor,
                     ImageTransparency = 0
                 }):Play()
                 
-                task.wait(0.2)
+                task.wait(0.3)
                 
-                TweenService:Create(child, TweenInfo.new(0.2, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                TweenService:Create(child, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
                     ImageColor3 = Library.Theme.BackgroundColor
                 }):Play()
             end
@@ -641,13 +641,13 @@ function Library:CreateTab(name)
         
         for _, v in pairs(TabButtons:GetChildren()) do
             if v:IsA("ImageButton") and v ~= NameTabButton then
-                TweenService:Create(v, TweenInfo.new(0.2, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                TweenService:Create(v, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
                     Size = originalSize
                 }):Play()
             end
         end
         
-        TweenService:Create(NameTabButton, TweenInfo.new(0.2, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+        TweenService:Create(NameTabButton, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
             ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 20),
             Size = smallSize
         }):Play()
@@ -656,7 +656,7 @@ function Library:CreateTab(name)
     ResetAllTabButtons = function()
         for _, v in pairs(TabButtons:GetChildren()) do
             if v:IsA("ImageButton") then
-                TweenService:Create(v, TweenInfo.new(0.2, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                TweenService:Create(v, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
                     ImageColor3 = Library.Theme.MainColor,
                     Size = originalSize
                 }):Play()
@@ -666,28 +666,36 @@ function Library:CreateTab(name)
 
     local function ShowFirstTab()
         if NameTab.Name == (Library.FirstTab .. "Tab") then
-    NameTab.Visible = true
-    task.wait(0.1)
+            NameTab.Visible = true
+            for _, child in pairs(NameTab:GetChildren()) do
+                if child:IsA("ImageLabel") and child.Name:match("Section$") then
+                    child.ImageTransparency = 1
+                    child.ImageColor3 = Library.Theme.MainColor
+                end
+            end
+            task.wait(0.1)
 
-    for _, child in pairs(NameTab:GetChildren()) do
-        if child:IsA("ImageLabel") and child.Name:match("Section$") then
-            local darkenedColor = DarkenObjectColor(Library.Theme.MainColor, 15)
-            
-            local tween1 = TweenService:Create(child, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-                ImageColor3 = darkenedColor,
-                ImageTransparency = 0
-            })
-            tween1:Play()
-            
-            tween1.Completed:Wait()
-
-            local tween2 = TweenService:Create(child, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-                ImageColor3 = Library.Theme.BackgroundColor
-            })
-            tween2:Play()
+            for _, child in pairs(NameTab:GetChildren()) do
+                if child:IsA("ImageLabel") and child.Name:match("Section$") then
+                    local darkenedColor = DarkenObjectColor(Library.Theme.MainColor, 15)
+                    TweenService:Create(child, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                        ImageColor3 = darkenedColor,
+                        ImageTransparency = 0
+                    }):Play()
+                    
+                    task.wait(0.3)
+                    
+                    TweenService:Create(child, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                        ImageColor3 = Library.Theme.BackgroundColor
+                    }):Play()
+                end
+            end
+TweenService:Create(NameTabButton, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 20),
+                Size = smallSize
+            }):Play()
         end
     end
-end
 
     ShowFirstTab()
 
