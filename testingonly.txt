@@ -662,23 +662,38 @@ function Library:CreateTab(name)
 
     local function InitializeFirstTab()
         if NameTab.Name == (Library.FirstTab .. "Tab") then
+
             NameTab.Visible = true
             NameTabButton.ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 20)
             NameTabButton.Size = smallSize
             
             for _, child in pairs(NameTab:GetChildren()) do
                 if child:IsA("ImageLabel") and child.Name:match("Section$") then
-                    child.ImageColor3 = Library.Theme.BackgroundColor
-                    child.ImageTransparency = 0
+                    child.ImageTransparency = 1 -- Mulai dari transparan
+                    child.ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 15)
+                end
+            end
+
+
+            task.wait(0.2)
+            
+            for _, child in pairs(NameTab:GetChildren()) do
+                if child:IsA("ImageLabel") and child.Name:match("Section$") then
+                    -- Fase 1: Muncul dengan warna gelap
+                    TweenService:Create(child, TweenInfo.new(0.3, Library.Theme.EasingStyle), {
+                        ImageTransparency = 0,
+                        ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 15)
+                    }):Play()
+
+
+                    TweenService:Create(child, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out, 0, false, 0.3), {
+                        ImageColor3 = Library.Theme.BackgroundColor
+                    }):Play()
                 end
             end
         end
     end
 
-    task.defer(function()
-        if Library.TabCount == 1 then
-            InitializeFirstTab()
-            task.wait(0.1)
             
             for _, child in pairs(NameTab:GetChildren()) do
                 if child:IsA("ImageLabel") and child.Name:match("Section$") then
@@ -698,7 +713,9 @@ function Library:CreateTab(name)
         end
     end)
 
-
+    task.defer(function()
+        if Library.TabCount == 1 then
+            InitializeFirstTab()
     
 function TabElements:CreateSection(name)
     local NameSection = Instance.new("ImageLabel")
