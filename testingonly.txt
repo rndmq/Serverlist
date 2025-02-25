@@ -79,11 +79,10 @@ local Library = {
 }
 
 local function DarkenObjectColor(object, amount)
-    local ColorR = (object.r * 255) - amount
-    local ColorG = (object.g * 255) - amount
-    local ColorB = (object.b * 255) - amount
-   
-    return Color3.fromRGB(ColorR, ColorG, ColorB)
+    local h, s, v = Color3.toHSV(object)
+    v = math.clamp(v - (amount / 255), 0, 1)
+    s = math.clamp(s - (amount / 510), 0, 1)
+    return Color3.fromHSV(h, s, v)
 end
 
 local function SetUIAccent(color)
@@ -593,7 +592,7 @@ function Library:CreateTab(name)
         CloseAllTabs()
         ResetAllTabButtons()
         NameTab.Visible = true
-        TweenService:Create(NameTabButton, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 20)}):Play()
+        TweenService:Create(NameTabButton, TweenInfo.new(0, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 20)}):Play()
     end)
 
     KeepFirstTabOpen()
@@ -670,71 +669,35 @@ function TabElements:CreateSection(name)
         end)
 
 function SectionElements:CreateLabel(name, text)
-    local NameLabel = Instance.new("TextLabel")
+            local NameLabel = Instance.new("TextLabel")
 
-    NameLabel.Name = (name .. "Label")
-    NameLabel.Parent = SectionContent
-    NameLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    NameLabel.BackgroundTransparency = 1.000
-    NameLabel.ZIndex = 5
-    NameLabel.Font = Library.Theme.TextFont
-    NameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    NameLabel.TextSize = 15.000
-    NameLabel.TextXAlignment = Enum.TextXAlignment.Left
-
-    local function WrapText(inputText)
-        if inputText:find("\n") then
-            return inputText
-        end
-
-        local maxWidth = 197
-        local tempLabel = NameLabel:Clone()
-        tempLabel.Text = ""
-        tempLabel.Parent = nil
-        
-        local wrappedText = ""
-        local currentLine = ""
-        
-        for word in inputText:gmatch("%S+") do
-            local testLine = currentLine .. (currentLine == "" and "" or " ") .. word
-            tempLabel.Text = testLine
-            if tempLabel.TextBounds.X > maxWidth then
-                wrappedText = wrappedText .. (wrappedText == "" and "" or "\n") .. currentLine
-                currentLine = word
-            else
-                currentLine = testLine
-            end
-        end
-        
-        if currentLine ~= "" then
-            wrappedText = wrappedText .. (wrappedText == "" and "" or "\n") .. currentLine
-        end
-        
-        return wrappedText
-    end
-
-    NameLabel.Text = WrapText(text)
-    NameLabel.Size = UDim2.new(0, 197, 0, NameLabel.TextBounds.Y)
-
-    local function ChangeText(newtext)
-        NameLabel.Text = WrapText(newtext)
-        NameLabel.Size = UDim2.new(0, 197, 0, NameLabel.TextBounds.Y)
-    end
-
-    NameLabel:GetPropertyChangedSignal("TextBounds"):Connect(function()
-        if NameLabel.Text ~= "" then
+            NameLabel.Name = (name .. "Label")
+            NameLabel.Parent = SectionContent
+            NameLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            NameLabel.BackgroundTransparency = 1.000
+            NameLabel.Text = text
             NameLabel.Size = UDim2.new(0, 197, 0, NameLabel.TextBounds.Y)
-        else
-            NameLabel.Size = UDim2.new(0, 197, 0, 0)
+            NameLabel.ZIndex = 5
+            NameLabel.Font = Library.Theme.TextFont
+            NameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+            NameLabel.TextSize = 15.000
+
+            local function ChangeText(newtext)
+                NameLabel.Text = newtext
+            end
+
+            NameLabel:GetPropertyChangedSignal("TextBounds"):Connect(function()
+                if NameLabel.Text ~= "" then
+                    TweenService:Create(NameLabel, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 197, 0, NameLabel.TextBounds.Y)}):Play()
+                else
+                    TweenService:Create(NameLabel, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 197, 0, 0)}):Play()
+                end
+            end)
+
+            return {
+                ChangeText = ChangeText
+            }
         end
-    end)
-
-    SectionContent.CanvasSize = UDim2.new(0, 0, 0, SectionContentLayout.AbsoluteContentSize.Y + 15)
-
-    return {
-        ChangeText = ChangeText
-    }
-end
 
         function SectionElements:CreateButton(name, callback)
             local NameButton = Instance.new("Frame")
