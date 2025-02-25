@@ -526,7 +526,6 @@ coroutine.wrap(function()
         end
     end
 end)()
-
 function Library:CreateTab(name)
     local NameTab = Instance.new("Frame")
     local NameTabButton = Instance.new("ImageButton")
@@ -575,7 +574,7 @@ function Library:CreateTab(name)
     SectionPadding.Name = "SectionPadding"
     SectionPadding.Parent = NameTab
     SectionPadding.PaddingTop = UDim.new(0, 12)
-    NameTab.Visible = (Library.currentTab == name)
+    NameTab.Visible = false -- Default hide tab sampai dipilih
     table.insert(Library.LibraryColorTable, NameTabButton)
     local indicator = Instance.new("ImageLabel")
     indicator.Name = "Indicator"
@@ -589,6 +588,7 @@ function Library:CreateTab(name)
     indicator.SliceCenter = Rect.new(100, 100, 100, 100)
     indicator.SliceScale = 0.050
     if Library.currentTab == name then
+        NameTab.Visible = true
         local tabButtonPos = NameTabButton.AbsolutePosition - TabButtons.AbsolutePosition
         indicator.Position = UDim2.new(0, tabButtonPos.X, 0, tabButtonPos.Y + 25 - 2)
         TweenService:Create(NameTabButton, TweenInfo.new(0.1, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 80, 0, 23)}):Play()
