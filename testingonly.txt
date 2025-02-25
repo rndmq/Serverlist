@@ -649,12 +649,13 @@ function Library:CreateTab(name)
                     child.ImageColor3 = Library.Theme.MainColor
                 end
             end
-            
-            wait(0.1)
-            
+
+            -- Meniru logika animasi dari MouseButton1Down untuk section
             for _, child in pairs(NameTab:GetChildren()) do
                 if child:IsA("ImageLabel") and child.Name:match("Section$") then
+                    local darkenedColor = DarkenObjectColor(Library.Theme.MainColor, 15)
                     TweenService:Create(child, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                        ImageColor3 = darkenedColor,
                         ImageTransparency = 0
                     }):Play()
                     
@@ -676,8 +677,7 @@ function Library:CreateTab(name)
 
     ShowFirstTab()
 
-
-    
+   
     
 function TabElements:CreateSection(name)
     local NameSection = Instance.new("ImageLabel")
