@@ -650,29 +650,33 @@ function Library:CreateTab(name)
     end
 
     local function ShowFirstTab()
-        if NameTab.Name == (Library.FirstTab .. "Tab") then
-            NameTab.Visible = true
-            for _, child in pairs(NameTab:GetChildren()) do
-                if child:IsA("ImageLabel") and child.Name:match("Section$") then
-                    child.ImageTransparency = 1
-                end
+    if NameTab.Name == (Library.FirstTab .. "Tab") then
+        NameTab.Visible = true
+        
+        for _, child in pairs(NameTab:GetChildren()) do
+            if child:IsA("ImageLabel") and child.Name:match("Section$") then
+                child.ImageTransparency = 1
+                child.ImageColor3 = Library.Theme.MainColor
             end
-            
-            for _, child in pairs(NameTab:GetChildren()) do
-                if child:IsA("ImageLabel") and child.Name:match("Section$") then
-                    local darkenedColor = DarkenObjectColor(Library.Theme.MainColor, 15)
-                    TweenService:Create(child, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-                        ImageColor3 = darkenedColor,
-                        ImageTransparency = 0
-                    }):Play()
-                    wait(0.3)
-                    TweenService:Create(child, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-                        ImageColor3 = Library.Theme.BackgroundColor
-                    }):Play()
-                end
+        end
+        
+        wait(0.1)
+        
+        for _, child in pairs(NameTab:GetChildren()) do
+            if child:IsA("ImageLabel") and child.Name:match("Section$") then
+                TweenService:Create(child, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                    ImageTransparency = 0
+                }):Play()
+                
+                wait(0.3)
+                
+                TweenService:Create(child, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                    ImageColor3 = Library.Theme.BackgroundColor
+                }):Play()
             end
         end
     end
+end
 
     ShowFirstTab()
 
@@ -749,12 +753,7 @@ function TabElements:CreateSection(name)
 
     SectionContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
         SectionContent.CanvasSize = UDim2.new(0, 0, 0, SectionContentLayout.AbsoluteContentSize.Y + 15)
-    end)
-
-    
-
-
-    
+    end)  
 function SectionElements:CreateLabel(name, text)
             local NameLabel = Instance.new("TextLabel")
 
