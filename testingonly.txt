@@ -13,7 +13,7 @@ local Settings = {}
 local function LoadSettings()
     if isfile("Rdnm.json") then
         local success, result = pcall(function()
-            return HttpService:JSONDecode(readfile("HubInc.json"))
+            return HttpService:JSONDecode(readfile("Rdnm.json"))
         end)
         if success and type(result) == "table" then
             Settings = result
