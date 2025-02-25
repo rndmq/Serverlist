@@ -587,92 +587,55 @@ function Library:CreateTab(name)
 
     table.insert(Library.LibraryColorTable, NameTabButton)
 
+    local function SetTabButtonSize(button, isActive)
+        local targetSize = isActive and UDim2.new(0, 70, 0, 20) or UDim2.new(0, 84, 0, 25)
+        TweenService:Create(button, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = targetSize}):Play()
+    end
+
+    local function ResetAllTabButtons()
+        for i, v in pairs(TabButtons:GetChildren()) do
+            if v:IsA("ImageButton") then
+                TweenService:Create(v, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageColor3 = Library.Theme.MainColor}):Play()
+                SetTabButtonSize(v, false)
+            end
+        end
+    end
+
     NameTabButton.MouseButton1Down:Connect(function()
         CloseAllTabs()
         ResetAllTabButtons()
         NameTab.Visible = true
         TweenService:Create(NameTabButton, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 20)}):Play()
+        SetTabButtonSize(NameTabButton, true)
     end)
+
+    local function KeepFirstTabOpen()
+        for i, v in pairs(Tabs:GetChildren()) do
+            if v:IsA("Frame") then
+                if v.Name == (Library.FirstTab .. "Tab") then
+                    v.Visible = true
+                else
+                    v.Visible = false
+                end
+            end
+        end
+
+        for i, v in pairs(TabButtons:GetChildren()) do
+            if v:IsA("ImageButton") then
+                if v.Name:find(Library.FirstTab .. "TabButton") then
+                    TweenService:Create(v, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 15)}):Play()
+                    SetTabButtonSize(v, true)
+                else
+                    TweenService:Create(v, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageColor3 = Library.Theme.MainColor}):Play()
+                    SetTabButtonSize(v, false)
+                end
+            end
+        end
+    end
 
     KeepFirstTabOpen()
 
-    NameTabButton.MouseButton1Down:Connect(function()
-        CloseAllTabs()
-        ResetAllTabButtons()
-        NameTab.Visible = true
-        TweenService:Create(NameTabButton, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 15)}):Play()
-    end)
-
-    function TabElements:CreateSection(name)
-        local NameSection = Instance.new("ImageLabel")
-        local SectionBorder = Instance.new("ImageLabel")
-        local SectionTitle = Instance.new("TextLabel")
-        local SectionContent = Instance.new("ScrollingFrame")
-        local SectionContentLayout = Instance.new("UIListLayout")
-
-        local SectionElements = { GameId = self.GameId }
-
-        NameSection.Name = (name .. "Section")
-        NameSection.Parent = NameTab
-        NameSection.BackgroundColor3 = Library.Theme.MainColor
-        NameSection.BackgroundTransparency = 1.000
-        NameSection.Position = UDim2.new(0, 0, 0.0574162677, 0)
-        NameSection.Size = UDim2.new(0, 197, 0, 181)
-        NameSection.ZIndex = 4
-        NameSection.Image = "rbxassetid://3570695787"
-        NameSection.ImageColor3 = Library.Theme.BackgroundColor
-        NameSection.ScaleType = Enum.ScaleType.Slice
-        NameSection.SliceCenter = Rect.new(100, 100, 100, 100)
-        NameSection.SliceScale = 0.050
-        
-        SectionBorder.Name = "SectionBorder"
-        SectionBorder.Parent = NameSection
-        SectionBorder.BackgroundColor3 = Library.Theme.MainColor
-        SectionBorder.BackgroundTransparency = 1.000
-        SectionBorder.Position = UDim2.new(0, -1, 0, -1)
-        SectionBorder.Size = UDim2.new(1, 2, 1, 2)
-        SectionBorder.ZIndex = 3
-        SectionBorder.Image = "rbxassetid://3570695787"
-        SectionBorder.ImageColor3 = Library.Theme.MainColor
-        SectionBorder.ScaleType = Enum.ScaleType.Slice
-        SectionBorder.SliceCenter = Rect.new(100, 100, 100, 100)
-        SectionBorder.SliceScale = 0.050
-        
-        SectionTitle.Name = "SectionTitle"
-        SectionTitle.Parent = NameSection
-        SectionTitle.BackgroundColor3 = Library.Theme.BackgroundColor
-        SectionTitle.BorderSizePixel = 0
-        SectionTitle.Text = name
-        SectionTitle.Position = UDim2.new(0.5, (-SectionTitle.TextBounds.X - 5) / 2, 0, -12)
-        SectionTitle.Size = UDim2.new(0, SectionTitle.TextBounds.X + 5, 0, 22)
-        SectionTitle.ZIndex = 4
-        SectionTitle.Font = Library.Theme.TextFont
-        SectionTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-        SectionTitle.TextSize = 14.000
-        
-        SectionContent.Name = "SectionContent"
-        SectionContent.Parent = NameSection
-        SectionContent.Active = true
-        SectionContent.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        SectionContent.BackgroundTransparency = 1.000
-        SectionContent.BorderColor3 = Color3.fromRGB(27, 42, 53)
-        SectionContent.BorderSizePixel = 0
-        SectionContent.Size = UDim2.new(1, 0, 1, 0)
-        SectionContent.ZIndex = 4
-        SectionContent.BottomImage = "rbxasset://textures/ui/Scroll/scroll-middle.png"
-        SectionContent.ScrollBarImageColor3 = Color3.fromRGB(85, 85, 85)
-        SectionContent.ScrollBarThickness = 4
-        SectionContent.TopImage = "rbxasset://textures/ui/Scroll/scroll-middle.png"
-
-        SectionContentLayout.Name = "SectionContentLayout"
-        SectionContentLayout.Parent = SectionContent
-        SectionContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
-
-        table.insert(Library.LibraryColorTable, SectionBorder)
-
-        SectionContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-            SectionContent.CanvasSize = UDim2.new(0, 0, 0, SectionContentLayout.AbsoluteContentSize.Y + 15)
-        end)
+    
 
         function SectionElements:CreateLabel(name, text)
             local NameLabel = Instance.new("TextLabel")
