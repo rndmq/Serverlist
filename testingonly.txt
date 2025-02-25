@@ -744,7 +744,6 @@ function Library:CreateTab(name)
 
             table.insert(Library.LibraryColorTable, ButtonRounded)
         end
-
 function SectionElements:CreateToggle(name, callback, tooltipText)
     local NameToggle = Instance.new("Frame")
     local Title = Instance.new("TextLabel")
@@ -824,11 +823,9 @@ function SectionElements:CreateToggle(name, callback, tooltipText)
         Tooltip.Name = "Tooltip"
         Tooltip.Parent = NameToggle
         Tooltip.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        Tooltip.Position = UDim2.new(0, 13, 0, -35)
-        Tooltip.Size = UDim2.new(0, 0, 0, 20)
+        Tooltip.Position = UDim2.new(0, 13, 0, -25)
         Tooltip.ZIndex = 10
         Tooltip.Font = Library.Theme.TextFont
-        Tooltip.Text = tooltipText
         Tooltip.TextColor3 = Color3.fromRGB(0, 0, 0)
         Tooltip.TextSize = 14.000
         Tooltip.Visible = false
@@ -838,8 +835,35 @@ function SectionElements:CreateToggle(name, callback, tooltipText)
         UICorner.CornerRadius = UDim.new(0, 5)
         UICorner.Parent = Tooltip
 
-        local textWidth = math.min(Tooltip.TextBounds.X + 10, 197)
-        Tooltip.Size = UDim2.new(0, textWidth, 0, Tooltip.TextBounds.Y + 5)
+        local function WrapText(inputText)
+            if inputText:find("\n") then
+                Tooltip.Text = inputText
+                return
+            end
+            local maxWidth = 197
+            local tempLabel = Tooltip:Clone()
+            tempLabel.Text = ""
+            tempLabel.Parent = nil
+            local wrappedText = ""
+            local currentLine = ""
+            for word in inputText:gmatch("%S+") do
+                local testLine = currentLine .. (currentLine == "" and "" or " ") .. word
+                tempLabel.Text = testLine
+                if tempLabel.TextBounds.X > maxWidth then
+                    wrappedText = wrappedText .. (wrappedText == "" and "" or "\n") .. currentLine
+                    currentLine = word
+                else
+                    currentLine = testLine
+                end
+            end
+            if currentLine ~= "" then
+                wrappedText = wrappedText .. (wrappedText == "" and "" or "\n") .. currentLine
+            end
+            Tooltip.Text = wrappedText
+        end
+
+        WrapText(tooltipText)
+        Tooltip.Size = UDim2.new(0, math.min(Tooltip.TextBounds.X + 10, 197), 0, Tooltip.TextBounds.Y + 5)
 
         Title.InputBegan:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
