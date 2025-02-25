@@ -479,26 +479,28 @@ local function ResetAllTabButtons()
 end
 
 local function KeepFirstTabOpen()
-    for i, v in pairs(Tabs:GetChildren()) do
-        if v:IsA("Frame") then
-            if v.Name == (Library.FirstTab .. "Tab") then
-                v.Visible = true
-            else
-                v.Visible = false
+        for i, v in pairs(Tabs:GetChildren()) do
+            if v:IsA("Frame") then
+                if v.Name == (Library.FirstTab .. "Tab") then
+                    v.Visible = true
+                else
+                    v.Visible = false
+                end
             end
         end
-    end
 
-    for i, v in pairs(TabButtons:GetChildren()) do
-        if v:IsA("ImageButton") then
-            if v.Name:find(Library.FirstTab .. "TabButton") then
-                TweenService:Create(v, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 15)}):Play()
-            else
-                TweenService:Create(v, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageColor3 = Library.Theme.MainColor}):Play()
+        for i, v in pairs(TabButtons:GetChildren()) do
+            if v:IsA("ImageButton") then
+                if v.Name:find(Library.FirstTab .. "TabButton") then
+                    TweenService:Create(v, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 15)}):Play()
+                    SetTabButtonSize(v, true)
+                else
+                    TweenService:Create(v, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageColor3 = Library.Theme.MainColor}):Play()
+                    SetTabButtonSize(v, false)
+                end
             end
         end
     end
-end
 
 local function ToggleUI()
     Library.UIOpen = not Library.UIOpen
@@ -609,29 +611,7 @@ function Library:CreateTab(name)
         SetTabButtonSize(NameTabButton, true)
     end)
 
-    local function KeepFirstTabOpen()
-        for i, v in pairs(Tabs:GetChildren()) do
-            if v:IsA("Frame") then
-                if v.Name == (Library.FirstTab .. "Tab") then
-                    v.Visible = true
-                else
-                    v.Visible = false
-                end
-            end
-        end
-
-        for i, v in pairs(TabButtons:GetChildren()) do
-            if v:IsA("ImageButton") then
-                if v.Name:find(Library.FirstTab .. "TabButton") then
-                    TweenService:Create(v, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 15)}):Play()
-                    SetTabButtonSize(v, true)
-                else
-                    TweenService:Create(v, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageColor3 = Library.Theme.MainColor}):Play()
-                    SetTabButtonSize(v, false)
-                end
-            end
-        end
-    end
+    
 
     KeepFirstTabOpen()
 
