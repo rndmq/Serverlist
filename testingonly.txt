@@ -823,6 +823,7 @@ function SectionElements:CreateToggle(name, callback, tooltipText)
         Tooltip.Name = "Tooltip"
         Tooltip.Parent = NameToggle
         Tooltip.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        Tooltip.Position = UDim2.new(0, 10, 0, -10)
         Tooltip.ZIndex = 10
         Tooltip.Font = Library.Theme.TextFont
         Tooltip.TextColor3 = Color3.fromRGB(0, 0, 0)
@@ -841,9 +842,9 @@ function SectionElements:CreateToggle(name, callback, tooltipText)
                 for _ in inputText:gmatch("\n") do
                     lineCount = lineCount + 1
                 end
-                Tooltip.Position = UDim2.new(0, 13, 0, -10 - (lineCount * 20))
+                Tooltip.Position = UDim2.new(0, 10, 0, -10 - (lineCount * 20))
             else
-                local maxWidth = 197
+                local maxWidth = 187
                 local tempLabel = Tooltip:Clone()
                 tempLabel.Text = ""
                 tempLabel.Parent = nil
@@ -863,12 +864,12 @@ function SectionElements:CreateToggle(name, callback, tooltipText)
                     wrappedText = wrappedText .. (wrappedText == "" and "" or "\n") .. currentLine
                 end
                 Tooltip.Text = wrappedText
-                Tooltip.Position = UDim2.new(0, 13, 0, -10)
+                Tooltip.Position = UDim2.new(0, 10, 0, -10)
             end
         end
 
         WrapText(tooltipText)
-        Tooltip.Size = UDim2.new(0, math.min(Tooltip.TextBounds.X + 10, 197), 0, Tooltip.TextBounds.Y + 5)
+        Tooltip.Size = UDim2.new(0, math.min(Tooltip.TextBounds.X + 10, 187), 0, Tooltip.TextBounds.Y + 5)
 
         Title.InputBegan:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
