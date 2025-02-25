@@ -553,7 +553,7 @@ function Library:CreateTab(name)
     NameTabButton.Size = UDim2.new(0, 84, 0, 25)
     NameTabButton.ZIndex = 2
     NameTabButton.Image = "rbxassetid://3570695787"
-    NameTabButton.ImageColor3 = Library.currentTab == name and DarkenObjectColor(Library.Theme.MainColor, 15) or Library.Theme.MainColor
+    NameTabButton.ImageColor3 = Library.currentTab == name and Library.Theme.MainColor or DarkenObjectColor(Library.Theme.MainColor, 30)
     NameTabButton.ScaleType = Enum.ScaleType.Slice
     NameTabButton.SliceCenter = Rect.new(100, 100, 100, 100)
     NameTabButton.SliceScale = 0.050
@@ -584,7 +584,7 @@ function Library:CreateTab(name)
     indicator.Size = UDim2.new(0, 84, 0, 2)
     indicator.ZIndex = 3
     indicator.Image = "rbxassetid://3570695787"
-    indicator.ImageColor3 = Library.currentTab == name and DarkenObjectColor(Library.Theme.MainColor, 15) or Library.Theme.MainColor
+    indicator.ImageColor3 = Color3.fromRGB(255, 255, 255)
     indicator.ScaleType = Enum.ScaleType.Slice
     indicator.SliceCenter = Rect.new(100, 100, 100, 100)
     indicator.SliceScale = 0.050
@@ -599,24 +599,22 @@ function Library:CreateTab(name)
             TweenService:Create(NameTabButton, TweenInfo.new(0.1, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 84, 0, 25)}):Play()
             local prevTabButton = TabButtons:FindFirstChild(Library.currentTab .. "TabButton")
             if prevTabButton then
-                TweenService:Create(prevTabButton, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageColor3 = Library.Theme.MainColor}):Play()
+                TweenService:Create(prevTabButton, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 30)}):Play()
             end
-            TweenService:Create(NameTabButton, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 15)}):Play()
+            TweenService:Create(NameTabButton, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageColor3 = Library.Theme.MainColor}):Play()
             Library.currentTab = name
             for _, tab in ipairs(Tabs:GetChildren()) do
                 if tab:IsA("Frame") then
                     if tab.Name == (name .. "Tab") then
-                        tab.Position = UDim2.new(0, 13, 0, 41 - 20) -- Mulai sedikit di atas posisi normal
                         tab.Visible = true
-                        TweenService:Create(tab, TweenInfo.new(0.2, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Position = UDim2.new(0, 13, 0, 41)}):Play()
                     else
-                        tab.Visible = false -- Langsung sembunyi, nggak pake delay
+                        tab.Visible = false
                     end
                 end
             end
             local newPos = NameTabButton.AbsolutePosition - TabButtons.AbsolutePosition
             local indicatorPos = UDim2.new(0, newPos.X, 0, newPos.Y + 25 - 2)
-            TweenService:Create(indicator, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Position = indicatorPos, ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 15)}):Play()
+            TweenService:Create(indicator, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Position = indicatorPos}):Play()
         end
     end)
     KeepFirstTabOpen()
