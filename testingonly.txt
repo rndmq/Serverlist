@@ -534,7 +534,6 @@ function Library:CreateTab(name)
     local Title = Instance.new("TextLabel")
     local SectionLayout = Instance.new("UIListLayout")
     local SectionPadding = Instance.new("UIPadding")
-    local LoadingLine = Instance.new("Frame")
     
     local gameId = tostring(game.PlaceId)
     local TabElements = { GameId = gameId }
@@ -585,15 +584,6 @@ function Library:CreateTab(name)
     SectionPadding.Parent = NameTab
     SectionPadding.PaddingTop = UDim.new(0, 12)
 
-    LoadingLine.Name = "LoadingLine"
-    LoadingLine.Parent = NameTab
-    LoadingLine.BackgroundColor3 = Library.Theme.MainColor
-    LoadingLine.Size = UDim2.new(0, 50, 0, 3)
-    LoadingLine.Position = UDim2.new(0, -50, 0.5, -1.5)
-    LoadingLine.Rotation = 15
-    LoadingLine.ZIndex = 15
-    LoadingLine.Visible = false
-
     NameTab.Visible = false
 
     table.insert(Library.LibraryColorTable, NameTabButton)
@@ -619,31 +609,22 @@ function Library:CreateTab(name)
         for _, child in pairs(NameTab:GetChildren()) do
             if child:IsA("ImageLabel") and child.Name:match("Section$") then
                 child.ImageTransparency = 1
-                child.Position = UDim2.new(1, 0, 0.0574162677, 0) -- Posisi awal di kanan
             end
         end
-        
-        LoadingLine.Visible = true
-        local lineTween = TweenService:Create(LoadingLine, TweenInfo.new(0.5, Enum.EasingStyle.Linear), {Position = UDim2.new(1, 0, 0.5, -1.5)})
-        lineTween:Play()
         
         for _, child in pairs(NameTab:GetChildren()) do
             if child:IsA("ImageLabel") and child.Name:match("Section$") then
-                local sectionX = child.Position.X.Scale + (child.Position.X.Offset / NameTab.AbsoluteSize.X)
-                spawn(function()
-                    wait(sectionX * 0.5)
-                    local sectionTween = TweenService:Create(child, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-                        Position = UDim2.new(0, 0, 0.0574162677, 0), -- Posisi akhir (statis)
-                        ImageTransparency = 0
-                    })
-                    sectionTween:Play()
-                end)
+                local darkenedColor = DarkenObjectColor(Library.Theme.MainColor, 15) -- Warna sedikit gelap
+                TweenService:Create(child, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                    ImageColor3 = darkenedColor,
+                    ImageTransparency = 0
+                }):Play()
+                wait(0.3) -- Tunggu animasi selesai
+                TweenService:Create(child, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                    ImageColor3 = Library.Theme.BackgroundColor
+                }):Play()
             end
         end
-        
-        lineTween.Completed:Wait()
-        LoadingLine.Visible = false
-        LoadingLine.Position = UDim2.new(0, -50, 0.5, -1.5)
         
         for _, v in pairs(TabButtons:GetChildren()) do
             if v:IsA("ImageButton") and v ~= NameTabButton then
@@ -674,35 +655,27 @@ function Library:CreateTab(name)
             for _, child in pairs(NameTab:GetChildren()) do
                 if child:IsA("ImageLabel") and child.Name:match("Section$") then
                     child.ImageTransparency = 1
-                    child.Position = UDim2.new(1, 0, 0.0574162677, 0) -- Posisi awal di kanan
                 end
             end
-            
-            LoadingLine.Visible = true
-            local lineTween = TweenService:Create(LoadingLine, TweenInfo.new(0.5, Enum.EasingStyle.Linear), {Position = UDim2.new(1, 0, 0.5, -1.5)})
-            lineTween:Play()
             
             for _, child in pairs(NameTab:GetChildren()) do
                 if child:IsA("ImageLabel") and child.Name:match("Section$") then
-                    local sectionX = child.Position.X.Scale + (child.Position.X.Offset / NameTab.AbsoluteSize.X)
-                    spawn(function()
-                        wait(sectionX * 0.5)
-                        local sectionTween = TweenService:Create(child, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-                            Position = UDim2.new(0, 0, 0.0574162677, 0), -- Posisi akhir (statis)
-                            ImageTransparency = 0
-                        })
-                        sectionTween:Play()
-                    end)
+                    local darkenedColor = DarkenObjectColor(Library.Theme.MainColor, 15)
+                    TweenService:Create(child, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                        ImageColor3 = darkenedColor,
+                        ImageTransparency = 0
+                    }):Play()
+                    wait(0.3)
+                    TweenService:Create(child, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                        ImageColor3 = Library.Theme.BackgroundColor
+                    }):Play()
                 end
             end
-            
-            lineTween.Completed:Wait()
-            LoadingLine.Visible = false
-            LoadingLine.Position = UDim2.new(0, -50, 0.5, -1.5)
         end
     end
 
     ShowFirstTab()
+
 
     
     
@@ -777,6 +750,8 @@ function TabElements:CreateSection(name)
     SectionContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
         SectionContent.CanvasSize = UDim2.new(0, 0, 0, SectionContentLayout.AbsoluteContentSize.Y + 15)
     end)
+
+    
 
 
     
