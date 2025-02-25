@@ -527,6 +527,7 @@ coroutine.wrap(function()
         end
     end
 end)()
+
 function Library:CreateTab(name)
     local NameTab = Instance.new("Frame")
     local NameTabButton = Instance.new("ImageButton")
@@ -629,7 +630,9 @@ function Library:CreateTab(name)
                     ImageTransparency = 0
                 }):Play()
                 
-                TweenService:Create(child, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out, 0, false, 0.3), {
+                wait(0.3)
+                
+                TweenService:Create(child, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
                     ImageColor3 = Library.Theme.BackgroundColor
                 }):Play()
             end
@@ -660,62 +663,46 @@ function Library:CreateTab(name)
         end
     end
 
-    local function InitializeFirstTab()
+    local function ShowFirstTab()
         if NameTab.Name == (Library.FirstTab .. "Tab") then
-
             NameTab.Visible = true
-            NameTabButton.ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 20)
-            NameTabButton.Size = smallSize
             
-            for _, child in pairs(NameTab:GetChildren()) do
-                if child:IsA("ImageLabel") and child.Name:match("Section$") then
-                    child.ImageTransparency = 1 -- Mulai dari transparan
-                    child.ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 15)
-                end
-            end
-
-
-            task.wait(0.2)
-            
-            for _, child in pairs(NameTab:GetChildren()) do
-                if child:IsA("ImageLabel") and child.Name:match("Section$") then
-                    -- Fase 1: Muncul dengan warna gelap
-                    TweenService:Create(child, TweenInfo.new(0.3, Library.Theme.EasingStyle), {
-                        ImageTransparency = 0,
-                        ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 15)
-                    }):Play()
-
-
-                    TweenService:Create(child, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out, 0, false, 0.3), {
-                        ImageColor3 = Library.Theme.BackgroundColor
-                    }):Play()
-                end
-            end
-        end
-    end
-
-            
+            -- Pastikan semua section diatur ke warna yang sudah diupdate sebelum animasi
             for _, child in pairs(NameTab:GetChildren()) do
                 if child:IsA("ImageLabel") and child.Name:match("Section$") then
                     child.ImageTransparency = 1
+                    child.ImageColor3 = Library.Theme.MainColor -- Gunakan warna yang sudah diupdate
+                end
+            end
+
+            -- Meniru logika animasi penuh dari MouseButton1Down untuk section
+            for _, child in pairs(NameTab:GetChildren()) do
+                if child:IsA("ImageLabel") and child.Name:match("Section$") then
                     local darkenedColor = DarkenObjectColor(Library.Theme.MainColor, 15)
-                    
-                    TweenService:Create(child, TweenInfo.new(0.3, Library.Theme.EasingStyle), {
-                        ImageTransparency = 0,
-                        ImageColor3 = darkenedColor
+                    TweenService:Create(child, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                        ImageColor3 = darkenedColor,
+                        ImageTransparency = 0
                     }):Play()
                     
-                    TweenService:Create(child, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out, 0, false, 0.3), {
+                    wait(0.3)
+                    
+                    TweenService:Create(child, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
                         ImageColor3 = Library.Theme.BackgroundColor
                     }):Play()
                 end
             end
-        end
-    end)
 
-    task.defer(function()
-        if Library.TabCount == 1 then
-            InitializeFirstTab()
+            -- Set tombol tab pertama ke status aktif seperti saat diklik
+            TweenService:Create(NameTabButton, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 20),
+                Size = smallSize
+            }):Play()
+        end
+    end
+
+    ShowFirstTab()
+
+    
     
 function TabElements:CreateSection(name)
     local NameSection = Instance.new("ImageLabel")
