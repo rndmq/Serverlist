@@ -703,7 +703,7 @@ function Library:CreateTab(name)
 
     ShowFirstTab()
 
-
+    
 function TabElements:CreateSection(name)
     local NameSection = Instance.new("ImageLabel")
     local SectionBorder = Instance.new("ImageLabel")
