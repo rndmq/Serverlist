@@ -652,72 +652,36 @@ function Library:CreateTab(name)
             SectionContent.CanvasSize = UDim2.new(0, 0, 0, SectionContentLayout.AbsoluteContentSize.Y + 15)
         end)
 
-function SectionElements:CreateLabel(name, text)
-    local NameLabel = Instance.new("TextLabel")
+        function SectionElements:CreateLabel(name, text)
+            local NameLabel = Instance.new("TextLabel")
 
-    NameLabel.Name = (name .. "Label")
-    NameLabel.Parent = SectionContent
-    NameLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    NameLabel.BackgroundTransparency = 1.000
-    NameLabel.ZIndex = 5
-    NameLabel.Font = Library.Theme.TextFont
-    NameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    NameLabel.TextSize = 15.000
-    NameLabel.TextXAlignment = Enum.TextXAlignment.Left
-
-    local function WrapText(inputText)
-        if inputText:find("\n") then
-            return inputText
-        end
-
-        local maxWidth = 197
-        local tempLabel = NameLabel:Clone()
-        tempLabel.Text = ""
-        tempLabel.Parent = nil
-        
-        local wrappedText = ""
-        local currentLine = ""
-        
-        for word in inputText:gmatch("%S+") do
-            local testLine = currentLine .. (currentLine == "" and "" or " ") .. word
-            tempLabel.Text = testLine
-            if tempLabel.TextBounds.X > maxWidth then
-                wrappedText = wrappedText .. (wrappedText == "" and "" or "\n") .. currentLine
-                currentLine = word
-            else
-                currentLine = testLine
-            end
-        end
-        
-        if currentLine ~= "" then
-            wrappedText = wrappedText .. (wrappedText == "" and "" or "\n") .. currentLine
-        end
-        
-        return wrappedText
-    end
-
-    NameLabel.Text = WrapText(text)
-    NameLabel.Size = UDim2.new(0, 197, 0, NameLabel.TextBounds.Y)
-
-    local function ChangeText(newtext)
-        NameLabel.Text = WrapText(newtext)
-        NameLabel.Size = UDim2.new(0, 197, 0, NameLabel.TextBounds.Y)
-    end
-
-    NameLabel:GetPropertyChangedSignal("TextBounds"):Connect(function()
-        if NameLabel.Text ~= "" then
+            NameLabel.Name = (name .. "Label")
+            NameLabel.Parent = SectionContent
+            NameLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            NameLabel.BackgroundTransparency = 1.000
+            NameLabel.Text = text
             NameLabel.Size = UDim2.new(0, 197, 0, NameLabel.TextBounds.Y)
-        else
-            NameLabel.Size = UDim2.new(0, 197, 0, 0)
+            NameLabel.ZIndex = 5
+            NameLabel.Font = Library.Theme.TextFont
+            NameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+            NameLabel.TextSize = 15.000
+
+            local function ChangeText(newtext)
+                NameLabel.Text = newtext
+            end
+
+            NameLabel:GetPropertyChangedSignal("TextBounds"):Connect(function()
+                if NameLabel.Text ~= "" then
+                    TweenService:Create(NameLabel, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 197, 0, NameLabel.TextBounds.Y)}):Play()
+                else
+                    TweenService:Create(NameLabel, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 197, 0, 0)}):Play()
+                end
+            end)
+
+            return {
+                ChangeText = ChangeText
+            }
         end
-    end)
-
-    SectionContent.CanvasSize = UDim2.new(0, 0, 0, SectionContentLayout.AbsoluteContentSize.Y + 15)
-
-    return {
-        ChangeText = ChangeText
-    }
-end
 
         function SectionElements:CreateButton(name, callback)
             local NameButton = Instance.new("Frame")
@@ -781,13 +745,14 @@ end
             table.insert(Library.LibraryColorTable, ButtonRounded)
         end
 
-function SectionElements:CreateToggle(name, callback)
+function SectionElements:CreateToggle(name, callback, tooltipText)
     local NameToggle = Instance.new("Frame")
     local Title = Instance.new("TextLabel")
     local Toggle = Instance.new("TextButton")
     local CheckboxOutline = Instance.new("ImageLabel")
     local CheckboxTicked = Instance.new("ImageLabel")
     local TickCover = Instance.new("Frame")
+    local Tooltip
 
     local gameId = self.GameId
     if not Settings[gameId] then Settings[gameId] = {} end
@@ -833,17 +798,17 @@ function SectionElements:CreateToggle(name, callback)
     CheckboxOutline.Position = UDim2.new(0.5, -12, 0.5, -12)
     CheckboxOutline.Size = UDim2.new(0, 24, 0, 24)
     CheckboxOutline.ZIndex = 5
-    CheckboxOutline.Image = "http://www.roblox.com/asset/?id=5416796047"
+    CheckboxOutline.Image = "rbxassetid://5416796047"
     CheckboxOutline.ImageColor3 = Color3.fromRGB(65, 65, 65)
 
     CheckboxTicked.Name = "CheckboxTicked"
     CheckboxTicked.Parent = Toggle
     CheckboxTicked.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     CheckboxTicked.BackgroundTransparency = 1.000
-    CheckboxTicked.Position = UDim2.new(0.5, -12, 0.5, -12)
+    CheckboxTicked.Position = UDim2.new(0.5, -12, 0, -12)
     CheckboxTicked.Size = UDim2.new(0, 24, 0, 24)
     CheckboxTicked.ZIndex = 5
-    CheckboxTicked.Image = "http://www.roblox.com/asset/?id=5416796675"
+    CheckboxTicked.Image = "rbxassetid://5416796675"
     CheckboxTicked.ImageColor3 = Color3.fromRGB(65, 65, 65)
 
     TickCover.Name = "TickCover"
@@ -853,6 +818,45 @@ function SectionElements:CreateToggle(name, callback)
     TickCover.Position = UDim2.new(0.5, -7, 0.5, -7)
     TickCover.Size = UDim2.new(0, 14, 0, 14)
     TickCover.ZIndex = 5
+
+    if tooltipText then
+        Tooltip = Instance.new("TextLabel")
+        Tooltip.Name = "Tooltip"
+        Tooltip.Parent = NameToggle
+        Tooltip.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        Tooltip.Position = UDim2.new(0, 13, 0, -30)
+        Tooltip.Size = UDim2.new(0, 0, 0, 20)
+        Tooltip.ZIndex = 6
+        Tooltip.Font = Library.Theme.TextFont
+        Tooltip.Text = tooltipText
+        Tooltip.TextColor3 = Color3.fromRGB(0, 0, 0)
+        Tooltip.TextSize = 14.000
+        Tooltip.Visible = false
+        Tooltip.ClipsDescendants = true
+        
+        local UICorner = Instance.new("UICorner")
+        UICorner.CornerRadius = UDim.new(0, 5)
+        UICorner.Parent = Tooltip
+
+        local textWidth = math.min(Tooltip.TextBounds.X + 10, 197)
+        Tooltip.Size = UDim2.new(0, textWidth, 0, Tooltip.TextBounds.Y + 5)
+
+        Title.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+                Tooltip.Visible = true
+            elseif input.UserInputType == Enum.UserInputType.MouseMovement then
+                Tooltip.Visible = true
+            end
+        end)
+
+        Title.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+                Tooltip.Visible = false
+            elseif input.UserInputType == Enum.UserInputType.MouseMovement then
+                Tooltip.Visible = false
+            end
+        end)
+    end
 
     local function UpdateVisual(state)
         if state then
