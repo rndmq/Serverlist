@@ -656,15 +656,16 @@ function Library:CreateTab(name)
             for _, child in pairs(NameTab:GetChildren()) do
                 if child:IsA("ImageLabel") and child.Name:match("Section$") then
                     child.ImageTransparency = 1
-                    child.ImageColor3 = Library.Theme.MainColor
+                    child.ImageColor3 = Library.Theme.MainColor -- Pastikan langsung menggunakan warna yang sudah diupdate
                 end
             end
             
-            wait(0.1)
-            
+            -- Pastikan animasi langsung berjalan untuk semua section
             for _, child in pairs(NameTab:GetChildren()) do
                 if child:IsA("ImageLabel") and child.Name:match("Section$") then
+                    local darkenedColor = DarkenObjectColor(Library.Theme.MainColor, 15)
                     TweenService:Create(child, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                        ImageColor3 = darkenedColor,
                         ImageTransparency = 0
                     }):Play()
                     
@@ -679,8 +680,6 @@ function Library:CreateTab(name)
     end
 
     ShowFirstTab()
-
-    
 
 
     
