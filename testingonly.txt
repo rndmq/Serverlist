@@ -11,22 +11,22 @@ local Mouse = LocalPlayer:GetMouse()
 local Settings = {}
 
 local function LoadSettings()
-    if isfile("HubInc.json") then
+    if isfile("Rdnm.json") then
         local success, result = pcall(function()
-            return HttpService:JSONDecode(readfile("HubInc.json"))
+            return HttpService:JSONDecode(readfile("Rdnm.json"))
         end)
         if success and type(result) == "table" then
             Settings = result
         else
             Settings = {}
             pcall(function()
-                writefile("HubInc.json", HttpService:JSONEncode(Settings))
+                writefile("Rdnm.json", HttpService:JSONEncode(Settings))
             end)
         end
     else
         Settings = {}
         pcall(function()
-            writefile("HubInc.json", HttpService:JSONEncode(Settings))
+            writefile("Rdnm.json", HttpService:JSONEncode(Settings))
         end)
     end
 end
@@ -37,7 +37,7 @@ local function SaveSettings()
         Settings = {}
     end
     pcall(function()
-        writefile("HubInc.json", HttpService:JSONEncode(Settings))
+        writefile("Rdnm.json", HttpService:JSONEncode(Settings))
     end)
 end
 ContentProvider:PreloadAsync({"rbxassetid://3570695787", "rbxassetid://2708891598", "rbxassetid://4155801252", "rbxassetid://4695575676", "rbxassetid://4155801252"})
@@ -652,36 +652,72 @@ function Library:CreateTab(name)
             SectionContent.CanvasSize = UDim2.new(0, 0, 0, SectionContentLayout.AbsoluteContentSize.Y + 15)
         end)
 
-        function SectionElements:CreateLabel(name, text)
-            local NameLabel = Instance.new("TextLabel")
+function SectionElements:CreateLabel(name, text)
+    local NameLabel = Instance.new("TextLabel")
 
-            NameLabel.Name = (name .. "Label")
-            NameLabel.Parent = SectionContent
-            NameLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-            NameLabel.BackgroundTransparency = 1.000
-            NameLabel.Text = text
-            NameLabel.Size = UDim2.new(0, 197, 0, NameLabel.TextBounds.Y)
-            NameLabel.ZIndex = 5
-            NameLabel.Font = Library.Theme.TextFont
-            NameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-            NameLabel.TextSize = 15.000
+    NameLabel.Name = (name .. "Label")
+    NameLabel.Parent = SectionContent
+    NameLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    NameLabel.BackgroundTransparency = 1.000
+    NameLabel.ZIndex = 5
+    NameLabel.Font = Library.Theme.TextFont
+    NameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    NameLabel.TextSize = 15.000
+    NameLabel.TextXAlignment = Enum.TextXAlignment.Left
 
-            local function ChangeText(newtext)
-                NameLabel.Text = newtext
-            end
-
-            NameLabel:GetPropertyChangedSignal("TextBounds"):Connect(function()
-                if NameLabel.Text ~= "" then
-                    TweenService:Create(NameLabel, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 197, 0, NameLabel.TextBounds.Y)}):Play()
-                else
-                    TweenService:Create(NameLabel, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 197, 0, 0)}):Play()
-                end
-            end)
-
-            return {
-                ChangeText = ChangeText
-            }
+    local function WrapText(inputText)
+        if inputText:find("\n") then
+            return inputText
         end
+
+        local maxWidth = 197
+        local tempLabel = NameLabel:Clone()
+        tempLabel.Text = ""
+        tempLabel.Parent = nil
+        
+        local wrappedText = ""
+        local currentLine = ""
+        
+        for word in inputText:gmatch("%S+") do
+            local testLine = currentLine .. (currentLine == "" and "" or " ") .. word
+            tempLabel.Text = testLine
+            if tempLabel.TextBounds.X > maxWidth then
+                wrappedText = wrappedText .. (wrappedText == "" and "" or "\n") .. currentLine
+                currentLine = word
+            else
+                currentLine = testLine
+            end
+        end
+        
+        if currentLine ~= "" then
+            wrappedText = wrappedText .. (wrappedText == "" and "" or "\n") .. currentLine
+        end
+        
+        return wrappedText
+    end
+
+    NameLabel.Text = WrapText(text)
+    NameLabel.Size = UDim2.new(0, 197, 0, NameLabel.TextBounds.Y)
+
+    local function ChangeText(newtext)
+        NameLabel.Text = WrapText(newtext)
+        NameLabel.Size = UDim2.new(0, 197, 0, NameLabel.TextBounds.Y)
+    end
+
+    NameLabel:GetPropertyChangedSignal("TextBounds"):Connect(function()
+        if NameLabel.Text ~= "" then
+            NameLabel.Size = UDim2.new(0, 197, 0, NameLabel.TextBounds.Y)
+        else
+            NameLabel.Size = UDim2.new(0, 197, 0, 0)
+        end
+    end)
+
+    SectionContent.CanvasSize = UDim2.new(0, 0, 0, SectionContentLayout.AbsoluteContentSize.Y + 15)
+
+    return {
+        ChangeText = ChangeText
+    }
+end
 
         function SectionElements:CreateButton(name, callback)
             local NameButton = Instance.new("Frame")
