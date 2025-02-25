@@ -61,6 +61,19 @@ pcall(function()
         selectedColor = colorMap[colorKey] or colorMap.default
     end
 end)
+local colorMap = {
+    blue = Color3.fromRGB(0, 0, 255),
+    red = Color3.fromRGB(255, 0, 0),
+    green = Color3.fromRGB(0, 255, 0),
+    yellow = Color3.fromRGB(255, 255, 0),
+    purple = Color3.fromRGB(128, 0, 128),
+    pink = Color3.fromRGB(255, 105, 180),
+    default = Color3.fromRGB(255, 75, 75),
+    cyan = Color3.fromRGB(0, 255, 255),
+    brown = Color3.fromRGB(139, 69, 19),
+    orange = Color3.fromRGB(255, 165, 0)
+}
+
 
 local Library = {
     Theme = {
@@ -77,6 +90,9 @@ local Library = {
     RainbowColorValue = 0,
     HueSelectionPosition = 0
 }
+Library.RGBEnabled = false
+Library.GradientColor1 = Color3.fromRGB(255, 0, 0)
+Library.GradientColor2 = Color3.fromRGB(0, 0, 255)l
 
 local function DarkenObjectColor(object, amount)
     local h, s, v = Color3.toHSV(object)
@@ -85,6 +101,61 @@ local function DarkenObjectColor(object, amount)
     return Color3.fromHSV(h, s, v)
 end
 
+function Library:SetRGBColor(r, g, b, gradient)
+    Library.RGBEnabled = true
+    Library.Theme.MainColor = Color3.fromRGB(r, g, b)
+    if gradient then
+        Library.GradientColor1 = Color3.fromRGB(r, g, b)
+        Library.GradientColor2 = Color3.fromRGB(255 - r, 255 - g, 255 - b)
+    else
+        Library.GradientColor1 = Library.Theme.MainColor
+        Library.GradientColor2 = Library.Theme.MainColor
+    end
+    SetUIAccent(Library.Theme.MainColor)
+    UpdateGradient()
+end
+
+local function UpdateGradient()
+    local color1 = Library.GradientColor1
+    local color2 = Library.GradientColor2
+    for _, child in pairs(Tabs:GetChildren()) do
+        if child:IsA("Frame") then
+            local gradient = child:FindFirstChild("Gradient") or Instance.new("UIGradient")
+            gradient.Color = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, color1),
+                ColorSequenceKeypoint.new(1, color2)
+            })
+            gradient.Rotation = 90
+            gradient.Parent = child
+        end
+        for _, section in pairs(child:GetChildren()) do
+            if section:IsA("ImageLabel") and section.Name:match("Section$") then
+                local gradient = section:FindFirstChild("Gradient") or Instance.new("UIGradient")
+                gradient.Color = ColorSequence.new({
+                    ColorSequenceKeypoint.new(0, color1),
+                    ColorSequenceKeypoint.new(1, color2)
+                })
+                gradient.Rotation = 90
+                gradient.Parent = section
+            end
+        end
+    end
+end
+
+pcall(function()
+    if getgenv().Color then
+        local color = getgenv().Color
+        if type(color) == "table" and color.r and color.g and color.b then
+            Library:SetRGBColor(color.r, color.g, color.b, true)
+        elseif type(color) == "string" and colorMap[color] then
+            local c = colorMap[color]
+            local r, g, b = math.floor(c.r * 255), math.floor(c.g * 255), math.floor(c.b * 255)
+            Library:SetRGBColor(r, g, b, true)
+        elseif color == "rgb" then
+            Library:SetRGBColor(255, 0, 0, true)
+        end
+    end
+end)
 local function SetUIAccent(color)
     for i, v in pairs(Library.LibraryColorTable) do
         if HasProperty(v, "ImageColor3") then
@@ -92,13 +163,13 @@ local function SetUIAccent(color)
                 v.ImageColor3 = color
             end
         end
-
         if HasProperty(v, "TextColor3") then
             if v.TextColor3 ~= Color3.fromRGB(255, 255, 255) then
                 v.TextColor3 = color
             end
         end
     end
+    UpdateGradient()
 end
 
 local function RippleEffect(object)
@@ -534,6 +605,7 @@ function Library:CreateTab(name)
     local Title = Instance.new("TextLabel")
     local SectionLayout = Instance.new("UIListLayout")
     local SectionPadding = Instance.new("UIPadding")
+    local Gradient = Instance.new("UIGradient")
     
     local gameId = tostring(game.PlaceId)
     local TabElements = { GameId = gameId }
@@ -545,11 +617,15 @@ function Library:CreateTab(name)
 
     NameTab.Name = (name .. "Tab")
     NameTab.Parent = Tabs
-    NameTab.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    NameTab.BackgroundColor3 = Library.Theme.BackgroundColor
     NameTab.BackgroundTransparency = 1.000
     NameTab.Size = UDim2.new(1, 0, 1, 0)
     NameTab.ZIndex = 2
     NameTab.ClipsDescendants = true
+
+    Gradient.Name = "Gradient"
+    Gradient.Parent = NameTab
+    UpdateGradient()
 
     NameTabButton.Name = (name .. "TabButton")
     NameTabButton.Parent = TabButtons
@@ -609,20 +685,25 @@ function Library:CreateTab(name)
         for _, child in pairs(NameTab:GetChildren()) do
             if child:IsA("ImageLabel") and child.Name:match("Section$") then
                 child.ImageTransparency = 1
+                local overlay = child:FindFirstChild("ColorOverlay")
+                if overlay then
+                    overlay.ImageTransparency = 0
+                    overlay.BackgroundColor3 = DarkenObjectColor(Library.Theme.MainColor, 15)
+                end
             end
         end
         
         for _, child in pairs(NameTab:GetChildren()) do
             if child:IsA("ImageLabel") and child.Name:match("Section$") then
-                local darkenedColor = DarkenObjectColor(Library.Theme.MainColor, 15) -- Warna sedikit gelap
-                TweenService:Create(child, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-                    ImageColor3 = darkenedColor,
-                    ImageTransparency = 0
-                }):Play()
-                wait(0.3) -- Tunggu animasi selesai
-                TweenService:Create(child, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-                    ImageColor3 = Library.Theme.BackgroundColor
-                }):Play()
+                local overlay = child:FindFirstChild("ColorOverlay")
+                if overlay then
+                    TweenService:Create(overlay, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                        BackgroundTransparency = 1
+                    }):Play()
+                    wait(0.5)
+                    overlay.BackgroundTransparency = 0
+                    overlay.BackgroundColor3 = Library.Theme.BackgroundColor
+                end
             end
         end
         
@@ -650,36 +731,37 @@ function Library:CreateTab(name)
     end
 
     local function ShowFirstTab()
-    if NameTab.Name == (Library.FirstTab .. "Tab") then
-        NameTab.Visible = true
-        
-        for _, child in pairs(NameTab:GetChildren()) do
-            if child:IsA("ImageLabel") and child.Name:match("Section$") then
-                child.ImageTransparency = 1
-                child.ImageColor3 = Library.Theme.MainColor
+        if NameTab.Name == (Library.FirstTab .. "Tab") then
+            NameTab.Visible = true
+            for _, child in pairs(NameTab:GetChildren()) do
+                if child:IsA("ImageLabel") and child.Name:match("Section$") then
+                    child.ImageTransparency = 1
+                    local overlay = child:FindFirstChild("ColorOverlay")
+                    if overlay then
+                        overlay.ImageTransparency = 0
+                        overlay.BackgroundColor3 = DarkenObjectColor(Library.Theme.MainColor, 15)
+                    end
+                end
             end
-        end
-        
-        wait(0.1)
-        
-        for _, child in pairs(NameTab:GetChildren()) do
-            if child:IsA("ImageLabel") and child.Name:match("Section$") then
-                TweenService:Create(child, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-                    ImageTransparency = 0
-                }):Play()
-                
-                wait(0.3)
-                
-                TweenService:Create(child, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-                    ImageColor3 = Library.Theme.BackgroundColor
-                }):Play()
+            
+            for _, child in pairs(NameTab:GetChildren()) do
+                if child:IsA("ImageLabel") and child.Name:match("Section$") then
+                    local overlay = child:FindFirstChild("ColorOverlay")
+                    if overlay then
+                        TweenService:Create(overlay, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                            BackgroundTransparency = 1
+                        }):Play()
+                        wait(0.5)
+                        overlay.BackgroundTransparency = 0
+                        overlay.BackgroundColor3 = Library.Theme.BackgroundColor
+                    end
+                end
             end
         end
     end
-end
 
     ShowFirstTab()
-
+    UpdateGradient()
 
     
     
@@ -689,6 +771,8 @@ function TabElements:CreateSection(name)
     local SectionTitle = Instance.new("TextLabel")
     local SectionContent = Instance.new("ScrollingFrame")
     local SectionContentLayout = Instance.new("UIListLayout")
+    local ColorOverlay = Instance.new("ImageLabel")
+    local Gradient = Instance.new("UIGradient")
 
     local SectionElements = { GameId = self.GameId }
 
@@ -696,7 +780,7 @@ function TabElements:CreateSection(name)
     NameSection.Parent = NameTab
     NameSection.BackgroundColor3 = Library.Theme.MainColor
     NameSection.BackgroundTransparency = 1.000
-    NameSection.Position = UDim2.new(0, 0, 0.0574162677, 0) -- Posisi statis
+    NameSection.Position = UDim2.new(0, 0, 0.0574162677, 0)
     NameSection.Size = UDim2.new(0, 197, 0, 181)
     NameSection.ZIndex = 4
     NameSection.Image = "rbxassetid://3570695787"
@@ -704,8 +788,12 @@ function TabElements:CreateSection(name)
     NameSection.ScaleType = Enum.ScaleType.Slice
     NameSection.SliceCenter = Rect.new(100, 100, 100, 100)
     NameSection.SliceScale = 0.050
-    NameSection.ImageTransparency = 1 -- Awalnya invisible
-    
+    NameSection.ImageTransparency = 1
+
+    Gradient.Name = "Gradient"
+    Gradient.Parent = NameSection
+    UpdateGradient()
+
     SectionBorder.Name = "SectionBorder"
     SectionBorder.Parent = NameSection
     SectionBorder.BackgroundColor3 = Library.Theme.MainColor
@@ -718,7 +806,7 @@ function TabElements:CreateSection(name)
     SectionBorder.ScaleType = Enum.ScaleType.Slice
     SectionBorder.SliceCenter = Rect.new(100, 100, 100, 100)
     SectionBorder.SliceScale = 0.050
-    
+
     SectionTitle.Name = "SectionTitle"
     SectionTitle.Parent = NameSection
     SectionTitle.BackgroundColor3 = Library.Theme.BackgroundColor
@@ -730,7 +818,7 @@ function TabElements:CreateSection(name)
     SectionTitle.Font = Library.Theme.TextFont
     SectionTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
     SectionTitle.TextSize = 14.000
-    
+
     SectionContent.Name = "SectionContent"
     SectionContent.Parent = NameSection
     SectionContent.Active = true
@@ -749,11 +837,22 @@ function TabElements:CreateSection(name)
     SectionContentLayout.Parent = SectionContent
     SectionContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
+    ColorOverlay.Name = "ColorOverlay"
+    ColorOverlay.Parent = NameSection
+    ColorOverlay.BackgroundColor3 = DarkenObjectColor(Library.Theme.MainColor, 15)
+    ColorOverlay.BackgroundTransparency = 0
+    ColorOverlay.Position = UDim2.new(0, 0, 0, 0)
+    ColorOverlay.Size = UDim2.new(1, 0, 1, 0)
+    ColorOverlay.ZIndex = 5
+    ColorOverlay.ImageTransparency = 1
+
     table.insert(Library.LibraryColorTable, SectionBorder)
 
     SectionContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
         SectionContent.CanvasSize = UDim2.new(0, 0, 0, SectionContentLayout.AbsoluteContentSize.Y + 15)
-    end)  
+    end)
+
+    
 function SectionElements:CreateLabel(name, text)
             local NameLabel = Instance.new("TextLabel")
 
