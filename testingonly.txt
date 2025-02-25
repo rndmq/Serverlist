@@ -527,7 +527,6 @@ coroutine.wrap(function()
         end
     end
 end)()
-
 function Library:CreateTab(name)
     local NameTab = Instance.new("Frame")
     local NameTabButton = Instance.new("ImageButton")
@@ -590,6 +589,20 @@ function Library:CreateTab(name)
 
     local originalSize = NameTabButton.Size
     local smallSize = UDim2.new(0, 74, 0, 20)
+    local function SimulateClick(button)
+        if button and button:IsA("ImageButton") then
+            local mouse = game.Players.LocalPlayer:GetMouse()
+            local connection
+            connection = mouse.Button1Down:Connect(function()
+                button:Activate() -- Simulasi klik
+                connection:Disconnect() -- Hentikan connection setelah klik
+            end)
+            task.wait(0.1)
+            mouse.Move(mouse.X, mouse.Y)
+            task.wait(0.1)
+            mouse.Button1Down:Fire()
+        end
+    end
 
     NameTabButton.MouseButton1Down:Connect(function()
         if CloseAllTabs and type(CloseAllTabs) == "function" then 
@@ -619,7 +632,7 @@ function Library:CreateTab(name)
         for _, child in pairs(NameTab:GetChildren()) do
             if child:IsA("ImageLabel") and child.Name:match("Section$") then
                 child.ImageTransparency = 1
-                child.ImageColor3 = Library.Theme.MainColor -- Pastikan menggunakan warna yang sudah diupdate
+                child.ImageColor3 = Library.Theme.MainColor
             end
         end
         
@@ -631,7 +644,7 @@ function Library:CreateTab(name)
                     ImageTransparency = 0
                 }):Play()
                 
-                task.wait(0.3)
+                task.wait(0.1)
                 
                 TweenService:Create(child, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
                     ImageColor3 = Library.Theme.BackgroundColor
@@ -668,39 +681,15 @@ function Library:CreateTab(name)
         if NameTab.Name == (Library.FirstTab .. "Tab") then
             NameTab.Visible = true
             
-            -- Pastikan semua section diatur ke warna yang sudah diupdate sebelum animasi
             for _, child in pairs(NameTab:GetChildren()) do
                 if child:IsA("ImageLabel") and child.Name:match("Section$") then
                     child.ImageTransparency = 1
-                    child.ImageColor3 = Library.Theme.MainColor -- Gunakan warna yang sudah diupdate
+                    child.ImageColor3 = Library.Theme.MainColor
                 end
             end
 
-            -- Delay kecil untuk memastikan elemen UI sudah siap
-            task.wait(0.1)
-
-            -- Meniru logika animasi penuh dari MouseButton1Down untuk section
-            for _, child in pairs(NameTab:GetChildren()) do
-                if child:IsA("ImageLabel") and child.Name:match("Section$") then
-                    local darkenedColor = DarkenObjectColor(Library.Theme.MainColor, 15)
-                    TweenService:Create(child, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-                        ImageColor3 = darkenedColor,
-                        ImageTransparency = 0
-                    }):Play()
-                    
-                    task.wait(0.3)
-                    
-                    TweenService:Create(child, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-                        ImageColor3 = Library.Theme.BackgroundColor
-                    }):Play()
-                end
-            end
-
-            -- Set tombol tab pertama ke status aktif seperti saat diklik
-            TweenService:Create(NameTabButton, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-                ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 20),
-                Size = smallSize
-            }):Play()
+            task.wait(0.2)
+            SimulateClick(NameTabButton)
         end
     end
 
