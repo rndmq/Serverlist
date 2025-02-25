@@ -631,7 +631,7 @@ function Library:CreateTab(name)
                     ImageTransparency = 0
                 }):Play()
                 
-                wait(0.3)
+                task.wait(0.3)
                 
                 TweenService:Create(child, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
                     ImageColor3 = Library.Theme.BackgroundColor
@@ -676,6 +676,9 @@ function Library:CreateTab(name)
                 end
             end
 
+            -- Delay kecil untuk memastikan elemen UI sudah siap
+            task.wait(0.1)
+
             -- Meniru logika animasi penuh dari MouseButton1Down untuk section
             for _, child in pairs(NameTab:GetChildren()) do
                 if child:IsA("ImageLabel") and child.Name:match("Section$") then
@@ -685,7 +688,7 @@ function Library:CreateTab(name)
                         ImageTransparency = 0
                     }):Play()
                     
-                    task.wait(0.3) -- Gunakan task.wait untuk konsistensi
+                    task.wait(0.3)
                     
                     TweenService:Create(child, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
                         ImageColor3 = Library.Theme.BackgroundColor
@@ -702,6 +705,7 @@ function Library:CreateTab(name)
     end
 
     ShowFirstTab()
+
 
     
 function TabElements:CreateSection(name)
