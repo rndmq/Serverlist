@@ -42,26 +42,27 @@ local function SaveSettings()
 end
 ContentProvider:PreloadAsync({"rbxassetid://3570695787", "rbxassetid://2708891598", "rbxassetid://4155801252", "rbxassetid://4695575676", "rbxassetid://4155801252"})
 
-if getgenv().Color then
-    local colorMap = {
-        blue = Color3.fromRGB(0, 0, 255),
-        red = Color3.fromRGB(255, 0, 0),
-        green = Color3.fromRGB(0, 255, 0),
-        yellow = Color3.fromRGB(255, 255, 0),
-        purple = Color3.fromRGB(128, 0, 128),
-        pink = Color3.fromRGB(255, 105, 180),
-        default = Color3.fromRGB(255, 75, 75),
-        cyan = Color3.fromRGB(0, 255, 255)
-    }
-    local colorKey = string.lower(getgenv().Color)
-    _G.SelectedColor = colorMap[colorKey] or colorMap.default
-else
-    _G.SelectedColor = Color3.fromRGB(255, 75, 75)
-end
+local selectedColor = Color3.fromRGB(255, 75, 75)
+pcall(function()
+    if getgenv().Color then
+        local colorMap = {
+            blue = Color3.fromRGB(0, 0, 255),
+            red = Color3.fromRGB(255, 0, 0),
+            green = Color3.fromRGB(0, 255, 0),
+            yellow = Color3.fromRGB(255, 255, 0),
+            purple = Color3.fromRGB(128, 0, 128),
+            pink = Color3.fromRGB(255, 105, 180),
+            default = Color3.fromRGB(255, 75, 75),
+            cyan = Color3.fromRGB(0, 255, 255)
+        }
+        local colorKey = string.lower(getgenv().Color)
+        selectedColor = colorMap[colorKey] or colorMap.default
+    end
+end)
 
 local Library = {
     Theme = {
-        MainColor = _G.SelectedColor,
+        MainColor = selectedColor,
         BackgroundColor = Color3.fromRGB(35, 35, 35),
         UIToggleKey = Enum.KeyCode.RightControl,
         TextFont = Enum.Font.SourceSansBold,
@@ -585,9 +586,13 @@ function Library:CreateTab(name)
     NameTab.Visible = true
 
     table.insert(Library.LibraryColorTable, NameTabButton)
-    CloseAllTabs()
-    ResetAllTabButtons()
-    TweenService:Create(NameTabButton, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 15)}):Play()
+
+    NameTabButton.MouseButton1Down:Connect(function()
+        CloseAllTabs()
+        ResetAllTabButtons()
+        NameTab.Visible = true
+        TweenService:Create(NameTabButton, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 20)}):Play()
+    end)
 
     KeepFirstTabOpen()
 
