@@ -624,75 +624,91 @@ function Library:CreateTab(name)
 
 
 function TabElements:CreateSection(name)
-        local NameSection = Instance.new("ImageLabel")
-        local SectionBorder = Instance.new("ImageLabel")
-        local SectionTitle = Instance.new("TextLabel")
-        local SectionContent = Instance.new("ScrollingFrame")
-        local SectionContentLayout = Instance.new("UIListLayout")
+    local NameSection = Instance.new("ImageLabel")
+    local SectionBorder = Instance.new("ImageLabel")
+    local SectionTitle = Instance.new("TextLabel")
+    local SectionContent = Instance.new("ScrollingFrame")
+    local SectionContentLayout = Instance.new("UIListLayout")
+    local LoadingLine = Instance.new("Frame") -- Garis animasi
 
-        local SectionElements = { GameId = self.GameId }
+    local SectionElements = { GameId = self.GameId }
 
-        NameSection.Name = (name .. "Section")
-        NameSection.Parent = NameTab
-        NameSection.BackgroundColor3 = Library.Theme.MainColor
-        NameSection.BackgroundTransparency = 1.000
-        NameSection.Position = UDim2.new(0, 0, 0.0574162677, 0)
-        NameSection.Size = UDim2.new(0, 197, 0, 181)
-        NameSection.ZIndex = 4
-        NameSection.Image = "rbxassetid://3570695787"
-        NameSection.ImageColor3 = Library.Theme.BackgroundColor
-        NameSection.ScaleType = Enum.ScaleType.Slice
-        NameSection.SliceCenter = Rect.new(100, 100, 100, 100)
-        NameSection.SliceScale = 0.050
-        
-        SectionBorder.Name = "SectionBorder"
-        SectionBorder.Parent = NameSection
-        SectionBorder.BackgroundColor3 = Library.Theme.MainColor
-        SectionBorder.BackgroundTransparency = 1.000
-        SectionBorder.Position = UDim2.new(0, -1, 0, -1)
-        SectionBorder.Size = UDim2.new(1, 2, 1, 2)
-        SectionBorder.ZIndex = 3
-        SectionBorder.Image = "rbxassetid://3570695787"
-        SectionBorder.ImageColor3 = Library.Theme.MainColor
-        SectionBorder.ScaleType = Enum.ScaleType.Slice
-        SectionBorder.SliceCenter = Rect.new(100, 100, 100, 100)
-        SectionBorder.SliceScale = 0.050
-        
-        SectionTitle.Name = "SectionTitle"
-        SectionTitle.Parent = NameSection
-        SectionTitle.BackgroundColor3 = Library.Theme.BackgroundColor
-        SectionTitle.BorderSizePixel = 0
-        SectionTitle.Text = name
-        SectionTitle.Position = UDim2.new(0.5, (-SectionTitle.TextBounds.X - 5) / 2, 0, -12)
-        SectionTitle.Size = UDim2.new(0, SectionTitle.TextBounds.X + 5, 0, 22)
-        SectionTitle.ZIndex = 4
-        SectionTitle.Font = Library.Theme.TextFont
-        SectionTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-        SectionTitle.TextSize = 14.000
-        
-        SectionContent.Name = "SectionContent"
-        SectionContent.Parent = NameSection
-        SectionContent.Active = true
-        SectionContent.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        SectionContent.BackgroundTransparency = 1.000
-        SectionContent.BorderColor3 = Color3.fromRGB(27, 42, 53)
-        SectionContent.BorderSizePixel = 0
-        SectionContent.Size = UDim2.new(1, 0, 1, 0)
-        SectionContent.ZIndex = 4
-        SectionContent.BottomImage = "rbxasset://textures/ui/Scroll/scroll-middle.png"
-        SectionContent.ScrollBarImageColor3 = Color3.fromRGB(85, 85, 85)
-        SectionContent.ScrollBarThickness = 4
-        SectionContent.TopImage = "rbxasset://textures/ui/Scroll/scroll-middle.png"
+    NameSection.Name = (name .. "Section")
+    NameSection.Parent = NameTab
+    NameSection.BackgroundColor3 = Library.Theme.MainColor
+    NameSection.BackgroundTransparency = 1.000
+    NameSection.Position = UDim2.new(0, 0, 0.0574162677, 0)
+    NameSection.Size = UDim2.new(0, 197, 0, 181)
+    NameSection.ZIndex = 4
+    NameSection.Image = "rbxassetid://3570695787"
+    NameSection.ImageColor3 = Library.Theme.BackgroundColor
+    NameSection.ScaleType = Enum.ScaleType.Slice
+    NameSection.SliceCenter = Rect.new(100, 100, 100, 100)
+    NameSection.SliceScale = 0.050
+    NameSection.ImageTransparency = 1 -- Awalnya transparan
+    
+    SectionBorder.Name = "SectionBorder"
+    SectionBorder.Parent = NameSection
+    SectionBorder.BackgroundColor3 = Library.Theme.MainColor
+    SectionBorder.BackgroundTransparency = 1.000
+    SectionBorder.Position = UDim2.new(0, -1, 0, -1)
+    SectionBorder.Size = UDim2.new(1, 2, 1, 2)
+    SectionBorder.ZIndex = 3
+    SectionBorder.Image = "rbxassetid://3570695787"
+    SectionBorder.ImageColor3 = Library.Theme.MainColor
+    SectionBorder.ScaleType = Enum.ScaleType.Slice
+    SectionBorder.SliceCenter = Rect.new(100, 100, 100, 100)
+    SectionBorder.SliceScale = 0.050
+    
+    SectionTitle.Name = "SectionTitle"
+    SectionTitle.Parent = NameSection
+    SectionTitle.BackgroundColor3 = Library.Theme.BackgroundColor
+    SectionTitle.BorderSizePixel = 0
+    SectionTitle.Text = name
+    SectionTitle.Position = UDim2.new(0.5, (-SectionTitle.TextBounds.X - 5) / 2, 0, -12)
+    SectionTitle.Size = UDim2.new(0, SectionTitle.TextBounds.X + 5, 0, 22)
+    SectionTitle.ZIndex = 4
+    SectionTitle.Font = Library.Theme.TextFont
+    SectionTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    SectionTitle.TextSize = 14.000
+    
+    SectionContent.Name = "SectionContent"
+    SectionContent.Parent = NameSection
+    SectionContent.Active = true
+    SectionContent.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    SectionContent.BackgroundTransparency = 1.000
+    SectionContent.BorderColor3 = Color3.fromRGB(27, 42, 53)
+    SectionContent.BorderSizePixel = 0
+    SectionContent.Size = UDim2.new(1, 0, 1, 0)
+    SectionContent.ZIndex = 4
+    SectionContent.BottomImage = "rbxasset://textures/ui/Scroll/scroll-middle.png"
+    SectionContent.ScrollBarImageColor3 = Color3.fromRGB(85, 85, 85)
+    SectionContent.ScrollBarThickness = 4
+    SectionContent.TopImage = "rbxasset://textures/ui/Scroll/scroll-middle.png"
 
-        SectionContentLayout.Name = "SectionContentLayout"
-        SectionContentLayout.Parent = SectionContent
-        SectionContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    SectionContentLayout.Name = "SectionContentLayout"
+    SectionContentLayout.Parent = SectionContent
+    SectionContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    LoadingLine.Name = "LoadingLine"
+    LoadingLine.Parent = NameSection
+    LoadingLine.BackgroundColor3 = Library.Theme.MainColor -- Warna garis ikut tema
+    LoadingLine.Size = UDim2.new(0, 0, 0, 2) -- Garis tipis horizontal
+    LoadingLine.Position = UDim2.new(0, 0, 0, 0) -- Mulai dari atas kiri
+    LoadingLine.ZIndex = 5
 
-        table.insert(Library.LibraryColorTable, SectionBorder)
+    table.insert(Library.LibraryColorTable, SectionBorder)
 
-        SectionContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-            SectionContent.CanvasSize = UDim2.new(0, 0, 0, SectionContentLayout.AbsoluteContentSize.Y + 15)
-        end)
+    -- Animasi garis dan munculnya section
+    spawn(function()
+        TweenService:Create(LoadingLine, TweenInfo.new(0.5, Enum.EasingStyle.Linear), {Size = UDim2.new(1, 0, 0, 2)}):Play()
+        wait(0.5)
+        TweenService:Create(NameSection, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageTransparency = 0}):Play()
+        LoadingLine:Destroy() -- Hapus garis setelah selesai
+    end)
+
+    SectionContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        SectionContent.CanvasSize = UDim2.new(0, 0, 0, SectionContentLayout.AbsoluteContentSize.Y + 15)
+    end)
 
 function SectionElements:CreateLabel(name, text)
             local NameLabel = Instance.new("TextLabel")
