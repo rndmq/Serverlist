@@ -534,6 +534,7 @@ function Library:CreateTab(name)
     local Title = Instance.new("TextLabel")
     local SectionLayout = Instance.new("UIListLayout")
     local SectionPadding = Instance.new("UIPadding")
+    local LoadingLine = Instance.new("Frame")
     
     local gameId = tostring(game.PlaceId)
     local TabElements = { GameId = gameId }
@@ -584,6 +585,15 @@ function Library:CreateTab(name)
     SectionPadding.Parent = NameTab
     SectionPadding.PaddingTop = UDim.new(0, 12)
 
+    LoadingLine.Name = "LoadingLine"
+    LoadingLine.Parent = NameTab
+    LoadingLine.BackgroundColor3 = Library.Theme.MainColor
+    LoadingLine.Size = UDim2.new(0, 50, 0, 3)
+    LoadingLine.Position = UDim2.new(0, -50, 0.5, -1.5)
+    LoadingLine.Rotation = 15
+    LoadingLine.ZIndex = 15
+    LoadingLine.Visible = false
+
     NameTab.Visible = false
 
     table.insert(Library.LibraryColorTable, NameTabButton)
@@ -609,29 +619,31 @@ function Library:CreateTab(name)
         for _, child in pairs(NameTab:GetChildren()) do
             if child:IsA("ImageLabel") and child.Name:match("Section$") then
                 child.ImageTransparency = 1
-                local overlay = child:FindFirstChild("ColorOverlay")
-                if overlay then
-                    overlay.ImageTransparency = 0
-                    overlay.BackgroundColor3 = DarkenObjectColor(Library.Theme.MainColor, 15)
-                end
+                child.Position = UDim2.new(1, 0, 0.0574162677, 0) -- Posisi awal di kanan
             end
         end
         
+        LoadingLine.Visible = true
+        local lineTween = TweenService:Create(LoadingLine, TweenInfo.new(0.5, Enum.EasingStyle.Linear), {Position = UDim2.new(1, 0, 0.5, -1.5)})
+        lineTween:Play()
+        
         for _, child in pairs(NameTab:GetChildren()) do
             if child:IsA("ImageLabel") and child.Name:match("Section$") then
-                local overlay = child:FindFirstChild("ColorOverlay")
-                if overlay then
-                    TweenService:Create(overlay, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-                        Position = UDim2.new(0, 0, 0, -181), -- Bergerak ke atas untuk memudar dari bawah
-                        BackgroundTransparency = 1
-                    }):Play()
-                    wait(0.5)
-                    overlay.Position = UDim2.new(0, 0, 0, 0) -- Reset posisi
-                    overlay.BackgroundTransparency = 0
-                    overlay.BackgroundColor3 = Library.Theme.BackgroundColor
-                end
+                local sectionX = child.Position.X.Scale + (child.Position.X.Offset / NameTab.AbsoluteSize.X)
+                spawn(function()
+                    wait(sectionX * 0.5)
+                    local sectionTween = TweenService:Create(child, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                        Position = UDim2.new(0, 0, 0.0574162677, 0), -- Posisi akhir (statis)
+                        ImageTransparency = 0
+                    })
+                    sectionTween:Play()
+                end)
             end
         end
+        
+        lineTween.Completed:Wait()
+        LoadingLine.Visible = false
+        LoadingLine.Position = UDim2.new(0, -50, 0.5, -1.5)
         
         for _, v in pairs(TabButtons:GetChildren()) do
             if v:IsA("ImageButton") and v ~= NameTabButton then
@@ -662,35 +674,35 @@ function Library:CreateTab(name)
             for _, child in pairs(NameTab:GetChildren()) do
                 if child:IsA("ImageLabel") and child.Name:match("Section$") then
                     child.ImageTransparency = 1
-                    local overlay = child:FindFirstChild("ColorOverlay")
-                    if overlay then
-                        overlay.ImageTransparency = 0
-                        overlay.BackgroundColor3 = DarkenObjectColor(Library.Theme.MainColor, 15)
-                    end
+                    child.Position = UDim2.new(1, 0, 0.0574162677, 0) -- Posisi awal di kanan
                 end
             end
             
+            LoadingLine.Visible = true
+            local lineTween = TweenService:Create(LoadingLine, TweenInfo.new(0.5, Enum.EasingStyle.Linear), {Position = UDim2.new(1, 0, 0.5, -1.5)})
+            lineTween:Play()
+            
             for _, child in pairs(NameTab:GetChildren()) do
                 if child:IsA("ImageLabel") and child.Name:match("Section$") then
-                    local overlay = child:FindFirstChild("ColorOverlay")
-                    if overlay then
-                        TweenService:Create(overlay, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-                            Position = UDim2.new(0, 0, 0, -181),
-                            BackgroundTransparency = 1
-                        }):Play()
-                        wait(0.5)
-                        overlay.Position = UDim2.new(0, 0, 0, 0)
-                        overlay.BackgroundTransparency = 0
-                        overlay.BackgroundColor3 = Library.Theme.BackgroundColor
-                    end
+                    local sectionX = child.Position.X.Scale + (child.Position.X.Offset / NameTab.AbsoluteSize.X)
+                    spawn(function()
+                        wait(sectionX * 0.5)
+                        local sectionTween = TweenService:Create(child, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                            Position = UDim2.new(0, 0, 0.0574162677, 0), -- Posisi akhir (statis)
+                            ImageTransparency = 0
+                        })
+                        sectionTween:Play()
+                    end)
                 end
             end
+            
+            lineTween.Completed:Wait()
+            LoadingLine.Visible = false
+            LoadingLine.Position = UDim2.new(0, -50, 0.5, -1.5)
         end
     end
 
     ShowFirstTab()
-
-
 
     
     
@@ -700,7 +712,6 @@ function TabElements:CreateSection(name)
     local SectionTitle = Instance.new("TextLabel")
     local SectionContent = Instance.new("ScrollingFrame")
     local SectionContentLayout = Instance.new("UIListLayout")
-    local ColorOverlay = Instance.new("ImageLabel") -- Overlay untuk animasi warna
 
     local SectionElements = { GameId = self.GameId }
 
@@ -708,7 +719,7 @@ function TabElements:CreateSection(name)
     NameSection.Parent = NameTab
     NameSection.BackgroundColor3 = Library.Theme.MainColor
     NameSection.BackgroundTransparency = 1.000
-    NameSection.Position = UDim2.new(0, 0, 0.0574162677, 0)
+    NameSection.Position = UDim2.new(0, 0, 0.0574162677, 0) -- Posisi statis
     NameSection.Size = UDim2.new(0, 197, 0, 181)
     NameSection.ZIndex = 4
     NameSection.Image = "rbxassetid://3570695787"
@@ -760,15 +771,6 @@ function TabElements:CreateSection(name)
     SectionContentLayout.Name = "SectionContentLayout"
     SectionContentLayout.Parent = SectionContent
     SectionContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
-
-    ColorOverlay.Name = "ColorOverlay"
-    ColorOverlay.Parent = NameSection
-    ColorOverlay.BackgroundColor3 = DarkenObjectColor(Library.Theme.MainColor, 15) -- Warna gelap awal
-    ColorOverlay.BackgroundTransparency = 0
-    ColorOverlay.Position = UDim2.new(0, 0, 0, 0)
-    ColorOverlay.Size = UDim2.new(1, 0, 1, 0)
-    ColorOverlay.ZIndex = 5
-    ColorOverlay.ImageTransparency = 1 -- Awalnya tidak terlihat, akan dianimasikan
 
     table.insert(Library.LibraryColorTable, SectionBorder)
 
