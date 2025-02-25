@@ -70,19 +70,16 @@ local Library = {
         TextFont = Enum.Font.SourceSansBold,
         EasingStyle = Enum.EasingStyle.Quart
     },
-    LibraryColorTable = {},
-    TabCount = 0,
-    FirstTab = nil,
-    CurrentlyBinding = false,
-    RainbowColorValue = 0,
-    HueSelectionPosition = 0
-}
 
 local function DarkenObjectColor(object, amount)
     local h, s, v = Color3.toHSV(object)
     v = math.clamp(v - (amount / 255), 0, 1)
     s = math.clamp(s - (amount / 510), 0, 1)
     return Color3.fromHSV(h, s, v)
+end
+
+local function HasProperty(object, property)
+    return pcall(function() return object[property] end)
 end
 
 local function SetUIAccent(color)
@@ -92,7 +89,6 @@ local function SetUIAccent(color)
                 v.ImageColor3 = color
             end
         end
-
         if HasProperty(v, "TextColor3") then
             if v.TextColor3 ~= Color3.fromRGB(255, 255, 255) then
                 v.TextColor3 = color
@@ -100,6 +96,16 @@ local function SetUIAccent(color)
         end
     end
 end
+
+pcall(function()
+    if getgenv().Color then
+        local color = getgenv().Color
+        if type(color) == "string" and colorMap[color] then
+            Library.Theme.MainColor = colorMap[color]
+            SetUIAccent(Library.Theme.MainColor)
+        end
+    end
+end)
 
 local function RippleEffect(object)
     spawn(function()
@@ -609,20 +615,25 @@ function Library:CreateTab(name)
         for _, child in pairs(NameTab:GetChildren()) do
             if child:IsA("ImageLabel") and child.Name:match("Section$") then
                 child.ImageTransparency = 1
+                local overlay = child:FindFirstChild("ColorOverlay")
+                if overlay then
+                    overlay.ImageTransparency = 0
+                    overlay.BackgroundColor3 = DarkenObjectColor(Library.Theme.MainColor, 15)
+                end
             end
         end
         
         for _, child in pairs(NameTab:GetChildren()) do
             if child:IsA("ImageLabel") and child.Name:match("Section$") then
-                local darkenedColor = DarkenObjectColor(Library.Theme.MainColor, 15) -- Warna sedikit gelap
-                TweenService:Create(child, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-                    ImageColor3 = darkenedColor,
-                    ImageTransparency = 0
-                }):Play()
-                wait(0.3) -- Tunggu animasi selesai
-                TweenService:Create(child, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-                    ImageColor3 = Library.Theme.BackgroundColor
-                }):Play()
+                local overlay = child:FindFirstChild("ColorOverlay")
+                if overlay then
+                    TweenService:Create(overlay, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                        BackgroundTransparency = 1
+                    }):Play()
+                    wait(0.5)
+                    overlay.BackgroundTransparency = 0
+                    overlay.BackgroundColor3 = Library.Theme.MainColor
+                end
             end
         end
         
@@ -650,45 +661,44 @@ function Library:CreateTab(name)
     end
 
     local function ShowFirstTab()
-    if NameTab.Name == (Library.FirstTab .. "Tab") then
-        NameTab.Visible = true
-        
-        for _, child in pairs(NameTab:GetChildren()) do
-            if child:IsA("ImageLabel") and child.Name:match("Section$") then
-                child.ImageTransparency = 1
-                child.ImageColor3 = Library.Theme.MainColor
+        if NameTab.Name == (Library.FirstTab .. "Tab") then
+            NameTab.Visible = true
+            for _, child in pairs(NameTab:GetChildren()) do
+                if child:IsA("ImageLabel") and child.Name:match("Section$") then
+                    child.ImageTransparency = 1
+                    local overlay = child:FindFirstChild("ColorOverlay")
+                    if overlay then
+                        overlay.ImageTransparency = 0
+                        overlay.BackgroundColor3 = DarkenObjectColor(Library.Theme.MainColor, 15)
+                    end
+                end
             end
-        end
-        
-        wait(0.1)
-        
-        for _, child in pairs(NameTab:GetChildren()) do
-            if child:IsA("ImageLabel") and child.Name:match("Section$") then
-                TweenService:Create(child, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-                    ImageTransparency = 0
-                }):Play()
-                
-                wait(0.3)
-                
-                TweenService:Create(child, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-                    ImageColor3 = Library.Theme.BackgroundColor
-                }):Play()
+            
+            for _, child in pairs(NameTab:GetChildren()) do
+                if child:IsA("ImageLabel") and child.Name:match("Section$") then
+                    local overlay = child:FindFirstChild("ColorOverlay")
+                    if overlay then
+                        TweenService:Create(overlay, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                            BackgroundTransparency = 1
+                        }):Play()
+                        wait(0.5)
+                        overlay.BackgroundTransparency = 0
+                        overlay.BackgroundColor3 = Library.Theme.MainColor
+                    end
+                end
             end
         end
     end
-end
 
     ShowFirstTab()
 
-
-    
-    
 function TabElements:CreateSection(name)
     local NameSection = Instance.new("ImageLabel")
     local SectionBorder = Instance.new("ImageLabel")
     local SectionTitle = Instance.new("TextLabel")
     local SectionContent = Instance.new("ScrollingFrame")
     local SectionContentLayout = Instance.new("UIListLayout")
+    local ColorOverlay = Instance.new("ImageLabel")
 
     local SectionElements = { GameId = self.GameId }
 
@@ -696,16 +706,16 @@ function TabElements:CreateSection(name)
     NameSection.Parent = NameTab
     NameSection.BackgroundColor3 = Library.Theme.MainColor
     NameSection.BackgroundTransparency = 1.000
-    NameSection.Position = UDim2.new(0, 0, 0.0574162677, 0) -- Posisi statis
+    NameSection.Position = UDim2.new(0, 0, 0.0574162677, 0)
     NameSection.Size = UDim2.new(0, 197, 0, 181)
     NameSection.ZIndex = 4
     NameSection.Image = "rbxassetid://3570695787"
-    NameSection.ImageColor3 = Library.Theme.BackgroundColor
+    NameSection.ImageColor3 = Library.Theme.MainColor
     NameSection.ScaleType = Enum.ScaleType.Slice
     NameSection.SliceCenter = Rect.new(100, 100, 100, 100)
     NameSection.SliceScale = 0.050
-    NameSection.ImageTransparency = 1 -- Awalnya invisible
-    
+    NameSection.ImageTransparency = 1
+
     SectionBorder.Name = "SectionBorder"
     SectionBorder.Parent = NameSection
     SectionBorder.BackgroundColor3 = Library.Theme.MainColor
@@ -718,10 +728,10 @@ function TabElements:CreateSection(name)
     SectionBorder.ScaleType = Enum.ScaleType.Slice
     SectionBorder.SliceCenter = Rect.new(100, 100, 100, 100)
     SectionBorder.SliceScale = 0.050
-    
+
     SectionTitle.Name = "SectionTitle"
     SectionTitle.Parent = NameSection
-    SectionTitle.BackgroundColor3 = Library.Theme.BackgroundColor
+    SectionTitle.BackgroundColor3 = Library.Theme.MainColor
     SectionTitle.BorderSizePixel = 0
     SectionTitle.Text = name
     SectionTitle.Position = UDim2.new(0.5, (-SectionTitle.TextBounds.X - 5) / 2, 0, -12)
@@ -730,7 +740,7 @@ function TabElements:CreateSection(name)
     SectionTitle.Font = Library.Theme.TextFont
     SectionTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
     SectionTitle.TextSize = 14.000
-    
+
     SectionContent.Name = "SectionContent"
     SectionContent.Parent = NameSection
     SectionContent.Active = true
@@ -749,11 +759,22 @@ function TabElements:CreateSection(name)
     SectionContentLayout.Parent = SectionContent
     SectionContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
+    ColorOverlay.Name = "ColorOverlay"
+    ColorOverlay.Parent = NameSection
+    ColorOverlay.BackgroundColor3 = DarkenObjectColor(Library.Theme.MainColor, 15)
+    ColorOverlay.BackgroundTransparency = 0
+    ColorOverlay.Position = UDim2.new(0, 0, 0, 0)
+    ColorOverlay.Size = UDim2.new(1, 0, 1, 0)
+    ColorOverlay.ZIndex = 5
+    ColorOverlay.ImageTransparency = 1
+
     table.insert(Library.LibraryColorTable, SectionBorder)
 
     SectionContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
         SectionContent.CanvasSize = UDim2.new(0, 0, 0, SectionContentLayout.AbsoluteContentSize.Y + 15)
-    end)  
+    end)
+
+    
 function SectionElements:CreateLabel(name, text)
             local NameLabel = Instance.new("TextLabel")
 
