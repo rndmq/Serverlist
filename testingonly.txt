@@ -471,13 +471,10 @@ local function CloseAllTabs()
     end
 end
 
-ResetAllTabButtons = function()
-    oldResetAllTabButtons()
+local function ResetAllTabButtons()
     for i, v in pairs(TabButtons:GetChildren()) do
         if v:IsA("ImageButton") then
-            TweenService:Create(v, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-                Size = originalSize
-            }):Play()
+            TweenService:Create(v, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageColor3 = Library.Theme.MainColor}):Play()
         end
     end
 end
@@ -611,12 +608,11 @@ function Library:CreateTab(name)
         }):Play()
     end)
 
-    local oldResetAllTabButtons = ResetAllTabButtons
     ResetAllTabButtons = function()
-        oldResetAllTabButtons()
         for i, v in pairs(TabButtons:GetChildren()) do
             if v:IsA("ImageButton") then
                 TweenService:Create(v, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                    ImageColor3 = Library.Theme.MainColor,
                     Size = originalSize
                 }):Play()
             end
@@ -624,6 +620,8 @@ function Library:CreateTab(name)
     end
 
     KeepFirstTabOpen()
+
+
 
 function TabElements:CreateSection(name)
         local NameSection = Instance.new("ImageLabel")
