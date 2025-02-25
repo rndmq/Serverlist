@@ -70,15 +70,12 @@ local Library = {
         TextFont = Enum.Font.SourceSansBold,
         EasingStyle = Enum.EasingStyle.Quart
     },
-            Library.TabCount = 0
-Library.FirstTab = nil
-Library.LibraryColorTable = {}
-Library.Theme = {
-    MainColor = colorMap.default,
-    BackgroundColor = Color3.fromRGB(35, 35, 35),
-    TextFont = Enum.Font.SourceSansBold,
-    TextColor = Color3.fromRGB(255, 255, 255),
-    EasingStyle = Enum.EasingStyle.Quart
+    LibraryColorTable = {},
+    TabCount = 0,
+    FirstTab = nil,
+    CurrentlyBinding = false,
+    RainbowColorValue = 0,
+    HueSelectionPosition = 0
 }
 
 local function DarkenObjectColor(object, amount)
@@ -88,10 +85,6 @@ local function DarkenObjectColor(object, amount)
     return Color3.fromHSV(h, s, v)
 end
 
-local function HasProperty(object, property)
-    return pcall(function() return object[property] end)
-end
-
 local function SetUIAccent(color)
     for i, v in pairs(Library.LibraryColorTable) do
         if HasProperty(v, "ImageColor3") then
@@ -99,6 +92,7 @@ local function SetUIAccent(color)
                 v.ImageColor3 = color
             end
         end
+
         if HasProperty(v, "TextColor3") then
             if v.TextColor3 ~= Color3.fromRGB(255, 255, 255) then
                 v.TextColor3 = color
@@ -107,25 +101,6 @@ local function SetUIAccent(color)
     end
 end
 
-pcall(function()
-    if getgenv().Color then
-        local color = getgenv().Color
-        if type(color) == "string" and colorMap[color] then
-            Library.Theme.MainColor = colorMap[color]
-            SetUIAccent(Library.Theme.MainColor)
-           
-            for _, tab in pairs(Tabs:GetChildren()) do
-                if tab:IsA("Frame") then
-                    for _, section in pairs(tab:GetChildren()) do
-                        if section:IsA("ImageLabel") and section.Name:match("Section$") then
-                            section.ImageColor3 = Library.Theme.MainColor
-                        end
-                    end
-                end
-            end
-        end
-    end
-end)
 local function RippleEffect(object)
     spawn(function()
         local Ripple = Instance.new("ImageLabel")
@@ -714,7 +689,6 @@ function Library:CreateTab(name)
     ShowFirstTab()
 
     
-
 function TabElements:CreateSection(name)
     local NameSection = Instance.new("ImageLabel")
     local SectionBorder = Instance.new("ImageLabel")
