@@ -558,8 +558,7 @@ function Library:CreateTab(name)
     NameTabButton.Size = UDim2.new(0, 84, 0, 25)
     NameTabButton.ZIndex = 2
     NameTabButton.Image = "rbxassetid://3570695787"
-    NameTabButton.ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 20)
-NameTabButton.Size = smallSize
+    NameTabButton.ImageColor3 = Library.Theme.MainColor
     NameTabButton.ScaleType = Enum.ScaleType.Slice
     NameTabButton.SliceCenter = Rect.new(100, 100, 100, 100)
     NameTabButton.SliceScale = 0.050
@@ -653,27 +652,34 @@ NameTabButton.Size = smallSize
 local function ShowFirstTab()
     if NameTab.Name == (Library.FirstTab .. "Tab") then
         NameTab.Visible = true
+        
         for _, child in pairs(NameTab:GetChildren()) do
             if child:IsA("ImageLabel") and child.Name:match("Section$") then
-                child.ImageTransparency = 0
-                child.ImageColor3 = Library.Theme.BackgroundColor
+                child.ImageTransparency = 1
+                child.ImageColor3 = Library.Theme.MainColor
             end
         end
+        
+        task.wait(0.1)
+        
         for _, child in pairs(NameTab:GetChildren()) do
             if child:IsA("ImageLabel") and child.Name:match("Section$") then
                 local darkenedColor = DarkenObjectColor(Library.Theme.MainColor, 15)
+                
                 TweenService:Create(child, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-                    ImageColor3 = darkenedColor
+                    ImageColor3 = darkenedColor,
+                    ImageTransparency = 0
                 }):Play()
-
-                task.wait(0.
-
-                TweenService:Create(child, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-                    ImageColor3 = Library.Theme.BackgroundColor
-                }):Play()
+                
+                task.spawn(function()
+                    task.wait(0.3)
+                    
+                    TweenService:Create(child, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                        ImageColor3 = Library.Theme.BackgroundColor
+                    }):Play()
+                end)
             end
         end
-
 
         TweenService:Create(NameTabButton, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
             ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 20),
