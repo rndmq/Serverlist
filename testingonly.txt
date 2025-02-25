@@ -697,177 +697,79 @@ function Library:CreateTab(name)
 
     
     
-  
+function TabElements:CreateSection(name)
+    local NameSection = Instance.new("ImageLabel")
+    local SectionBorder = Instance.new("ImageLabel")
+    local SectionTitle = Instance.new("TextLabel")
+    local SectionContent = Instance.new("ScrollingFrame")
+    local SectionContentLayout = Instance.new("UIListLayout")
 
+    local SectionElements = { GameId = self.GameId }
 
+    NameSection.Name = (name .. "Section")
+    NameSection.Parent = NameTab
+    NameSection.BackgroundColor3 = Library.Theme.MainColor
+    NameSection.BackgroundTransparency = 1.000
+    NameSection.Position = UDim2.new(1, 0, 0.0574162677, 0) -- Awalnya di luar kanan
+    NameSection.Size = UDim2.new(0, 197, 0, 181)
+    NameSection.ZIndex = 4
+    NameSection.Image = "rbxassetid://3570695787"
+    NameSection.ImageColor3 = Library.Theme.BackgroundColor
+    NameSection.ScaleType = Enum.ScaleType.Slice
+    NameSection.SliceCenter = Rect.new(100, 100, 100, 100)
+    NameSection.SliceScale = 0.050
+    NameSection.ImageTransparency = 1 -- Awalnya invisible
     
-function Library:CreateTab(name)
-    local NameTab = Instance.new("Frame")
-    local NameTabButton = Instance.new("ImageButton")
-    local Title = Instance.new("TextLabel")
-    local SectionLayout = Instance.new("UIListLayout")
-    local SectionPadding = Instance.new("UIPadding")
-    local LoadingLine = Instance.new("Frame")
+    SectionBorder.Name = "SectionBorder"
+    SectionBorder.Parent = NameSection
+    SectionBorder.BackgroundColor3 = Library.Theme.MainColor
+    SectionBorder.BackgroundTransparency = 1.000
+    SectionBorder.Position = UDim2.new(0, -1, 0, -1)
+    SectionBorder.Size = UDim2.new(1, 2, 1, 2)
+    SectionBorder.ZIndex = 3
+    SectionBorder.Image = "rbxassetid://3570695787"
+    SectionBorder.ImageColor3 = Library.Theme.MainColor
+    SectionBorder.ScaleType = Enum.ScaleType.Slice
+    SectionBorder.SliceCenter = Rect.new(100, 100, 100, 100)
+    SectionBorder.SliceScale = 0.050
     
-    local gameId = tostring(game.PlaceId)
-    local TabElements = { GameId = gameId }
-    Library.TabCount = Library.TabCount + 1
-
-    if Library.TabCount == 1 then
-        Library.FirstTab = name
-    end
-
-    NameTab.Name = (name .. "Tab")
-    NameTab.Parent = Tabs
-    NameTab.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    NameTab.BackgroundTransparency = 1.000
-    NameTab.Size = UDim2.new(1, 0, 1, 0)
-    NameTab.ZIndex = 2
-    NameTab.ClipsDescendants = true
-
-    NameTabButton.Name = (name .. "TabButton")
-    NameTabButton.Parent = TabButtons
-    NameTabButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    NameTabButton.BackgroundTransparency = 1.000
-    NameTabButton.Size = UDim2.new(0, 84, 0, 25)
-    NameTabButton.ZIndex = 2
-    NameTabButton.Image = "rbxassetid://3570695787"
-    NameTabButton.ImageColor3 = Library.Theme.MainColor
-    NameTabButton.ScaleType = Enum.ScaleType.Slice
-    NameTabButton.SliceCenter = Rect.new(100, 100, 100, 100)
-    NameTabButton.SliceScale = 0.050
+    SectionTitle.Name = "SectionTitle"
+    SectionTitle.Parent = NameSection
+    SectionTitle.BackgroundColor3 = Library.Theme.BackgroundColor
+    SectionTitle.BorderSizePixel = 0
+    SectionTitle.Text = name
+    SectionTitle.Position = UDim2.new(0.5, (-SectionTitle.TextBounds.X - 5) / 2, 0, -12)
+    SectionTitle.Size = UDim2.new(0, SectionTitle.TextBounds.X + 5, 0, 22)
+    SectionTitle.ZIndex = 4
+    SectionTitle.Font = Library.Theme.TextFont
+    SectionTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    SectionTitle.TextSize = 14.000
     
-    Title.Name = "Title"
-    Title.Parent = NameTabButton
-    Title.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    Title.BackgroundTransparency = 1.000
-    Title.Size = UDim2.new(1, 0, 1, 0)
-    Title.ZIndex = 2
-    Title.Font = Library.Theme.TextFont
-    Title.Text = name
-    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Title.TextSize = 15.000
+    SectionContent.Name = "SectionContent"
+    SectionContent.Parent = NameSection
+    SectionContent.Active = true
+    SectionContent.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    SectionContent.BackgroundTransparency = 1.000
+    SectionContent.BorderColor3 = Color3.fromRGB(27, 42, 53)
+    SectionContent.BorderSizePixel = 0
+    SectionContent.Size = UDim2.new(1, 0, 1, 0)
+    SectionContent.ZIndex = 4
+    SectionContent.BottomImage = "rbxasset://textures/ui/Scroll/scroll-middle.png"
+    SectionContent.ScrollBarImageColor3 = Color3.fromRGB(85, 85, 85)
+    SectionContent.ScrollBarThickness = 4
+    SectionContent.TopImage = "rbxasset://textures/ui/Scroll/scroll-middle.png"
 
-    SectionLayout.Name = "SectionLayout"
-    SectionLayout.Parent = NameTab
-    SectionLayout.FillDirection = Enum.FillDirection.Horizontal
-    SectionLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    SectionLayout.Padding = UDim.new(0, 25)
+    SectionContentLayout.Name = "SectionContentLayout"
+    SectionContentLayout.Parent = SectionContent
+    SectionContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
-    SectionPadding.Name = "SectionPadding"
-    SectionPadding.Parent = NameTab
-    SectionPadding.PaddingTop = UDim.new(0, 12)
+    table.insert(Library.LibraryColorTable, SectionBorder)
 
-    LoadingLine.Name = "LoadingLine"
-    LoadingLine.Parent = NameTab
-    LoadingLine.BackgroundColor3 = Library.Theme.MainColor
-    LoadingLine.Size = UDim2.new(0, 50, 0, 3)
-    LoadingLine.Position = UDim2.new(0, -50, 0.5, -1.5)
-    LoadingLine.Rotation = 15
-    LoadingLine.ZIndex = 15
-    LoadingLine.Visible = false
-
-    NameTab.Visible = false
-
-    table.insert(Library.LibraryColorTable, NameTabButton)
-
-    local originalSize = NameTabButton.Size
-    local smallSize = UDim2.new(0, 74, 0, 20)
-
-    NameTabButton.MouseButton1Down:Connect(function()
-        CloseAllTabs()
-        ResetAllTabButtons()
-        NameTab.Visible = true
-        
-        for _, child in pairs(NameTab:GetChildren()) do
-            if child:IsA("ImageLabel") and child.Name:match("Section$") then
-                child.ImageTransparency = 1
-                child.Position = UDim2.new(1, 0, 0.0574162677, 0) -- Posisi awal di kanan
-            end
-        end
-        
-        LoadingLine.Visible = true
-        local lineTween = TweenService:Create(LoadingLine, TweenInfo.new(0.5, Enum.EasingStyle.Linear), {Position = UDim2.new(1, 0, 0.5, -1.5)})
-        lineTween:Play()
-        
-        for _, child in pairs(NameTab:GetChildren()) do
-            if child:IsA("ImageLabel") and child.Name:match("Section$") then
-                local sectionX = child.Position.X.Scale + (child.Position.X.Offset / NameTab.AbsoluteSize.X)
-                spawn(function()
-                    wait(sectionX * 0.5)
-                    local sectionTween = TweenService:Create(child, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-                        Position = UDim2.new(0, 0, 0.0574162677, 0), -- Posisi akhir (statis)
-                        ImageTransparency = 0
-                    })
-                    sectionTween:Play()
-                end)
-            end
-        end
-        
-        lineTween.Completed:Wait() -- Tunggu animasi garis selesai
-        LoadingLine.Visible = false
-        LoadingLine.Position = UDim2.new(0, -50, 0.5, -1.5)
-        
-        for _, v in pairs(TabButtons:GetChildren()) do
-            if v:IsA("ImageButton") and v ~= NameTabButton then
-                TweenService:Create(v, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = originalSize}):Play()
-            end
-        end
-        
-        TweenService:Create(NameTabButton, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-            ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 20),
-            Size = smallSize
-        }):Play()
+    SectionContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        SectionContent.CanvasSize = UDim2.new(0, 0, 0, SectionContentLayout.AbsoluteContentSize.Y + 15)
     end)
 
-    ResetAllTabButtons = function()
-        for i, v in pairs(TabButtons:GetChildren()) do
-            if v:IsA("ImageButton") then
-                TweenService:Create(v, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-                    ImageColor3 = Library.Theme.MainColor,
-                    Size = originalSize
-                }):Play()
-            end
-        end
-    end
-
-    local function ShowFirstTab()
-        if NameTab.Name == (Library.FirstTab .. "Tab") then
-            NameTab.Visible = true
-            for _, child in pairs(NameTab:GetChildren()) do
-                if child:IsA("ImageLabel") and child.Name:match("Section$") then
-                    child.ImageTransparency = 1
-                    child.Position = UDim2.new(1, 0, 0.0574162677, 0) -- Posisi awal di kanan
-                end
-            end
-            
-            LoadingLine.Visible = true
-            local lineTween = TweenService:Create(LoadingLine, TweenInfo.new(0.5, Enum.EasingStyle.Linear), {Position = UDim2.new(1, 0, 0.5, -1.5)})
-            lineTween:Play()
-            
-            for _, child in pairs(NameTab:GetChildren()) do
-                if child:IsA("ImageLabel") and child.Name:match("Section$") then
-                    local sectionX = child.Position.X.Scale + (child.Position.X.Offset / NameTab.AbsoluteSize.X)
-                    spawn(function()
-                        wait(sectionX * 0.5)
-                        local sectionTween = TweenService:Create(child, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-                            Position = UDim2.new(0, 0, 0.0574162677, 0), -- Posisi akhir (statis)
-                            ImageTransparency = 0
-                        })
-                        sectionTween:Play()
-                    end)
-                end
-            end
-            
-            lineTween.Completed:Wait()
-            LoadingLine.Visible = false
-            LoadingLine.Position = UDim2.new(0, -50, 0.5, -1.5)
-        end
-    end
-
-    ShowFirstTab()
-
-
+    
    
 
 function SectionElements:CreateLabel(name, text)
