@@ -42,9 +42,26 @@ local function SaveSettings()
 end
 ContentProvider:PreloadAsync({"rbxassetid://3570695787", "rbxassetid://2708891598", "rbxassetid://4155801252", "rbxassetid://4695575676", "rbxassetid://4155801252"})
 
+if getgenv().Color then
+    local colorMap = {
+        blue = Color3.fromRGB(0, 0, 255),
+        red = Color3.fromRGB(255, 0, 0),
+        green = Color3.fromRGB(0, 255, 0),
+        yellow = Color3.fromRGB(255, 255, 0),
+        purple = Color3.fromRGB(128, 0, 128),
+        pink = Color3.fromRGB(255, 105, 180),
+        default = Color3.fromRGB(255, 75, 75),
+        cyan = Color3.fromRGB(0, 255, 255)
+    }
+    local colorKey = string.lower(getgenv().Color)
+    _G.SelectedColor = colorMap[colorKey] or colorMap.default
+else
+    _G.SelectedColor = Color3.fromRGB(255, 75, 75)
+end
+
 local Library = {
     Theme = {
-        MainColor = Color3.fromRGB(255, 75, 75),
+        MainColor = _G.SelectedColor,
         BackgroundColor = Color3.fromRGB(35, 35, 35),
         UIToggleKey = Enum.KeyCode.RightControl,
         TextFont = Enum.Font.SourceSansBold,
