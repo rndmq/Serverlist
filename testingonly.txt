@@ -708,7 +708,7 @@ function TabElements:CreateSection(name)
     SectionContent.Parent = NameSection
     SectionContent.Active = true
     SectionContent.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    SectionContent.BackgroundTransparency = 1.000
+    SectionContent.BackgroundTransparency = 1.000 -- Ganti ImageTransparency jadi BackgroundTransparency
     SectionContent.BorderColor3 = Color3.fromRGB(27, 42, 53)
     SectionContent.BorderSizePixel = 0
     SectionContent.Size = UDim2.new(1, 0, 1, 0)
@@ -717,7 +717,6 @@ function TabElements:CreateSection(name)
     SectionContent.ScrollBarImageColor3 = Color3.fromRGB(85, 85, 85)
     SectionContent.ScrollBarThickness = 4
     SectionContent.TopImage = "rbxasset://textures/ui/Scroll/scroll-middle.png"
-    SectionContent.ImageTransparency = 1 -- Awalnya invisible
 
     SectionContentLayout.Name = "SectionContentLayout"
     SectionContentLayout.Parent = SectionContent
@@ -728,6 +727,8 @@ function TabElements:CreateSection(name)
     SectionContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
         SectionContent.CanvasSize = UDim2.new(0, 0, 0, SectionContentLayout.AbsoluteContentSize.Y + 15)
     end)
+
+    
 
 
 function SectionElements:CreateLabel(name, text)
