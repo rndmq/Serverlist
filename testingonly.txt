@@ -528,7 +528,6 @@ coroutine.wrap(function()
     end
 end)()
 
-
 function Library:CreateTab(name)
     local NameTab = Instance.new("Frame")
     local NameTabButton = Instance.new("ImageButton")
@@ -603,8 +602,18 @@ function Library:CreateTab(name)
     local smallSize = UDim2.new(0, 74, 0, 20)
 
     NameTabButton.MouseButton1Down:Connect(function()
-        CloseAllTabs()
-        ResetAllTabButtons()
+        if CloseAllTabs and type(CloseAllTabs) == "function" then CloseAllTabs() else
+            for _, v in pairs(Tabs:GetChildren()) do
+                if v:IsA("Frame") then v.Visible = false end
+            end
+        end
+        if ResetAllTabButtons and type(ResetAllTabButtons) == "function" then ResetAllTabButtons() else
+            for _, v in pairs(TabButtons:GetChildren()) do
+                if v:IsA("ImageButton") then
+                    TweenService:Create(v, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageColor3 = Library.Theme.MainColor}):Play()
+                end
+            end
+        end
         NameTab.Visible = true
         
         for _, child in pairs(NameTab:GetChildren()) do
@@ -632,7 +641,7 @@ function Library:CreateTab(name)
             end
         end
         
-        lineTween.Completed:Wait() -- Tunggu animasi garis selesai
+        lineTween.Completed:Wait()
         LoadingLine.Visible = false
         LoadingLine.Position = UDim2.new(0, -50, 0.5, -1.5)
         
@@ -770,8 +779,6 @@ function TabElements:CreateSection(name)
     end)
 
     
-   
-
 function SectionElements:CreateLabel(name, text)
             local NameLabel = Instance.new("TextLabel")
 
