@@ -471,12 +471,13 @@ local function CloseAllTabs()
 end
 
 local function ResetAllTabButtons()
-    for i, v in pairs(TabButtons:GetChildren()) do
-        if v:IsA("ImageButton") then
-            TweenService:Create(v, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageColor3 = Library.Theme.MainColor}):Play()
+        for i, v in pairs(TabButtons:GetChildren()) do
+            if v:IsA("ImageButton") then
+                TweenService:Create(v, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageColor3 = Library.Theme.MainColor}):Play()
+                SetTabButtonSize(v, false)
+            end
         end
     end
-end
 
 local function KeepFirstTabOpen()
         for i, v in pairs(Tabs:GetChildren()) do
@@ -594,14 +595,7 @@ function Library:CreateTab(name)
         TweenService:Create(button, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = targetSize}):Play()
     end
 
-    local function ResetAllTabButtons()
-        for i, v in pairs(TabButtons:GetChildren()) do
-            if v:IsA("ImageButton") then
-                TweenService:Create(v, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageColor3 = Library.Theme.MainColor}):Play()
-                SetTabButtonSize(v, false)
-            end
-        end
-    end
+    
 
     NameTabButton.MouseButton1Down:Connect(function()
         CloseAllTabs()
