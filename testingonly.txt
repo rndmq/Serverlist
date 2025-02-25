@@ -814,7 +814,7 @@ function SectionElements:CreateToggle(name, callback, tooltipText)
     TickCover.Parent = Toggle
     TickCover.BackgroundColor3 = Library.Theme.BackgroundColor
     TickCover.BorderSizePixel = 0
-    TickCover.Position = UDim2.new(0, -7, 0.5, -7)
+    TickCover.Position = UDim2.new(0.5, -7, 0.5, -7)
     TickCover.Size = UDim2.new(0, 14, 0, 14)
     TickCover.ZIndex = 7
 
@@ -823,7 +823,6 @@ function SectionElements:CreateToggle(name, callback, tooltipText)
         Tooltip.Name = "Tooltip"
         Tooltip.Parent = NameToggle
         Tooltip.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        Tooltip.Position = UDim2.new(0, 13, 0, -10)
         Tooltip.ZIndex = 10
         Tooltip.Font = Library.Theme.TextFont
         Tooltip.TextColor3 = Color3.fromRGB(0, 0, 0)
@@ -838,28 +837,34 @@ function SectionElements:CreateToggle(name, callback, tooltipText)
         local function WrapText(inputText)
             if inputText:find("\n") then
                 Tooltip.Text = inputText
-                return
-            end
-            local maxWidth = 197
-            local tempLabel = Tooltip:Clone()
-            tempLabel.Text = ""
-            tempLabel.Parent = nil
-            local wrappedText = ""
-            local currentLine = ""
-            for word in inputText:gmatch("%S+") do
-                local testLine = currentLine .. (currentLine == "" and "" or " ") .. word
-                tempLabel.Text = testLine
-                if tempLabel.TextBounds.X > maxWidth then
-                    wrappedText = wrappedText .. (wrappedText == "" and "" or "\n") .. currentLine
-                    currentLine = word
-                else
-                    currentLine = testLine
+                local lineCount = 0
+                for _ in inputText:gmatch("\n") do
+                    lineCount = lineCount + 1
                 end
+                Tooltip.Position = UDim2.new(0, 13, 0, -10 - (lineCount * 20))
+            else
+                local maxWidth = 197
+                local tempLabel = Tooltip:Clone()
+                tempLabel.Text = ""
+                tempLabel.Parent = nil
+                local wrappedText = ""
+                local currentLine = ""
+                for word in inputText:gmatch("%S+") do
+                    local testLine = currentLine .. (currentLine == "" and "" or " ") .. word
+                    tempLabel.Text = testLine
+                    if tempLabel.TextBounds.X > maxWidth then
+                        wrappedText = wrappedText .. (wrappedText == "" and "" or "\n") .. currentLine
+                        currentLine = word
+                    else
+                        currentLine = testLine
+                    end
+                end
+                if currentLine ~= "" then
+                    wrappedText = wrappedText .. (wrappedText == "" and "" or "\n") .. currentLine
+                end
+                Tooltip.Text = wrappedText
+                Tooltip.Position = UDim2.new(0, 13, 0, -10)
             end
-            if currentLine ~= "" then
-                wrappedText = wrappedText .. (wrappedText == "" and "" or "\n") .. currentLine
-            end
-            Tooltip.Text = wrappedText
         end
 
         WrapText(tooltipText)
