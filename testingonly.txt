@@ -527,7 +527,6 @@ coroutine.wrap(function()
         end
     end
 end)()
-
 function Library:CreateTab(name)
     local NameTab = Instance.new("Frame")
     local NameTabButton = Instance.new("ImageButton")
@@ -698,7 +697,6 @@ function Library:CreateTab(name)
             end
         end
     end)
-
 
 
     
