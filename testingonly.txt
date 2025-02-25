@@ -592,10 +592,10 @@ function Library:CreateTab(name)
     LoadingLine.Size = UDim2.new(0, 50, 0, 3)
     LoadingLine.Position = UDim2.new(0, -50, 0.5, -1.5)
     LoadingLine.Rotation = 15
-    LoadingLine.ZIndex = 5
+    LoadingLine.ZIndex = 10 -- Tingkatkan ZIndex agar garis terlihat di atas
     LoadingLine.Visible = false
 
-    NameTab.Visible = false -- Awalnya tidak terlihat, akan diatur di KeepFirstTabOpen atau saat diklik
+    NameTab.Visible = false -- Awalnya invisible, akan dianimasikan
 
     table.insert(Library.LibraryColorTable, NameTabButton)
 
@@ -653,7 +653,38 @@ function Library:CreateTab(name)
         end
     end
 
-    KeepFirstTabOpen()
+    -- Pastikan tab pertama muncul dengan animasi
+    local function ShowFirstTab()
+        if NameTab.Name == (Library.FirstTab .. "Tab") then
+            NameTab.Visible = true
+            for _, child in pairs(NameTab:GetChildren()) do
+                if child:IsA("ImageLabel") and child.Name:match("Section$") then
+                    child.ImageTransparency = 1
+                end
+            end
+            
+            LoadingLine.Visible = true
+            TweenService:Create(LoadingLine, TweenInfo.new(0.5, Enum.EasingStyle.Linear), {Position = UDim2.new(1, 0, 0.5, -1.5)}):Play()
+            
+            for _, child in pairs(NameTab:GetChildren()) do
+                if child:IsA("ImageLabel") and child.Name:match("Section$") then
+                    local sectionX = child.Position.X.Scale + (child.Position.X.Offset / NameTab.AbsoluteSize.X)
+                    spawn(function()
+                        wait(sectionX * 0.5)
+                        TweenService:Create(child, TweenInfo.new(0.2, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageTransparency = 0}):Play()
+                    end)
+                end
+            end
+            
+            wait(0.5)
+            LoadingLine.Visible = false
+            LoadingLine.Position = UDim2.new(0, -50, 0.5, -1.5)
+        end
+    end
+
+    ShowFirstTab() -- Panggil untuk tab pertama
+
+  
 
 
     
@@ -729,6 +760,7 @@ function TabElements:CreateSection(name)
         SectionContent.CanvasSize = UDim2.new(0, 0, 0, SectionContentLayout.AbsoluteContentSize.Y + 15)
     end)
 
+   
 
 function SectionElements:CreateLabel(name, text)
             local NameLabel = Instance.new("TextLabel")
