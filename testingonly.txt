@@ -591,16 +591,16 @@ function Library:CreateTab(name)
     if Library.currentTab == name then
         local tabButtonPos = NameTabButton.AbsolutePosition - TabButtons.AbsolutePosition
         indicator.Position = UDim2.new(0, tabButtonPos.X, 0, tabButtonPos.Y + 25 - 2)
+        TweenService:Create(NameTabButton, TweenInfo.new(0.1, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 80, 0, 23)}):Play()
     end
     NameTabButton.MouseButton1Down:Connect(function()
         if Library.currentTab ~= name then
-            TweenService:Create(NameTabButton, TweenInfo.new(0.1, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 80, 0, 23)}):Play()
-            wait(0.1)
-            TweenService:Create(NameTabButton, TweenInfo.new(0.1, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 84, 0, 25)}):Play()
             local prevTabButton = TabButtons:FindFirstChild(Library.currentTab .. "TabButton")
             if prevTabButton then
+                TweenService:Create(prevTabButton, TweenInfo.new(0.1, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 84, 0, 25)}):Play()
                 TweenService:Create(prevTabButton, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 30)}):Play()
             end
+            TweenService:Create(NameTabButton, TweenInfo.new(0.1, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 80, 0, 23)}):Play()
             TweenService:Create(NameTabButton, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageColor3 = Library.Theme.MainColor}):Play()
             Library.currentTab = name
             for _, tab in ipairs(Tabs:GetChildren()) do
