@@ -533,23 +533,19 @@ function Library:CreateTab(name)
     local Title = Instance.new("TextLabel")
     local SectionLayout = Instance.new("UIListLayout")
     local SectionPadding = Instance.new("UIPadding")
-    
     local gameId = tostring(game.PlaceId)
     local TabElements = { GameId = gameId }
     Library.TabCount = Library.TabCount + 1
-
     if Library.TabCount == 1 then
         Library.FirstTab = name
         Library.currentTab = name
     end
-
     NameTab.Name = (name .. "Tab")
     NameTab.Parent = Tabs
     NameTab.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     NameTab.BackgroundTransparency = 1.000
     NameTab.Size = UDim2.new(1, 0, 1, 0)
     NameTab.ZIndex = 2
-
     NameTabButton.Name = (name .. "TabButton")
     NameTabButton.Parent = TabButtons
     NameTabButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -561,7 +557,6 @@ function Library:CreateTab(name)
     NameTabButton.ScaleType = Enum.ScaleType.Slice
     NameTabButton.SliceCenter = Rect.new(100, 100, 100, 100)
     NameTabButton.SliceScale = 0.050
-    
     Title.Name = "Title"
     Title.Parent = NameTabButton
     Title.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -572,79 +567,61 @@ function Library:CreateTab(name)
     Title.Text = name
     Title.TextColor3 = Color3.fromRGB(255, 255, 255)
     Title.TextSize = 15.000
-
     SectionLayout.Name = "SectionLayout"
     SectionLayout.Parent = NameTab
     SectionLayout.FillDirection = Enum.FillDirection.Horizontal
     SectionLayout.SortOrder = Enum.SortOrder.LayoutOrder
     SectionLayout.Padding = UDim.new(0, 25)
-
     SectionPadding.Name = "SectionPadding"
     SectionPadding.Parent = NameTab
     SectionPadding.PaddingTop = UDim.new(0, 12)
-
     NameTab.Visible = (Library.currentTab == name)
-
     table.insert(Library.LibraryColorTable, NameTabButton)
-local indicator = Instance.new("Frame")
+    local indicator = Instance.new("ImageLabel")
     indicator.Name = "Indicator"
     indicator.Parent = TabButtons
-    indicator.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    indicator.BackgroundTransparency = 1.000
     indicator.Size = UDim2.new(0, 84, 0, 2)
     indicator.ZIndex = 3
     indicator.Image = "rbxassetid://3570695787"
     indicator.ImageColor3 = Library.currentTab == name and Color3.fromRGB(255, 255, 255) or Library.Theme.MainColor
     indicator.ScaleType = Enum.ScaleType.Slice
-    indicator.SliceCenter = Rect.new(10, 10, 10, 10)
-    indicator.SliceScale = 0.05
-
+    indicator.SliceCenter = Rect.new(100, 100, 100, 100)
+    indicator.SliceScale = 0.050
     if Library.currentTab == name then
         local tabButtonPos = NameTabButton.AbsolutePosition - TabButtons.AbsolutePosition
         indicator.Position = UDim2.new(0, tabButtonPos.X, 0, tabButtonPos.Y + 25 - 2)
     end
-
     NameTabButton.MouseButton1Down:Connect(function()
         if Library.currentTab ~= name then
             TweenService:Create(NameTabButton, TweenInfo.new(0.1, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 80, 0, 23)}):Play()
             wait(0.1)
             TweenService:Create(NameTabButton, TweenInfo.new(0.1, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 84, 0, 25)}):Play()
-
             local prevTabButton = TabButtons:FindFirstChild(Library.currentTab .. "TabButton")
             if prevTabButton then
                 TweenService:Create(prevTabButton, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageColor3 = Library.Theme.MainColor}):Play()
             end
             TweenService:Create(NameTabButton, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 15)}):Play()
-
             Library.currentTab = name
-
             for _, tab in ipairs(Tabs:GetChildren()) do
                 if tab:IsA("Frame") then
                     if tab.Name == (name .. "Tab") then
                         tab.Position = UDim2.new(0, 13, 0, 0)
                         tab.Visible = true
-                        TweenService:Create(tab, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-                            Position = UDim2.new(0, 13, 0, 41)
-                        }):Play()
+                        TweenService:Create(tab, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Position = UDim2.new(0, 13, 0, 41)}):Play()
                     else
-                        TweenService:Create(tab, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-                            Position = UDim2.new(0, 13, 0, 0)
-                        }):Play()
+                        TweenService:Create(tab, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Position = UDim2.new(0, 13, 0, 0)}):Play()
                         task.delay(0.3, function()
                             tab.Visible = false
                         end)
                     end
                 end
             end
-
             local newPos = NameTabButton.AbsolutePosition - TabButtons.AbsolutePosition
             local indicatorPos = UDim2.new(0, newPos.X, 0, newPos.Y + 25 - 2)
-            TweenService:Create(indicator, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-                Position = indicatorPos,
-                ImageColor3 = Color3.fromRGB(255, 255, 255)
-            }):Play()
+            TweenService:Create(indicator, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Position = indicatorPos, ImageColor3 = Color3.fromRGB(255, 255, 255)}):Play()
         end
     end)
-
     KeepFirstTabOpen()
     
     function TabElements:CreateSection(name)
