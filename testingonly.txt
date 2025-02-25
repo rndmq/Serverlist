@@ -45,28 +45,37 @@ ContentProvider:PreloadAsync({"rbxassetid://3570695787", "rbxassetid://270889159
 local selectedColor = Color3.fromRGB(255, 75, 75) -- Default
 pcall(function()
     if getgenv().Color then
-    local colorMap = {
-    blue = Color3.fromRGB(0, 0, 255),
-    red = Color3.fromRGB(255, 0, 0),
-    green = Color3.fromRGB(0, 255, 0),
-    yellow = Color3.fromRGB(255, 255, 0),
-    purple = Color3.fromRGB(128, 0, 128),
-    pink = Color3.fromRGB(255, 105, 180),
-    default = Color3.fromRGB(255, 75, 75),
-    cyan = Color3.fromRGB(0, 255, 255),
-    brown = Color3.fromRGB(139, 69, 19),
-    orange = Color3.fromRGB(255, 165, 0)
-}
+        local colorMap = {
+            blue = Color3.fromRGB(0, 0, 255),
+            red = Color3.fromRGB(255, 0, 0),
+            green = Color3.fromRGB(0, 255, 0),
+            yellow = Color3.fromRGB(255, 255, 0),
+            purple = Color3.fromRGB(128, 0, 128),
+            pink = Color3.fromRGB(255, 105, 180),
+            default = Color3.fromRGB(255, 75, 75),
+            cyan = Color3.fromRGB(0, 255, 255),
+            brown = Color3.fromRGB(139, 69, 19),
+            orange = Color3.fromRGB(255, 165, 0)
+        }
+        local colorKey = string.lower(getgenv().Color)
+        selectedColor = colorMap[colorKey] or colorMap.default
+    end
+end)
 
-Library.TabCount = 0
-Library.FirstTab = nil
-Library.LibraryColorTable = {}
-Library.Theme = {
-    MainColor = colorMap.default,
-    BackgroundColor = Color3.fromRGB(35, 35, 35),
-    TextFont = Enum.Font.SourceSansBold,
-    TextColor = Color3.fromRGB(255, 255, 255),
-    EasingStyle = Enum.EasingStyle.Quart
+local Library = {
+    Theme = {
+        MainColor = selectedColor,
+        BackgroundColor = Color3.fromRGB(35, 35, 35),
+        UIToggleKey = Enum.KeyCode.RightControl,
+        TextFont = Enum.Font.SourceSansBold,
+        EasingStyle = Enum.EasingStyle.Quart
+    },
+    LibraryColorTable = {},
+    TabCount = 0,
+    FirstTab = nil,
+    CurrentlyBinding = false,
+    RainbowColorValue = 0,
+    HueSelectionPosition = 0
 }
 
 local function DarkenObjectColor(object, amount)
@@ -76,10 +85,6 @@ local function DarkenObjectColor(object, amount)
     return Color3.fromHSV(h, s, v)
 end
 
-local function HasProperty(object, property)
-    return pcall(function() return object[property] end)
-end
-
 local function SetUIAccent(color)
     for i, v in pairs(Library.LibraryColorTable) do
         if HasProperty(v, "ImageColor3") then
@@ -87,6 +92,7 @@ local function SetUIAccent(color)
                 v.ImageColor3 = color
             end
         end
+
         if HasProperty(v, "TextColor3") then
             if v.TextColor3 ~= Color3.fromRGB(255, 255, 255) then
                 v.TextColor3 = color
@@ -94,17 +100,6 @@ local function SetUIAccent(color)
         end
     end
 end
-
-
-pcall(function()
-    if getgenv().Color then
-        local color = getgenv().Color
-        if type(color) == "string" and colorMap[color] then
-            Library.Theme.MainColor = colorMap[color]
-            SetUIAccent(Library.Theme.MainColor)
-        end
-    end
-end)
 
 local function RippleEffect(object)
     spawn(function()
@@ -685,7 +680,10 @@ function Library:CreateTab(name)
 
     ShowFirstTab()
 
+    
 
+
+    
     
 function TabElements:CreateSection(name)
     local NameSection = Instance.new("ImageLabel")
@@ -700,7 +698,7 @@ function TabElements:CreateSection(name)
     NameSection.Parent = NameTab
     NameSection.BackgroundColor3 = Library.Theme.MainColor
     NameSection.BackgroundTransparency = 1.000
-    NameSection.Position = UDim2.new(0, 0, 0.0574162677, 0)
+    NameSection.Position = UDim2.new(0, 0, 0.0574162677, 0) -- Posisi statis
     NameSection.Size = UDim2.new(0, 197, 0, 181)
     NameSection.ZIndex = 4
     NameSection.Image = "rbxassetid://3570695787"
@@ -708,8 +706,8 @@ function TabElements:CreateSection(name)
     NameSection.ScaleType = Enum.ScaleType.Slice
     NameSection.SliceCenter = Rect.new(100, 100, 100, 100)
     NameSection.SliceScale = 0.050
-    NameSection.ImageTransparency = 1
-
+    NameSection.ImageTransparency = 1 -- Awalnya invisible
+    
     SectionBorder.Name = "SectionBorder"
     SectionBorder.Parent = NameSection
     SectionBorder.BackgroundColor3 = Library.Theme.MainColor
@@ -722,7 +720,7 @@ function TabElements:CreateSection(name)
     SectionBorder.ScaleType = Enum.ScaleType.Slice
     SectionBorder.SliceCenter = Rect.new(100, 100, 100, 100)
     SectionBorder.SliceScale = 0.050
-
+    
     SectionTitle.Name = "SectionTitle"
     SectionTitle.Parent = NameSection
     SectionTitle.BackgroundColor3 = Library.Theme.BackgroundColor
@@ -734,7 +732,7 @@ function TabElements:CreateSection(name)
     SectionTitle.Font = Library.Theme.TextFont
     SectionTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
     SectionTitle.TextSize = 14.000
-
+    
     SectionContent.Name = "SectionContent"
     SectionContent.Parent = NameSection
     SectionContent.Active = true
@@ -757,9 +755,7 @@ function TabElements:CreateSection(name)
 
     SectionContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
         SectionContent.CanvasSize = UDim2.new(0, 0, 0, SectionContentLayout.AbsoluteContentSize.Y + 15)
-    end)
-
-
+    end)  
 function SectionElements:CreateLabel(name, text)
             local NameLabel = Instance.new("TextLabel")
 
