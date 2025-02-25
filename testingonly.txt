@@ -42,7 +42,7 @@ local function SaveSettings()
 end
 ContentProvider:PreloadAsync({"rbxassetid://3570695787", "rbxassetid://2708891598", "rbxassetid://4155801252", "rbxassetid://4695575676", "rbxassetid://4155801252"})
 
-local selectedColor = Color3.fromRGB(255, 75, 75)
+local selectedColor = Color3.fromRGB(255, 75, 75) 
 pcall(function()
     if getgenv().Color then
         local colorMap = {
@@ -471,21 +471,19 @@ local function CloseAllTabs()
 end
 
 local function ResetAllTabButtons()
-        for i, v in pairs(TabButtons:GetChildren()) do
-            if v:IsA("ImageButton") then
-                TweenService:Create(v, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-                    ImageColor3 = Library.Theme.MainColor,
-                    Size = UDim2.new(0, 84, 0, 25)
-                }):Play()
-            end
+    for i, v in pairs(TabButtons:GetChildren()) do
+        if v:IsA("ImageButton") then
+            TweenService:Create(v, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageColor3 = Library.Theme.MainColor}):Play()
         end
     end
+end
 
 local function KeepFirstTabOpen()
         for i, v in pairs(Tabs:GetChildren()) do
             if v:IsA("Frame") then
                 if v.Name == (Library.FirstTab .. "Tab") then
                     v.Visible = true
+                    TweenService:Create(v, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = UDim2.new(0, 0, 0, 0)}):Play()
                 else
                     v.Visible = false
                 end
@@ -495,15 +493,9 @@ local function KeepFirstTabOpen()
         for i, v in pairs(TabButtons:GetChildren()) do
             if v:IsA("ImageButton") then
                 if v.Name:find(Library.FirstTab .. "TabButton") then
-                    TweenService:Create(v, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-                        ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 40),
-                        Size = UDim2.new(0, 80, 0, 23)
-                    }):Play()
+                    TweenService:Create(v, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 20)}):Play()
                 else
-                    TweenService:Create(v, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-                        ImageColor3 = Library.Theme.MainColor,
-                        Size = UDim2.new(0, 84, 0, 25)
-                    }):Play()
+                    TweenService:Create(v, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageColor3 = Library.Theme.MainColor}):Play()
                 end
             end
         end
@@ -558,6 +550,7 @@ function Library:CreateTab(name)
     NameTab.BackgroundTransparency = 1.000
     NameTab.Size = UDim2.new(1, 0, 1, 0)
     NameTab.ZIndex = 2
+    NameTab.Position = UDim2.new(0, 0, -1, 0) -- Mulai dari atas (invisible)
 
     NameTabButton.Name = (name .. "TabButton")
     NameTabButton.Parent = TabButtons
@@ -592,18 +585,26 @@ function Library:CreateTab(name)
     SectionPadding.Parent = NameTab
     SectionPadding.PaddingTop = UDim.new(0, 12)
 
-    NameTab.Visible = true
+    NameTab.Visible = false
 
     table.insert(Library.LibraryColorTable, NameTabButton)
+local function AnimateTabSelection()
+        TweenService:Create(NameTabButton, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(0, 80, 0, 22)}):Play()
+        wait(0.15)
+        TweenService:Create(NameTabButton, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(0, 84, 0, 25)}):Play()
+        
+        TweenService:Create(NameTabButton, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 20)}):Play()
+    end
 
-    NameTabButton.MouseButton1Down:Connect(function()
+    local function AnimateTabContent()
+        NameTab.Visible = true
+        TweenService:Create(NameTab, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = UDim2.new(0, 0, 0, 0)}):Play()
+    end
+    NameTabButton.NameTabButton.MouseButton1Down:Connect(function()
         CloseAllTabs()
         ResetAllTabButtons()
-        NameTab.Visible = true
-        TweenService:Create(NameTabButton, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-            ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 40),
-            Size = UDim2.new(0, 80, 0, 23)
-        }):Play()
+        AnimateTabSelection()
+        AnimateTabContent()
     end)
 
     KeepFirstTabOpen()
@@ -612,10 +613,7 @@ function Library:CreateTab(name)
         CloseAllTabs()
         ResetAllTabButtons()
         NameTab.Visible = true
-        TweenService:Create(NameTabButton, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-            ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 40),
-            Size = UDim2.new(0, 80, 0, 23)
-        }):Play()
+        TweenService:Create(NameTabButton, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 15)}):Play()
     end)
 
     function TabElements:CreateSection(name)
