@@ -589,13 +589,13 @@ function Library:CreateTab(name)
     LoadingLine.Name = "LoadingLine"
     LoadingLine.Parent = NameTab
     LoadingLine.BackgroundColor3 = Library.Theme.MainColor
-    LoadingLine.Size = UDim2.new(0, 50, 0, 3) -- Garis miring, sedikit lebih tebal
-    LoadingLine.Position = UDim2.new(0, -50, 0.5, -1.5) -- Mulai dari luar kiri, tengah vertikal
-    LoadingLine.Rotation = 15 -- Miring lebih jelas
+    LoadingLine.Size = UDim2.new(0, 50, 0, 3)
+    LoadingLine.Position = UDim2.new(0, -50, 0.5, -1.5)
+    LoadingLine.Rotation = 15
     LoadingLine.ZIndex = 5
     LoadingLine.Visible = false
 
-    NameTab.Visible = true
+    NameTab.Visible = false -- Awalnya tidak terlihat, akan diatur di KeepFirstTabOpen atau saat diklik
 
     table.insert(Library.LibraryColorTable, NameTabButton)
 
@@ -620,7 +620,7 @@ function Library:CreateTab(name)
             if child:IsA("ImageLabel") and child.Name:match("Section$") then
                 local sectionX = child.Position.X.Scale + (child.Position.X.Offset / NameTab.AbsoluteSize.X)
                 spawn(function()
-                    wait(sectionX * 0.5) -- Delay berdasarkan posisi section
+                    wait(sectionX * 0.5)
                     TweenService:Create(child, TweenInfo.new(0.2, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageTransparency = 0}):Play()
                 end)
             end
@@ -654,6 +654,7 @@ function Library:CreateTab(name)
     end
 
     KeepFirstTabOpen()
+
 
     
 function TabElements:CreateSection(name)
@@ -708,7 +709,7 @@ function TabElements:CreateSection(name)
     SectionContent.Parent = NameSection
     SectionContent.Active = true
     SectionContent.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    SectionContent.BackgroundTransparency = 1.000 -- Ganti ImageTransparency jadi BackgroundTransparency
+    SectionContent.BackgroundTransparency = 1.000
     SectionContent.BorderColor3 = Color3.fromRGB(27, 42, 53)
     SectionContent.BorderSizePixel = 0
     SectionContent.Size = UDim2.new(1, 0, 1, 0)
@@ -727,8 +728,6 @@ function TabElements:CreateSection(name)
     SectionContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
         SectionContent.CanvasSize = UDim2.new(0, 0, 0, SectionContentLayout.AbsoluteContentSize.Y + 15)
     end)
-
-    
 
 
 function SectionElements:CreateLabel(name, text)
