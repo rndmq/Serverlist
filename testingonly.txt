@@ -619,6 +619,7 @@ function Library:CreateTab(name)
         for _, child in pairs(NameTab:GetChildren()) do
             if child:IsA("ImageLabel") and child.Name:match("Section$") then
                 child.ImageTransparency = 1
+                child.ImageColor3 = Library.Theme.MainColor -- Pastikan menggunakan warna yang sudah diupdate
             end
         end
         
@@ -684,7 +685,7 @@ function Library:CreateTab(name)
                         ImageTransparency = 0
                     }):Play()
                     
-                    wait(0.3)
+                    task.wait(0.3) -- Gunakan task.wait untuk konsistensi
                     
                     TweenService:Create(child, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
                         ImageColor3 = Library.Theme.BackgroundColor
@@ -702,8 +703,7 @@ function Library:CreateTab(name)
 
     ShowFirstTab()
 
-    
-    
+
 function TabElements:CreateSection(name)
     local NameSection = Instance.new("ImageLabel")
     local SectionBorder = Instance.new("ImageLabel")
