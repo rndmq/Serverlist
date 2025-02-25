@@ -650,38 +650,50 @@ function Library:CreateTab(name)
     end
 
 local function ShowFirstTab()
+    print("ShowFirstTab called for:", NameTab.Name)
+
     if NameTab.Name == (Library.FirstTab .. "Tab") then
+        print("Setting tab visible")
         NameTab.Visible = true
 
-        -- Ubah warna langsung tanpa menunggu klik
+        -- Pastikan semua section langsung terlihat
         for _, child in pairs(NameTab:GetChildren()) do
             if child:IsA("ImageLabel") and child.Name:match("Section$") then
+                print("Updating", child.Name, "initial color")
                 child.ImageTransparency = 0
                 child.ImageColor3 = Library.Theme.BackgroundColor
             end
         end
 
-        -- Animasi langsung untuk transisi warna
+        -- Animasi perubahan warna
         for _, child in pairs(NameTab:GetChildren()) do
             if child:IsA("ImageLabel") and child.Name:match("Section$") then
                 local darkenedColor = DarkenObjectColor(Library.Theme.MainColor, 15)
-                TweenService:Create(child, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                print("Animating", child.Name, "to dark color")
+                
+                local tween1 = TweenService:Create(child, TweenInfo.new(0.2, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
                     ImageColor3 = darkenedColor
-                }):Play()
-
-                task.wait(0.3)
-
-                TweenService:Create(child, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                })
+                tween1:Play()
+                
+                tween1.Completed:Wait() -- Tunggu tween selesai
+                
+                print("Animating", child.Name, "to final color")
+                local tween2 = TweenService:Create(child, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
                     ImageColor3 = Library.Theme.BackgroundColor
-                }):Play()
+                })
+                tween2:Play()
             end
         end
 
         -- Pastikan tombol tab pertama juga berubah warna
-        TweenService:Create(NameTabButton, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+        print("Animating tab button:", NameTabButton.Name)
+        TweenService:Create(NameTabButton, TweenInfo.new(0.2, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
             ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 20),
             Size = smallSize
         }):Play()
+    else
+        print("Tab does not match first tab:", NameTab.Name, "Expected:", Library.FirstTab .. "Tab")
     end
 end
 
