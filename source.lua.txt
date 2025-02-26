@@ -222,7 +222,7 @@ Border.Size = UDim2.new(1, 2, 1, 2)
 Border.Image = "rbxassetid://3570695787"
 Border.ImageColor3 = Library.Theme.MainColor
 Border.ScaleType = Enum.ScaleType.Slice
-Border.SliceCenter = Rect.new(100, 100, 100, 100)
+Border.SliceCenter = Rect.new(95, 95, 95, 95)
 Border.SliceScale = 0.050
 Border.ImageTransparency = 0
 
@@ -692,28 +692,18 @@ function Library:CreateTab(name)
     end
 
     local function ShowFirstTab()
-        if NameTab.Name == (Library.FirstTab .. "Tab") then
-            NameTab.Visible = true
-            
-            for _, child in pairs(NameTab:GetChildren()) do
-                if child:IsA("ImageLabel") and child.Name:match("Section$") then
-                    child.ImageTransparency = 0
-                    child.ImageColor3 = Library.Theme.MainColor
-                    child.Position = UDim2.new(0, 0, 0.0574162677, 0)
-                    child.Size = UDim2.new(0, 197, 0, 181)
-                end
-            end
-
-            TweenService:Create(NameTabButton, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-                ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 20),
-                Size = smallSize
-            }):Play()
-            
-            TweenService:Create(NameTab, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-                Position = UDim2.new(0, 0, 0, 0)
-            }):Play()
-        end
+    if NameTab.Name == (Library.FirstTab .. "Tab") then
+        NameTab.Visible = true
+        TweenService:Create(NameTabButton, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+            ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 20),
+            Size = smallSize
+        }):Play()
+        
+        TweenService:Create(NameTab, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+            Position = UDim2.new(0, 0, 0, 0)
+        }):Play()
     end
+end
 
     task.wait(0.1)
 ShowFirstTab()
@@ -1726,7 +1716,7 @@ function SectionElements:CreateDropdown(name, options, presetoption, callback)
     local DropdownToggled = false
     table.insert(options, 1, "None")
     if not Settings[gameId] then Settings[gameId] = {} end
-    local SelectedOption = Settings[gameId][name] or options[presetoption] or options[1]
+    local SelectedOption = tostring(Settings[gameId][name] or options[presetoption] or options[1] or "None")
 
     NameDropdown.Name = (name .. "Dropdown")
     NameDropdown.Parent = SectionContent
