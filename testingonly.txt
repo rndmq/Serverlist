@@ -528,7 +528,6 @@ coroutine.wrap(function()
     end
 end)()
 function Library:CreateTab(name)
-function Library:CreateTab(name)
     local NameTab = Instance.new("Frame")
     local NameTabButton = Instance.new("ImageButton")
     local Title = Instance.new("TextLabel")
@@ -688,7 +687,6 @@ function Library:CreateTab(name)
     ShowFirstTab()
 
     
-    
 function TabElements:CreateSection(name)
     local NameSection = Instance.new("ImageLabel")
     local SectionBorder = Instance.new("ImageLabel")
@@ -710,7 +708,8 @@ function TabElements:CreateSection(name)
     NameSection.ScaleType = Enum.ScaleType.Slice
     NameSection.SliceCenter = Rect.new(100, 100, 100, 100)
     NameSection.SliceScale = 0.050
-    NameSection.ImageTransparency = 1 
+    NameSection.ImageTransparency = 1
+
     SectionBorder.Name = "SectionBorder"
     SectionBorder.Parent = NameSection
     SectionBorder.BackgroundColor3 = Library.Theme.MainColor
@@ -758,7 +757,12 @@ function TabElements:CreateSection(name)
 
     SectionContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
         SectionContent.CanvasSize = UDim2.new(0, 0, 0, SectionContentLayout.AbsoluteContentSize.Y + 15)
-    end)  
+    end)
+
+    NameSection.ImageTransparency = 1
+    NameSection.ImageColor3 = Library.Theme.MainColor
+
+    
 function SectionElements:CreateLabel(name, text)
             local NameLabel = Instance.new("TextLabel")
 
