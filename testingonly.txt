@@ -678,7 +678,6 @@ end)
         end
     end
 
-    -- Modifikasi di fungsi CreateTab()
 local function ShowFirstTab()
     if NameTab.Name == (Library.FirstTab .. "Tab") then
         NameTab.Visible = true
@@ -735,13 +734,13 @@ function TabElements:CreateSection(name)
     NameSection.Parent = NameTab
     NameSection.BackgroundColor3 = Library.Theme.BackgroundColor
     NameSection.BackgroundTransparency = 1.000
-    NameSection.Position = UDim2.new(0, 20, 0.0574162677, 0)
+    NameSection.Position = UDim2.new(0, 0, 0.0574162677, 0)
     NameSection.Size = UDim2.new(0, 197, 0, 181)
     NameSection.ZIndex = 4
     NameSection.Image = "rbxassetid://3570695787"
     NameSection.ImageColor3 = Library.Theme.MainColor
     NameSection.ScaleType = Enum.ScaleType.Slice
-    NameSection.SliceCenter = Rect.new(99, 99, 99, 99)
+    NameSection.SliceCenter = Rect.new(100, 100, 100, 100)
     NameSection.SliceScale = 0.025
     NameSection.ImageTransparency = 1
 
@@ -1056,22 +1055,6 @@ function SectionElements:CreateToggle(name, callback, tooltipText)
                 end
             }
         end
-        local function UpdateBackgroundColors()
-    if not Tabs or not Tabs:IsA("Frame") then
-        return
-    end
-    
-    for _, tab in pairs(Tabs:GetChildren()) do
-        if tab:IsA("Frame") then
-            for _, section in pairs(tab:GetChildren()) do
-                if section:IsA("ImageLabel") and section.Name:match("Section$") then
-                    section.ImageColor3 = Library.Theme.BackgroundColor
-                end
-            end
-        end
-    end
-end
-        UpdateBackgroundColors()
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 
