@@ -56,6 +56,7 @@ Library = {
         EasingStyle = Enum.EasingStyle.Quart
     }
 }
+
 local selectedColor = Color3.fromRGB(255, 75, 75) -- Default
 pcall(function()
     if getgenv().Color then
@@ -84,7 +85,8 @@ pcall(function()
             italic = Enum.Font.SourceSansItalic,
             light = Enum.Font.SourceSansLight,
             semibold = Enum.Font.SourceSansSemibold,
-            buildersans = Enum.Font.BuilderSans,
+            arial = Enum.Font.Arial,
+            arialbold = Enum.Font.ArialBold,
             legacy = Enum.Font.Legacy,
             cartosil = Enum.Font.Cartosil,
             specialelite = Enum.Font.SpecialElite
@@ -93,6 +95,8 @@ pcall(function()
         Library.Theme.TextFont = fontMap[fontKey] or Enum.Font.SourceSansBold
     end
 end)
+
+Library.Theme.MainColor = selectedColor
 
 
 local function DarkenObjectColor(object, amount)
