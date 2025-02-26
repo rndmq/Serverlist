@@ -109,7 +109,7 @@ local function UpdateBackgroundColors()
         end
     end
 end
-UpdateBackgroundColors()
+
 
 local function DarkenObjectColor(object, amount)
     local h, s, v = Color3.toHSV(object)
@@ -1069,6 +1069,7 @@ function SectionElements:CreateToggle(name, callback, tooltipText)
                 end
             }
         end
+        UpdateBackgroundColors()
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 
