@@ -62,20 +62,30 @@ pcall(function()
     end
 end)
 
-local Library = {
-    Theme = {
-        MainColor = selectedColor,
-        BackgroundColor = Color3.fromRGB(35, 35, 35),
-        UIToggleKey = Enum.KeyCode.RightControl,
-        TextFont = Enum.Font.SourceSansBold,
-        EasingStyle = Enum.EasingStyle.Quart
-    },
-    LibraryColorTable = {},
-    TabCount = 0,
-    FirstTab = nil,
-    CurrentlyBinding = false,
-    RainbowColorValue = 0,
-    HueSelectionPosition = 0
+pcall(function()
+    if getgenv().Font then
+        local fontMap = {
+            bold = Enum.Font.SourceSansBold,
+            regular = Enum.Font.SourceSans,
+            italic = Enum.Font.SourceSansItalic,
+            light = Enum.Font.SourceSansLight,
+            semibold = Enum.Font.SourceSansSemibold,
+            buildersans = Enum.Font.BuilderSans,
+            legacy = Enum.Font.Legacy,
+            cartosil = Enum.Font.Cartosil,
+            specialelite = Enum.Font.SpecialElite
+        }
+        local fontKey = string.lower(getgenv().Font)
+        Library.Theme.TextFont = fontMap[fontKey] or Enum.Font.SourceSansBold
+    end
+end)
+
+Library.Theme = {
+    MainColor = selectedColor,
+    BackgroundColor = Color3.fromRGB(35, 35, 35),
+    UIToggleKey = Enum.KeyCode.RightControl,
+    TextFont = Enum.Font.SourceSansBold,
+    EasingStyle = Enum.EasingStyle.Quart
 }
 
 local function DarkenObjectColor(object, amount)
