@@ -41,7 +41,21 @@ local function SaveSettings()
     end)
 end
 ContentProvider:PreloadAsync({"rbxassetid://3570695787", "rbxassetid://2708891598", "rbxassetid://4155801252", "rbxassetid://4695575676", "rbxassetid://4155801252"})
-
+Library = {
+    LibraryColorTable = {},
+    TabCount = 0,
+    FirstTab = nil,
+    CurrentlyBinding = false,
+    RainbowColorValue = 0,
+    HueSelectionPosition = 0,
+    Theme = {
+        MainColor = Color3.fromRGB(255, 75, 75),
+        BackgroundColor = Color3.fromRGB(35, 35, 35),
+        UIToggleKey = Enum.KeyCode.RightControl,
+        TextFont = Enum.Font.SourceSansBold,
+        EasingStyle = Enum.EasingStyle.Quart
+    }
+}
 local selectedColor = Color3.fromRGB(255, 75, 75) -- Default
 pcall(function()
     if getgenv().Color then
@@ -61,13 +75,6 @@ pcall(function()
         selectedColor = colorMap[colorKey] or colorMap.default
     end
 end)
-Library.Theme = {
-    MainColor = selectedColor,
-    BackgroundColor = Color3.fromRGB(35, 35, 35),
-    UIToggleKey = Enum.KeyCode.RightControl,
-    TextFont = Enum.Font.SourceSansBold,
-    EasingStyle = Enum.EasingStyle.Quart
-}
 
 pcall(function()
     if getgenv().Font then
