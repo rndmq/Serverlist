@@ -694,6 +694,8 @@ function Library:CreateTab(name)
     local function ShowFirstTab()
     if NameTab.Name == (Library.FirstTab .. "Tab") then
         NameTab.Visible = true
+        -- Pastikan section tidak terlihat sampai tween (hapus pengaturan langsung pada section)
+        
         TweenService:Create(NameTabButton, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
             ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 20),
             Size = smallSize
@@ -705,24 +707,20 @@ function Library:CreateTab(name)
     end
 end
 
-    task.wait(0.1)
 ShowFirstTab()
-task.wait(0.1)  
 if NameTab.Name == (Library.FirstTab .. "Tab") then
     for _, child in pairs(NameTab:GetChildren()) do
         if child:IsA("ImageLabel") and child.Name:match("Section$") then
+            -- Pastikan section tidak terlihat dan tidak menggunakan MainColor
             child.ImageTransparency = 1
-            child.ImageColor3 = Library.Theme.MainColor
+            child.ImageColor3 = Library.Theme.BackgroundColor  -- Atur langsung ke BackgroundColor
             child.Position = UDim2.new(0, 0, -0.5, 0)
             child.Size = UDim2.new(0, 197, 0, 0)
-            if child.Name == "SectionBorder" then
-                child.Position = UDim2.new(0, 0, 0, 0)
-            end
             TweenService:Create(child, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
                 Position = UDim2.new(0, 0, 0, 0),
                 Size = UDim2.new(0, 197, 0, 181),
                 ImageTransparency = 0,
-                ImageColor3 = Library.Theme.BackgroundColor
+                ImageColor3 = Library.Theme.BackgroundColor  -- Tetap gunakan BackgroundColor
             }):Play()
         end
     end
