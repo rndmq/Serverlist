@@ -2203,7 +2203,6 @@ end
         return SectionElements
     end
 
-    return TabElements
-end
+    
 
 return Library
