@@ -691,17 +691,22 @@ function Library:CreateTab(name)
         end
     end
 
-    local function ShowFirstTab()
+    -- Modifikasi di fungsi CreateTab()
+local function ShowFirstTab()
     if NameTab.Name == (Library.FirstTab .. "Tab") then
         NameTab.Visible = true
-        TweenService:Create(NameTabButton, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-            ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 20),
-            Size = smallSize
-        }):Play()
-        
-        TweenService:Create(NameTab, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-            Position = UDim2.new(0, 0, 0, 0)
-        }):Play()
+        -- Tambahkan ini untuk memastikan transisi warna
+        for _, child in pairs(NameTab:GetChildren()) do
+            if child:IsA("ImageLabel") and child.Name:match("Section$") then
+                child.ImageTransparency = 1
+                child.ImageColor3 = Library.Theme.MainColor
+                TweenService:Create(child, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                    ImageTransparency = 0,
+                    ImageColor3 = Library.Theme.BackgroundColor
+                    Position = UDim2.new(0, 0, 0, 0)
+                }):Play()
+            end
+        end
     end
 end
 
