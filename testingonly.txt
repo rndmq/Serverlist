@@ -61,6 +61,13 @@ pcall(function()
         selectedColor = colorMap[colorKey] or colorMap.default
     end
 end)
+Library.Theme = {
+    MainColor = selectedColor,
+    BackgroundColor = Color3.fromRGB(35, 35, 35),
+    UIToggleKey = Enum.KeyCode.RightControl,
+    TextFont = Enum.Font.SourceSansBold,
+    EasingStyle = Enum.EasingStyle.Quart
+}
 
 pcall(function()
     if getgenv().Font then
@@ -80,13 +87,6 @@ pcall(function()
     end
 end)
 
-Library.Theme = {
-    MainColor = selectedColor,
-    BackgroundColor = Color3.fromRGB(35, 35, 35),
-    UIToggleKey = Enum.KeyCode.RightControl,
-    TextFont = Enum.Font.SourceSansBold,
-    EasingStyle = Enum.EasingStyle.Quart
-}
 
 local function DarkenObjectColor(object, amount)
     local h, s, v = Color3.toHSV(object)
