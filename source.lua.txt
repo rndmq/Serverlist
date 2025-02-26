@@ -612,19 +612,17 @@ function Library:CreateTab(name)
     local smallSize = UDim2.new(0, 74, 0, 20)
 
 NameTabButton.MouseButton1Down:Connect(function()
-    -- Tutup semua tab terlebih dahulu
     if CloseAllTabs and type(CloseAllTabs) == "function" then 
         CloseAllTabs() 
     else
         for _, v in pairs(Tabs:GetChildren()) do
             if v:IsA("Frame") then 
                 v.Visible = false 
-                v.Position = UDim2.new(0, 0, 0, 0) -- Reset posisi ke default
+                v.Position = UDim2.new(0, 0, 0, 0)
             end
         end
     end
     
-    -- Reset warna semua tombol tab
     if ResetAllTabButtons and type(ResetAllTabButtons) == "function" then 
         ResetAllTabButtons() 
     else
@@ -637,17 +635,13 @@ NameTabButton.MouseButton1Down:Connect(function()
         end
     end
     
-    -- Tampilkan tab yang dipilih
     NameTab.Visible = true
     
-    -- Animasi transisi warna untuk section
     for _, child in pairs(NameTab:GetChildren()) do
         if child:IsA("ImageLabel") and child.Name:match("Section$") then
-            -- Set awal transparansi dan warna
             child.ImageTransparency = 1
             child.ImageColor3 = Library.Theme.MainColor
             
-            -- Animasi transisi
             TweenService:Create(child, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
                 ImageTransparency = 0,
                 ImageColor3 = Library.Theme.BackgroundColor
@@ -655,13 +649,11 @@ NameTabButton.MouseButton1Down:Connect(function()
         end
     end
     
-    -- Animasi tombol tab yang dipilih
     TweenService:Create(NameTabButton, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
         ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 20),
         Size = smallSize
     }):Play()
     
-    -- Animasi posisi tab
     TweenService:Create(NameTab, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
         Position = UDim2.new(0, 0, 0, 0)
     }):Play()
@@ -1882,8 +1874,8 @@ function SectionElements:CreateMultiDropdown(name, options, minSelect, maxSelect
     
     local DropdownToggled = false
     local SelectedOptions = presetOptions or {}
-    local minSelect = tonumber(minSelect) or 1 -- Pastikan number
-    local maxSelect = tonumber(maxSelect) or (#options or 0) -- Pastikan number dan fallback jika options kosong
+    local minSelect = tonumber(minSelect) or 1
+    local maxSelect = tonumber(maxSelect) or (#options or 0)
 
     NameDropdown.Name = (name .. "MultiDropdown")
     NameDropdown.Parent = SectionContent
@@ -1901,7 +1893,7 @@ function SectionElements:CreateMultiDropdown(name, options, minSelect, maxSelect
     TitleToggle.Size = UDim2.new(0, 167, 0, 30)
     TitleToggle.ZIndex = 7
     TitleToggle.Font = Library.Theme.TextFont
-    TitleToggle.Text = name .. " - " .. #SelectedOptions .. "/" .. maxSelect -- Perbaiki konkatenasi
+    TitleToggle.Text = name .. " - " .. #SelectedOptions .. "/" .. maxSelect
     TitleToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
     TitleToggle.TextSize = 15.000
     TitleToggle.TextXAlignment = Enum.TextXAlignment.Left
@@ -1954,7 +1946,7 @@ function SectionElements:CreateMultiDropdown(name, options, minSelect, maxSelect
     local function PopulateDropdown()
         ClearAllDropdownItems()
         
-        for _, v in pairs(options or {}) do -- Pastikan options tidak nil
+        for _, v in pairs(options or {}) do
             local NameButton = Instance.new("TextButton")
             
             NameButton.Name = (v .. "DropdownButton")
