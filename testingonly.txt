@@ -598,6 +598,7 @@ function Library:CreateTab(name)
             for _, v in pairs(Tabs:GetChildren()) do
                 if v:IsA("Frame") then 
                     v.Visible = false 
+                    v.Position = UDim2.new(0, 0, 0, 0) -- Reset posisi ke default
                 end
             end
         end
@@ -652,6 +653,10 @@ function Library:CreateTab(name)
             ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 20),
             Size = smallSize
         }):Play()
+        
+        TweenService:Create(NameTab, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+            Position = UDim2.new(0, 0, 0, 0)
+        }):Play()
     end)
 
     ResetAllTabButtons = function()
@@ -691,6 +696,8 @@ function Library:CreateTab(name)
 
     task.wait(0.1)
     ShowFirstTab()
+
+    
 
 
     
