@@ -804,12 +804,7 @@ function TabElements:CreateSection(name)
         SectionContent.CanvasSize = UDim2.new(0, 0, 0, SectionContentLayout.AbsoluteContentSize.Y + 15)
     end)
 
-    task.wait()
-    TweenService:Create(NameSection, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-        ImageTransparency = 0,
-        ImageColor3 = Library.Theme.BackgroundColor
-    }):Play()
-end)
+    
     local function UpdateBackgroundColors()
     if not Tabs or not Tabs:IsA("Frame") then
         return
