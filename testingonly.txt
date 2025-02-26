@@ -741,7 +741,7 @@ function TabElements:CreateSection(name)
     NameSection.Image = "rbxassetid://3570695787"
     NameSection.ImageColor3 = Library.Theme.BackgroundColor
     NameSection.ScaleType = Enum.ScaleType.Slice
-    NameSection.SliceCenter = Rect.new(100, 100, 100, 100)
+    NameSection.SliceCenter = Rect.new(99, 99, 99, 99)
     NameSection.SliceScale = 0.025
     NameSection.ImageTransparency = 1
 
