@@ -98,19 +98,6 @@ end)
 
 Library.Theme.MainColor = selectedColor
 
-local function UpdateBackgroundColors()
-    for _, tab in pairs(Tabs:GetChildren()) do
-        if tab:IsA("Frame") then
-            for _, section in pairs(tab:GetChildren()) do
-                if section:IsA("ImageLabel") and section.Name:match("Section$") then
-                    section.ImageColor3 = Library.Theme.BackgroundColor
-                end
-            end
-        end
-    end
-end
-
-
 local function DarkenObjectColor(object, amount)
     local h, s, v = Color3.toHSV(object)
     v = math.clamp(v - (amount / 255), 0, 1)
@@ -1069,6 +1056,21 @@ function SectionElements:CreateToggle(name, callback, tooltipText)
                 end
             }
         end
+        local function UpdateBackgroundColors()
+    if not Tabs or not Tabs:IsA("Frame") then
+        return
+    end
+    
+    for _, tab in pairs(Tabs:GetChildren()) do
+        if tab:IsA("Frame") then
+            for _, section in pairs(tab:GetChildren()) do
+                if section:IsA("ImageLabel") and section.Name:match("Section$") then
+                    section.ImageColor3 = Library.Theme.BackgroundColor
+                end
+            end
+        end
+    end
+end
         UpdateBackgroundColors()
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
