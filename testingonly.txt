@@ -613,72 +613,60 @@ function Library:CreateTab(name)
     local smallSize = UDim2.new(0, 74, 0, 20)
 
     NameTabButton.MouseButton1Down:Connect(function()
-        if CloseAllTabs and type(CloseAllTabs) == "function" then 
-            CloseAllTabs() 
-        else
-            for _, v in pairs(Tabs:GetChildren()) do
-                if v:IsA("Frame") then 
-                    v.Visible = false 
-                    v.Position = UDim2.new(0, 0, 0, 0) -- Reset posisi ke default
-                end
+    -- Tutup semua tab terlebih dahulu
+    if CloseAllTabs and type(CloseAllTabs) == "function" then 
+        CloseAllTabs() 
+    else
+        for _, v in pairs(Tabs:GetChildren()) do
+            if v:IsA("Frame") then 
+                v.Visible = false 
+                v.Position = UDim2.new(0, 0, 0, 0) -- Reset posisi ke default
             end
         end
-        
-        if ResetAllTabButtons and type(ResetAllTabButtons) == "function" then 
-            ResetAllTabButtons() 
-        else
-            for _, v in pairs(TabButtons:GetChildren()) do
-                if v:IsA("ImageButton") then
-                    TweenService:Create(v, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-                        ImageColor3 = Library.Theme.MainColor
-                    }):Play()
-                end
-            end
-        end
-        
-        NameTab.Visible = true
-        
-        for _, child in pairs(NameTab:GetChildren()) do
-            if child:IsA("ImageLabel") and child.Name:match("Section$") then
-                child.ImageTransparency = 1
-                child.ImageColor3 = Library.Theme.MainColor
-            end
-        end
-        
-        for _, child in pairs(NameTab:GetChildren()) do
-            if child:IsA("ImageLabel") and child.Name:match("Section$") then
-                local originalPosition = child.Position
-                local originalSize = child.Size
-                
-                child.Position = UDim2.new(originalPosition.X.Scale, originalPosition.X.Offset, -0.5, 0)
-                child.Size = UDim2.new(originalSize.X.Scale, originalSize.X.Offset, 0, 0)
-                child.ImageTransparency = 0
-                
-                TweenService:Create(child, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-                    Position = originalPosition,
-                    Size = originalSize,
-                    ImageColor3 = Library.Theme.BackgroundColor
-                }):Play()
-            end
-        end
-        
+    end
+    
+    -- Reset warna semua tombol tab
+    if ResetAllTabButtons and type(ResetAllTabButtons) == "function" then 
+        ResetAllTabButtons() 
+    else
         for _, v in pairs(TabButtons:GetChildren()) do
-            if v:IsA("ImageButton") and v ~= NameTabButton then
+            if v:IsA("ImageButton") then
                 TweenService:Create(v, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-                    Size = originalSize
+                    ImageColor3 = Library.Theme.MainColor
                 }):Play()
             end
         end
-        
-        TweenService:Create(NameTabButton, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-            ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 20),
-            Size = smallSize
-        }):Play()
-        
-        TweenService:Create(NameTab, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-            Position = UDim2.new(0, 0, 0, 0)
-        }):Play()
-    end)
+    end
+    
+    -- Tampilkan tab yang dipilih
+    NameTab.Visible = true
+    
+    -- Animasi transisi warna untuk section
+    for _, child in pairs(NameTab:GetChildren()) do
+        if child:IsA("ImageLabel") and child.Name:match("Section$") then
+            -- Set awal transparansi dan warna
+            child.ImageTransparency = 1
+            child.ImageColor3 = Library.Theme.MainColor
+            
+            -- Animasi transisi
+            TweenService:Create(child, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                ImageTransparency = 0,
+                ImageColor3 = Library.Theme.BackgroundColor
+            }):Play()
+        end
+    end
+    
+    -- Animasi tombol tab yang dipilih
+    TweenService:Create(NameTabButton, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+        ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 20),
+        Size = smallSize
+    }):Play()
+    
+    -- Animasi posisi tab
+    TweenService:Create(NameTab, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+        Position = UDim2.new(0, 0, 0, 0)
+    }):Play()
+end)
 
     ResetAllTabButtons = function()
         for _, v in pairs(TabButtons:GetChildren()) do
