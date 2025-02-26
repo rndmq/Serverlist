@@ -691,22 +691,17 @@ function Library:CreateTab(name)
         end
     end
 
-    -- Modifikasi di fungsi CreateTab()
-local function ShowFirstTab()
+    local function ShowFirstTab()
     if NameTab.Name == (Library.FirstTab .. "Tab") then
         NameTab.Visible = true
-        -- Tambahkan ini untuk memastikan transisi warna
-        for _, child in pairs(NameTab:GetChildren()) do
-            if child:IsA("ImageLabel") and child.Name:match("Section$") then
-                child.ImageTransparency = 1
-                child.ImageColor3 = Library.Theme.MainColor
-                TweenService:Create(child, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-                    ImageTransparency = 0,
-                    ImageColor3 = Library.Theme.BackgroundColor
-                    
-                }):Play()
-            end
-        end
+        TweenService:Create(NameTabButton, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+            ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 20),
+            Size = smallSize
+        }):Play()
+        
+        TweenService:Create(NameTab, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+            Position = UDim2.new(0, 0, 0, 0)
+        }):Play()
     end
 end
 
@@ -754,7 +749,7 @@ function TabElements:CreateSection(name)
     NameSection.Size = UDim2.new(0, 197, 0, 181)
     NameSection.ZIndex = 4
     NameSection.Image = "rbxassetid://3570695787"
-    NameSection.ImageColor3 = Library.Theme.MainColor
+    NameSection.ImageColor3 = Library.Theme.BackgroundColor
     NameSection.ScaleType = Enum.ScaleType.Slice
     NameSection.SliceCenter = Rect.new(99, 99, 99, 99)
     NameSection.SliceScale = 0.025
@@ -762,7 +757,7 @@ function TabElements:CreateSection(name)
 
     SectionBorder.Name = "SectionBorder"
     SectionBorder.Parent = NameSection
-    SectionBorder.BackgroundColor3 = Library.Theme.BackgroundColor
+    SectionBorder.BackgroundColor3 = Library.Theme.MainColor
     SectionBorder.BackgroundTransparency = 1.000
     SectionBorder.Position = UDim2.new(0, -1, 0, -1)
     SectionBorder.Size = UDim2.new(1, 2, 1, 2)
@@ -809,9 +804,21 @@ function TabElements:CreateSection(name)
         SectionContent.CanvasSize = UDim2.new(0, 0, 0, SectionContentLayout.AbsoluteContentSize.Y + 15)
     end)
 
-    NameSection.ImageTransparency = 1
-    NameSection.ImageColor3 = Library.Theme.MainColor
-
+    local function UpdateBackgroundColors()
+    if not Tabs or not Tabs:IsA("Frame") then
+        return -- Keluar jika Tabs tidak ada atau bukan Frame
+    end
+    
+    for _, tab in pairs(Tabs:GetChildren()) do
+        if tab:IsA("Frame") then
+            for _, section in pairs(tab:GetChildren()) do
+                if section:IsA("ImageLabel") and section.Name:match("Section$") then
+                    section.ImageColor3 = Library.Theme.BackgroundColor
+                end
+            end
+        end
+    end
+end
     
 function SectionElements:CreateLabel(name, text)
             local NameLabel = Instance.new("TextLabel")
