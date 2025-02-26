@@ -549,6 +549,7 @@ function Library:CreateTab(name)
     NameTab.Size = UDim2.new(1, 0, 1, 0)
     NameTab.ZIndex = 2
     NameTab.ClipsDescendants = true
+    NameTab.Position = UDim2.new(-1, 0, 0, 0)
 
     NameTabButton.Name = (name .. "TabButton")
     NameTabButton.Parent = TabButtons
@@ -681,13 +682,16 @@ function Library:CreateTab(name)
                 ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 20),
                 Size = smallSize
             }):Play()
+            
+            TweenService:Create(NameTab, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                Position = UDim2.new(0, 0, 0, 0)
+            }):Play()
         end
     end
 
-    task.wait(0.2)
+    task.wait(0.1)
     ShowFirstTab()
 
-    
 
     
 function TabElements:CreateSection(name)
