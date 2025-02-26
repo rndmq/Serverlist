@@ -1716,7 +1716,7 @@ function SectionElements:CreateDropdown(name, options, presetoption, callback)
     local DropdownToggled = false
     table.insert(options, 1, "None")
     if not Settings[gameId] then Settings[gameId] = {} end
-    local SelectedOption = Settings[gameId][name] or options[presetoption] or options[1]
+    local SelectedOption = tostring(Settings[gameId][name] or options[presetoption] or options[1] or "None")
 
     NameDropdown.Name = (name .. "Dropdown")
     NameDropdown.Parent = SectionContent
