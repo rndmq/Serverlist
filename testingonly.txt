@@ -710,7 +710,7 @@ function Library:CreateTab(name)
             }):Play()
             
             TweenService:Create(NameTab, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-                Position = UDim2.new(0, 0, 0, 0)
+                Position = UDim2.new(0, 20, 0, 0)
             }):Play()
         end
     end
@@ -735,7 +735,7 @@ function TabElements:CreateSection(name)
     NameSection.Parent = NameTab
     NameSection.BackgroundColor3 = Library.Theme.MainColor
     NameSection.BackgroundTransparency = 1.000
-    NameSection.Position = UDim2.new(0, 20, 0.0574162677, 0)
+    NameSection.*Position = UDim2.new(0, 20, 0.0574162677, 0)
     NameSection.Size = UDim2.new(0, 197, 0, 181)
     NameSection.ZIndex = 4
     NameSection.Image = "rbxassetid://3570695787"
