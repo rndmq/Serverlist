@@ -716,7 +716,23 @@ function Library:CreateTab(name)
     end
 
     task.wait(0.1)
-    ShowFirstTab()
+ShowFirstTab()
+if NameTab.Name == (Library.FirstTab .. "Tab") then
+    for _, child in pairs(NameTab:GetChildren()) do
+        if child:IsA("ImageLabel") and child.Name:match("Section$") then
+            child.ImageTransparency = 1
+            child.ImageColor3 = Library.Theme.MainColor
+            child.Position = UDim2.new(0, 0, -0.5, 0)
+            child.Size = UDim2.new(0, 197, 0, 0)
+            TweenService:Create(child, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                Position = UDim2.new(0, 0, 0, 0),
+                Size = UDim2.new(0, 197, 0, 181),
+                ImageTransparency = 0,
+                ImageColor3 = Library.Theme.BackgroundColor
+            }):Play()
+        end
+    end
+end
 
     
 
