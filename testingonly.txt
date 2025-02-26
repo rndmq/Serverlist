@@ -684,7 +684,10 @@ function Library:CreateTab(name)
         end
     end
 
+    task.wait(0.2)
     ShowFirstTab()
+
+    
 
     
 function TabElements:CreateSection(name)
