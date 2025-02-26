@@ -78,7 +78,7 @@ pcall(function()
 end)
 
 pcall(function()
-    if getgenv().Font then
+    if getgenv().font then
         local fontMap = {
             bold = Enum.Font.SourceSansBold,
             regular = Enum.Font.SourceSans,
@@ -735,7 +735,7 @@ function TabElements:CreateSection(name)
     NameSection.Parent = NameTab
     NameSection.BackgroundColor3 = Library.Theme.MainColor
     NameSection.BackgroundTransparency = 1.000
-    NameSection.Position = UDim2.new(0, 0, 0.0574162677, 0)
+    NameSection.Position = UDim2.new(0, 20, 0.0574162677, 0)
     NameSection.Size = UDim2.new(0, 197, 0, 181)
     NameSection.ZIndex = 4
     NameSection.Image = "rbxassetid://3570695787"
