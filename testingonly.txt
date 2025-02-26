@@ -710,13 +710,16 @@ function Library:CreateTab(name)
             }):Play()
             
             TweenService:Create(NameTab, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-                Position = UDim2.new(0, 20, 0, 0)
+                Position = UDim2.new(0, 0, 0, 0)
             }):Play()
         end
     end
 
     task.wait(0.1)
     ShowFirstTab()
+
+    
+
 
     
 function TabElements:CreateSection(name)
@@ -739,7 +742,7 @@ function TabElements:CreateSection(name)
     NameSection.ImageColor3 = Library.Theme.BackgroundColor
     NameSection.ScaleType = Enum.ScaleType.Slice
     NameSection.SliceCenter = Rect.new(100, 100, 100, 100)
-    NameSection.SliceScale = 0.050
+    NameSection.SliceScale = 0.025
     NameSection.ImageTransparency = 1
 
     SectionBorder.Name = "SectionBorder"
