@@ -618,32 +618,27 @@ function Library:CreateTab(name)
         for _, child in pairs(NameTab:GetChildren()) do
             if child:IsA("ImageLabel") and child.Name:match("Section$") then
                 child.ImageTransparency = 1
-                child.ImageColor3 = Library.Theme.MainColor -- Pastikan menggunakan warna yang sudah diupdate
+                child.ImageColor3 = Library.Theme.MainColor
             end
         end
-        
-        -- Animasi turun dari atas ke bawah sambil transisi warna
         for _, child in pairs(NameTab:GetChildren()) do
             if child:IsA("ImageLabel") and child.Name:match("Section$") then
                 local originalPosition = child.Position
                 local originalSize = child.Size
                 local darkenedColor = DarkenObjectColor(Library.Theme.MainColor, 15)
                 
-                -- Mulai dari posisi di atas (misalnya -50% tinggi section)
                 child.Position = UDim2.new(originalPosition.X.Scale, originalPosition.X.Offset, -0.5, 0)
                 child.Size = UDim2.new(originalSize.X.Scale, originalSize.X.Offset, 0, 0)
-                child.ImageTransparency = 0 -- Mulai dari visible
+                child.ImageTransparency = 0
                 
-                -- Animasi turun ke posisi asli sambil transisi warna
                 TweenService:Create(child, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
                     Position = originalPosition,
                     Size = originalSize,
                     ImageColor3 = darkenedColor
                 }):Play()
                 
-                task.wait(0.5) -- Tunggu animasi pertama selesai
-                
-                -- Transisi ke background
+                task.wait(0.5)
+               
                 TweenService:Create(child, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
                     ImageColor3 = Library.Theme.BackgroundColor
                 }):Play()
@@ -678,14 +673,12 @@ function Library:CreateTab(name)
     local function ShowFirstTab()
         if NameTab.Name == (Library.FirstTab .. "Tab") then
             NameTab.Visible = true
-            
-            -- Atur section di tab pertama langsung ke warna background tanpa animasi
             for _, child in pairs(NameTab:GetChildren()) do
                 if child:IsA("ImageLabel") and child.Name:match("Section$") then
                     child.ImageTransparency = 0
-                    child.ImageColor3 = Library.Theme.BackgroundColor -- Langsung ke background
-                    child.Position = UDim2.new(0, 0, 0.0574162677, 0) -- Posisi asli
-                    child.Size = UDim2.new(0, 197, 0, 181) -- Ukuran asli
+                    child.ImageColor3 = Library.Theme.BackgroundColor
+                    child.Position = UDim2.new(0, 0, 0.0574162677, 0)
+                    child.Size = UDim2.new(0, 197, 0, 181)
                 end
             end
 
@@ -698,6 +691,7 @@ function Library:CreateTab(name)
     end
 
     ShowFirstTab()
+    
 function TabElements:CreateSection(name)
     local NameSection = Instance.new("ImageLabel")
     local SectionBorder = Instance.new("ImageLabel")
@@ -1666,80 +1660,101 @@ function SectionElements:CreateTextBox(name, characterLimit, placeholderText, ca
             table.insert(Library.LibraryColorTable, CheckboxTicked)
         end
 
-        function SectionElements:CreateDropdown(name, options, presetoption, callback)
-            local NameDropdown = Instance.new("Frame")
-            local TitleToggle = Instance.new("TextButton")
-            local Dropdown = Instance.new("ImageLabel")
-            local DropdownContentLayout = Instance.new("UIListLayout")
+function SectionElements:CreateDropdown(name, options, presetoption, callback)
+    local NameDropdown = Instance.new("Frame")
+    local TitleToggle = Instance.new("TextButton")
+    local Dropdown = Instance.new("ImageLabel")
+    local DropdownContentLayout = Instance.new("UIListLayout")
 
-            local gameId = self.GameId -- Ambil gameId dari SectionElements
-            local DropdownToggled = true
-            table.insert(options, 1, "None")
-            if not Settings[gameId] then Settings[gameId] = {} end
-            local SelectedOption = Settings[gameId][name] or options[presetoption] or options[1]
+    local gameId = self.GameId
+    local DropdownToggled = false
+    table.insert(options, 1, "None")
+    if not Settings[gameId] then Settings[gameId] = {} end
+    local SelectedOption = Settings[gameId][name] or options[presetoption] or options[1]
 
-            NameDropdown.Name = (name .. "Dropdown")
-            NameDropdown.Parent = SectionContent
-            NameDropdown.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-            NameDropdown.BackgroundTransparency = 1.000
-            NameDropdown.Position = UDim2.new(0, 0, 0.773480654, 0)
-            NameDropdown.Size = UDim2.new(0, 197, 0, 35)
-            NameDropdown.ZIndex = 5
+    NameDropdown.Name = (name .. "Dropdown")
+    NameDropdown.Parent = SectionContent
+    NameDropdown.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    NameDropdown.BackgroundTransparency = 1.000
+    NameDropdown.Position = UDim2.new(0, 0, 0.773480654, 0)
+    NameDropdown.Size = UDim2.new(0, 197, 0, 35)
+    NameDropdown.ZIndex = 5
 
-            TitleToggle.Archivable = false
-            TitleToggle.Name = "TitleToggle"
-            TitleToggle.Parent = NameDropdown
-            TitleToggle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-            TitleToggle.BackgroundTransparency = 1.000
-            TitleToggle.BorderSizePixel = 0
-            TitleToggle.Position = UDim2.new(0, 13, 0, 0)
-            TitleToggle.Size = UDim2.new(0, 167, 0, 30)
-            TitleToggle.ZIndex = 7
-            TitleToggle.Font = Library.Theme.TextFont
-            TitleToggle.Text = (name .. " - " .. SelectedOption)
-            TitleToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
-            TitleToggle.TextSize = 15.000
-            TitleToggle.TextXAlignment = Enum.TextXAlignment.Left
+    TitleToggle.Name = "TitleToggle"
+    TitleToggle.Parent = NameDropdown
+    TitleToggle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    TitleToggle.BackgroundTransparency = 1.000
+    TitleToggle.BorderSizePixel = 0
+    TitleToggle.Position = UDim2.new(0, 13, 0, 0)
+    TitleToggle.Size = UDim2.new(0, 167, 0, 30)
+    TitleToggle.ZIndex = 7
+    TitleToggle.Font = Library.Theme.TextFont
+    TitleToggle.Text = (name .. " - " .. SelectedOption)
+    TitleToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    TitleToggle.TextSize = 15.000
+    TitleToggle.TextXAlignment = Enum.TextXAlignment.Left
 
-            Dropdown.Name = "Dropdown"
-            Dropdown.Parent = NameDropdown
-            Dropdown.BackgroundColor3 = Library.Theme.BackgroundColor
-            Dropdown.BackgroundTransparency = 1.000
-            Dropdown.Position = UDim2.new(0, 15, 0, 30)
-            Dropdown.Size = UDim2.new(0, 165, 0, 0)
-            Dropdown.ZIndex = 15
-            Dropdown.Image = "rbxassetid://3570695787"
-            Dropdown.ImageColor3 = Color3.fromRGB(45, 45, 45)
-            Dropdown.ScaleType = Enum.ScaleType.Slice
-            Dropdown.SliceCenter = Rect.new(100, 100, 100, 100)
-            Dropdown.SliceScale = 0.050
-            Dropdown.ClipsDescendants = true
+    Dropdown.Name = "Dropdown"
+    Dropdown.Parent = NameDropdown
+    Dropdown.BackgroundColor3 = Library.Theme.BackgroundColor
+    Dropdown.BackgroundTransparency = 1.000
+    Dropdown.Position = UDim2.new(0, 15, 0, 30)
+    Dropdown.Size = UDim2.new(0, 165, 0, 0)
+    Dropdown.ZIndex = 15
+    Dropdown.Image = "rbxassetid://3570695787"
+    Dropdown.ImageColor3 = Color3.fromRGB(45, 45, 45)
+    Dropdown.ScaleType = Enum.ScaleType.Slice
+    Dropdown.SliceCenter = Rect.new(100, 100, 100, 100)
+    Dropdown.SliceScale = 0.050
+    Dropdown.ClipsDescendants = true
 
-            DropdownContentLayout.Name = "DropdownContentLayout"
-            DropdownContentLayout.Parent = Dropdown
-            DropdownContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    DropdownContentLayout.Name = "DropdownContentLayout"
+    DropdownContentLayout.Parent = Dropdown
+    DropdownContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
-            local function ResetAllDropdownItems()
-                for i, v in pairs(Dropdown:GetChildren()) do
-                    if v:IsA("TextButton") then
-                        TweenService:Create(v, TweenInfo.new(0.25, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
-                    end
-                end
+    local searchTextBox = Instance.new("TextBox")
+    searchTextBox.Name = "SearchTextBox"
+    searchTextBox.Parent = Dropdown
+    searchTextBox.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    searchTextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+    searchTextBox.PlaceholderText = "Search..."
+    searchTextBox.Size = UDim2.new(1, 0, 0, 20)
+    searchTextBox.Position = UDim2.new(0, 0, 0, 0)
+    searchTextBox.Visible = false
+    searchTextBox.TextSize = 14
+    searchTextBox.Font = Library.Theme.TextFont
+    searchTextBox.ZIndex = 16
+
+    local function ResetAllDropdownItems()
+        for i, v in pairs(Dropdown:GetChildren()) do
+            if v:IsA("TextButton") then
+                TweenService:Create(v, TweenInfo.new(0.25, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
             end
+        end
+    end
 
-            local function ClearAllDropdownItems()
-                for i, v in pairs(Dropdown:GetChildren()) do
-                    if v:IsA("TextButton") then
-                        v:Destroy()
-                    end
-                end
-                DropdownToggled = true
-                TweenService:Create(TitleToggle, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
-                TweenService:Create(NameDropdown, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 197, 0, 35)}):Play()
-                TweenService:Create(Dropdown, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 165, 0, 0)}):Play()
+    local function ClearAllDropdownItems()
+        for i, v in pairs(Dropdown:GetChildren()) do
+            if v:IsA("TextButton") then
+                v:Destroy()
             end
+        end
+        DropdownToggled = true
+        searchTextBox.Visible = false
+        TweenService:Create(TitleToggle, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+        TweenService:Create(NameDropdown, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 197, 0, 35)}):Play()
+        TweenService:Create(Dropdown, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 165, 0, 0)}):Play()
+    end
 
-for i, v in pairs(options) do
+    local function updateOptions(filterText)
+        for i, v in pairs(Dropdown:GetChildren()) do
+            if v:IsA("TextButton") then
+                v:Destroy()
+            end
+        end
+
+        for i, v in pairs(options) do
+            if string.find(string.lower(v), string.lower(filterText)) then
                 local NameButton = Instance.new("TextButton")
                 NameButton.Name = (v .. "DropdownButton")
                 NameButton.Parent = Dropdown
@@ -1765,6 +1780,7 @@ for i, v in pairs(options) do
                     Settings[gameId][name] = SelectedOption
                     SaveSettings()
                     callback(NameButton.Text)
+                    ClearAllDropdownItems()
                 end)
 
                 NameButton.InputBegan:Connect(function(input)
@@ -1779,68 +1795,47 @@ for i, v in pairs(options) do
                     end
                 end)
             end
-            
-            TitleToggle.MouseButton1Down:Connect(function()
-                DropdownToggled = not DropdownToggled
-                if DropdownToggled then
-                    TweenService:Create(TitleToggle, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
-                    TweenService:Create(NameDropdown, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 197, 0, 35)}):Play()
-                    TweenService:Create(Dropdown, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 165, 0, 0)}):Play()
-                else
-                    TweenService:Create(TitleToggle, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(185, 185, 185)}):Play()
-                    TweenService:Create(NameDropdown, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 197, 0, 35 + DropdownContentLayout.AbsoluteContentSize.Y)}):Play()
-                    TweenService:Create(Dropdown, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 165, 0, DropdownContentLayout.AbsoluteContentSize.Y)}):Play()
-                end
-            end)
-
-local function Refresh(newoptions, newpresetoption, newcallback)
-                ClearAllDropdownItems()
-                local SelectedOption = Settings[gameId][name] or newoptions[newpresetoption] or newoptions[1]
-                TitleToggle.Text = (name .. " - " .. SelectedOption)
-                for i, v in pairs(newoptions) do
-                    local NameButton = Instance.new("TextButton")
-                    NameButton.Name = (v .. "Button")
-                    NameButton.Parent = Dropdown
-                    NameButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-                    NameButton.BackgroundTransparency = 1.000
-                    NameButton.BorderSizePixel = 0
-                    NameButton.Size = UDim2.new(0, 165, 0, 25)
-                    NameButton.ZIndex = 15
-                    NameButton.AutoButtonColor = false
-                    NameButton.Font = Library.Theme.TextFont
-                    NameButton.Text = v
-                    NameButton.TextColor3 = (v == SelectedOption) and Library.Theme.MainColor or Color3.fromRGB(255, 255, 255)
-                    NameButton.TextSize = 15.000
-
-                    NameButton.MouseButton1Down:Connect(function()
-                        SelectedOption = v
-                        ResetAllDropdownItems()
-                        TitleToggle.Text = (name .. " - " .. SelectedOption)
-                        TweenService:Create(NameButton, TweenInfo.new(0.35, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {TextColor3 = Library.Theme.MainColor}):Play()
-                        if not Settings[gameId] then Settings[gameId] = {} end
-                        Settings[gameId][name] = SelectedOption
-                        SaveSettings()
-                        newcallback(NameButton.Text)
-                    end)
-
-                    NameButton.InputBegan:Connect(function(input)
-                        if input.UserInputType == Enum.UserInputType.MouseMovement then
-                            TweenService:Create(NameButton, TweenInfo.new(0.35, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {BackgroundTransparency = 0.95}):Play()
-                        end
-                    end)
-
-                    NameButton.InputEnded:Connect(function(input)
-                        if input.UserInputType == Enum.UserInputType.MouseMovement then
-                            TweenService:Create(NameButton, TweenInfo.new(0.35, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {BackgroundTransparency = 1}):Play()
-                        end
-                    end)
-                end
-            end
-
-            return {
-                Refresh = Refresh
-            }
         end
+    end
+
+    TitleToggle.MouseButton1Down:Connect(function()
+        DropdownToggled = not DropdownToggled
+        if DropdownToggled then
+            searchTextBox.Visible = false
+            updateOptions("")
+            TweenService:Create(TitleToggle, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+            TweenService:Create(NameDropdown, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 197, 0, 35)}):Play()
+            TweenService:Create(Dropdown, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 165, 0, 0)}):Play()
+        else
+            searchTextBox.Visible = true
+            searchTextBox.Text = ""
+            updateOptions("")
+            TweenService:Create(TitleToggle, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(185, 185, 185)}):Play()
+            TweenService:Create(NameDropdown, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 197, 0, 35 + DropdownContentLayout.AbsoluteContentSize.Y + 20)}):Play() 
+            TweenService:Create(Dropdown, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 165, 0, DropdownContentLayout.AbsoluteContentSize.Y + 20)}):Play()
+        end
+    end)
+
+    searchTextBox.Changed:Connect(function(property)
+        if property == "Text" and not DropdownToggled then
+            updateOptions(searchTextBox.Text)
+        end
+    end)
+
+    local function Refresh(newoptions, newpresetoption, newcallback)
+        ClearAllDropdownItems()
+        options = newoptions or options
+        SelectedOption = Settings[gameId][name] or newoptions[newpresetoption] or newoptions[1]
+        TitleToggle.Text = (name .. " - " .. SelectedOption)
+        updateOptions("")
+    end
+
+    updateOptions("")
+
+    return {
+        Refresh = Refresh
+    }
+end
 function SectionElements:CreateMultiDropdown(name, options, minSelect, maxSelect, presetOptions, callback)
     local NameDropdown = Instance.new("Frame")
     local TitleToggle = Instance.new("TextButton")
