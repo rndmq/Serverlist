@@ -80,7 +80,7 @@ pcall(function()
             default = Color3.fromRGB(255, 75, 75),
             cyan = Color3.fromRGB(0, 255, 255),
             brown = Color3.fromRGB(139, 69, 19),
-            orange = Color3.fromRGB(255, 165, 0)
+            orange = Color3.fromRGB(255, 165, 0),        black = Color3.fromRGB(0, 0, 0)
         }
         local colorKey = string.lower(getgenv().Color)
         selectedColor = colorMap[colorKey] or colorMap.default
