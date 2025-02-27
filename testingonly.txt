@@ -60,15 +60,16 @@ Library = {
 pcall(function()
     if getgenv().Color == "rgb" then
         coroutine.wrap(function()
-            while true do
-                if getgenv().StopRGB then break end
-                for i = 0, 1, 0.002 do
-                    selectedColor = Color3.fromHSV(i, 1, 1)
-                    Library.Theme.Color = selectedColor
-                    task.wait(0.03) 
-                end
-            end
-        end)()
+    while true do
+        if getgenv().StopRGB then break end
+        for i = 0, 1, 0.002 do
+            selectedColor = Color3.fromHSV(i, 1, 1)
+            Library.Theme.Color = selectedColor
+            task.wait(0.03) 
+        end
+        task.wait()
+    end
+end)()
     else
         local colorMap = {
             blue = Color3.fromRGB(0, 0, 255),
@@ -384,7 +385,18 @@ FloatingText.Font = Library.Theme.TextFont
 FloatingText.Text = "W"
 FloatingText.TextColor3 = Color3.fromRGB(255, 255, 255)
 FloatingText.TextSize = 20
+local function AutoContrast()
+    local color = string.lower(tostring(getgenv().Color))
+    if color == "white" then
+        FloatingText.TextColor3 = Color3.fromRGB(0, 0, 0)
+    elseif color == "black" then
+        FloatingText.TextColor3 = Color3.fromRGB(255, 255, 255) 
+    else
+        FloatingText.TextColor3 = Color3.fromRGB(255, 255, 255)
+    end
+end
 
+AutoContrast()
 if not Library.LibraryColorTable then
     Library.LibraryColorTable = {}
 end
