@@ -2103,7 +2103,7 @@ function Library:CreateNotification(title, message, duration, buttonText, button
     NotificationBackground.BackgroundTransparency = 1
     NotificationBackground.Size = UDim2.new(1, 0, 1, 0)
     NotificationBackground.Image = "rbxassetid://3570695787"
-    NotificationBackground.ImageColor3 = Library.Theme.BackgroundColor
+    NotificationBackground.ImageColor3 = Library.Theme.Color
     NotificationBackground.ScaleType = Enum.ScaleType.Slice
     NotificationBackground.SliceCenter = Rect.new(100, 100, 100, 100)
     NotificationBackground.SliceScale = 0.050
