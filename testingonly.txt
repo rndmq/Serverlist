@@ -63,13 +63,18 @@ pcall(function()
             while true do
                 if getgenv().StopRGB then break end
                 for i = 0, 1, 0.002 do
-                    selectedColor = Color3.fromHSV(i, 1, 1)
+                    local selectedColor = Color3.fromHSV(i, 1, 1)
                     Library.Theme.Color = selectedColor
-for _, v in pairs(Library.LibraryColorTable) do
-    if v:IsA("ImageLabel") and (v.Name == "SectionBorder" or string.find(v.Name, "TabButton") or v.Name == "MinimizeBtn") then
-        v.ImageColor3 = selectedColor
-    end
-end
+                    if Library.LibraryColorTable and type(Library.LibraryColorTable) == "table" then
+                        for _, v in pairs(Library.LibraryColorTable) do
+                            if v and v:IsA("ImageLabel") then
+                                local name = v.Name or "Unknown"
+                                if name == "SectionBorder" or string.find(name, "TabButton") or name == "MinimizeBtn" then
+                                    v.ImageColor3 = selectedColor
+                                end
+                            end
+                        end
+                    end
                     task.wait(0.005)
                 end
             end
@@ -88,8 +93,8 @@ end
             black = Color3.fromRGB(0, 0, 0),
             white = Color3.fromRGB(255, 255, 255)
         }
-        local colorKey = string.lower(getgenv().Color)
-        selectedColor = colorMap[colorKey] or colorMap.default
+        local colorKey = string.lower(getgenv().Color or "default")
+        local selectedColor = colorMap[colorKey] or colorMap.default
         Library.Theme.Color = selectedColor
     end
 end)
