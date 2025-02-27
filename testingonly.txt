@@ -2157,7 +2157,7 @@ end
         GetSelected = function() return SelectedOptions end
     }
 end
-function Library:CreateNotification(title, message, duration, buttonText, buttonCallback)
+function Library:CreateNotification(title, message, duration, buttons, buttonCallbacks)
     local NotificationFrame = Instance.new("Frame")
     local NotificationBackground = Instance.new("Frame")
     local UICorner = Instance.new("UICorner")
@@ -2166,13 +2166,12 @@ function Library:CreateNotification(title, message, duration, buttonText, button
     local CloseButton = Instance.new("TextButton")
     local TimerBar = Instance.new("Frame")
     local TimerBarFill = Instance.new("Frame")
-    local ActionButton = nil
 
     NotificationFrame.Name = "Notification"
     NotificationFrame.Parent = UILibrary
     NotificationFrame.BackgroundTransparency = 1
     NotificationFrame.Position = UDim2.new(1, -310, 1, -110)
-    NotificationFrame.Size = UDim2.new(0, 300, 0, 100)
+    NotificationFrame.Size = UDim2.new(0, 300, 0, buttons and #buttons > 0 and 100 or 70)
     NotificationFrame.ZIndex = 100
 
     NotificationBackground.Name = "Background"
@@ -2199,7 +2198,7 @@ function Library:CreateNotification(title, message, duration, buttonText, button
     MessageLabel.Parent = NotificationBackground
     MessageLabel.BackgroundTransparency = 1
     MessageLabel.Position = UDim2.new(0, 10, 0, 25)
-    MessageLabel.Size = UDim2.new(0, 260, 0, 40)
+    MessageLabel.Size = UDim2.new(0, 260, 0, buttons and #buttons > 0 and 40 or 30)
     MessageLabel.ZIndex = 101
     MessageLabel.Font = Library.Theme.TextFont
     MessageLabel.Text = message or ""
@@ -2234,23 +2233,33 @@ function Library:CreateNotification(title, message, duration, buttonText, button
     TimerBarFill.Size = UDim2.new(1, 0, 1, 0)
     TimerBarFill.ZIndex = 102
 
-    if buttonText and buttonCallback then
-        ActionButton = Instance.new("TextButton")
-        ActionButton.Name = "ActionButton"
-        ActionButton.Parent = NotificationBackground
-        ActionButton.BackgroundColor3 = DarkenObjectColor(Library.Theme.MainColor, 20)
-        ActionButton.Position = UDim2.new(0, 230, 1, -40)
-        ActionButton.Size = UDim2.new(0, 60, 0, 20)
-        ActionButton.ZIndex = 102
-        ActionButton.Font = Library.Theme.TextFont
-        ActionButton.Text = buttonText
-        ActionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-        ActionButton.TextSize = 14
-        ActionButton.MouseButton1Click:Connect(buttonCallback)
-        
-        local ButtonRounded = Instance.new("UICorner")
-        ButtonRounded.CornerRadius = UDim.new(0, 5)
-        ButtonRounded.Parent = ActionButton
+    if buttons and #buttons > 0 then
+        local buttonCount = math.clamp(#buttons, 1, 5)
+        local buttonWidth = 280 / buttonCount - 5
+        for i = 1, buttonCount do
+            local ActionButton = Instance.new("TextButton")
+            ActionButton.Name = "ActionButton" .. i
+            ActionButton.Parent = NotificationBackground
+            ActionButton.BackgroundColor3 = DarkenObjectColor(Library.Theme.MainColor, 20)
+            ActionButton.Position = UDim2.new(0, 10 + (i - 1) * (buttonWidth + 5), 0, 65)
+            ActionButton.Size = UDim2.new(0, buttonWidth, 0, 20)
+            ActionButton.ZIndex = 102
+            ActionButton.Font = Library.Theme.TextFont
+            ActionButton.Text = buttons[i] or "Button " .. i
+            ActionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+            ActionButton.TextSize = 14
+            
+            local ButtonRounded = Instance.new("UICorner")
+            ButtonRounded.CornerRadius = UDim.new(0, 5)
+            ButtonRounded.Parent = ActionButton
+
+            ActionButton.MouseButton1Click:Connect(function()
+                if buttonCallbacks and buttonCallbacks[i] then
+                    buttonCallbacks[i]()
+                end
+                NotificationFrame:Destroy()
+            end)
+        end
     end
 
     NotificationFrame.Position = UDim2.new(1, 0, 1, -110)
