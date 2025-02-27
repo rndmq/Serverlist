@@ -2157,6 +2157,8 @@ end
         GetSelected = function() return SelectedOptions end
     }
 end
+Library.ActiveNotifications = {}
+
 function Library:CreateNotification(title, message, duration, buttons, buttonCallbacks)
     local NotificationFrame = Instance.new("Frame")
     local NotificationBackground = Instance.new("Frame")
@@ -2234,11 +2236,17 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
     TimerBarFill.ZIndex = 102
 
     local function closeNotification()
+        table.remove(Library.ActiveNotifications, table.find(Library.ActiveNotifications, NotificationFrame))
         TweenService:Create(NotificationFrame, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-            Position = UDim2.new(1, 0, 1, -110)
+            Position = UDim2.new(1, 0, NotificationFrame.Position.Y.Scale, NotificationFrame.Position.Y.Offset)
         }):Play()
         wait(0.5)
         NotificationFrame:Destroy()
+        for i, notif in pairs(Library.ActiveNotifications) do
+            TweenService:Create(notif, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
+                Position = UDim2.new(1, -310, 1, -110 - (i - 1) * 110)
+            }):Play()
+        end
     end
 
     if buttons and #buttons > 0 then
@@ -2270,10 +2278,12 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
         end
     end
 
-    NotificationFrame.Position = UDim2.new(1, 0, 1, -110)
-    TweenService:Create(NotificationFrame, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-        Position = UDim2.new(1, -310, 1, -110)
-    }):Play()
+    table.insert(Library.ActiveNotifications, 1, NotificationFrame)
+    for i, notif in pairs(Library.ActiveNotifications) do
+        TweenService:Create(notif, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
+            Position = UDim2.new(1, -310, 1, -110 - (i - 1) * 110)
+        }):Play()
+    end
 
     local duration = duration or 5
     TweenService:Create(TimerBarFill, TweenInfo.new(duration, Enum.EasingStyle.Linear), {
