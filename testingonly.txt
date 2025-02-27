@@ -66,10 +66,13 @@ pcall(function()
                     selectedColor = Color3.fromHSV(i, 1, 1)
                     Library.Theme.Color = selectedColor
                     for _, v in pairs(Library.LibraryColorTable) do
-    if v:IsA("ImageLabel") and v.Name == "Border" then
-        v.ImageColor3 = selectedColor 
-    end
-end
+                        if v:IsA("ImageLabel") or v:IsA("ImageButton") then
+                            v.ImageColor3 = Library.Theme.Color
+                        end
+                    end
+                    task.wait(0.03)
+                end
+            end
         end)()
     else
         local colorMap = {
