@@ -66,9 +66,9 @@ pcall(function()
                     selectedColor = Color3.fromHSV(i, 1, 1)
                     Library.Theme.Color = selectedColor
                     for _, v in pairs(Library.LibraryColorTable) do
-    if v:IsA("Frame") or v:IsA("ImageButton") or (v:IsA("ImageLabel") and (v.Name == "Border" or v.Name == "BackgroundTab" or v == SectionBorder)) or v == SectionLayout then
-        v.ImageColor3 = Library.Theme.Color
-    end
+    if v:IsA("Frame") or v:IsA("ImageButton") or (v:IsA("ImageLabel") and (v.Name == "Border" or v.Name == "BackgroundTab" or v == SectionBorder)) or v:IsA("UIListLayout") or v:IsA("UIPadding") then
+    v.ImageColor3 = Library.Theme.Color
+end
 end
                     task.wait(0.0001)
                 end
