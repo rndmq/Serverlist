@@ -2239,17 +2239,20 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
     TimerBarFill.ZIndex = 102
 
     local function closeNotification()
-        table.remove(Library.ActiveNotifications, table.find(Library.ActiveNotifications, NotificationFrame))
-        TweenService:Create(NotificationFrame, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-            Position = UDim2.new(1, 0, NotificationFrame.Position.Y.Scale, NotificationFrame.Position.Y.Offset)
-        }):Play()
-        wait(0.5)
-        NotificationFrame:Destroy()
-        for i, notif in pairs(Library.ActiveNotifications) do
-            local targetY = -110 - (i - 1) * (notif.Size.Y.Offset + 10)
-            TweenService:Create(notif, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
-                Position = UDim2.new(1, -310, 1, targetY)
+        local index = table.find(Library.ActiveNotifications, NotificationFrame)
+        if index then
+            table.remove(Library.ActiveNotifications, index)
+            TweenService:Create(NotificationFrame, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                Position = UDim2.new(1, 0, NotificationFrame.Position.Y.Scale, NotificationFrame.Position.Y.Offset)
             }):Play()
+            wait(0.5)
+            NotificationFrame:Destroy()
+            for i, notif in pairs(Library.ActiveNotifications) do
+                local targetY = -110 - (i - 1) * (notif.Size.Y.Offset + 10)
+                TweenService:Create(notif, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
+                    Position = UDim2.new(1, -310, 1, targetY)
+                }):Play()
+            end
         end
     end
 
