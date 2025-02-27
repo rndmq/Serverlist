@@ -66,11 +66,13 @@ pcall(function()
                     selectedColor = Color3.fromHSV(i, 1, 1)
                     Library.Theme.Color = selectedColor
                     for _, v in pairs(Library.LibraryColorTable) do
-    if v:IsA("ImageLabel") and (v.Name == "Border" or v.Name == "BackgroundTab") then
-        v.ImageColor3 = selectedColor
-    end
-end
-task.wait(0.005) 
+                        if v:IsA("ImageLabel") and (v.Name == "Border" or v.Name == "BackgroundTab") then
+                            v.ImageColor3 = selectedColor 
+                        end
+                    end
+                    task.wait(0.005)
+                end
+            end
         end)()
     else
         local colorMap = {
@@ -80,7 +82,6 @@ task.wait(0.005)
             yellow = Color3.fromRGB(255, 255, 0),
             purple = Color3.fromRGB(128, 0, 128),
             pink = Color3.fromRGB(255, 105, 180),
-            default = Color3.fromRGB(255, 75, 75),
             cyan = Color3.fromRGB(0, 255, 255),
             brown = Color3.fromRGB(139, 69, 19),
             orange = Color3.fromRGB(255, 165, 0),
