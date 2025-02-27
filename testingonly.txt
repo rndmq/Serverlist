@@ -626,6 +626,7 @@ function Library:CreateTab(name)
     NameTabButton.ZIndex = 2
     NameTabButton.Image = "rbxassetid://3570695787"
     NameTabButton.ImageColor3 = Library.Theme.MainColor
+table.insert(Library.LibraryColorTable, NameTabButton)
     NameTabButton.ScaleType = Enum.ScaleType.Slice
     NameTabButton.SliceCenter = Rect.new(100, 100, 100, 100)
     NameTabButton.SliceScale = 0.050
@@ -777,6 +778,7 @@ function TabElements:CreateSection(name)
     NameSection.ZIndex = 4
     NameSection.Image = "rbxassetid://3570695787"
     NameSection.ImageColor3 = Library.Theme.MainColor
+table.insert(Library.LibraryColorTable, NameSection)
     NameSection.ScaleType = Enum.ScaleType.Slice
     NameSection.SliceCenter = Rect.new(100, 100, 100, 100)
     NameSection.SliceScale = 0.025
@@ -791,6 +793,7 @@ function TabElements:CreateSection(name)
     SectionBorder.ZIndex = 3
     SectionBorder.Image = "rbxassetid://3570695787"
     SectionBorder.ImageColor3 = Library.Theme.MainColor
+table.insert(Library.LibraryColorTable, SectionBorder)
     SectionBorder.ScaleType = Enum.ScaleType.Slice
     SectionBorder.SliceCenter = Rect.new(100, 100, 100, 100)
     SectionBorder.SliceScale = 0.050
@@ -887,6 +890,7 @@ function SectionElements:CreateLabel(name, text)
             Button.Name = "Button"
             Button.Parent = NameButton
             Button.BackgroundColor3 = Library.Theme.MainColor
+table.insert(Library.LibraryColorTable, Button)
             Button.BackgroundTransparency = 1.000
             Button.BorderSizePixel = 0
             Button.Position = UDim2.new(0.454314709, -76, 0.528571427, -12)
