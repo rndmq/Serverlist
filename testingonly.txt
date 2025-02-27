@@ -626,6 +626,7 @@ function Library:CreateTab(name)
     Title.Font = Library.Theme.TextFont
     Title.Text = name
     Title.TextColor3 = Library.Theme.TextColor
+table.insert(Library.LibraryColorTable, Title)
     Title.TextSize = 15.000
 
     SectionLayout.Name = "SectionLayout"
@@ -791,6 +792,7 @@ function TabElements:CreateSection(name)
     SectionTitle.ZIndex = 4
     SectionTitle.Font = Library.Theme.TextFont
     SectionTitle.TextColor3 = Library.Theme.TextColor
+    table.insert(Library.LibraryColorTable, SectionTitle)
     SectionTitle.TextSize = 14.000
     
     SectionContent.Name = "SectionContent"
