@@ -2082,6 +2082,130 @@ end
         GetSelected = function() return SelectedOptions end
     }
 end
+function Library:CreateNotification(title, message, duration, buttonText, buttonCallback)
+    local NotificationFrame = Instance.new("Frame")
+    local NotificationBackground = Instance.new("ImageLabel")
+    local UICorner = Instance.new("UICorner")
+    local TitleLabel = Instance.new("TextLabel")
+    local MessageLabel = Instance.new("TextLabel")
+    local CloseButton = Instance.new("TextButton")
+    local TimerBar = Instance.new("Frame")
+    local TimerBarFill = Instance.new("Frame")
+    local ActionButton = nil
+    NotificationFrame.Name = "Notification"
+    NotificationFrame.Parent = UILibrary
+    NotificationFrame.BackgroundTransparency = 1
+    NotificationFrame.Position = UDim2.new(1, -210, 1, -110)
+    NotificationFrame.Size = UDim2.new(0, 200, 0, 100)
+    NotificationFrame.ZIndex = 100
+    NotificationBackground.Name = "Background"
+    NotificationBackground.Parent = NotificationFrame
+    NotificationBackground.BackgroundTransparency = 1
+    NotificationBackground.Size = UDim2.new(1, 0, 1, 0)
+    NotificationBackground.Image = "rbxassetid://3570695787"
+    NotificationBackground.ImageColor3 = Library.Theme.BackgroundColor
+    NotificationBackground.ScaleType = Enum.ScaleType.Slice
+    NotificationBackground.SliceCenter = Rect.new(100, 100, 100, 100)
+    NotificationBackground.SliceScale = 0.050
+    UICorner.CornerRadius = UDim.new(0, 10)
+    UICorner.Parent = NotificationBackground
+    TitleLabel.Name = "Title"
+    TitleLabel.Parent = NotificationBackground
+    TitleLabel.BackgroundTransparency = 1
+    TitleLabel.Position = UDim2.new(0, 10, 0, 5)
+    TitleLabel.Size = UDim2.new(0, 180, 0, 20)
+    TitleLabel.ZIndex = 101
+    TitleLabel.Font = Library.Theme.TextFont
+    TitleLabel.Text = title or "Notification"
+    TitleLabel.TextColor3 = Library.Theme.TextColor
+    TitleLabel.TextSize = 16
+    TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    MessageLabel.Name = "Message"
+    MessageLabel.Parent = NotificationBackground
+    MessageLabel.BackgroundTransparency = 1
+    MessageLabel.Position = UDim2.new(0, 10, 0, 25)
+    MessageLabel.Size = UDim2.new(0, 180, 0, 40)
+    MessageLabel.ZIndex = 101
+    MessageLabel.Font = Library.Theme.TextFont
+    MessageLabel.Text = message or ""
+    MessageLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+    MessageLabel.TextSize = 14
+    MessageLabel.TextWrapped = true
+    MessageLabel.TextXAlignment = Enum.TextXAlignment.Left
+    CloseButton.Name = "CloseButton"
+    CloseButton.Parent = NotificationBackground
+    CloseButton.BackgroundTransparency = 1
+    CloseButton.Position = UDim2.new(1, -25, 0, 5)
+    CloseButton.Size = UDim2.new(0, 20, 0, 20)
+    CloseButton.ZIndex = 102
+    CloseButton.Font = Library.Theme.TextFont
+    CloseButton.Text = "X"
+    CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    CloseButton.TextSize = 16
+    TimerBar.Name = "TimerBar"
+    TimerBar.Parent = NotificationBackground
+    TimerBar.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    TimerBar.BorderSizePixel = 0
+    TimerBar.Position = UDim2.new(0, 10, 1, -15)
+    TimerBar.Size = UDim2.new(0, 180, 0, 5)
+    TimerBar.ZIndex = 101
+
+    TimerBarFill.Name = "TimerBarFill"
+    TimerBarFill.Parent = TimerBar
+    TimerBarFill.BackgroundColor3 = Library.Theme.MainColor
+    TimerBarFill.BorderSizePixel = 0
+    TimerBarFill.Size = UDim2.new(1, 0, 1, 0)
+    TimerBarFill.ZIndex = 102
+    if buttonText and buttonCallback then
+        ActionButton = Instance.new("TextButton")
+        ActionButton.Name = "ActionButton"
+        ActionButton.Parent = NotificationBackground
+        ActionButton.BackgroundColor3 = Library.Theme.MainColor
+        ActionButton.Position = UDim2.new(0, 130, 1, -40)
+        ActionButton.Size = UDim2.new(0, 60, 0, 20)
+        ActionButton.ZIndex = 102
+        ActionButton.Font = Library.Theme.TextFont
+        ActionButton.Text = buttonText
+        ActionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+        ActionButton.TextSize = 14
+        ActionButton.MouseButton1Click:Connect(buttonCallback)
+        
+        local ButtonRounded = Instance.new("ImageLabel")
+        ButtonRounded.Name = "ButtonRounded"
+        ButtonRounded.Parent = ActionButton
+        ButtonRounded.BackgroundTransparency = 1
+        ButtonRounded.Size = UDim2.new(1, 0, 1, 0)
+        ButtonRounded.ZIndex = 101
+        ButtonRounded.Image = "rbxassetid://3570695787"
+        ButtonRounded.ImageColor3 = Library.Theme.MainColor
+        ButtonRounded.ScaleType = Enum.ScaleType.Slice
+        ButtonRounded.SliceCenter = Rect.new(100, 100, 100, 100)
+        ButtonRounded.SliceScale = 0.050
+    end
+    NotificationFrame.Position = UDim2.new(1, 0, 1, -110)
+    TweenService:Create(NotificationFrame, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+        Position = UDim2.new(1, -210, 1, -110)
+    }):Play()
+
+    local duration = duration or 5
+    local function closeNotification()
+        TweenService:Create(NotificationFrame, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+            Position = UDim2.new(1, 0, 1, -110)
+        }):Play()
+        wait(0.5)
+        NotificationFrame:Destroy()
+    end
+    TweenService:Create(TimerBarFill, TweenInfo.new(duration, Enum.EasingStyle.Linear), {
+        Size = UDim2.new(0, 0, 1, 0)
+    }):Play()
+    spawn(function()
+        wait(duration)
+        closeNotification()
+    end)
+    CloseButton.MouseButton1Click:Connect(closeNotification)
+
+    return NotificationFrame
+end
         function SectionElements:CreateKeybind(name, presetbind, keyboardonly, holdmode, callback)
             local NameKeybind = Instance.new("Frame")
             local Title = Instance.new("TextLabel")
