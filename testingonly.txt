@@ -2233,6 +2233,14 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
     TimerBarFill.Size = UDim2.new(1, 0, 1, 0)
     TimerBarFill.ZIndex = 102
 
+    local function closeNotification()
+        TweenService:Create(NotificationFrame, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+            Position = UDim2.new(1, 0, 1, -110)
+        }):Play()
+        wait(0.5)
+        NotificationFrame:Destroy()
+    end
+
     if buttons and #buttons > 0 then
         local buttonCount = math.clamp(#buttons, 1, 5)
         local buttonWidth = 280 / buttonCount - 5
@@ -2257,7 +2265,7 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
                 if buttonCallbacks and buttonCallbacks[i] then
                     buttonCallbacks[i]()
                 end
-                NotificationFrame:Destroy()
+                closeNotification()
             end)
         end
     end
@@ -2268,14 +2276,6 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
     }):Play()
 
     local duration = duration or 5
-    local function closeNotification()
-        TweenService:Create(NotificationFrame, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-            Position = UDim2.new(1, 0, 1, -110)
-        }):Play()
-        wait(0.5)
-        NotificationFrame:Destroy()
-    end
-
     TweenService:Create(TimerBarFill, TweenInfo.new(duration, Enum.EasingStyle.Linear), {
         Size = UDim2.new(0, 0, 1, 0)
     }):Play()
