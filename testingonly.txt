@@ -675,7 +675,8 @@ function Library:CreateTab(name)
                 if holdStart and tick() - holdStart >= 2 and not sortingMode then
                     sortingMode = true
                     TweenService:Create(NameTabButton, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
-                        Size = UDim2.new(0, 94, 0, 30)
+                        Size = UDim2.new(0, 94, 0, 30),
+                        ZIndex = 3
                     }):Play()
                     spawn(function()
                         while sortingMode do
@@ -694,28 +695,31 @@ function Library:CreateTab(name)
     NameTabButton.InputChanged:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
             if sortingMode then
-                local newOffset = dragOffset + (input.Position.X - dragStart.X)
+                local delta = input.Position.X - dragStart.X
+                local newOffset = dragOffset + delta
                 NameTabButton.Position = UDim2.new(0, newOffset, 0, 0)
-                
-                local siblings = TabButtons:GetChildren()
+
+                local siblings = {}
+                for _, child in pairs(TabButtons:GetChildren()) do
+                    if child:IsA("ImageButton") then
+                        table.insert(siblings, child)
+                    end
+                end
                 local myIndex = table.find(siblings, NameTabButton)
-                for i, sibling in pairs(siblings) do
-                    if sibling:IsA("ImageButton") and sibling ~= NameTabButton then
-                        local siblingOffset = (i - 1) * 84
-                        if newOffset > siblingOffset + 42 and myIndex < i then
+                local newIndex = math.clamp(math.floor((newOffset + 42) / 84) + 1, 1, #siblings)
+
+                if newIndex ~= myIndex then
+                    table.remove(siblings, myIndex)
+                    table.insert(siblings, newIndex, NameTabButton)
+                    for i, sibling in pairs(siblings) do
+                        if sibling ~= NameTabButton then
                             TweenService:Create(sibling, TweenInfo.new(0.5, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
-                                Position = UDim2.new(0, siblingOffset - 84, 0, 0)
+                                Position = UDim2.new(0, (i - 1) * 84, 0, 0)
                             }):Play()
-                            table.remove(siblings, i)
-                            table.insert(siblings, myIndex, sibling)
-                        elseif newOffset < siblingOffset - 42 and myIndex > i then
-                            TweenService:Create(sibling, TweenInfo.new(0.5, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
-                                Position = UDim2.new(0, siblingOffset + 84, 0, 0)
-                            }):Play()
-                            table.remove(siblings, i)
-                            table.insert(siblings, myIndex, sibling)
                         end
                     end
+                    dragOffset = (newIndex - 1) * 84
+                    dragStart = input.Position
                 end
             end
         end
@@ -725,9 +729,11 @@ function Library:CreateTab(name)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             if sortingMode then
                 sortingMode = false
+                local finalIndex = math.clamp(math.floor((NameTabButton.Position.X.Offset + 42) / 84) + 1, 1, #TabButtons:GetChildren())
                 TweenService:Create(NameTabButton, TweenInfo.new(0.5, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
                     Size = NameTabButton.ImageColor3 == Library.Theme.MainColor and originalSize or smallSize,
-                    Position = UDim2.new(0, (table.find(TabButtons:GetChildren(), NameTabButton) - 1) * 84, 0, 0)
+                    Position = UDim2.new(0, (finalIndex - 1) * 84, 0, 0),
+                    ZIndex = 2
                 }):Play()
             elseif holdStart and tick() - holdStart < 2 then
                 if CloseAllTabs and type(CloseAllTabs) == "function" then 
@@ -829,7 +835,6 @@ function Library:CreateTab(name)
     end
 
 
-    
 function TabElements:CreateSection(name)
     local NameSection = Instance.new("ImageLabel")
     local SectionBorder = Instance.new("ImageLabel")
