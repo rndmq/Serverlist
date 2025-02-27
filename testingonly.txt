@@ -66,7 +66,7 @@ pcall(function()
                     selectedColor = Color3.fromHSV(i, 1, 1)
                     Library.Theme.Color = selectedColor
                     for _, v in pairs(Library.LibraryColorTable) do
-                        if v:IsA("ImageLabel") or v:IsA("ImageButton") then
+                        if v:IsA("SectionBorder") or v:IsA("ImageButton") then
                             v.ImageColor3 = Library.Theme.Color
                         end
                     end
