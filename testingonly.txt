@@ -2169,11 +2169,14 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
     local TimerBar = Instance.new("Frame")
     local TimerBarFill = Instance.new("Frame")
 
+    local hasButtons = buttons and #buttons > 0
+    local notifHeight = hasButtons and 100 or 70
+
     NotificationFrame.Name = "Notification"
     NotificationFrame.Parent = UILibrary
     NotificationFrame.BackgroundTransparency = 1
-    NotificationFrame.Position = UDim2.new(1, -310, 1, -110)
-    NotificationFrame.Size = UDim2.new(0, 300, 0, buttons and #buttons > 0 and 100 or 70)
+    NotificationFrame.Position = UDim2.new(1, 0, 1, -110)
+    NotificationFrame.Size = UDim2.new(0, 300, 0, notifHeight)
     NotificationFrame.ZIndex = 100
 
     NotificationBackground.Name = "Background"
@@ -2200,7 +2203,7 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
     MessageLabel.Parent = NotificationBackground
     MessageLabel.BackgroundTransparency = 1
     MessageLabel.Position = UDim2.new(0, 10, 0, 25)
-    MessageLabel.Size = UDim2.new(0, 260, 0, buttons and #buttons > 0 and 40 or 30)
+    MessageLabel.Size = UDim2.new(0, 260, 0, hasButtons and 40 or 30)
     MessageLabel.ZIndex = 101
     MessageLabel.Font = Library.Theme.TextFont
     MessageLabel.Text = message or ""
@@ -2243,13 +2246,14 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
         wait(0.5)
         NotificationFrame:Destroy()
         for i, notif in pairs(Library.ActiveNotifications) do
+            local targetY = -110 - (i - 1) * (notif.Size.Y.Offset + 10)
             TweenService:Create(notif, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
-                Position = UDim2.new(1, -310, 1, -110 - (i - 1) * 110)
+                Position = UDim2.new(1, -310, 1, targetY)
             }):Play()
         end
     end
 
-    if buttons and #buttons > 0 then
+    if hasButtons then
         local buttonCount = math.clamp(#buttons, 1, 5)
         local buttonWidth = 280 / buttonCount - 5
         for i = 1, buttonCount do
@@ -2280,8 +2284,9 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
 
     table.insert(Library.ActiveNotifications, 1, NotificationFrame)
     for i, notif in pairs(Library.ActiveNotifications) do
+        local targetY = -110 - (i - 1) * (notif.Size.Y.Offset + 10)
         TweenService:Create(notif, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
-            Position = UDim2.new(1, -310, 1, -110 - (i - 1) * 110)
+            Position = UDim2.new(1, -310, 1, targetY)
         }):Play()
     end
 
