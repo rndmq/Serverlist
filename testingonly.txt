@@ -65,10 +65,9 @@ pcall(function()
                 for i = 0, 1, 0.001 do
                     selectedColor = Color3.fromHSV(i, 1, 1)
                     Library.Theme.Color = selectedColor
-                    for _, v in pairs(Library.LibraryColorTable) do
-    if v:IsA("Frame") or v:IsA("ImageButton") or (v:IsA("ImageLabel") and (v.Name == "Border" or v.Name == "BackgroundTab" or v == SectionBorder)) or v == SectionLayout then
-        v.ImageColor3 = Library.Theme.Color
-    end
+                    if v:IsA("Frame") or v:IsA("ImageButton") or (v:IsA("ImageLabel") and (v.Name == "Border" or v.Name == "BackgroundTab" or v == SectionBorder)) or v:IsA("UIListLayout") or v:IsA("UIPadding") then
+    v.ImageColor3 = Library.Theme.Color
+end
 end
                     task.wait(0.0001)
                 end
@@ -656,7 +655,7 @@ function Library:CreateTab(name)
     NameTabButton.ZIndex = 2
     NameTabButton.Image = "rbxassetid://3570695787"
     NameTabButton.ImageColor3 = Library.Theme.MainColor
-table.insert(Library.LibraryColorTable, NameTabButton.ImageColor3)
+    table.insert(Library.LibraryColorTable, NameTabButton)
     NameTabButton.ScaleType = Enum.ScaleType.Slice
     NameTabButton.SliceCenter = Rect.new(100, 100, 100, 100)
     NameTabButton.SliceScale = 0.050
