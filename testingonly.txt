@@ -594,10 +594,11 @@ coroutine.wrap(function()
         end
     end
 end)()
-function Library:CreateTab(name)
+function Library:CreateTab(name, icon)
     local NameTab = Instance.new("Frame")
     local NameTabButton = Instance.new("ImageButton")
     local Title = Instance.new("TextLabel")
+    local IconLabel
     local SectionLayout = Instance.new("UIListLayout")
     local SectionPadding = Instance.new("UIPadding")
 
@@ -626,21 +627,35 @@ function Library:CreateTab(name)
     NameTabButton.ZIndex = 2
     NameTabButton.Image = "rbxassetid://3570695787"
     NameTabButton.ImageColor3 = Library.Theme.MainColor
-table.insert(Library.LibraryColorTable, NameTabButton)
+    table.insert(Library.LibraryColorTable, NameTabButton)
     NameTabButton.ScaleType = Enum.ScaleType.Slice
     NameTabButton.SliceCenter = Rect.new(100, 100, 100, 100)
     NameTabButton.SliceScale = 0.050
+
+    if icon then
+        IconLabel = Instance.new("ImageLabel")
+        IconLabel.Name = "TabIcon"
+        IconLabel.Parent = NameTabButton
+        IconLabel.BackgroundTransparency = 1.000
+        IconLabel.Position = UDim2.new(0, 5, 0.5, -8)
+        IconLabel.Size = UDim2.new(0, 16, 0, 16)
+        IconLabel.ZIndex = 2
+        IconLabel.Image = icon
+        IconLabel.ImageColor3 = Color3.fromRGB(255, 255, 255)
+        IconLabel.ScaleType = Enum.ScaleType.Fit
+    end
 
     Title.Name = "Title"
     Title.Parent = NameTabButton
     Title.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     Title.BackgroundTransparency = 1.000
-    Title.Size = UDim2.new(1, 0, 1, 0)
+    Title.Size = UDim2.new(1, icon and -25 or 0, 1, 0)
+    Title.Position = UDim2.new(icon and 0.25 or 0, icon and 5 or 0, 0, 0)
     Title.ZIndex = 2
     Title.Font = Library.Theme.TextFont
     Title.Text = name
     Title.TextColor3 = Library.Theme.TextColor
-table.insert(Library.LibraryColorTable, Title)
+    table.insert(Library.LibraryColorTable, Title)
     Title.TextSize = 15.000
 
     SectionLayout.Name = "SectionLayout"
@@ -660,53 +675,53 @@ table.insert(Library.LibraryColorTable, Title)
     local originalSize = NameTabButton.Size
     local smallSize = UDim2.new(0, 74, 0, 20)
 
-NameTabButton.MouseButton1Down:Connect(function()
-    if CloseAllTabs and type(CloseAllTabs) == "function" then 
-        CloseAllTabs() 
-    else
-        for _, v in pairs(Tabs:GetChildren()) do
-            if v:IsA("Frame") then 
-                v.Visible = false 
-                v.Position = UDim2.new(0, 0, 0, 0)
+    NameTabButton.MouseButton1Down:Connect(function()
+        if CloseAllTabs and type(CloseAllTabs) == "function" then 
+            CloseAllTabs() 
+        else
+            for _, v in pairs(Tabs:GetChildren()) do
+                if v:IsA("Frame") then 
+                    v.Visible = false 
+                    v.Position = UDim2.new(0, 0, 0, 0)
+                end
             end
         end
-    end
-    
-    if ResetAllTabButtons and type(ResetAllTabButtons) == "function" then 
-        ResetAllTabButtons() 
-    else
-        for _, v in pairs(TabButtons:GetChildren()) do
-            if v:IsA("ImageButton") then
-                TweenService:Create(v, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-                    ImageColor3 = Library.Theme.MainColor
+        
+        if ResetAllTabButtons and type(ResetAllTabButtons) == "function" then 
+            ResetAllTabButtons() 
+        else
+            for _, v in pairs(TabButtons:GetChildren()) do
+                if v:IsA("ImageButton") then
+                    TweenService:Create(v, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                        ImageColor3 = Library.Theme.MainColor
+                    }):Play()
+                end
+            end
+        end
+        
+        NameTab.Visible = true
+        
+        for _, child in pairs(NameTab:GetChildren()) do
+            if child:IsA("ImageLabel") and child.Name:match("Section$") then
+                child.ImageTransparency = 1
+                child.ImageColor3 = Library.Theme.MainColor
+                
+                TweenService:Create(child, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                    ImageTransparency = 0,
+                    ImageColor3 = Library.Theme.BackgroundColor
                 }):Play()
             end
         end
-    end
-    
-    NameTab.Visible = true
-    
-    for _, child in pairs(NameTab:GetChildren()) do
-        if child:IsA("ImageLabel") and child.Name:match("Section$") then
-            child.ImageTransparency = 1
-            child.ImageColor3 = Library.Theme.MainColor
-            
-            TweenService:Create(child, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-                ImageTransparency = 0,
-                ImageColor3 = Library.Theme.BackgroundColor
-            }):Play()
-        end
-    end
-    
-    TweenService:Create(NameTabButton, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-        ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 20),
-        Size = smallSize
-    }):Play()
-    
-    TweenService:Create(NameTab, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-        Position = UDim2.new(0, 0, 0, 0)
-    }):Play()
-end)
+        
+        TweenService:Create(NameTabButton, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+            ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 20),
+            Size = smallSize
+        }):Play()
+        
+        TweenService:Create(NameTab, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+            Position = UDim2.new(0, 0, 0, 0)
+        }):Play()
+    end)
 
     ResetAllTabButtons = function()
         for _, v in pairs(TabButtons:GetChildren()) do
@@ -719,45 +734,42 @@ end)
         end
     end
 
-local function ShowFirstTab()
-    if NameTab.Name == (Library.FirstTab .. "Tab") then
-        NameTab.Visible = true
-        TweenService:Create(NameTabButton, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-            ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 20),
-            Size = smallSize
-        }):Play()
-        
-        TweenService:Create(NameTab, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-            Position = UDim2.new(0, 0, 0, 0)
-        }):Play()
-    end
-end
-
-    task.wait(0.1)
-ShowFirstTab()
-task.wait(0.1)  
-if NameTab.Name == (Library.FirstTab .. "Tab") then
-    for _, child in pairs(NameTab:GetChildren()) do
-        if child:IsA("ImageLabel") and child.Name:match("Section$") then
-            child.ImageTransparency = 1
-            child.ImageColor3 = Library.Theme.MainColor
-            child.Position = UDim2.new(0, 0, -0.5, 0)
-            child.Size = UDim2.new(0, 197, 0, 0)
-            if child.Name == "SectionBorder" then
-                child.Position = UDim2.new(0, 0, 0, 0)
-            end
-            TweenService:Create(child, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-                Position = UDim2.new(0, 0, 0, 0),
-                Size = UDim2.new(0, 197, 0, 181),
-                ImageTransparency = 0,
-                ImageColor3 = Library.Theme.BackgroundColor
+    local function ShowFirstTab()
+        if NameTab.Name == (Library.FirstTab .. "Tab") then
+            NameTab.Visible = true
+            TweenService:Create(NameTabButton, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 20),
+                Size = smallSize
+            }):Play()
+            
+            TweenService:Create(NameTab, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                Position = UDim2.new(0, 0, 0, 0)
             }):Play()
         end
     end
-end
 
-    
-
+    task.wait(0.1)
+    ShowFirstTab()
+    task.wait(0.1)  
+    if NameTab.Name == (Library.FirstTab .. "Tab") then
+        for _, child in pairs(NameTab:GetChildren()) do
+            if child:IsA("ImageLabel") and child.Name:match("Section$") then
+                child.ImageTransparency = 1
+                child.ImageColor3 = Library.Theme.MainColor
+                child.Position = UDim2.new(0, 0, -0.5, 0)
+                child.Size = UDim2.new(0, 197, 0, 0)
+                if child.Name == "SectionBorder" then
+                    child.Position = UDim2.new(0, 0, 0, 0)
+                end
+                TweenService:Create(child, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                    Position = UDim2.new(0, 0, 0, 0),
+                    Size = UDim2.new(0, 197, 0, 181),
+                    ImageTransparency = 0,
+                    ImageColor3 = Library.Theme.BackgroundColor
+                }):Play()
+            end
+        end
+    end
 
     
 function TabElements:CreateSection(name)
@@ -2084,7 +2096,7 @@ end
 end
 function Library:CreateNotification(title, message, duration, buttonText, buttonCallback)
     local NotificationFrame = Instance.new("Frame")
-    local NotificationBackground = Instance.new("ImageLabel")
+    local NotificationBackground = Instance.new("Frame")
     local UICorner = Instance.new("UICorner")
     local TitleLabel = Instance.new("TextLabel")
     local MessageLabel = Instance.new("TextLabel")
@@ -2092,39 +2104,39 @@ function Library:CreateNotification(title, message, duration, buttonText, button
     local TimerBar = Instance.new("Frame")
     local TimerBarFill = Instance.new("Frame")
     local ActionButton = nil
+
     NotificationFrame.Name = "Notification"
     NotificationFrame.Parent = UILibrary
     NotificationFrame.BackgroundTransparency = 1
-    NotificationFrame.Position = UDim2.new(1, -210, 1, -110)
-    NotificationFrame.Size = UDim2.new(0, 200, 0, 100)
+    NotificationFrame.Position = UDim2.new(1, -310, 1, -110)
+    NotificationFrame.Size = UDim2.new(0, 300, 0, 100)
     NotificationFrame.ZIndex = 100
+
     NotificationBackground.Name = "Background"
     NotificationBackground.Parent = NotificationFrame
-    NotificationBackground.BackgroundTransparency = 1
+    NotificationBackground.BackgroundColor3 = Library.Theme.MainColor
     NotificationBackground.Size = UDim2.new(1, 0, 1, 0)
-    NotificationBackground.Image = "rbxassetid://3570695787"
-    NotificationBackground.ImageColor3 = Library.Theme.Color
-    NotificationBackground.ScaleType = Enum.ScaleType.Slice
-    NotificationBackground.SliceCenter = Rect.new(100, 100, 100, 100)
-    NotificationBackground.SliceScale = 0.050
+    NotificationBackground.ZIndex = 100
     UICorner.CornerRadius = UDim.new(0, 10)
     UICorner.Parent = NotificationBackground
+
     TitleLabel.Name = "Title"
     TitleLabel.Parent = NotificationBackground
     TitleLabel.BackgroundTransparency = 1
     TitleLabel.Position = UDim2.new(0, 10, 0, 5)
-    TitleLabel.Size = UDim2.new(0, 180, 0, 20)
+    TitleLabel.Size = UDim2.new(0, 260, 0, 20)
     TitleLabel.ZIndex = 101
     TitleLabel.Font = Library.Theme.TextFont
     TitleLabel.Text = title or "Notification"
-    TitleLabel.TextColor3 = Library.Theme.TextColor
+    TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     TitleLabel.TextSize = 16
     TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+
     MessageLabel.Name = "Message"
     MessageLabel.Parent = NotificationBackground
     MessageLabel.BackgroundTransparency = 1
     MessageLabel.Position = UDim2.new(0, 10, 0, 25)
-    MessageLabel.Size = UDim2.new(0, 180, 0, 40)
+    MessageLabel.Size = UDim2.new(0, 260, 0, 40)
     MessageLabel.ZIndex = 101
     MessageLabel.Font = Library.Theme.TextFont
     MessageLabel.Text = message or ""
@@ -2132,6 +2144,7 @@ function Library:CreateNotification(title, message, duration, buttonText, button
     MessageLabel.TextSize = 14
     MessageLabel.TextWrapped = true
     MessageLabel.TextXAlignment = Enum.TextXAlignment.Left
+
     CloseButton.Name = "CloseButton"
     CloseButton.Parent = NotificationBackground
     CloseButton.BackgroundTransparency = 1
@@ -2142,26 +2155,28 @@ function Library:CreateNotification(title, message, duration, buttonText, button
     CloseButton.Text = "X"
     CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
     CloseButton.TextSize = 16
+
     TimerBar.Name = "TimerBar"
     TimerBar.Parent = NotificationBackground
     TimerBar.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
     TimerBar.BorderSizePixel = 0
     TimerBar.Position = UDim2.new(0, 10, 1, -15)
-    TimerBar.Size = UDim2.new(0, 180, 0, 5)
+    TimerBar.Size = UDim2.new(0, 280, 0, 5)
     TimerBar.ZIndex = 101
 
     TimerBarFill.Name = "TimerBarFill"
     TimerBarFill.Parent = TimerBar
-    TimerBarFill.BackgroundColor3 = Library.Theme.MainColor
+    TimerBarFill.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     TimerBarFill.BorderSizePixel = 0
     TimerBarFill.Size = UDim2.new(1, 0, 1, 0)
     TimerBarFill.ZIndex = 102
+
     if buttonText and buttonCallback then
         ActionButton = Instance.new("TextButton")
         ActionButton.Name = "ActionButton"
         ActionButton.Parent = NotificationBackground
-        ActionButton.BackgroundColor3 = Library.Theme.MainColor
-        ActionButton.Position = UDim2.new(0, 130, 1, -40)
+        ActionButton.BackgroundColor3 = DarkenObjectColor(Library.Theme.MainColor, 20)
+        ActionButton.Position = UDim2.new(0, 230, 1, -40)
         ActionButton.Size = UDim2.new(0, 60, 0, 20)
         ActionButton.ZIndex = 102
         ActionButton.Font = Library.Theme.TextFont
@@ -2170,21 +2185,14 @@ function Library:CreateNotification(title, message, duration, buttonText, button
         ActionButton.TextSize = 14
         ActionButton.MouseButton1Click:Connect(buttonCallback)
         
-        local ButtonRounded = Instance.new("ImageLabel")
-        ButtonRounded.Name = "ButtonRounded"
+        local ButtonRounded = Instance.new("UICorner")
+        ButtonRounded.CornerRadius = UDim.new(0, 5)
         ButtonRounded.Parent = ActionButton
-        ButtonRounded.BackgroundTransparency = 1
-        ButtonRounded.Size = UDim2.new(1, 0, 1, 0)
-        ButtonRounded.ZIndex = 101
-        ButtonRounded.Image = "rbxassetid://3570695787"
-        ButtonRounded.ImageColor3 = Library.Theme.MainColor
-        ButtonRounded.ScaleType = Enum.ScaleType.Slice
-        ButtonRounded.SliceCenter = Rect.new(100, 100, 100, 100)
-        ButtonRounded.SliceScale = 0.050
     end
+
     NotificationFrame.Position = UDim2.new(1, 0, 1, -110)
     TweenService:Create(NotificationFrame, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-        Position = UDim2.new(1, -210, 1, -110)
+        Position = UDim2.new(1, -310, 1, -110)
     }):Play()
 
     local duration = duration or 5
@@ -2195,6 +2203,7 @@ function Library:CreateNotification(title, message, duration, buttonText, button
         wait(0.5)
         NotificationFrame:Destroy()
     end
+
     TweenService:Create(TimerBarFill, TweenInfo.new(duration, Enum.EasingStyle.Linear), {
         Size = UDim2.new(0, 0, 1, 0)
     }):Play()
@@ -2202,6 +2211,7 @@ function Library:CreateNotification(title, message, duration, buttonText, button
         wait(duration)
         closeNotification()
     end)
+
     CloseButton.MouseButton1Click:Connect(closeNotification)
 
     return NotificationFrame
