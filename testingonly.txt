@@ -65,13 +65,14 @@ pcall(function()
                 for i = 0, 1, 0.002 do
                     local selectedColor = Color3.fromHSV(i, 1, 1)
                     Library.Theme.Color = selectedColor
-                    if Library.LibraryColorTable and type(Library.LibraryColorTable) == "table" then
-                        for _, v in pairs(Library.LibraryColorTable) do
-                            if v and v:IsA("ImageLabel") then
-                                local name = v.Name or "Unknown"
-                                if name == "SectionBorder" or string.find(name, "TabButton") or name == "MinimizeBtn" then
-                                    v.ImageColor3 = selectedColor
-                                end
+                    for _, v in pairs(Library.LibraryColorTable or {}) do
+                        if v and v:IsA("ImageLabel") then
+                            if v.Name == "Border" or v.Name == "SectionBorder" then
+                                v.ImageColor3 = selectedColor
+                            end
+                        elseif v and v:IsA("ImageButton") then
+                            if string.find(v.Name, "TabButton") or v.Name == "MinimizeBtn" or v.Name == "FloatingIcon" then
+                                v.ImageColor3 = selectedColor
                             end
                         end
                     end
