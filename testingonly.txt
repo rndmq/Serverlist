@@ -81,36 +81,39 @@ pcall(function()
         coroutine.wrap(function()
             while true do
                 if getgenv().StopRGB then break end
-                for i = 0, 1, 0.008 do
+                for i = 0, 1, 0.008 do -- Lebih cepat tapi tetap smooth
                     Library.Theme.TextColor = Color3.fromHSV(i, 1, 1)
-
                     for _, v in pairs(Library.LibraryColorTable) do
                         if v:IsA("TextLabel") or v:IsA("TextButton") then
                             pcall(function()
                                 v.TextColor3 = Library.Theme.TextColor
-                                v.TextStrokeTransparency = 0.3
-                                v.TextStrokeColor3 = Library.Theme.TextColor
                             end)
                         elseif v:IsA("ImageLabel") and (v.Name == "CheckboxTicked" or v.Name == "CheckboxOutline") then
                             pcall(function()
                                 v.ImageColor3 = Library.Theme.TextColor
                             end)
-                        elseif v:IsA("TextLabel") and (v.Name == "TitleToggle" or v.Name == "Title") then
+                        elseif v:IsA("TextLabel") and v.Name == "Title" then
                             pcall(function()
-                                v.TextColor3 = Library.Theme.TextColor
-                                v.TextStrokeTransparency = 0.3
-                                v.TextStrokeColor3 = Library.Theme.TextColor
-                            end)
-                        elseif v:IsA("ImageButton") and v.Name:find("TabButton") then
-                            pcall(function()
-                                v.ImageColor3 = Library.Theme.TextColor -- Tab RGB
+                                v.TextColor3 = Library.Theme.TextColor -- Title Button ikut RGB
                             end)
                         end
                     end
-                    task.wait(0.01)
+                    task.wait(0.01) -- Kecepatan gradiant lebih cepat
                 end
             end
         end)()
+    else
+        local colorMap = {
+            blue = Color3.fromRGB(0, 0, 255),
+            red = Color3.fromRGB(255, 0, 0),
+            green = Color3.fromRGB(0, 255, 0),
+            yellow = Color3.fromRGB(255, 255, 0),
+            cyan = Color3.fromRGB(0, 255, 255),
+            white = Color3.fromRGB(255, 255, 255),
+            black = Color3.fromRGB(0, 0, 0)
+        }
+        local colorKey = string.lower(tostring(getgenv().TextColor))
+        Library.Theme.TextColor = colorMap[colorKey] or Color3.fromRGB(255, 255, 255)
     end
 end)
 pcall(function()
@@ -880,10 +883,7 @@ function SectionElements:CreateLabel(name, text)
             Button.ZIndex = 6
             Button.Font = Library.Theme.TextFont
             Button.Text = name
-            Button.TextColor3 = Library.Theme.TextColor
-table.insert(Library.LibraryColorTable, Title)
-            Button.TextSize = 15.000
-            Button.ClipsDescendants = true
+            
 
             ButtonRounded.Name = "ButtonRounded"
             ButtonRounded.Parent = Button
@@ -1757,7 +1757,7 @@ function SectionElements:CreateDropdown(name, options, presetoption, callback)
     TitleToggle.ZIndex = 7
     TitleToggle.Font = Library.Theme.TextFont
     TitleToggle.Text = (name .. " - " .. SelectedOption)
-    TitleToggle.TextColor3 = Library.Theme.TextColor
+    TitleToggle.TextColor3 = Color3.fromRGB(255, 255, 255) 
 TitleToggle.TextStrokeTransparency = 0.3
 TitleToggle.TextStrokeColor3 = Library.Theme.TextColor
 table.insert(Library.LibraryColorTable, TitleToggle)
