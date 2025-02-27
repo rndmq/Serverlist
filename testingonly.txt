@@ -92,6 +92,10 @@ local function UpdateTextColors()
     for _, v in pairs(Library.LibraryColorTable) do
         if v:IsA("TextLabel") or v:IsA("TextButton") then
             v.TextColor3 = Library.Theme.TextColor
+        elseif v:IsA("ImageLabel") and (v.Name == "CheckboxTicked" or v.Name == "CheckboxOutline") then
+            v.ImageColor3 = Library.Theme.TextColor
+        elseif v:IsA("TextLabel") and (v.Name == "Title" or v.Name == "TitleTab" or v.Name == "SectionTitle") then
+            v.TextColor3 = Library.Theme.TextColor
         end
     end
 end
