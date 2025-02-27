@@ -81,28 +81,35 @@ pcall(function()
         coroutine.wrap(function()
             while true do
                 if getgenv().StopRGB then break end
-                for i = 0, 1, 0.002 do
-                    Library.Theme.TextColor = Color3.fromHSV(i, 1, 1) -- RGB Gradiant
+                for i = 0, 1, 0.008 do
+                    Library.Theme.TextColor = Color3.fromHSV(i, 1, 1)
+
                     for _, v in pairs(Library.LibraryColorTable) do
                         if v:IsA("TextLabel") or v:IsA("TextButton") then
                             pcall(function()
-                                v.TextColor3 = Library.Theme.TextColor -- Text RGB
+                                v.TextColor3 = Library.Theme.TextColor
+                                v.TextStrokeTransparency = 0.3 -- Glow Transparan
+                                v.TextStrokeColor3 = Library.Theme.TextColor
                             end)
-                        elseif v:IsA("ImageLabel") and v.Name == "CheckboxTicked" then
+                        elseif v:IsA("ImageLabel") and (v.Name == "CheckboxTicked" or v.Name == "CheckboxOutline") then
                             pcall(function()
-                                v.ImageColor3 = Library.Theme.TextColor -- Toggle Check
-                            end)
-                        elseif v:IsA("ImageLabel") and v.Name == "CheckboxOutline" then
-                            pcall(function()
-                                v.ImageColor3 = Library.Theme.TextColor -- Toggle Outline
+                                v.ImageColor3 = Library.Theme.TextColor
                             end)
                         elseif v:IsA("TextLabel") and v.Name == "Title" then
                             pcall(function()
-                                v.TextColor3 = Library.Theme.TextColor -- Toggle Text
+                                v.TextColor3 = Library.Theme.TextColor
+                                v.TextStrokeTransparency = 0.3
+                                v.TextStrokeColor3 = Library.Theme.TextColor
+                            end)
+                        elseif v:IsA("TextButton") and v.Name == "Dropdown" then
+                            pcall(function()
+                                v.TextColor3 = Library.Theme.TextColor
+                                v.TextStrokeTransparency = 0.3
+                                v.TextStrokeColor3 = Library.Theme.TextColor
                             end)
                         end
                     end
-                    task.wait(0.03) -- Kecepatan Transisi
+                    task.wait(0.01)
                 end
             end
         end)()
@@ -887,7 +894,8 @@ function SectionElements:CreateLabel(name, text)
             Button.ZIndex = 6
             Button.Font = Library.Theme.TextFont
             Button.Text = name
-            Button.TextColor3 = Color3.fromRGB(255, 255, 255)
+            Button.TextColor3 = Library.Theme.TextColor
+table.insert(Library.LibraryColorTable, Title)
             Button.TextSize = 15.000
             Button.ClipsDescendants = true
 
@@ -1775,7 +1783,8 @@ function SectionElements:CreateDropdown(name, options, presetoption, callback)
     Dropdown.Size = UDim2.new(0, 165, 0, 0)
     Dropdown.ZIndex = 15
     Dropdown.Image = "rbxassetid://3570695787"
-    Dropdown.ImageColor3 = Color3.fromRGB(45, 45, 45)
+    Dropdown.TextColor3 = Library.Theme.TextColor
+table.insert(Library.LibraryColorTable, Dropdown)
     Dropdown.ScaleType = Enum.ScaleType.Slice
     Dropdown.SliceCenter = Rect.new(100, 100, 100, 100)
     Dropdown.SliceScale = 0.050
