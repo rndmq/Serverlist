@@ -594,11 +594,10 @@ coroutine.wrap(function()
         end
     end
 end)()
-function Library:CreateTab(name, icon)
+function Library:CreateTab(name)
     local NameTab = Instance.new("Frame")
     local NameTabButton = Instance.new("ImageButton")
     local Title = Instance.new("TextLabel")
-    local IconLabel
     local SectionLayout = Instance.new("UIListLayout")
     local SectionPadding = Instance.new("UIPadding")
 
@@ -617,7 +616,7 @@ function Library:CreateTab(name, icon)
     NameTab.Size = UDim2.new(1, 0, 1, 0)
     NameTab.ZIndex = 2
     NameTab.ClipsDescendants = true
-    NameTab.Position = UDim2.new(-1, 0, 0, 0)
+    NameTab.Position = UDim2.new(-0.1, 0, 0, 0) -- Mulai sedikit di luar layar
 
     NameTabButton.Name = (name .. "TabButton")
     NameTabButton.Parent = TabButtons
@@ -632,25 +631,11 @@ function Library:CreateTab(name, icon)
     NameTabButton.SliceCenter = Rect.new(100, 100, 100, 100)
     NameTabButton.SliceScale = 0.050
 
-    if icon then
-        IconLabel = Instance.new("ImageLabel")
-        IconLabel.Name = "TabIcon"
-        IconLabel.Parent = NameTabButton
-        IconLabel.BackgroundTransparency = 1.000
-        IconLabel.Position = UDim2.new(0, 5, 0.5, -8)
-        IconLabel.Size = UDim2.new(0, 16, 0, 16)
-        IconLabel.ZIndex = 2
-        IconLabel.Image = icon
-        IconLabel.ImageColor3 = Color3.fromRGB(255, 255, 255)
-        IconLabel.ScaleType = Enum.ScaleType.Fit
-    end
-
     Title.Name = "Title"
     Title.Parent = NameTabButton
     Title.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     Title.BackgroundTransparency = 1.000
-    Title.Size = UDim2.new(1, icon and -25 or 0, 1, 0)
-    Title.Position = UDim2.new(icon and 0.25 or 0, icon and 5 or 0, 0, 0)
+    Title.Size = UDim2.new(1, 0, 1, 0)
     Title.ZIndex = 2
     Title.Font = Library.Theme.TextFont
     Title.Text = name
@@ -682,7 +667,9 @@ function Library:CreateTab(name, icon)
             for _, v in pairs(Tabs:GetChildren()) do
                 if v:IsA("Frame") then 
                     v.Visible = false 
-                    v.Position = UDim2.new(0, 0, 0, 0)
+                    TweenService:Create(v, TweenInfo.new(0.7, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
+                        Position = UDim2.new(-0.1, 0, 0, 0)
+                    }):Play()
                 end
             end
         end
@@ -692,7 +679,7 @@ function Library:CreateTab(name, icon)
         else
             for _, v in pairs(TabButtons:GetChildren()) do
                 if v:IsA("ImageButton") then
-                    TweenService:Create(v, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                    TweenService:Create(v, TweenInfo.new(0.7, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
                         ImageColor3 = Library.Theme.MainColor
                     }):Play()
                 end
@@ -705,20 +692,19 @@ function Library:CreateTab(name, icon)
             if child:IsA("ImageLabel") and child.Name:match("Section$") then
                 child.ImageTransparency = 1
                 child.ImageColor3 = Library.Theme.MainColor
-                
-                TweenService:Create(child, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                TweenService:Create(child, TweenInfo.new(0.7, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
                     ImageTransparency = 0,
                     ImageColor3 = Library.Theme.BackgroundColor
                 }):Play()
             end
         end
         
-        TweenService:Create(NameTabButton, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+        TweenService:Create(NameTabButton, TweenInfo.new(0.7, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
             ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 20),
             Size = smallSize
         }):Play()
         
-        TweenService:Create(NameTab, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+        TweenService:Create(NameTab, TweenInfo.new(0.7, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
             Position = UDim2.new(0, 0, 0, 0)
         }):Play()
     end)
@@ -726,7 +712,7 @@ function Library:CreateTab(name, icon)
     ResetAllTabButtons = function()
         for _, v in pairs(TabButtons:GetChildren()) do
             if v:IsA("ImageButton") then
-                TweenService:Create(v, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                TweenService:Create(v, TweenInfo.new(0.7, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
                     ImageColor3 = Library.Theme.MainColor,
                     Size = originalSize
                 }):Play()
@@ -737,12 +723,11 @@ function Library:CreateTab(name, icon)
     local function ShowFirstTab()
         if NameTab.Name == (Library.FirstTab .. "Tab") then
             NameTab.Visible = true
-            TweenService:Create(NameTabButton, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+            TweenService:Create(NameTabButton, TweenInfo.new(0.7, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
                 ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 20),
                 Size = smallSize
             }):Play()
-            
-            TweenService:Create(NameTab, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+            TweenService:Create(NameTab, TweenInfo.new(0.7, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
                 Position = UDim2.new(0, 0, 0, 0)
             }):Play()
         end
@@ -750,7 +735,7 @@ function Library:CreateTab(name, icon)
 
     task.wait(0.1)
     ShowFirstTab()
-    task.wait(0.1)  
+    task.wait(0.1)
     if NameTab.Name == (Library.FirstTab .. "Tab") then
         for _, child in pairs(NameTab:GetChildren()) do
             if child:IsA("ImageLabel") and child.Name:match("Section$") then
@@ -761,7 +746,7 @@ function Library:CreateTab(name, icon)
                 if child.Name == "SectionBorder" then
                     child.Position = UDim2.new(0, 0, 0, 0)
                 end
-                TweenService:Create(child, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                TweenService:Create(child, TweenInfo.new(0.7, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
                     Position = UDim2.new(0, 0, 0, 0),
                     Size = UDim2.new(0, 197, 0, 181),
                     ImageTransparency = 0,
