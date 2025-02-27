@@ -81,7 +81,7 @@ pcall(function()
         coroutine.wrap(function()
             while true do
                 if getgenv().StopRGB then break end
-                for i = 0, 1, 0.002 do
+                for i = 0, 1, 0.001 do -- Lebih cepat
                     Library.Theme.TextColor = Color3.fromHSV(i, 1, 1) -- RGB Gradiant
                     for _, v in pairs(Library.LibraryColorTable) do
                         if v:IsA("TextLabel") or v:IsA("TextButton") then
@@ -96,13 +96,13 @@ pcall(function()
                             pcall(function()
                                 v.ImageColor3 = Library.Theme.TextColor -- Toggle Outline
                             end)
-                        elseif v:IsA("TextLabel") and v.Name == "Title" then
+                        elseif v:IsA("TextLabel") and (v.Name == "Title" or v.Name == "TitleTab") then
                             pcall(function()
-                                v.TextColor3 = Library.Theme.TextColor -- Toggle Text
+                                v.TextColor3 = Library.Theme.TextColor -- Title & Tab Title RGB
                             end)
                         end
                     end
-                    task.wait(0.03) -- Kecepatan Transisi
+                    task.wait(0.015) -- Lebih cepat dari 0.03 jadi transisi lebih smooth
                 end
             end
         end)()
