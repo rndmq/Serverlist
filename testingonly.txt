@@ -63,22 +63,14 @@ pcall(function()
             while true do
                 if getgenv().StopRGB then break end
                 for i = 0, 1, 0.002 do
-                    local selectedColor = Color3.fromHSV(i, 1, 1) or Color3.fromRGB(255, 75, 75) -- Fallback jika gagal
+                    selectedColor = Color3.fromHSV(i, 1, 1)
                     Library.Theme.Color = selectedColor
-                    for _, v in pairs(Library.LibraryColorTable or {}) do
-                        if v and v:IsA("ImageLabel") then
-                            if v.Name == "Border" or v.Name == "SectionBorder" then
-                                v.ImageColor3 = selectedColor
-                            end
-                        elseif v and v:IsA("ImageButton") then
-                            if string.find(v.Name, "TabButton") or v.Name == "MinimizeBtn" or v.Name == "FloatingIcon" then
-                                v.ImageColor3 = selectedColor
-                            end
-                        end
-                    end
-                    task.wait(0.005)
-                end
-            end
+                    for _, v in pairs(Library.LibraryColorTable) do
+    if v:IsA("ImageLabel") and (v.Name == "Border" or v.Name == "ImageButton") then
+        v.ImageColor3 = selectedColor
+    end
+end
+task.wait(0.005) 
         end)()
     else
         local colorMap = {
@@ -88,14 +80,15 @@ pcall(function()
             yellow = Color3.fromRGB(255, 255, 0),
             purple = Color3.fromRGB(128, 0, 128),
             pink = Color3.fromRGB(255, 105, 180),
+            default = Color3.fromRGB(255, 75, 75),
             cyan = Color3.fromRGB(0, 255, 255),
             brown = Color3.fromRGB(139, 69, 19),
             orange = Color3.fromRGB(255, 165, 0),
             black = Color3.fromRGB(0, 0, 0),
             white = Color3.fromRGB(255, 255, 255)
         }
-        local colorKey = string.lower(getgenv().Color or "default")
-        local selectedColor = colorMap[colorKey] or colorMap.default or Color3.fromRGB(255, 75, 75) -- Fallback tambahan
+        local colorKey = string.lower(getgenv().Color)
+        selectedColor = colorMap[colorKey] or colorMap.default
         Library.Theme.Color = selectedColor
     end
 end)
