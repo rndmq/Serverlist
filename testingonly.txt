@@ -83,12 +83,12 @@ pcall(function()
                 if getgenv().StopRGB then break end
                 for i = 0, 1, 0.008 do
                     Library.Theme.TextColor = Color3.fromHSV(i, 1, 1)
-                    
+
                     for _, v in pairs(Library.LibraryColorTable) do
                         if v:IsA("TextLabel") or v:IsA("TextButton") then
                             pcall(function()
                                 v.TextColor3 = Library.Theme.TextColor
-                                v.TextStrokeTransparency = 0.3 
+                                v.TextStrokeTransparency = 0.3
                                 v.TextStrokeColor3 = Library.Theme.TextColor
                             end)
                         elseif v:IsA("ImageLabel") and (v.Name == "CheckboxTicked" or v.Name == "CheckboxOutline") then
@@ -101,24 +101,16 @@ pcall(function()
                                 v.TextStrokeTransparency = 0.3
                                 v.TextStrokeColor3 = Library.Theme.TextColor
                             end)
+                        elseif v:IsA("ImageButton") and v.Name:find("TabButton") then
+                            pcall(function()
+                                v.ImageColor3 = Library.Theme.TextColor -- Tab RGB
+                            end)
                         end
                     end
                     task.wait(0.01)
                 end
             end
         end)()
-    else
-        local colorMap = {
-            blue = Color3.fromRGB(0, 0, 255),
-            red = Color3.fromRGB(255, 0, 0),
-            green = Color3.fromRGB(0, 255, 0),
-            yellow = Color3.fromRGB(255, 255, 0),
-            cyan = Color3.fromRGB(0, 255, 255),
-            white = Color3.fromRGB(255, 255, 255),
-            black = Color3.fromRGB(0, 0, 0)
-        }
-        local colorKey = string.lower(tostring(getgenv().TextColor))
-        Library.Theme.TextColor = colorMap[colorKey] or Color3.fromRGB(255, 255, 255)
     end
 end)
 pcall(function()
