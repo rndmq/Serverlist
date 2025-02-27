@@ -62,15 +62,15 @@ pcall(function()
         coroutine.wrap(function()
             while true do
                 if getgenv().StopRGB then break end
-                for i = 0, 1, 0.002 do
+                for i = 0, 1, 0.001 do
                     selectedColor = Color3.fromHSV(i, 1, 1)
                     Library.Theme.Color = selectedColor
                     for _, v in pairs(Library.LibraryColorTable) do
-    if v:IsA("Frame") or v:IsA("ImageButton") or v == SectionBorder then
+    if v:IsA("Frame") or v:IsA("ImageButton") or (v:IsA("ImageLabel") and (v.Name == "Border" or v.Name == "BackgroundTab" or v == SectionBorder)) then
         v.ImageColor3 = Library.Theme.Color
     end
 end
-                    task.wait(0.001)
+                    task.wait(0.0001)
                 end
             end
         end)()
