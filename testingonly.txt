@@ -81,9 +81,28 @@ pcall(function()
         coroutine.wrap(function()
             while true do
                 if getgenv().StopRGB then break end
-                for i = 0, 1, 0.002 do -- Smooth banget transisi
+                for i = 0, 1, 0.002 do
                     Library.Theme.TextColor = Color3.fromHSV(i, 1, 1) -- RGB Gradiant
-                    task.wait(0.03) -- Kecepatan transisi
+                    for _, v in pairs(Library.LibraryColorTable) do
+                        if v:IsA("TextLabel") or v:IsA("TextButton") then
+                            pcall(function()
+                                v.TextColor3 = Library.Theme.TextColor -- Text RGB
+                            end)
+                        elseif v:IsA("ImageLabel") and v.Name == "CheckboxTicked" then
+                            pcall(function()
+                                v.ImageColor3 = Library.Theme.TextColor -- Toggle Check
+                            end)
+                        elseif v:IsA("ImageLabel") and v.Name == "CheckboxOutline" then
+                            pcall(function()
+                                v.ImageColor3 = Library.Theme.TextColor -- Toggle Outline
+                            end)
+                        elseif v:IsA("TextLabel") and v.Name == "Title" then
+                            pcall(function()
+                                v.TextColor3 = Library.Theme.TextColor -- Toggle Text
+                            end)
+                        end
+                    end
+                    task.wait(0.03) -- Kecepatan Transisi
                 end
             end
         end)()
@@ -95,8 +114,7 @@ pcall(function()
             yellow = Color3.fromRGB(255, 255, 0),
             cyan = Color3.fromRGB(0, 255, 255),
             white = Color3.fromRGB(255, 255, 255),
-            black = Color3.fromRGB(0, 0, 0),
-            default = Color3.fromRGB(255, 255, 255)
+            black = Color3.fromRGB(0, 0, 0)
         }
         local colorKey = string.lower(tostring(getgenv().TextColor))
         Library.Theme.TextColor = colorMap[colorKey] or Color3.fromRGB(255, 255, 255)
@@ -917,7 +935,6 @@ function SectionElements:CreateToggle(name, callback, tooltipText)
             local CheckboxTicked = Instance.new("ImageLabel")
             local TickCover = Instance.new("Frame")
             local Tooltip
-
             local gameId = self.GameId
             if not Settings[gameId] then Settings[gameId] = {} end
             local Toggled = (Settings[gameId][name] ~= nil and Settings[gameId][name]) or false
@@ -938,7 +955,8 @@ function SectionElements:CreateToggle(name, callback, tooltipText)
             Title.ZIndex = 5
             Title.Font = Library.Theme.TextFont
             Title.Text = name
-            Title.TextColor3 = Toggled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(185, 185, 185)
+            Title.TextColor3 = Library.Theme.TextColor
+table.insert(Library.LibraryColorTable, Title)
             Title.TextSize = 15.000
             Title.TextXAlignment = Enum.TextXAlignment.Left
 
@@ -973,7 +991,8 @@ function SectionElements:CreateToggle(name, callback, tooltipText)
             CheckboxTicked.Size = UDim2.new(0, 24, 0, 24)
             CheckboxTicked.ZIndex = 6
             CheckboxTicked.Image = "rbxassetid://5416796675"
-            CheckboxTicked.ImageColor3 = Color3.fromRGB(65, 65, 65)
+            CheckboxTicked.ImageColor3 = Library.Theme.TextColor
+table.insert(Library.LibraryColorTable, CheckboxTicked)
 
             TickCover.Name = "TickCover"
             TickCover.Parent = Toggle
