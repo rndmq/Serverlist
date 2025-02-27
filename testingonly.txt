@@ -668,7 +668,8 @@ function Library:CreateTab(name)
     Title.ZIndex = 2
     Title.Font = Library.Theme.TextFont
     Title.Text = name
-    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Title.TextColor3 = Library.Theme.TextColor
+    table.insert(Library.LibraryColorTable, Title)
     Title.TextSize = 15.000
 
     SectionLayout.Name = "SectionLayout"
@@ -783,10 +784,6 @@ if NameTab.Name == (Library.FirstTab .. "Tab") then
         end
     end
 end
-
-    
-
-
 
 function TabElements:CreateSection(name)
     local NameSection = Instance.new("ImageLabel")
