@@ -669,6 +669,25 @@ function Library:CreateTab(name)
             holdStart = tick()
             dragStart = input.Position
             dragOffset = NameTabButton.Position.X.Offset
+
+            spawn(function()
+                wait(2)
+                if holdStart and tick() - holdStart >= 2 and not sortingMode then
+                    sortingMode = true
+                    TweenService:Create(NameTabButton, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
+                        Size = UDim2.new(0, 94, 0, 30)
+                    }):Play()
+                    spawn(function()
+                        while sortingMode do
+                            TweenService:Create(NameTabButton, TweenInfo.new(0.1, Enum.EasingStyle.Sine), {Rotation = 2}):Play()
+                            wait(0.1)
+                            TweenService:Create(NameTabButton, TweenInfo.new(0.1, Enum.EasingStyle.Sine), {Rotation = -2}):Play()
+                            wait(0.1)
+                        end
+                        TweenService:Create(NameTabButton, TweenInfo.new(0.3, Enum.EasingStyle.Sine), {Rotation = 0}):Play()
+                    end)
+                end
+            end)
         end
     end)
 
@@ -710,21 +729,7 @@ function Library:CreateTab(name)
                     Size = NameTabButton.ImageColor3 == Library.Theme.MainColor and originalSize or smallSize,
                     Position = UDim2.new(0, (table.find(TabButtons:GetChildren(), NameTabButton) - 1) * 84, 0, 0)
                 }):Play()
-            elseif holdStart and tick() - holdStart >= 2 then
-                sortingMode = true
-                TweenService:Create(NameTabButton, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
-                    Size = UDim2.new(0, 94, 0, 30)
-                }):Play()
-                spawn(function()
-                    while sortingMode do
-                        TweenService:Create(NameTabButton, TweenInfo.new(0.1, Enum.EasingStyle.Sine), {Rotation = 2}):Play()
-                        wait(0.1)
-                        TweenService:Create(NameTabButton, TweenInfo.new(0.1, Enum.EasingStyle.Sine), {Rotation = -2}):Play()
-                        wait(0.1)
-                    end
-                    TweenService:Create(NameTabButton, TweenInfo.new(0.3, Enum.EasingStyle.Sine), {Rotation = 0}):Play()
-                end)
-            elseif tick() - holdStart < 2 then
+            elseif holdStart and tick() - holdStart < 2 then
                 if CloseAllTabs and type(CloseAllTabs) == "function" then 
                     CloseAllTabs() 
                 else
@@ -822,7 +827,6 @@ function Library:CreateTab(name)
             end
         end
     end
-
 
 
     
