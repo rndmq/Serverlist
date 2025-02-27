@@ -57,9 +57,19 @@ Library = {
     }
 }
 
-local selectedColor = Color3.fromRGB(255, 75, 75) -- Default
 pcall(function()
-    if getgenv().Color then
+    if getgenv().Color == "rgb" then
+        coroutine.wrap(function()
+            while true do
+                if getgenv().StopRGB then break end
+                for i = 0, 1, 0.002 do
+                    selectedColor = Color3.fromHSV(i, 1, 1)
+                    Library.Theme.Color = selectedColor
+                    task.wait(0.03) 
+                end
+            end
+        end)()
+    else
         local colorMap = {
             blue = Color3.fromRGB(0, 0, 255),
             red = Color3.fromRGB(255, 0, 0),
@@ -74,6 +84,7 @@ pcall(function()
         }
         local colorKey = string.lower(getgenv().Color)
         selectedColor = colorMap[colorKey] or colorMap.default
+        Library.Theme.Color = selectedColor
     end
 end)
 pcall(function()
@@ -104,9 +115,11 @@ pcall(function()
             red = Color3.fromRGB(255, 0, 0),
             green = Color3.fromRGB(0, 255, 0),
             yellow = Color3.fromRGB(255, 255, 0),
-            cyan = Color3.fromRGB(0, 255, 255),
             white = Color3.fromRGB(255, 255, 255),
-            black = Color3.fromRGB(0, 0, 0)
+            black = Color3.fromRGB(0, 0, 0),
+            default = Color3.fromRGB(255, 255, 255),     cyan = Color3.fromRGB(0, 255, 255),
+            brown = Color3.fromRGB(139, 69, 19),
+            orange = Color3.fromRGB(255, 165, 0)
         }
         local colorKey = string.lower(tostring(getgenv().TextColor))
         Library.Theme.TextColor = colorMap[colorKey] or Color3.fromRGB(255, 255, 255)
