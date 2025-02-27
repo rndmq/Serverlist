@@ -60,16 +60,20 @@ Library = {
 pcall(function()
     if getgenv().Color == "rgb" then
         coroutine.wrap(function()
-    while true do
-        if getgenv().StopRGB then break end
-        for i = 0, 1, 0.002 do
-            selectedColor = Color3.fromHSV(i, 1, 1)
-            Library.Theme.Color = selectedColor
-            task.wait(0.03) 
-        end
-        task.wait()
-    end
-end)()
+            while true do
+                if getgenv().StopRGB then break end
+                for i = 0, 1, 0.002 do
+                    selectedColor = Color3.fromHSV(i, 1, 1)
+                    Library.Theme.Color = selectedColor
+                    for _, v in pairs(Library.LibraryColorTable) do
+                        if v:IsA("ImageLabel") or v:IsA("ImageButton") then
+                            v.ImageColor3 = Library.Theme.Color
+                        end
+                    end
+                    task.wait(0.03)
+                end
+            end
+        end)()
     else
         local colorMap = {
             blue = Color3.fromRGB(0, 0, 255),
@@ -81,7 +85,8 @@ end)()
             default = Color3.fromRGB(255, 75, 75),
             cyan = Color3.fromRGB(0, 255, 255),
             brown = Color3.fromRGB(139, 69, 19),
-            orange = Color3.fromRGB(255, 165, 0),        black = Color3.fromRGB(0, 0, 0),
+            orange = Color3.fromRGB(255, 165, 0),
+            black = Color3.fromRGB(0, 0, 0),
             white = Color3.fromRGB(255, 255, 255)
         }
         local colorKey = string.lower(getgenv().Color)
