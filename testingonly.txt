@@ -656,6 +656,7 @@ function Library:CreateTab(name)
     NameTabButton.ZIndex = 2
     NameTabButton.Image = "rbxassetid://3570695787"
     NameTabButton.ImageColor3 = Library.Theme.MainColor
+    table.insert(Library.LibraryColorTable, NameTabButton)
     NameTabButton.ScaleType = Enum.ScaleType.Slice
     NameTabButton.SliceCenter = Rect.new(100, 100, 100, 100)
     NameTabButton.SliceScale = 0.050
@@ -728,7 +729,8 @@ NameTabButton.MouseButton1Down:Connect(function()
     end
     
     TweenService:Create(NameTabButton, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-        ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 20),
+        ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 20)
+table.insert(Library.LibraryColorTable, ImageColor3),
         Size = smallSize
     }):Play()
     
@@ -741,7 +743,8 @@ end)
         for _, v in pairs(TabButtons:GetChildren()) do
             if v:IsA("ImageButton") then
                 TweenService:Create(v, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-                    ImageColor3 = Library.Theme.MainColor,
+                    ImageColor3 = Library.Theme.MainColor
+                    table.insert(Library.LibraryColorTable, ImageColor3),
                     Size = originalSize
                 }):Play()
             end
