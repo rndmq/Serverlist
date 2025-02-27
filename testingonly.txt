@@ -88,6 +88,13 @@ pcall(function()
         Library.Theme.Color = selectedColor
     end
 end)
+local function UpdateTextColors()
+    for _, v in pairs(Library.LibraryColorTable) do
+        if v:IsA("TextLabel") or v:IsA("TextButton") then
+            v.TextColor3 = Library.Theme.TextColor
+        end
+    end
+end
 pcall(function()
     if getgenv().TextColor == "rgb" then
         coroutine.wrap(function()
@@ -124,6 +131,7 @@ pcall(function()
         }
         local colorKey = string.lower(tostring(getgenv().TextColor))
         Library.Theme.TextColor = colorMap[colorKey] or Color3.fromRGB(255, 255, 255)
+        UpdateTextColors()
     end
 end)
 pcall(function()
@@ -2218,7 +2226,7 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
     pcall(function()
         local envColor = getgenv().Color and string.lower(getgenv().Color) or nil
         if envColor == "white" then
-            TitleLabel.TextColor3 = Color3.fromRGB(0, 0, 0)l
+            TitleLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
         elseif envColor == "black" then
             MessageLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
         end
