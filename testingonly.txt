@@ -987,7 +987,7 @@ table.insert(Library.LibraryColorTable, Button)
             Button.ZIndex = 6
             Button.Font = Library.Theme.TextFont
             Button.Text = name
-            Button.TextColor3 = Color3.fromRGB(255, 255, 255)
+            Button.TextColor3 = Library.Theme.TextColor
             Button.TextSize = 15.000
             Button.ClipsDescendants = true
 
@@ -1057,6 +1057,7 @@ function SectionElements:CreateToggle(name, callback, tooltipText)
             Title.Text = name
             Title.TextColor3 = Library.Theme.TextColor
 table.insert(Library.LibraryColorTable, Title)
+UpdateTextColors()
             Title.TextSize = 15.000
             Title.TextXAlignment = Enum.TextXAlignment.Left
 
