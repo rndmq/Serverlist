@@ -2140,7 +2140,7 @@ function Library:CreateNotification(title, message, duration, buttonText, button
     MessageLabel.ZIndex = 101
     MessageLabel.Font = Library.Theme.TextFont
     MessageLabel.Text = message or ""
-    MessageLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+    MessageLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
     MessageLabel.TextSize = 14
     MessageLabel.TextWrapped = true
     MessageLabel.TextXAlignment = Enum.TextXAlignment.Left
