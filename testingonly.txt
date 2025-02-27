@@ -84,31 +84,17 @@ pcall(function()
                 for i = 0, 1, 0.002 do
                     Library.Theme.TextColor = Color3.fromHSV(i, 1, 1)
                     for _, v in pairs(Library.LibraryColorTable) do
-                        pcall(function()
-                            if v:IsA("TextLabel") or v:IsA("TextButton") then
-                                v.TextColor3 = Library.Theme.TextColor
-                            elseif v:IsA("ImageLabel") and (v.Name == "CheckboxTicked" or v.Name == "CheckboxOutline") then
-                                v.ImageColor3 = Library.Theme.TextColor
-                            elseif v:IsA("TextLabel") and (v.Name == "Title" or v.Name == "TitleTab" or v.Name == "SectionTitle") then
-                                v.TextColor3 = Library.Theme.TextColor
-                            end
-                        end)
+                        if v:IsA("TextLabel") or v:IsA("TextButton") then
+                            v.TextColor3 = Library.Theme.TextColor
+                        elseif v:IsA("ImageLabel") and v.Name == "CheckboxTicked" then
+                            v.ImageColor3 = Library.Theme.TextColor
+                        elseif v:IsA("ImageLabel") and v.Name == "CheckboxOutline" then
+                            v.ImageColor3 = Library.Theme.TextColor
+                        elseif v:IsA("TextLabel") and (v.Name == "Title" or v.Name == "TitleTab" or v.Name == "SectionTitle") then
+                            v.TextColor3 = Library.Theme.TextColor
+                        end
                     end
-                    for _, tab in pairs(Library:GetTabs()) do
-                        pcall(function()
-                            if tab.Title and tab.Title:IsA("TextLabel") then
-                                tab.Title.TextColor3 = Library.Theme.TextColor
-                            end
-                        end)
-                    end
-                    for _, section in pairs(Library:GetSections()) do
-                        pcall(function()
-                            if section.Title and section.Title:IsA("TextLabel") then
-                                section.Title.TextColor3 = Library.Theme.TextColor
-                            end
-                        end)
-                    end
-                    task.wait(0.015)
+                    task.wait(0.01)
                 end
             end
         end)()
