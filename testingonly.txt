@@ -88,6 +88,13 @@ pcall(function()
         Library.Theme.Color = selectedColor
     end
 end)
+local function UpdateTextColors()
+    for _, v in pairs(Library.LibraryColorTable) do
+        if v:IsA("TextLabel") or v:IsA("TextButton") then
+            v.TextColor3 = Library.Theme.TextColor
+        end
+    end
+end
 pcall(function()
     if getgenv().TextColor == "rgb" then
         coroutine.wrap(function()
@@ -124,6 +131,7 @@ pcall(function()
         }
         local colorKey = string.lower(tostring(getgenv().TextColor))
         Library.Theme.TextColor = colorMap[colorKey] or Color3.fromRGB(255, 255, 255)
+        UpdateTextColors()
     end
 end)
 pcall(function()
@@ -932,6 +940,7 @@ function SectionElements:CreateLabel(name, text)
             NameLabel.ZIndex = 5
             NameLabel.Font = Library.Theme.TextFont
             NameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+            table.insert(Library.LibraryColorTable, NameLabel)
             NameLabel.TextSize = 15.000
 
             local function ChangeText(newtext)
@@ -2196,7 +2205,7 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
     TitleLabel.ZIndex = 101
     TitleLabel.Font = Library.Theme.TextFont
     TitleLabel.Text = title or "Notification"
-    TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255) -- Default putih
     TitleLabel.TextSize = 16
     TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 
@@ -2212,6 +2221,16 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
     MessageLabel.TextSize = 14
     MessageLabel.TextWrapped = true
     MessageLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+
+    pcall(function()
+        local envColor = getgenv().Color and string.lower(getgenv().Color) or nil
+        if envColor == "white" then
+            TitleLabel.TextColor3 = Color3.fromRGB(0, 0, 0)l
+        elseif envColor == "black" then
+            MessageLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+        end
+    end)
 
     CloseButton.Name = "CloseButton"
     CloseButton.Parent = NotificationBackground
