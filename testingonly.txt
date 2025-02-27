@@ -670,8 +670,8 @@ function Library:CreateTab(name)
     Title.ZIndex = 2
     Title.Font = Library.Theme.TextFont
     Title.Text = name
-    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-table.insert(Library.LibraryColorTable, Title.TextColor3)
+    Title.TextColor3 = Library.Theme.MainColor
+table.insert(Library.LibraryColorTable, Title) 
     Title.TextSize = 15.000
 
     SectionLayout.Name = "SectionLayout"
@@ -733,7 +733,7 @@ NameTabButton.MouseButton1Down:Connect(function()
         ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 20),
         Size = smallSize
     }):Play()
-    
+    table.insert(Library.LibraryColorTable, NameTabButton)
     TweenService:Create(NameTab, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
         Position = UDim2.new(0, 0, 0, 0)
     }):Play()
