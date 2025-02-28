@@ -800,7 +800,7 @@ end
 
   
 
-function TabElements:CreateSection(name)
+function SectionElements:CreateSection(name)
     local NameSection = Instance.new("ImageLabel")
     local SectionBorder = Instance.new("ImageLabel")
     local SectionTitle = Instance.new("TextLabel")
@@ -808,17 +808,48 @@ function TabElements:CreateSection(name)
     local SectionContentLayout = Instance.new("UIListLayout")
 
     local SectionElements = { GameId = self.GameId }
+    local isDetached = false
+    local lastValidPosition = UDim2.new(0, 0, 0.0574162677, 0)
+    local originalParent = NameTab
+    local minimized = false
+
+    local Shadow = Instance.new("ImageLabel")
+    Shadow.Name = "Shadow"
+    Shadow.BackgroundTransparency = 1
+    Shadow.Image = "rbxassetid://3570695787"
+    Shadow.ImageColor3 = Color3.fromRGB(255, 255, 255)
+    Shadow.ImageTransparency = 0.7
+    Shadow.ScaleType = Enum.ScaleType.Slice
+    Shadow.SliceCenter = Rect.new(100, 100, 100, 100)
+    Shadow.SliceScale = 0.025
+    Shadow.Size = UDim2.new(0, 197, 0, 181)
+    Shadow.ZIndex = 3
+    Shadow.Visible = false
+    Shadow.Parent = UITabs
+
+    local MinimizeBtn = Instance.new("TextButton")
+    MinimizeBtn.Name = "MinimizeBtn"
+    MinimizeBtn.Parent = NameSection
+    MinimizeBtn.BackgroundTransparency = 1
+    MinimizeBtn.Position = UDim2.new(1, -25, 0, 5)
+    MinimizeBtn.Size = UDim2.new(0, 20, 0, 20)
+    MinimizeBtn.ZIndex = 5
+    MinimizeBtn.Font = Library.Theme.TextFont
+    MinimizeBtn.Text = "-"
+    MinimizeBtn.TextColor3 = Library.Theme.TextColor
+    MinimizeBtn.TextSize = 16
+    MinimizeBtn.Visible = false
 
     NameSection.Name = (name .. "Section")
     NameSection.Parent = NameTab
     NameSection.BackgroundColor3 = Library.Theme.BackgroundColor
     NameSection.BackgroundTransparency = 1.000
-    NameSection.Position = UDim2.new(0, 0, 0.0574162677, 0)
+    NameSection.Position = lastValidPosition
     NameSection.Size = UDim2.new(0, 197, 0, 181)
     NameSection.ZIndex = 4
     NameSection.Image = "rbxassetid://3570695787"
     NameSection.ImageColor3 = Library.Theme.MainColor
-table.insert(Library.LibraryColorTable, NameSection)
+    table.insert(Library.LibraryColorTable, NameSection)
     NameSection.ScaleType = Enum.ScaleType.Slice
     NameSection.SliceCenter = Rect.new(100, 100, 100, 100)
     NameSection.SliceScale = 0.025
@@ -833,11 +864,11 @@ table.insert(Library.LibraryColorTable, NameSection)
     SectionBorder.ZIndex = 3
     SectionBorder.Image = "rbxassetid://3570695787"
     SectionBorder.ImageColor3 = Library.Theme.MainColor
-table.insert(Library.LibraryColorTable, SectionBorder)
+    table.insert(Library.LibraryColorTable, SectionBorder)
     SectionBorder.ScaleType = Enum.ScaleType.Slice
     SectionBorder.SliceCenter = Rect.new(100, 100, 100, 100)
     SectionBorder.SliceScale = 0.050
-    
+
     SectionTitle.Name = "SectionTitle"
     SectionTitle.Parent = NameSection
     SectionTitle.BackgroundColor3 = Library.Theme.BackgroundColor
@@ -850,151 +881,7 @@ table.insert(Library.LibraryColorTable, SectionBorder)
     SectionTitle.TextColor3 = Library.Theme.TextColor
     table.insert(Library.LibraryColorTable, SectionTitle)
     SectionTitle.TextSize = 14.000
-    local isDetached = false
-    local lastValidPosition = NameSection.Position
-    local originalParent = NameSection.Parent
-    local minimized = false
-    local Shadow = Instance.new("ImageLabel")
-    Shadow.Name = "Shadow"
-    Shadow.BackgroundTransparency = 1
-    Shadow.Image = "rbxassetid://3570695787"
-    Shadow.ImageColor3 = Color3.fromRGB(255, 255, 255)
-    Shadow.ImageTransparency = 0.7
-    Shadow.ScaleType = Enum.ScaleType.Slice
-    Shadow.SliceCenter = Rect.new(100, 100, 100, 100)
-    Shadow.SliceScale = 0.025
-    Shadow.Size = UDim2.new(0, 197, 0, 181)
-    Shadow.ZIndex = 3
-    Shadow.Visible = false
-    Shadow.Parent = UITabs
-    local MinimizeBtn = Instance.new("TextButton")
-    MinimizeBtn.Name = "MinimizeBtn"
-    MinimizeBtn.Parent = NameSection
-    MinimizeBtn.BackgroundTransparency = 1
-    MinimizeBtn.Position = UDim2.new(1, -25, 0, 5)
-    MinimizeBtn.Size = UDim2.new(0, 20, 0, 20)
-    MinimizeBtn.ZIndex = 5
-    MinimizeBtn.Font = Library.Theme.TextFont
-    MinimizeBtn.Text = "-"
-    MinimizeBtn.TextColor3 = Library.Theme.TextColor
-    MinimizeBtn.TextSize = 16
-    MinimizeBtn.Visible = false
-    local function MakeSectionDraggable()
-        local dragging = false
-        local dragInput
-        local dragStart
-        local startPos
 
-        local function update(input)
-            local delta = input.Position - dragStart
-            local newPos = UDim2.new(
-                startPos.X.Scale,
-                startPos.X.Offset + delta.X,
-                startPos.Y.Scale,
-                startPos.Y.Offset + delta.Y
-            )
-            
-            NameSection.Position = newPos
-
-            -- Cek proximity ke tab
-            local tabPos = Tabs.AbsolutePosition
-            local tabSize = Tabs.AbsoluteSize
-            local sectionPos = NameSection.AbsolutePosition
-            
-            if math.abs(sectionPos.X - tabPos.X) < 50 and 
-               math.abs(sectionPos.Y - tabPos.Y) < 50 and
-               not isDetached then
-                Shadow.Position = UDim2.new(0, 0, 0, 0)
-                Shadow.Visible = true
-            else
-                Shadow.Visible = false
-            end
-        end
-
-        SectionTitle.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or 
-               input.UserInputType == Enum.UserInputType.Touch then
-                dragging = true
-                dragStart = input.Position
-                startPos = NameSection.Position
-                
-                if not isDetached then
-                    lastValidPosition = NameSection.Position
-                    NameSection.Parent = UILibrary
-                    isDetached = true
-                    MinimizeBtn.Visible = true
-                    TweenService:Create(NameSection, TweenInfo.new(0.3), {
-                        ImageColor3 = Color3.fromRGB(50, 50, 50)
-                    }):Play()
-                end
-                
-                input.Changed:Connect(function()
-                    if input.UserInputState == Enum.UserInputState.End then
-                        dragging = false
-                        
-                        -- Snap back to tab jika dekat
-                        local tabPos = Tabs.AbsolutePosition
-                        local sectionPos = NameSection.AbsolutePosition
-                        if math.abs(sectionPos.X - tabPos.X) < 50 and 
-                           math.abs(sectionPos.Y - tabPos.Y) < 50 then
-                            NameSection.Parent = originalParent
-                            isDetached = false
-                            MinimizeBtn.Visible = false
-                            TweenService:Create(NameSection, TweenInfo.new(0.3), {
-                                Position = lastValidPosition,
-                                ImageColor3 = Library.Theme.BackgroundColor
-                            }):Play()
-                            Shadow.Visible = false
-                        end
-                    end
-                end)
-            end
-        end)
-
-        SectionTitle.InputChanged:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseMovement or 
-               input.UserInputType == Enum.UserInputType.Touch then
-                dragInput = input
-            end
-        end)
-
-        UserInputService.InputChanged:Connect(function(input)
-            if input == dragInput and dragging then
-                update(input)
-            end
-        end)
-    end
-    local function ToggleMinimize()
-        if not isDetached then return end
-        
-        minimized = not minimized
-        if minimized then
-            TweenService:Create(NameSection, TweenInfo.new(0.3), {
-                Size = UDim2.new(0, 197, 0, 30),
-                ImageColor3 = Color3.fromRGB(70, 70, 70)
-            }):Play()
-            SectionContent.Visible = false
-            MinimizeBtn.Text = "⌄"
-        else
-            TweenService:Create(NameSection, TweenInfo.new(0.3), {
-                Size = UDim2.new(0, 197, 0, 181),
-                ImageColor3 = Color3.fromRGB(50, 50, 50)
-            }):Play()
-            SectionContent.Visible = true
-            MinimizeBtn.Text = "-"
-        end
-    end
-    MinimizeBtn.MouseButton1Click:Connect(ToggleMinimize)
-    MakeSectionDraggable()
-    task.spawn(function()
-        task.wait()
-        NameSection.Position = UDim2.new(0, 0, -0.5, 0)
-        TweenService:Create(NameSection, TweenInfo.new(0.5, Library.Theme.EasingStyle), {
-            Position = lastValidPosition,
-            ImageTransparency = 0,
-            ImageColor3 = Library.Theme.BackgroundColor
-        }):Play()
-    end)
     SectionContent.Name = "SectionContent"
     SectionContent.Parent = NameSection
     SectionContent.Active = true
@@ -1019,14 +906,134 @@ table.insert(Library.LibraryColorTable, SectionBorder)
         SectionContent.CanvasSize = UDim2.new(0, 0, 0, SectionContentLayout.AbsoluteContentSize.Y + 15)
     end)
 
-task.spawn(function()
-    task.wait()
-    TweenService:Create(NameSection, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-        ImageTransparency = 0,
-        ImageColor3 = Library.Theme.BackgroundColor
-    }):Play()
-end)
+    local function MakeSectionDraggable()
+        local dragging = false
+        local dragInput
+        local dragStart
+        local startPos
+        local holdTime = 0
+        local holdThreshold = 2 -- 2 detik
 
+        local function update(input)
+            local delta = input.Position - dragStart
+            local newPos = UDim2.new(
+                startPos.X.Scale,
+                startPos.X.Offset + delta.X,
+                startPos.Y.Scale,
+                startPos.Y.Offset + delta.Y
+            )
+            
+            NameSection.Position = newPos
+
+            local tabPos = Tabs.AbsolutePosition
+            local tabSize = Tabs.AbsoluteSize
+            local sectionPos = NameSection.AbsolutePosition
+            
+            if math.abs(sectionPos.X - tabPos.X) < 50 and 
+               math.abs(sectionPos.Y - tabPos.Y) < 50 then
+                Shadow.Position = lastValidPosition
+                Shadow.Visible = true
+            else
+                Shadow.Visible = false
+            end
+        end
+
+        SectionTitle.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or 
+               input.UserInputType == Enum.UserInputType.Touch then
+                holdTime = 0
+                local holdConnection
+                holdConnection = RunService.RenderStepped:Connect(function(dt)
+                    holdTime = holdTime + dt
+                    if holdTime >= holdThreshold then
+                        holdConnection:Disconnect()
+                        dragging = true
+                        dragStart = input.Position
+                        startPos = NameSection.Position
+                        
+                        if not isDetached then
+                            lastValidPosition = NameSection.Position
+                            NameSection.Parent = UILibrary
+                            NameSection.Size = UDim2.new(0, SectionTitle.TextBounds.X + 30, 0, 181)
+                            isDetached = true
+                            MinimizeBtn.Visible = true
+                            TweenService:Create(NameSection, TweenInfo.new(0.3), {
+                                ImageColor3 = Color3.fromRGB(50, 50, 50)
+                            }):Play()
+                        end
+                    end
+                end)
+
+                input.Changed:Connect(function()
+                    if input.UserInputState == Enum.UserInputState.End then
+                        holdConnection:Disconnect()
+                        if dragging then
+                            dragging = false
+                            local tabPos = Tabs.AbsolutePosition
+                            local sectionPos = NameSection.AbsolutePosition
+                            if math.abs(sectionPos.X - tabPos.X) < 50 and 
+                               math.abs(sectionPos.Y - tabPos.Y) < 50 then
+                                NameSection.Parent = originalParent
+                                NameSection.Size = UDim2.new(0, 197, 0, 181)
+                                isDetached = false
+                                MinimizeBtn.Visible = false
+                                TweenService:Create(NameSection, TweenInfo.new(0.3), {
+                                    Position = lastValidPosition,
+                                    ImageColor3 = Library.Theme.BackgroundColor
+                                }):Play()
+                                Shadow.Visible = false
+                            end
+                        end
+                    end
+                end)
+            end
+        end)
+
+        SectionTitle.InputChanged:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseMovement or 
+               input.UserInputType == Enum.UserInputType.Touch then
+                dragInput = input
+            end
+        end)
+
+        UserInputService.InputChanged:Connect(function(input)
+            if input == dragInput and dragging then
+                update(input)
+            end
+        end)
+    end
+
+    local function ToggleMinimize()
+        if not isDetached then return end
+        
+        minimized = not minimized
+        if minimized then
+            TweenService:Create(NameSection, TweenInfo.new(0.3), {
+                Size = UDim2.new(0, SectionTitle.TextBounds.X + 30, 0, 30),
+                ImageColor3 = Color3.fromRGB(70, 70, 70)
+            }):Play()
+            SectionContent.Visible = false
+            MinimizeBtn.Text = "+"
+        else
+            TweenService:Create(NameSection, TweenInfo.new(0.3), {
+                Size = UDim2.new(0, SectionTitle.TextBounds.X + 30, 0, 181),
+                ImageColor3 = Color3.fromRGB(50, 50, 50)
+            }):Play()
+            SectionContent.Visible = true
+            MinimizeBtn.Text = "-"
+        end
+    end
+
+    MinimizeBtn.MouseButton1Click:Connect(ToggleMinimize)
+    MakeSectionDraggable()
+
+    task.spawn(function()
+        task.wait()
+        TweenService:Create(NameSection, TweenInfo.new(0.5, Library.Theme.EasingStyle), {
+            ImageTransparency = 0,
+            ImageColor3 = Library.Theme.BackgroundColor
+        }):Play()
+    end)
     
 function SectionElements:CreateLabel(name, text)
             local NameLabel = Instance.new("TextLabel")
