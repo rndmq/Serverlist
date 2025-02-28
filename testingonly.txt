@@ -886,7 +886,7 @@ function TabElements:CreateSection(name)
     MinimizeBtn.TextSize = 16
     MinimizeBtn.Visible = false
     
-  local function MakeSectionDraggable()
+local function MakeSectionDraggable()
     local dragging = false
     local dragInput
     local dragStart
@@ -906,21 +906,26 @@ function TabElements:CreateSection(name)
             NameSection.Position = newPos
             
             if isDetached then
-                local activeTab = nil
+                local nearestTab = nil
+                local minDistance = math.huge
                 for _, tab in pairs(Tabs:GetChildren()) do
                     if tab:IsA("Frame") and tab.Visible then
-                        activeTab = tab
-                        break
+                        local tabPos = tab.AbsolutePosition
+                        local sectionPos = NameSection.AbsolutePosition
+                        local distance = math.sqrt((sectionPos.X - tabPos.X)^2 + (sectionPos.Y - tabPos.Y)^2)
+                        if distance < minDistance then
+                            minDistance = distance
+                            nearestTab = tab
+                        end
                     end
                 end
                 
-                if activeTab and NameSection then
-                    local tabPos = activeTab.AbsolutePosition
-                    local sectionPos = NameSection.AbsolutePosition
-                    local distance = math.sqrt((sectionPos.X - tabPos.X)^2 + (sectionPos.Y - tabPos.Y)^2)
-                    local minDistance = 75 -- Meningkatkan jarak deteksi untuk memudahkan pemasangan
+                if nearestTab and NameSection then
+                    local tabPos = nearestTab.AbsolutePosition
+                    local distance = minDistance
+                    local minAttachDistance = 75
                     
-                    if distance < minDistance then
+                    if distance < minAttachDistance then
                         local relativeX = tabPos.X - UILibrary.AbsolutePosition.X
                         local relativeY = tabPos.Y - UILibrary.AbsolutePosition.Y
                         Shadow.Position = UDim2.new(0, relativeX, 0, relativeY)
@@ -986,22 +991,27 @@ function TabElements:CreateSection(name)
                     dragging = false
                     isHolding = false
                     if isDetached and NameSection then
-                        local activeTab = nil
+                        local nearestTab = nil
+                        local minDistance = math.huge
                         for _, tab in pairs(Tabs:GetChildren()) do
                             if tab:IsA("Frame") and tab.Visible then
-                                activeTab = tab
-                                break
+                                local tabPos = tab.AbsolutePosition
+                                local sectionPos = NameSection.AbsolutePosition
+                                local distance = math.sqrt((sectionPos.X - tabPos.X)^2 + (sectionPos.Y - tabPos.Y)^2)
+                                if distance < minDistance then
+                                    minDistance = distance
+                                    nearestTab = tab
+                                end
                             end
                         end
                         
-                        if activeTab then
-                            local tabPos = activeTab.AbsolutePosition
-                            local sectionPos = NameSection.AbsolutePosition
-                            local distance = math.sqrt((sectionPos.X - tabPos.X)^2 + (sectionPos.Y - tabPos.Y)^2)
-                            local minDistance = 75
-                            if distance < minDistance then
+                        if nearestTab then
+                            local tabPos = nearestTab.AbsolutePosition
+                            local distance = minDistance
+                            local minAttachDistance = 75
+                            if distance < minAttachDistance then
                                 local hasSectionAtDefault = false
-                                for _, child in pairs(activeTab:GetChildren()) do
+                                for _, child in pairs(nearestTab:GetChildren()) do
                                     if child:IsA("ImageLabel") and child.Name:match("Section$") and
                                        child.Position == UDim2.new(0, 0, 0.0574162677, 0) then
                                         hasSectionAtDefault = true
@@ -1010,7 +1020,7 @@ function TabElements:CreateSection(name)
                                 end
                                 
                                 if not hasSectionAtDefault then
-                                    -- Animasi pemasangan ke tab
+                                    -- Animasi perpindahan ke tab baru
                                     local relativeX = tabPos.X - UILibrary.AbsolutePosition.X
                                     local relativeY = tabPos.Y - UILibrary.AbsolutePosition.Y
                                     local targetPos = UDim2.new(0, relativeX, 0, relativeY + 12)
@@ -1029,7 +1039,7 @@ function TabElements:CreateSection(name)
                                     }):Play()
                                     
                                     task.wait(0.3)
-                                    NameSection.Parent = activeTab
+                                    NameSection.Parent = nearestTab
                                     isDetached = false
                                     MinimizeBtn.Visible = false
                                     SectionTitle.Size = UDim2.new(0, SectionTitle.TextBounds.X + 20, 0, 22)
@@ -1037,9 +1047,62 @@ function TabElements:CreateSection(name)
                                     NameSection.Position = UDim2.new(0, 0, 0.0574162677, 0)
                                     Shadow.Visible = false
                                     
-                                    local layout = activeTab:FindFirstChild("SectionLayout")
+                                    local layout = nearestTab:FindFirstChild("SectionLayout")
                                     if layout then
                                         layout:ApplyLayout()
+                                    end
+                                else
+                                    -- Jika tab sudah ada section, cari tab lain yang kosong
+                                    local availableTab = nil
+                                    for _, tab in pairs(Tabs:GetChildren()) do
+                                        if tab:IsA("Frame") and tab.Visible then
+                                            local hasDefaultSection = false
+                                            for _, child in pairs(tab:GetChildren()) do
+                                                if child:IsA("ImageLabel") and child.Name:match("Section$") and
+                                                   child.Position == UDim2.new(0, 0, 0.0574162677, 0) then
+                                                    hasDefaultSection = true
+                                                    break
+                                                end
+                                            end
+                                            if not hasDefaultSection then
+                                                availableTab = tab
+                                                break
+                                            end
+                                        end
+                                    end
+                                    
+                                    if availableTab then
+                                        local newTabPos = availableTab.AbsolutePosition
+                                        local relativeX = newTabPos.X - UILibrary.AbsolutePosition.X
+                                        local relativeY = newTabPos.Y - UILibrary.AbsolutePosition.Y
+                                        local targetPos = UDim2.new(0, relativeX, 0, relativeY + 12)
+                                        TweenService:Create(NameSection, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.In), {
+                                            Position = targetPos,
+                                            ImageColor3 = Library.Theme.BackgroundColor
+                                        }):Play()
+                                        
+                                        -- Efek scale saat masuk
+                                        TweenService:Create(NameSection, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                                            Size = UDim2.new(0, 207, 0, 191)
+                                        }):Play()
+                                        task.wait(0.15)
+                                        TweenService:Create(NameSection, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                                            Size = UDim2.new(0, 197, 0, 181)
+                                        }):Play()
+                                        
+                                        task.wait(0.3)
+                                        NameSection.Parent = availableTab
+                                        isDetached = false
+                                        MinimizeBtn.Visible = false
+                                        SectionTitle.Size = UDim2.new(0, SectionTitle.TextBounds.X + 20, 0, 22)
+                                        SectionTitle.Position = UDim2.new(0.5, (-SectionTitle.TextBounds.X - 5) / 2, 0, -12)
+                                        NameSection.Position = UDim2.new(0, 0, 0.0574162677, 0)
+                                        Shadow.Visible = false
+                                        
+                                        local layout = availableTab:FindFirstChild("SectionLayout")
+                                        if layout then
+                                            layout:ApplyLayout()
+                                        end
                                     end
                                 end
                             end
