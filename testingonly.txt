@@ -1325,7 +1325,6 @@ function SectionElements:CreateToggle(name, ...)
     local args = {...}
     local presetToggle, callback, tooltipText = nil, nil, nil
 
-    -- Prioritaskan fungsi sebagai callback, lalu string sebagai tooltip
     for i, v in ipairs(args) do
         if type(v) == "boolean" then
             presetToggle = v
@@ -1335,7 +1334,7 @@ function SectionElements:CreateToggle(name, ...)
             tooltipText = v
         end
     end
-    callback = callback or function() end -- Default ke fungsi kosong kalau gak ada
+    callback = callback or function() end
 
     local NameToggle = Instance.new("Frame")
     local Title = Instance.new("TextLabel")
@@ -1492,7 +1491,10 @@ function SectionElements:CreateToggle(name, ...)
     if Toggled then
         if type(callback) == "function" then
             print("Initial callback triggered with:", true)
-            callback(true)
+            local success, err = pcall(callback, true) -- Pake pcall buat tangkap error
+            if not success then
+                print("Callback error:", err)
+            end
         else
             print("Initial callback not triggered, type is:", type(callback))
         end
@@ -1513,7 +1515,10 @@ function SectionElements:CreateToggle(name, ...)
             SaveSettings()
             if type(callback) == "function" then
                 print("SetState callback with:", state)
-                callback(state)
+                local success, err = pcall(callback, state)
+                if not success then
+                    print("Callback error:", err)
+                end
             else
                 print("SetState callback not a function, type is:", type(callback))
             end
