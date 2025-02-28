@@ -886,7 +886,7 @@ function TabElements:CreateSection(name)
     MinimizeBtn.TextSize = 16
     MinimizeBtn.Visible = false
     
-    local function MakeSectionDraggable()
+  local function MakeSectionDraggable()
     local dragging = false
     local dragInput
     local dragStart
@@ -914,14 +914,16 @@ function TabElements:CreateSection(name)
                     end
                 end
                 
-                if activeTab then
+                if activeTab and NameSection then
                     local tabPos = activeTab.AbsolutePosition
                     local sectionPos = NameSection.AbsolutePosition
                     local distance = math.sqrt((sectionPos.X - tabPos.X)^2 + (sectionPos.Y - tabPos.Y)^2)
-                    local minDistance = 50
+                    local minDistance = 75 -- Meningkatkan jarak deteksi untuk memudahkan pemasangan
                     
                     if distance < minDistance then
-                        Shadow.Position = UDim2.new(0, tabPos.X - UILibrary.AbsolutePosition.X, 0, tabPos.Y - UILibrary.AbsolutePosition.Y)
+                        local relativeX = tabPos.X - UILibrary.AbsolutePosition.X
+                        local relativeY = tabPos.Y - UILibrary.AbsolutePosition.Y
+                        Shadow.Position = UDim2.new(0, relativeX, 0, relativeY)
                         Shadow.Visible = true
                     else
                         Shadow.Visible = false
@@ -950,13 +952,15 @@ function TabElements:CreateSection(name)
                         
                         -- Animasi pelepasan dengan efek "tercabut"
                         NameSection.Parent = UILibrary
+                        local detachOffsetX = 15
+                        local detachOffsetY = -15
                         TweenService:Create(NameSection, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
                             ImageColor3 = Color3.fromRGB(50, 50, 50),
                             Position = UDim2.new(
-                                startPos.X.Scale, 
-                                startPos.X.Offset + 10,
+                                startPos.X.Scale,
+                                startPos.X.Offset + detachOffsetX,
                                 startPos.Y.Scale,
-                                startPos.Y.Offset - 10
+                                startPos.Y.Offset + detachOffsetY
                             )
                         }):Play()
                         
@@ -994,7 +998,7 @@ function TabElements:CreateSection(name)
                             local tabPos = activeTab.AbsolutePosition
                             local sectionPos = NameSection.AbsolutePosition
                             local distance = math.sqrt((sectionPos.X - tabPos.X)^2 + (sectionPos.Y - tabPos.Y)^2)
-                            local minDistance = 50
+                            local minDistance = 75
                             if distance < minDistance then
                                 local hasSectionAtDefault = false
                                 for _, child in pairs(activeTab:GetChildren()) do
@@ -1007,7 +1011,9 @@ function TabElements:CreateSection(name)
                                 
                                 if not hasSectionAtDefault then
                                     -- Animasi pemasangan ke tab
-                                    local targetPos = UDim2.new(0, tabPos.X - UILibrary.AbsolutePosition.X, 0, tabPos.Y - UILibrary.AbsolutePosition.Y + 12)
+                                    local relativeX = tabPos.X - UILibrary.AbsolutePosition.X
+                                    local relativeY = tabPos.Y - UILibrary.AbsolutePosition.Y
+                                    local targetPos = UDim2.new(0, relativeX, 0, relativeY + 12)
                                     TweenService:Create(NameSection, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.In), {
                                         Position = targetPos,
                                         ImageColor3 = Library.Theme.BackgroundColor
