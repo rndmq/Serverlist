@@ -58,7 +58,9 @@ Library = {
 }
 
 pcall(function()
-    if getgenv().Color == "rgb" then
+    if not getgenv().Color then
+        Library.Theme.Color = Color3.fromRGB(255, 75, 75)
+    elseif getgenv().Color == "rgb" then
         coroutine.wrap(function()
             while true do
                 if getgenv().StopRGB then break end
@@ -66,10 +68,10 @@ pcall(function()
                     selectedColor = Color3.fromHSV(i, 1, 1)
                     Library.Theme.Color = selectedColor
                     for _, v in pairs(Library.LibraryColorTable) do
-    if v:IsA("Frame") or v:IsA("ImageButton") or (v:IsA("ImageLabel") and (v.Name == "Border" or v.Name == "BackgroundTab" or v == SectionBorder)) or v == SectionLayout then
-        v.ImageColor3 = Library.Theme.Color
-    end
-end
+                        if v:IsA("Frame") or v:IsA("ImageButton") or (v:IsA("ImageLabel") and (v.Name == "Border" or v.Name == "BackgroundTab" or v == SectionBorder)) or v == SectionLayout then
+                            v.ImageColor3 = Library.Theme.Color
+                        end
+                    end
                     task.wait(0.0001)
                 end
             end
@@ -108,7 +110,10 @@ local function UpdateTextColors()
     end
 end
 pcall(function()
-    if getgenv().TextColor == "rgb" then
+    if not getgenv().TextColor then
+        Library.Theme.TextColor = Color3.fromRGB(255, 255, 255)
+        UpdateTextColors()
+    elseif getgenv().TextColor == "rgb" then
         coroutine.wrap(function()
             while true do
                 if getgenv().StopRGB then break end
