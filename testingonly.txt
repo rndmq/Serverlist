@@ -818,7 +818,7 @@ function TabElements:CreateSection(name)
     NameSection.ZIndex = 4
     NameSection.Image = "rbxassetid://3570695787"
     NameSection.ImageColor3 = Library.Theme.MainColor
-table.insert(Library.LibraryColorTable, NameSection)
+    table.insert(Library.LibraryColorTable, NameSection)
     NameSection.ScaleType = Enum.ScaleType.Slice
     NameSection.SliceCenter = Rect.new(100, 100, 100, 100)
     NameSection.SliceScale = 0.025
@@ -833,7 +833,7 @@ table.insert(Library.LibraryColorTable, NameSection)
     SectionBorder.ZIndex = 3
     SectionBorder.Image = "rbxassetid://3570695787"
     SectionBorder.ImageColor3 = Library.Theme.MainColor
-table.insert(Library.LibraryColorTable, SectionBorder)
+    table.insert(Library.LibraryColorTable, SectionBorder)
     SectionBorder.ScaleType = Enum.ScaleType.Slice
     SectionBorder.SliceCenter = Rect.new(100, 100, 100, 100)
     SectionBorder.SliceScale = 0.050
@@ -850,10 +850,12 @@ table.insert(Library.LibraryColorTable, SectionBorder)
     SectionTitle.TextColor3 = Library.Theme.TextColor
     table.insert(Library.LibraryColorTable, SectionTitle)
     SectionTitle.TextSize = 14.000
+    
     local isDetached = false
     local lastValidPosition = NameSection.Position
     local originalParent = NameSection.Parent
     local minimized = false
+    
     local Shadow = Instance.new("ImageLabel")
     Shadow.Name = "Shadow"
     Shadow.BackgroundTransparency = 1
@@ -867,6 +869,7 @@ table.insert(Library.LibraryColorTable, SectionBorder)
     Shadow.ZIndex = 3
     Shadow.Visible = false
     Shadow.Parent = UITabs
+    
     local MinimizeBtn = Instance.new("TextButton")
     MinimizeBtn.Name = "MinimizeBtn"
     MinimizeBtn.Parent = NameSection
@@ -879,8 +882,7 @@ table.insert(Library.LibraryColorTable, SectionBorder)
     MinimizeBtn.TextColor3 = Library.Theme.TextColor
     MinimizeBtn.TextSize = 16
     MinimizeBtn.Visible = false
-    function TabElements:CreateSection(name)
-
+    
     local function MakeSectionDraggable()
         local dragging = false
         local dragInput
@@ -980,7 +982,7 @@ table.insert(Library.LibraryColorTable, SectionBorder)
                                 isDetached = false
                                 MinimizeBtn.Visible = false
                                 TweenService:Create(NameSection, TweenInfo.new(0.3), {
-                                    Position = UDim2.new(0, 0, 0.0574162677, 0), -- Posisi default section
+                                    Position = UDim2.new(0, 0, 0.0574162677, 0),
                                     ImageColor3 = Library.Theme.BackgroundColor
                                 }):Play()
                                 Shadow.Visible = false
@@ -1010,6 +1012,41 @@ table.insert(Library.LibraryColorTable, SectionBorder)
             end
         end)
     end
+    
+    local function ToggleMinimize()
+        if not isDetached then return end
+        
+        minimized = not minimized
+        if minimized then
+            TweenService:Create(NameSection, TweenInfo.new(0.3), {
+                Size = UDim2.new(0, 197, 0, 30),
+                ImageColor3 = Color3.fromRGB(70, 70, 70)
+            }):Play()
+            SectionContent.Visible = false
+            MinimizeBtn.Text = "⌄"
+        else
+            TweenService:Create(NameSection, TweenInfo.new(0.3), {
+                Size = UDim2.new(0, 197, 0, 181),
+                ImageColor3 = Color3.fromRGB(50, 50, 50)
+            }):Play()
+            SectionContent.Visible = true
+            MinimizeBtn.Text = "-"
+        end
+    end
+    
+    MinimizeBtn.MouseButton1Click:Connect(ToggleMinimize)
+    MakeSectionDraggable()
+    
+    task.spawn(function()
+        task.wait()
+        NameSection.Position = UDim2.new(0, 0, -0.5, 0)
+        TweenService:Create(NameSection, TweenInfo.new(0.5, Library.Theme.EasingStyle), {
+            Position = lastValidPosition,
+            ImageTransparency = 0,
+            ImageColor3 = Library.Theme.BackgroundColor
+        }):Play()
+    end)
+    
     SectionContent.Name = "SectionContent"
     SectionContent.Parent = NameSection
     SectionContent.Active = true
@@ -1034,14 +1071,13 @@ table.insert(Library.LibraryColorTable, SectionBorder)
         SectionContent.CanvasSize = UDim2.new(0, 0, 0, SectionContentLayout.AbsoluteContentSize.Y + 15)
     end)
 
-task.spawn(function()
-    task.wait()
-    TweenService:Create(NameSection, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-        ImageTransparency = 0,
-        ImageColor3 = Library.Theme.BackgroundColor
-    }):Play()
-end)
-
+    task.spawn(function()
+        task.wait()
+        TweenService:Create(NameSection, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+            ImageTransparency = 0,
+            ImageColor3 = Library.Theme.BackgroundColor
+        }):Play()
+    end)
     
 function SectionElements:CreateLabel(name, text)
             local NameLabel = Instance.new("TextLabel")
