@@ -113,10 +113,7 @@ local function UpdateTextColors()
 end
 local selectedTextColor = Color3.fromRGB(255, 255, 255)
 pcall(function()
-    if getgenv and getgenv().TextColor == "rgb" then
-default = Color3.fromRGB(255, 255, 255)
-        UpdateTextColors()
-    elseif getgenv().TextColor == "rgb" then
+    if getgenv().TextColor == "rgb" then
         coroutine.wrap(function()
             while true do
                 if getgenv().StopRGB then break end
