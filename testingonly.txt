@@ -895,52 +895,52 @@ function TabElements:CreateSection(name)
     local isHolding = false
 
     local function update(input)
-        local delta = input.Position - dragStart
-        local newPos = UDim2.new(
-            startPos.X.Scale,
-            startPos.X.Offset + delta.X,
-            startPos.Y.Scale,
-            startPos.Y.Offset + delta.Y
-        )
-        
-        NameSection.Position = newPos
-        if isDetached then
-            local activeTab = nil
-            for _, tab in pairs(Tabs:GetChildren()) do
-                if tab:IsA("Frame") and tab.Visible then
-                    activeTab = tab
-                    break
-                end
-            end
+        if dragging and NameSection then
+            local delta = input.Position - dragStart
+            local newPos = UDim2.new(
+                startPos.X.Scale,
+                startPos.X.Offset + delta.X,
+                startPos.Y.Scale,
+                startPos.Y.Offset + delta.Y
+            )
+            NameSection.Position = newPos
             
-            if activeTab then
-                local tabPos = activeTab.AbsolutePosition
-                local sectionPos = NameSection.AbsolutePosition
-                local distance = math.sqrt((sectionPos.X - tabPos.X)^2 + (sectionPos.Y - tabPos.Y)^2)
-                local minDistance = 50
+            if isDetached then
+                local activeTab = nil
+                for _, tab in pairs(Tabs:GetChildren()) do
+                    if tab:IsA("Frame") and tab.Visible then
+                        activeTab = tab
+                        break
+                    end
+                end
                 
-                if distance < minDistance then
-                    Shadow.Position = UDim2.new(0, activeTab.Position.X.Offset, 0, activeTab.Position.Y.Offset)
-                    Shadow.Visible = true
+                if activeTab then
+                    local tabPos = activeTab.AbsolutePosition
+                    local sectionPos = NameSection.AbsolutePosition
+                    local distance = math.sqrt((sectionPos.X - tabPos.X)^2 + (sectionPos.Y - tabPos.Y)^2)
+                    local minDistance = 50
+                    
+                    if distance < minDistance then
+                        Shadow.Position = UDim2.new(0, tabPos.X - UILibrary.AbsolutePosition.X, 0, tabPos.Y - UILibrary.AbsolutePosition.Y)
+                        Shadow.Visible = true
+                    else
+                        Shadow.Visible = false
+                    end
                 else
                     Shadow.Visible = false
                 end
-            else
-                Shadow.Visible = false
             end
-        else
-            Shadow.Visible = false
         end
     end
 
     SectionTitle.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or 
-           input.UserInputType == Enum.UserInputType.Touch then
+        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) and NameSection then
             dragging = true
             dragStart = input.Position
             startPos = NameSection.Position
             holdStartTime = tick()
             isHolding = true
+            
             coroutine.wrap(function()
                 while isHolding do
                     if tick() - holdStartTime >= 0.5 and not isDetached then
@@ -948,20 +948,19 @@ function TabElements:CreateSection(name)
                         isDetached = true
                         MinimizeBtn.Visible = true
                         
-                        
+                        -- Animasi pelepasan dengan efek "tercabut"
                         NameSection.Parent = UILibrary
                         TweenService:Create(NameSection, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
                             ImageColor3 = Color3.fromRGB(50, 50, 50),
-                            Size = UDim2.new(0, 197, 0, 181), 
                             Position = UDim2.new(
                                 startPos.X.Scale, 
                                 startPos.X.Offset + 10,
-                                startPos.Y.Scale, 
+                                startPos.Y.Scale,
                                 startPos.Y.Offset - 10
                             )
                         }):Play()
                         
-                        
+                        -- Efek scale untuk simulasi tercabut
                         TweenService:Create(NameSection, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                             Size = UDim2.new(0, 187, 0, 171)
                         }):Play()
@@ -982,7 +981,7 @@ function TabElements:CreateSection(name)
                 if input.UserInputState == Enum.UserInputState.End then
                     dragging = false
                     isHolding = false
-                    if isDetached then
+                    if isDetached and NameSection then
                         local activeTab = nil
                         for _, tab in pairs(Tabs:GetChildren()) do
                             if tab:IsA("Frame") and tab.Visible then
@@ -1007,13 +1006,14 @@ function TabElements:CreateSection(name)
                                 end
                                 
                                 if not hasSectionAtDefault then
-                                    
+                                    -- Animasi pemasangan ke tab
+                                    local targetPos = UDim2.new(0, tabPos.X - UILibrary.AbsolutePosition.X, 0, tabPos.Y - UILibrary.AbsolutePosition.Y + 12)
                                     TweenService:Create(NameSection, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.In), {
-                                        Position = UDim2.new(0, activeTab.Position.X.Offset, 0, activeTab.Position.Y.Offset + 12),
+                                        Position = targetPos,
                                         ImageColor3 = Library.Theme.BackgroundColor
                                     }):Play()
                                     
-                                    
+                                    -- Efek scale saat masuk
                                     TweenService:Create(NameSection, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                                         Size = UDim2.new(0, 207, 0, 191)
                                     }):Play()
@@ -1022,7 +1022,7 @@ function TabElements:CreateSection(name)
                                         Size = UDim2.new(0, 197, 0, 181)
                                     }):Play()
                                     
-                                    task.wait(0.3) 
+                                    task.wait(0.3)
                                     NameSection.Parent = activeTab
                                     isDetached = false
                                     MinimizeBtn.Visible = false
@@ -1045,8 +1045,7 @@ function TabElements:CreateSection(name)
     end)
 
     SectionTitle.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement or 
-           input.UserInputType == Enum.UserInputType.Touch then
+        if (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) and NameSection then
             dragInput = input
         end
     end)
