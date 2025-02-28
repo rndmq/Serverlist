@@ -57,6 +57,7 @@ Library = {
         TextColor = Color3.fromRGB(255, 255, 255) 
     }
 }
+local selectedColor = Color3.fromRGB(255, 255, 255) -- Default
 
 pcall(function()
     if getgenv and not getgenv().Color then
