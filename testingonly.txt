@@ -1016,8 +1016,7 @@ function TabElements:CreateSection(name)
     table.insert(Library.LibraryColorTable, SectionBorder)
     table.insert(Library.LibraryColorTable, SectionTitle)
 
-    return SectionElements
-end
+    
     
 function SectionElements:CreateLabel(name, text)
             local NameLabel = Instance.new("TextLabel")
