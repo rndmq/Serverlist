@@ -1,4 +1,3 @@
-
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local HttpService = game:GetService("HttpService")
@@ -53,14 +52,16 @@ Library = {
         BackgroundColor = Color3.fromRGB(35, 35, 35),
         UIToggleKey = Enum.KeyCode.RightControl,
         TextFont = Enum.Font.SourceSansBold,
-        EasingStyle = Enum.EasingStyle.Quart
+        EasingStyle = Enum.EasingStyle.Quart,
+        Color = Color3.fromRGB(255, 75, 75),      
+        TextColor = Color3.fromRGB(255, 255, 255) 
     }
 }
 local selectedColor = Color3.fromRGB(255, 75, 75) -- Default
 
 pcall(function()
-    if not getgenv().Color then
-        Library.Theme.Color = Color3.fromRGB(255, 75, 75)
+    if getgenv and not getgenv().Color then
+    Library.Theme.Color = Color3.fromRGB(255, 75, 75)
     elseif getgenv().Color == "rgb" then
         coroutine.wrap(function()
             while true do
@@ -112,7 +113,10 @@ local function UpdateTextColors()
 end
 local selectedTextColor = Color3.fromRGB(255, 255, 255)
 pcall(function()
-    if getgenv().TextColor == "rgb" then
+    if getgenv and getgenv().TextColor == "rgb" then
+default = Color3.fromRGB(255, 255, 255)
+        UpdateTextColors()
+    elseif getgenv().TextColor == "rgb" then
         coroutine.wrap(function()
             while true do
                 if getgenv().StopRGB then break end
@@ -153,7 +157,6 @@ pcall(function()
         UpdateTextColors()
     end
 end)
-
 pcall(function()
     if getgenv().font then
         local fontMap = {
@@ -634,6 +637,33 @@ coroutine.wrap(function()
         end
     end
 end)()
+local function checkProximity(draggedSection, onlyCheck)
+    local sectionPos = draggedSection.Position
+    for _, tab in pairs(Tabs:GetChildren()) do
+        if tab:IsA("Frame") then
+            local tabPos = tab.Position
+            local distance = (Vector2.new(sectionPos.X.Offset, sectionPos.Y.Offset) - 
+                            Vector2.new(tabPos.X.Offset, tabPos.Y.Offset)).Magnitude
+            
+            if distance < 50 then
+                if not onlyCheck then
+                    draggedSection.Parent = tab
+                    TweenService:Create(draggedSection, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {
+                        Position = UDim2.new(0, 0, 0, 0),
+                        Size = UDim2.new(0, 197, 0, 181)
+                    }):Play()
+                    draggedSection.ZIndex = 4
+                    draggedSection:FindFirstChild("MinimizeSection").Visible = false
+                    TweenService:Create(draggedSection:FindFirstChild("SectionBorder"), TweenInfo.new(0.3), {
+                        ImageColor3 = Library.Theme.MainColor
+                    }):Play()
+                end
+                return true
+            end
+        end
+    end
+    return false
+end
 function Library:CreateTab(name)
     local NameTab = Instance.new("Frame")
     local NameTabButton = Instance.new("ImageButton")
@@ -798,44 +828,29 @@ end
   
 
 function TabElements:CreateSection(name)
-    local TweenService = game:GetService("TweenService")
-    local UserInputService = game:GetService("UserInputService")
-    
-    -- Buat elemen UI untuk section
     local NameSection = Instance.new("ImageLabel")
     local SectionBorder = Instance.new("ImageLabel")
     local SectionTitle = Instance.new("TextLabel")
     local SectionContent = Instance.new("ScrollingFrame")
     local SectionContentLayout = Instance.new("UIListLayout")
-    local MinimizeBtn = Instance.new("TextButton")
-    
-    -- Variabel untuk logika dragging, detach, dan minimize
-    local SectionElements = { GameId = self.GameId }
-    local isDragging = false
-    local isDetached = false
-    local originalParent = NameTab
-    local originalPosition = UDim2.new(0, 0, 0.0574162677, 0)
-    local dragStartPos = nil
-    local minimized = false
-    local snapThreshold = 100 -- Jarak maksimum untuk snap (pixel)
-    local detachThreshold = 50 -- Jarak minimum untuk detach (pixel)
 
-    -- Setup dasar section
+    local SectionElements = { GameId = self.GameId }
+
     NameSection.Name = (name .. "Section")
     NameSection.Parent = NameTab
     NameSection.BackgroundColor3 = Library.Theme.BackgroundColor
     NameSection.BackgroundTransparency = 1.000
-    NameSection.Position = originalPosition
+    NameSection.Position = UDim2.new(0, 0, 0.0574162677, 0)
     NameSection.Size = UDim2.new(0, 197, 0, 181)
     NameSection.ZIndex = 4
     NameSection.Image = "rbxassetid://3570695787"
     NameSection.ImageColor3 = Library.Theme.MainColor
+table.insert(Library.LibraryColorTable, NameSection)
     NameSection.ScaleType = Enum.ScaleType.Slice
     NameSection.SliceCenter = Rect.new(100, 100, 100, 100)
     NameSection.SliceScale = 0.025
     NameSection.ImageTransparency = 1
 
-    -- Border section
     SectionBorder.Name = "SectionBorder"
     SectionBorder.Parent = NameSection
     SectionBorder.BackgroundColor3 = Library.Theme.MainColor
@@ -845,11 +860,11 @@ function TabElements:CreateSection(name)
     SectionBorder.ZIndex = 3
     SectionBorder.Image = "rbxassetid://3570695787"
     SectionBorder.ImageColor3 = Library.Theme.MainColor
+table.insert(Library.LibraryColorTable, SectionBorder)
     SectionBorder.ScaleType = Enum.ScaleType.Slice
     SectionBorder.SliceCenter = Rect.new(100, 100, 100, 100)
     SectionBorder.SliceScale = 0.050
-
-    -- Judul section (draggable)
+    
     SectionTitle.Name = "SectionTitle"
     SectionTitle.Parent = NameSection
     SectionTitle.BackgroundColor3 = Library.Theme.BackgroundColor
@@ -857,12 +872,96 @@ function TabElements:CreateSection(name)
     SectionTitle.Text = name
     SectionTitle.Position = UDim2.new(0.5, (-SectionTitle.TextBounds.X - 5) / 2, 0, -12)
     SectionTitle.Size = UDim2.new(0, SectionTitle.TextBounds.X + 5, 0, 22)
-    SectionTitle.ZIndex = 5
+    SectionTitle.ZIndex = 4
     SectionTitle.Font = Library.Theme.TextFont
     SectionTitle.TextColor3 = Library.Theme.TextColor
+    table.insert(Library.LibraryColorTable, SectionTitle)
     SectionTitle.TextSize = 14.000
+    SectionTitle.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            local startPosition = input.Position
+            local dragging = true
 
-    -- Konten section (scrolling frame)
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                    if not checkProximity(NameSection) then
+                        -- Keep detached if not near any tab
+                        NameSection.Parent = UILibrary
+                        Settings[game.PlaceId]["DetachedSections"] = Settings[game.PlaceId]["DetachedSections"] or {}
+                        Settings[game.PlaceId]["DetachedSections"][name] = true
+                        SaveSettings()
+                    else
+                        Settings[game.PlaceId]["DetachedSections"] = Settings[game.PlaceId]["DetachedSections"] or {}
+                        Settings[game.PlaceId]["DetachedSections"][name] = false
+                        SaveSettings()
+                    end
+                end
+            end)
+
+            UserInputService.InputChanged:Connect(function(input)
+                if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+                    local delta = input.Position - startPosition
+                    if delta.Magnitude > 10 then
+                        NameSection.Parent = UILibrary
+                        NameSection.ZIndex = 99
+                        MinimizeSection.Visible = true
+                        
+                        local newPos = UDim2.new(0, input.Position.X - startPosition.X, 
+                                               0, input.Position.Y - startPosition.Y)
+                        TweenService:Create(NameSection, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {Position = newPos}):Play()
+                        
+                        -- Visual feedback saat mendekati tab
+                        if checkProximity(NameSection, true) then
+                            SectionBorder.ImageColor3 = Color3.fromRGB(0, 255, 0) -- Glow hijau
+                        else
+                            SectionBorder.ImageColor3 = Library.Theme.MainColor
+                        end
+                    end
+                end
+            end)
+        end
+    end)
+
+    -- Improve minimize functionality
+    MinimizeSection.MouseButton1Click:Connect(function()
+        TweenService:Create(NameSection, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {Size = UDim2.new(0, 0, 0, 0)}):Play()
+        task.wait(0.3)
+        NameSection.Visible = false
+        MinimizeSection.Visible = false
+        
+        -- Create floating minimized icon
+        local minimizedIcon = Instance.new("ImageButton")
+        minimizedIcon.Parent = UILibrary
+        minimizedIcon.Size = UDim2.new(0, 30, 0, 30)
+        minimizedIcon.Position = NameSection.Position
+        minimizedIcon.Image = "rbxassetid://3570695787"
+        minimizedIcon.ImageColor3 = Library.Theme.MainColor
+        minimizedIcon.ZIndex = 100
+        
+        local iconText = Instance.new("TextLabel")
+        iconText.Parent = minimizedIcon
+        iconText.Text = "S"
+        iconText.Size = UDim2.new(1, 0, 1, 0)
+        iconText.TextColor3 = Color3.fromRGB(255, 255, 255)
+        iconText.BackgroundTransparency = 1
+        iconText.Font = Library.Theme.TextFont
+        
+        -- Restore when clicked
+        minimizedIcon.MouseButton1Click:Connect(function()
+            NameSection.Visible = true
+            MinimizeSection.Visible = true
+            TweenService:Create(NameSection, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {Size = UDim2.new(0, 197, 0, 181)}):Play()
+            minimizedIcon:Destroy()
+        end)
+        
+        MakeDraggable(minimizedIcon, minimizedIcon)
+    end)
+    if Settings[game.PlaceId] and Settings[game.PlaceId]["DetachedSections"] and Settings[game.PlaceId]["DetachedSections"][name] then
+        NameSection.Parent = UILibrary
+        NameSection.ZIndex = 99
+        MinimizeSection.Visible = true
+    end
     SectionContent.Name = "SectionContent"
     SectionContent.Parent = NameSection
     SectionContent.Active = true
@@ -877,146 +976,24 @@ function TabElements:CreateSection(name)
     SectionContent.ScrollBarThickness = 4
     SectionContent.TopImage = "rbxasset://textures/ui/Scroll/scroll-middle.png"
 
-    -- Layout untuk konten section
     SectionContentLayout.Name = "SectionContentLayout"
     SectionContentLayout.Parent = SectionContent
     SectionContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
-    -- Tombol minimize (awalnya disembunyikan)
-    MinimizeBtn.Name = "MinimizeBtn"
-    MinimizeBtn.Parent = NameSection
-    MinimizeBtn.BackgroundTransparency = 1
-    MinimizeBtn.Position = UDim2.new(1, -25, 0, -12)
-    MinimizeBtn.Size = UDim2.new(0, 20, 0, 20)
-    MinimizeBtn.ZIndex = 6
-    MinimizeBtn.Font = Library.Theme.TextFont
-    MinimizeBtn.Text = "-"
-    MinimizeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    MinimizeBtn.TextSize = 16
-    MinimizeBtn.Visible = false
+    table.insert(Library.LibraryColorTable, SectionBorder)
 
-    -- Animasi awal section muncul
-    task.spawn(function()
-        task.wait()
-        TweenService:Create(NameSection, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-            ImageTransparency = 0,
-            ImageColor3 = Library.Theme.BackgroundColor
-        }):Play()
-    end)
-
-    -- Fungsi untuk minimize/maximize section
-    local function MinimizeSection()
-        if not minimized then
-            TweenService:Create(NameSection, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                Size = UDim2.new(0, 197, 0, 22) -- Tinggi cuma judul
-            }):Play()
-            SectionContent.Visible = false
-            MinimizeBtn.Text = "+"
-            minimized = true
-        else
-            TweenService:Create(NameSection, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                Size = UDim2.new(0, 197, 0, 181) -- Kembali ke ukuran penuh
-            }):Play()
-            SectionContent.Visible = true
-            MinimizeBtn.Text = "-"
-            minimized = false
-        end
-    end
-
-    -- Fungsi untuk cek snapping ke tab atau Main window
-    local function CheckSnapTarget()
-        local sectionPos = NameSection.AbsolutePosition
-
-        -- Cek semua tab sebagai target snap
-        for _, tab in pairs(Tabs:GetChildren()) do
-            if tab:IsA("Frame") then
-                local tabPos = tab.AbsolutePosition
-                local distance = (sectionPos - tabPos).Magnitude
-                if distance < snapThreshold then
-                    NameSection.Parent = tab
-                    isDetached = false
-                    MinimizeBtn.Visible = false
-                    TweenService:Create(NameSection, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                        Position = UDim2.new(0, sectionPos.X - tabPos.X, 0, sectionPos.Y - tabPos.Y)
-                    }):Play()
-                    return true
-                end
-            end
-        end
-
-        -- Cek snap ke Main window
-        local mainPos = Main.AbsolutePosition
-        local distanceToMain = (sectionPos - mainPos).Magnitude
-        if distanceToMain < snapThreshold then
-            NameSection.Parent = originalParent
-            isDetached = false
-            MinimizeBtn.Visible = false
-            TweenService:Create(NameSection, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                Position = originalPosition
-            }):Play()
-            return true
-        end
-
-        return false
-    end
-
-    -- Logika dragging
-    SectionTitle.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            isDragging = true
-            dragStartPos = input.Position
-            originalPosition = NameSection.Position
-            NameSection.ZIndex = 10 -- Bawa ke depan saat drag
-        end
-    end)
-
-    SectionTitle.InputChanged:Connect(function(input)
-        if isDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-            local delta = input.Position - dragStartPos
-            NameSection.Position = UDim2.new(
-                originalPosition.X.Scale, originalPosition.X.Offset + delta.X,
-                originalPosition.Y.Scale, originalPosition.Y.Offset + delta.Y
-            )
-        end
-    end)
-
-    SectionTitle.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            isDragging = false
-            NameSection.ZIndex = 4 -- Kembali ke ZIndex normal
-
-            local delta = input.Position - dragStartPos
-            if delta.Magnitude > detachThreshold then -- Kalau digeser cukup jauh
-                if not CheckSnapTarget() then -- Cek apakah bisa snap
-                    isDetached = true
-                    NameSection.Parent = UILibrary -- Jadi floating
-                    MinimizeBtn.Visible = true
-                end
-            else
-                -- Snap kembali ke posisi awal kalau nggak cukup jauh
-                TweenService:Create(NameSection, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                    Position = originalPosition
-                }):Play()
-            end
-        end
-    end)
-
-    -- Event klik tombol minimize
-    MinimizeBtn.MouseButton1Click:Connect(function()
-        MinimizeSection()
-    end)
-
-    -- Update ukuran canvas section
     SectionContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
         SectionContent.CanvasSize = UDim2.new(0, 0, 0, SectionContentLayout.AbsoluteContentSize.Y + 15)
     end)
 
-    -- Tambahkan ke tabel warna library
-    table.insert(Library.LibraryColorTable, NameSection)
-    table.insert(Library.LibraryColorTable, SectionBorder)
-    table.insert(Library.LibraryColorTable, SectionTitle)
+task.spawn(function()
+    task.wait()
+    TweenService:Create(NameSection, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+        ImageTransparency = 0,
+        ImageColor3 = Library.Theme.BackgroundColor
+    }):Play()
+end)
 
-    
     
 function SectionElements:CreateLabel(name, text)
             local NameLabel = Instance.new("TextLabel")
