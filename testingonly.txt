@@ -844,12 +844,15 @@ function TabElements:CreateSection(name)
     SectionTitle.BorderSizePixel = 0
     SectionTitle.Text = name
     SectionTitle.Position = UDim2.new(0.5, (-SectionTitle.TextBounds.X - 5) / 2, 0, -12)
-    SectionTitle.Size = UDim2.new(0, SectionTitle.TextBounds.X + 20, 0, 22) -- Tambah padding kiri-kanan
+    SectionTitle.Size = UDim2.new(0, SectionTitle.TextBounds.X + 20, 0, 22) -- Padding awal
     SectionTitle.ZIndex = 4
     SectionTitle.Font = Library.Theme.TextFont
     SectionTitle.TextColor3 = Library.Theme.TextColor
     table.insert(Library.LibraryColorTable, SectionTitle)
     SectionTitle.TextSize = 14.000
+    local titleCorner = Instance.new("UICorner")
+    titleCorner.CornerRadius = UDim.new(0, 10)
+    titleCorner.Parent = SectionTitle
     
     local isDetached = false
     local lastValidPosition = NameSection.Position
@@ -901,28 +904,27 @@ function TabElements:CreateSection(name)
             )
             
             NameSection.Position = newPos
-
-            -- Cek proximity ke semua tab hanya saat sudah detached
             if isDetached then
-                local closestTab = nil
-                local minDistance = 50 -- Jarak maksimum untuk snap
-                
+                local activeTab = nil
                 for _, tab in pairs(Tabs:GetChildren()) do
-                    if tab:IsA("Frame") then
-                        local tabPos = tab.AbsolutePosition
-                        local sectionPos = NameSection.AbsolutePosition
-                        local distance = math.sqrt((sectionPos.X - tabPos.X)^2 + (sectionPos.Y - tabPos.Y)^2)
-                        
-                        if distance < minDistance then
-                            minDistance = distance
-                            closestTab = tab
-                        end
+                    if tab:IsA("Frame") and tab.Visible then
+                        activeTab = tab
+                        break
                     end
                 end
-
-                if closestTab then
-                    Shadow.Position = UDim2.new(0, closestTab.Position.X.Offset, 0, closestTab.Position.Y.Offset)
-                    Shadow.Visible = true
+                
+                if activeTab then
+                    local tabPos = activeTab.AbsolutePosition
+                    local sectionPos = NameSection.AbsolutePosition
+                    local distance = math.sqrt((sectionPos.X - tabPos.X)^2 + (sectionPos.Y - tabPos.Y)^2)
+                    local minDistance = 50
+                    
+                    if distance < minDistance then
+                        Shadow.Position = UDim2.new(0, activeTab.Position.X.Offset, 0, activeTab.Position.Y.Offset)
+                        Shadow.Visible = true
+                    else
+                        Shadow.Visible = false
+                    end
                 else
                     Shadow.Visible = false
                 end
@@ -939,12 +941,9 @@ function TabElements:CreateSection(name)
                 startPos = NameSection.Position
                 holdStartTime = tick()
                 isHolding = true
-                
-                -- Coroutine untuk mendeteksi penahanan 0.5 detik
                 coroutine.wrap(function()
                     while isHolding do
                         if tick() - holdStartTime >= 0.5 and not isDetached then
-                            -- Simpan posisi terakhir dan ubah parent tanpa mengubah posisi langsung
                             lastValidPosition = NameSection.Position
                             NameSection.Parent = UILibrary
                             isDetached = true
@@ -952,9 +951,8 @@ function TabElements:CreateSection(name)
                             TweenService:Create(NameSection, TweenInfo.new(0.3), {
                                 ImageColor3 = Color3.fromRGB(50, 50, 50)
                             }):Play()
-                            -- Pastikan posisi tetap sama saat detach dan perpanjang judul
                             NameSection.Position = startPos
-                            SectionTitle.Size = UDim2.new(0, NameSection.Size.X.Offset - 40, 0, 22) -- Perpanjang judul ke kiri-kanan
+                            SectionTitle.Size = UDim2.new(0, NameSection.Size.X.Offset - 20, 0, 22)
                             SectionTitle.Position = UDim2.new(0.5, -SectionTitle.Size.X.Offset / 2, 0, -12)
                             break
                         end
@@ -966,60 +964,47 @@ function TabElements:CreateSection(name)
                     if input.UserInputState == Enum.UserInputState.End then
                         dragging = false
                         isHolding = false
-                        
-                        -- Jika sudah detached, cek apakah bisa dipasang kembali
                         if isDetached then
-                            local closestTab = nil
-                            local minDistance = 50
-                            local canAttach = false
-                            
+                            local activeTab = nil
                             for _, tab in pairs(Tabs:GetChildren()) do
-                                if tab:IsA("Frame") then
-                                    local tabPos = tab.AbsolutePosition
-                                    local sectionPos = NameSection.AbsolutePosition
-                                    local distance = math.sqrt((sectionPos.X - tabPos.X)^2 + (sectionPos.Y - tabPos.Y)^2)
+                                if tab:IsA("Frame") and tab.Visible then
+                                    activeTab = tab
+                                    break
+                                end
+                            end
+                            
+                            if activeTab then
+                                local tabPos = activeTab.AbsolutePosition
+                                local sectionPos = NameSection.AbsolutePosition
+                                local distance = math.sqrt((sectionPos.X - tabPos.X)^2 + (sectionPos.Y - tabPos.Y)^2)
+                                local minDistance = 50
+                                if distance < minDistance then
+                                    local hasSectionAtDefault = false
+                                    for _, child in pairs(activeTab:GetChildren()) do
+                                        if child:IsA("ImageLabel") and child.Name:match("Section$") and
+                                           child.Position == UDim2.new(0, 0, 0.0574162677, 0) then
+                                            hasSectionAtDefault = true
+                                            break
+                                        end
+                                    end
                                     
-                                    if distance < minDistance then
-                                        minDistance = distance
-                                        closestTab = tab
+                                    if not hasSectionAtDefault then
+                                        NameSection.Parent = activeTab
+                                        isDetached = false
+                                        MinimizeBtn.Visible = false
+                                        SectionTitle.Size = UDim2.new(0, SectionTitle.TextBounds.X + 20, 0, 22)
+                                        SectionTitle.Position = UDim2.new(0.5, (-SectionTitle.TextBounds.X - 5) / 2, 0, -12)
+                                        TweenService:Create(NameSection, TweenInfo.new(0.3), {
+                                            Position = UDim2.new(0, 0, 0.0574162677, 0),
+                                            ImageColor3 = Library.Theme.BackgroundColor
+                                        }):Play()
+                                        Shadow.Visible = false
+                                       
+                                        local layout = activeTab:FindFirstChild("SectionLayout")
+                                        if layout then
+                                            layout:ApplyLayout()
+                                        end
                                     end
-                                end
-                            end
-                            
-                            if closestTab then
-                                -- Cek apakah tab sudah memiliki section di posisi default
-                                local hasSectionAtDefault = false
-                                for _, child in pairs(closestTab:GetChildren()) do
-                                    if child:IsA("ImageLabel") and child.Name:match("Section$") and
-                                       child.Position == UDim2.new(0, 0, 0.0574162677, 0) then
-                                        hasSectionAtDefault = true
-                                        break
-                                    end
-                                end
-                                
-                                if not hasSectionAtDefault then
-                                    canAttach = true
-                                end
-                            end
-                            
-                            if closestTab and canAttach then
-                                -- Pasang kembali ke tab terdekat
-                                NameSection.Parent = closestTab
-                                isDetached = false
-                                MinimizeBtn.Visible = false
-                                -- Kembalikan ukuran judul ke normal saat di-attach
-                                SectionTitle.Size = UDim2.new(0, SectionTitle.TextBounds.X + 20, 0, 22)
-                                SectionTitle.Position = UDim2.new(0.5, (-SectionTitle.TextBounds.X - 5) / 2, 0, -12)
-                                TweenService:Create(NameSection, TweenInfo.new(0.3), {
-                                    Position = UDim2.new(0, 0, 0.0574162677, 0),
-                                    ImageColor3 = Library.Theme.BackgroundColor
-                                }):Play()
-                                Shadow.Visible = false
-                                
-                                -- Update layout tab
-                                local layout = closestTab:FindFirstChild("SectionLayout")
-                                if layout then
-                                    layout:ApplyLayout()
                                 end
                             end
                         end
