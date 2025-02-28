@@ -689,7 +689,7 @@ function Library:CreateTab(name)
     SectionLayout.Parent = NameTab
     SectionLayout.FillDirection = Enum.FillDirection.Horizontal
     SectionLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    SectionLayout.Padding = UDim.new(0, 25)
+    SectionLayout.Padding = UDim.new(0, 5) -- Padding antar section
 
     SectionPadding.Name = "SectionPadding"
     SectionPadding.Parent = NameTab
@@ -709,6 +709,30 @@ function Library:CreateTab(name)
         local dragStart
         local startPos
         local tabButtonsWidth = TabButtons.AbsoluteSize.X
+        local tabButtons = TabButtons:GetChildren()
+
+        local function sortTabs()
+            -- Ambil semua tab button dan urutkan berdasarkan posisi X
+            local sortedButtons = {}
+            for _, btn in pairs(tabButtons) do
+                if btn:IsA("ImageButton") then
+                    table.insert(sortedButtons, btn)
+                end
+            end
+            table.sort(sortedButtons, function(a, b)
+                return a.Position.X.Offset < b.Position.X.Offset
+            end)
+
+            -- Atur ulang posisi berdasarkan urutan
+            for i, btn in pairs(sortedButtons) do
+                local targetX = (i - 1) * (btn.Size.X.Offset + 5) -- Padding 5 piksel
+                if btn ~= tabButton or not dragging then -- Hindari perubahan saat dragging tab yang aktif
+                    TweenService:Create(btn, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                        Position = UDim2.new(0, targetX, btn.Position.Y.Scale, btn.Position.Y.Offset)
+                    }):Play()
+                end
+            end
+        end
 
         tabButton.InputBegan:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -718,6 +742,7 @@ function Library:CreateTab(name)
                 input.Changed:Connect(function()
                     if input.UserInputState == Enum.UserInputState.End then
                         dragging = false
+                        sortTabs() -- Urutkan ulang setelah drag selesai
                     end
                 end)
             end
@@ -740,24 +765,6 @@ function Library:CreateTab(name)
                 newXOffset = math.clamp(newXOffset, minX, maxX)
 
                 tabButton.Position = UDim2.new(0, newXOffset, startPos.Y.Scale, startPos.Y.Offset)
-
-                -- Perbarui posisi tab lain agar tetap berurutan
-                local tabButtons = TabButtons:GetChildren()
-                table.sort(tabButtons, function(a, b)
-                    if a:IsA("ImageButton") and b:IsA("ImageButton") then
-                        return a.Position.X.Offset < b.Position.X.Offset
-                    end
-                    return false
-                end)
-
-                for i, btn in pairs(tabButtons) do
-                    if btn:IsA("ImageButton") and btn ~= tabButton then
-                        local targetX = (i - 1) * (tabButton.Size.X.Offset + 5) -- Jarak 5 untuk padding
-                        TweenService:Create(btn, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                            Position = UDim2.new(0, targetX, btn.Position.Y.Scale, btn.Position.Y.Offset)
-                        }):Play()
-                    end
-                end
             end
         end)
     end
@@ -860,6 +867,7 @@ function Library:CreateTab(name)
             end
         end
     end
+
 
 function TabElements:CreateSection(name)
     local NameSection = Instance.new("ImageLabel")
