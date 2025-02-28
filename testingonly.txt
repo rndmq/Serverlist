@@ -135,11 +135,14 @@ pcall(function()
             red = Color3.fromRGB(255, 0, 0),
             green = Color3.fromRGB(0, 255, 0),
             yellow = Color3.fromRGB(255, 255, 0),
-            white = Color3.fromRGB(255, 255, 255),
-            black = Color3.fromRGB(0, 0, 0),
-            default = Color3.fromRGB(255, 255, 255),     cyan = Color3.fromRGB(0, 255, 255),
+            purple = Color3.fromRGB(128, 0, 128),
+            pink = Color3.fromRGB(255, 105, 180),
+            default = Color3.fromRGB(255, 255, 255),
+            cyan = Color3.fromRGB(0, 255, 255),
             brown = Color3.fromRGB(139, 69, 19),
-            orange = Color3.fromRGB(255, 165, 0)
+            orange = Color3.fromRGB(255, 165, 0),
+            black = Color3.fromRGB(0, 0, 0),
+            white = Color3.fromRGB(255, 255, 255)
         }
         local colorKey = string.lower(tostring(getgenv().TextColor))
         Library.Theme.TextColor = colorMap[colorKey] or Color3.fromRGB(255, 255, 255)
@@ -790,29 +793,41 @@ end
   
 
 function TabElements:CreateSection(name)
+    local TweenService = game:GetService("TweenService")
+    local UserInputService = game:GetService("UserInputService")
+    
     local NameSection = Instance.new("ImageLabel")
     local SectionBorder = Instance.new("ImageLabel")
     local SectionTitle = Instance.new("TextLabel")
     local SectionContent = Instance.new("ScrollingFrame")
     local SectionContentLayout = Instance.new("UIListLayout")
-
+    local MinimizeBtn = Instance.new("TextButton")
+    
     local SectionElements = { GameId = self.GameId }
+    local isDragging = false
+    local isDetached = false
+    local originalParent = NameTab
+    local originalPosition = UDim2.new(0, 0, 0.0574162677, 0)
+    local dragStartPos = nil
+    local minimized = false
+    local snapThreshold = 100 -- Jarak maksimum untuk snap (pixel)
 
+    -- Setup Section
     NameSection.Name = (name .. "Section")
     NameSection.Parent = NameTab
     NameSection.BackgroundColor3 = Library.Theme.BackgroundColor
     NameSection.BackgroundTransparency = 1.000
-    NameSection.Position = UDim2.new(0, 0, 0.0574162677, 0)
+    NameSection.Position = originalPosition
     NameSection.Size = UDim2.new(0, 197, 0, 181)
     NameSection.ZIndex = 4
     NameSection.Image = "rbxassetid://3570695787"
     NameSection.ImageColor3 = Library.Theme.MainColor
-table.insert(Library.LibraryColorTable, NameSection)
     NameSection.ScaleType = Enum.ScaleType.Slice
     NameSection.SliceCenter = Rect.new(100, 100, 100, 100)
     NameSection.SliceScale = 0.025
     NameSection.ImageTransparency = 1
 
+    -- Section Border
     SectionBorder.Name = "SectionBorder"
     SectionBorder.Parent = NameSection
     SectionBorder.BackgroundColor3 = Library.Theme.MainColor
@@ -822,11 +837,11 @@ table.insert(Library.LibraryColorTable, NameSection)
     SectionBorder.ZIndex = 3
     SectionBorder.Image = "rbxassetid://3570695787"
     SectionBorder.ImageColor3 = Library.Theme.MainColor
-table.insert(Library.LibraryColorTable, SectionBorder)
     SectionBorder.ScaleType = Enum.ScaleType.Slice
     SectionBorder.SliceCenter = Rect.new(100, 100, 100, 100)
     SectionBorder.SliceScale = 0.050
-    
+
+    -- Section Title (Draggable)
     SectionTitle.Name = "SectionTitle"
     SectionTitle.Parent = NameSection
     SectionTitle.BackgroundColor3 = Library.Theme.BackgroundColor
@@ -834,12 +849,12 @@ table.insert(Library.LibraryColorTable, SectionBorder)
     SectionTitle.Text = name
     SectionTitle.Position = UDim2.new(0.5, (-SectionTitle.TextBounds.X - 5) / 2, 0, -12)
     SectionTitle.Size = UDim2.new(0, SectionTitle.TextBounds.X + 5, 0, 22)
-    SectionTitle.ZIndex = 4
+    SectionTitle.ZIndex = 5
     SectionTitle.Font = Library.Theme.TextFont
     SectionTitle.TextColor3 = Library.Theme.TextColor
-    table.insert(Library.LibraryColorTable, SectionTitle)
     SectionTitle.TextSize = 14.000
-    
+
+    -- Section Content
     SectionContent.Name = "SectionContent"
     SectionContent.Parent = NameSection
     SectionContent.Active = true
@@ -858,19 +873,144 @@ table.insert(Library.LibraryColorTable, SectionBorder)
     SectionContentLayout.Parent = SectionContent
     SectionContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
-    table.insert(Library.LibraryColorTable, SectionBorder)
+    -- Minimize Button
+    MinimizeBtn.Name = "MinimizeBtn"
+    MinimizeBtn.Parent = NameSection
+    MinimizeBtn.BackgroundTransparency = 1
+    MinimizeBtn.Position = UDim2.new(1, -25, 0, -12)
+    MinimizeBtn.Size = UDim2.new(0, 20, 0, 20)
+    MinimizeBtn.ZIndex = 6
+    MinimizeBtn.Font = Library.Theme.TextFont
+    MinimizeBtn.Text = "-"
+    MinimizeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    MinimizeBtn.TextSize = 16
+    MinimizeBtn.Visible = false
 
+    -- Animasi Awal
+    task.spawn(function()
+        task.wait()
+        TweenService:Create(NameSection, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+            ImageTransparency = 0,
+            ImageColor3 = Library.Theme.BackgroundColor
+        }):Play()
+    end)
+
+    -- Fungsi Minimize/Maximize
+    local function MinimizeSection()
+        if not minimized then
+            TweenService:Create(NameSection, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                Size = UDim2.new(0, 197, 0, 22)
+            }):Play()
+            SectionContent.Visible = false
+            MinimizeBtn.Text = "+"
+            minimized = true
+        else
+            TweenService:Create(NameSection, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                Size = UDim2.new(0, 197, 0, 181)
+            }):Play()
+            SectionContent.Visible = true
+            MinimizeBtn.Text = "-"
+            minimized = false
+        end
+    end
+
+    -- Fungsi untuk cek snapping ke target
+    local function CheckSnapTarget()
+        local sectionPos = NameSection.AbsolutePosition
+        local sectionSize = NameSection.AbsoluteSize
+
+        -- Cek semua tab sebagai target snap
+        for _, tab in pairs(Tabs:GetChildren()) do
+            if tab:IsA("Frame") then
+                local tabPos = tab.AbsolutePosition
+                local tabSize = tab.AbsoluteSize
+
+                local distance = (sectionPos - tabPos).Magnitude
+                if distance < snapThreshold then
+                    -- Snap ke tab ini
+                    NameSection.Parent = tab
+                    isDetached = false
+                    MinimizeBtn.Visible = false
+                    TweenService:Create(NameSection, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                        Position = UDim2.new(0, sectionPos.X - tabPos.X, 0, sectionPos.Y - tabPos.Y)
+                    }):Play()
+                    return true
+                end
+            end
+        end
+
+        -- Cek snap ke Main window kalau nggak ketemu tab
+        local mainPos = Main.AbsolutePosition
+        local mainSize = Main.AbsoluteSize
+        local distanceToMain = (sectionPos - mainPos).Magnitude
+        if distanceToMain < snapThreshold then
+            NameSection.Parent = originalParent
+            isDetached = false
+            MinimizeBtn.Visible = false
+            TweenService:Create(NameSection, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                Position = originalPosition
+            }):Play()
+            return true
+        end
+
+        return false
+    end
+
+    -- Dragging Logic
+    SectionTitle.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            isDragging = true
+            dragStartPos = input.Position
+            originalPosition = NameSection.Position
+            NameSection.ZIndex = 10
+        end
+    end)
+
+    SectionTitle.InputChanged:Connect(function(input)
+        if isDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local delta = input.Position - dragStartPos
+            NameSection.Position = UDim2.new(
+                originalPosition.X.Scale, originalPosition.X.Offset + delta.X,
+                originalPosition.Y.Scale, originalPosition.Y.Offset + delta.Y
+            )
+        end
+    end)
+
+    SectionTitle.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            isDragging = false
+            NameSection.ZIndex = 4
+
+            local delta = input.Position - dragStartPos
+            if delta.Magnitude > 50 then -- Threshold untuk detach
+                if not CheckSnapTarget() then
+                    -- Kalau nggak snap, jadi detached
+                    isDetached = true
+                    NameSection.Parent = UILibrary
+                    MinimizeBtn.Visible = true
+                end
+            else
+                -- Snap back ke posisi awal
+                TweenService:Create(NameSection, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    Position = originalPosition
+                }):Play()
+            end
+        end
+    end)
+
+    -- Minimize Button Click
+    MinimizeBtn.MouseButton1Click:Connect(function()
+        MinimizeSection()
+    end)
+
+    -- Update Canvas Size
     SectionContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
         SectionContent.CanvasSize = UDim2.new(0, 0, 0, SectionContentLayout.AbsoluteContentSize.Y + 15)
     end)
 
-task.spawn(function()
-    task.wait()
-    TweenService:Create(NameSection, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-        ImageTransparency = 0,
-        ImageColor3 = Library.Theme.BackgroundColor
-    }):Play()
-end)
+    table.insert(Library.LibraryColorTable, NameSection)
+    table.insert(Library.LibraryColorTable, SectionBorder)
+    table.insert(Library.LibraryColorTable, SectionTitle)
 
     
 function SectionElements:CreateLabel(name, text)
