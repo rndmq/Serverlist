@@ -818,7 +818,7 @@ function TabElements:CreateSection(name)
     NameSection.ZIndex = 4
     NameSection.Image = "rbxassetid://3570695787"
     NameSection.ImageColor3 = Library.Theme.MainColor
-table.insert(Library.LibraryColorTable, NameSection)
+    table.insert(Library.LibraryColorTable, NameSection)
     NameSection.ScaleType = Enum.ScaleType.Slice
     NameSection.SliceCenter = Rect.new(100, 100, 100, 100)
     NameSection.SliceScale = 0.025
@@ -833,7 +833,7 @@ table.insert(Library.LibraryColorTable, NameSection)
     SectionBorder.ZIndex = 3
     SectionBorder.Image = "rbxassetid://3570695787"
     SectionBorder.ImageColor3 = Library.Theme.MainColor
-table.insert(Library.LibraryColorTable, SectionBorder)
+    table.insert(Library.LibraryColorTable, SectionBorder)
     SectionBorder.ScaleType = Enum.ScaleType.Slice
     SectionBorder.SliceCenter = Rect.new(100, 100, 100, 100)
     SectionBorder.SliceScale = 0.050
@@ -844,12 +844,321 @@ table.insert(Library.LibraryColorTable, SectionBorder)
     SectionTitle.BorderSizePixel = 0
     SectionTitle.Text = name
     SectionTitle.Position = UDim2.new(0.5, (-SectionTitle.TextBounds.X - 5) / 2, 0, -12)
-    SectionTitle.Size = UDim2.new(0, SectionTitle.TextBounds.X + 5, 0, 22)
+    SectionTitle.Size = UDim2.new(0, SectionTitle.TextBounds.X + 20, 0, 22)
     SectionTitle.ZIndex = 4
     SectionTitle.Font = Library.Theme.TextFont
     SectionTitle.TextColor3 = Library.Theme.TextColor
     table.insert(Library.LibraryColorTable, SectionTitle)
     SectionTitle.TextSize = 14.000
+    local titleCorner = Instance.new("UICorner")
+    titleCorner.CornerRadius = UDim.new(0, 10)
+    titleCorner.Parent = SectionTitle
+    
+    local isDetached = false
+    local lastValidPosition = NameSection.Position
+    local originalParent = NameSection.Parent
+    local minimized = false
+    
+    local Shadow = Instance.new("ImageLabel")
+    Shadow.Name = "Shadow"
+    Shadow.BackgroundTransparency = 1
+    Shadow.Image = "rbxassetid://3570695787"
+    Shadow.ImageColor3 = Color3.fromRGB(255, 255, 255)
+    Shadow.ImageTransparency = 0.7
+    Shadow.ScaleType = Enum.ScaleType.Slice
+    Shadow.SliceCenter = Rect.new(100, 100, 100, 100)
+    Shadow.SliceScale = 0.025
+    Shadow.Size = UDim2.new(0, 197, 0, 181)
+    Shadow.ZIndex = 3
+    Shadow.Visible = false
+    Shadow.Parent = UITabs
+    
+    local MinimizeBtn = Instance.new("TextButton")
+    MinimizeBtn.Name = "MinimizeBtn"
+    MinimizeBtn.Parent = NameSection
+    MinimizeBtn.BackgroundTransparency = 1
+    MinimizeBtn.Position = UDim2.new(1, -25, 0, 5)
+    MinimizeBtn.Size = UDim2.new(0, 20, 0, 20)
+    MinimizeBtn.ZIndex = 5
+    MinimizeBtn.Font = Library.Theme.TextFont
+    MinimizeBtn.Text = "-"
+    MinimizeBtn.TextColor3 = Library.Theme.TextColor
+    MinimizeBtn.TextSize = 16
+    MinimizeBtn.Visible = false
+    
+local function MakeSectionDraggable()
+    local dragging = false
+    local dragInput
+    local dragStart
+    local startPos
+    local holdStartTime
+    local isHolding = false
+
+    local function update(input)
+        if dragging and NameSection then
+            local delta = input.Position - dragStart
+            local newPos = UDim2.new(
+                startPos.X.Scale,
+                startPos.X.Offset + delta.X,
+                startPos.Y.Scale,
+                startPos.Y.Offset + delta.Y
+            )
+            NameSection.Position = newPos
+            
+            if isDetached then
+                local nearestTab = nil
+                local minDistance = math.huge
+                for _, tab in pairs(Tabs:GetChildren()) do
+                    if tab:IsA("Frame") and tab.Visible then
+                        local tabPos = tab.AbsolutePosition
+                        local sectionPos = NameSection.AbsolutePosition
+                        local distance = math.sqrt((sectionPos.X - tabPos.X)^2 + (sectionPos.Y - tabPos.Y)^2)
+                        if distance < minDistance then
+                            minDistance = distance
+                            nearestTab = tab
+                        end
+                    end
+                end
+                
+                if nearestTab and NameSection then
+                    local tabPos = nearestTab.AbsolutePosition
+                    local distance = minDistance
+                    local minAttachDistance = 75
+                    
+                    if distance < minAttachDistance then
+                        local relativeX = tabPos.X - UILibrary.AbsolutePosition.X
+                        local relativeY = tabPos.Y - UILibrary.AbsolutePosition.Y
+                        Shadow.Position = UDim2.new(0, relativeX, 0, relativeY)
+                        Shadow.Visible = true
+                    else
+                        Shadow.Visible = false
+                    end
+                else
+                    Shadow.Visible = false
+                end
+            end
+        end
+    end
+
+    SectionTitle.InputBegan:Connect(function(input)
+        if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) and NameSection then
+            dragging = true
+            dragStart = input.Position
+            startPos = NameSection.Position
+            holdStartTime = tick()
+            isHolding = true
+            
+            coroutine.wrap(function()
+                while isHolding do
+                    if tick() - holdStartTime >= 0.5 and not isDetached then
+                        lastValidPosition = NameSection.Position
+                        isDetached = true
+                        MinimizeBtn.Visible = true
+                        
+                        
+                        NameSection.Parent = UILibrary
+                        local detachOffsetX = 15
+                        local detachOffsetY = -15
+                        TweenService:Create(NameSection, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                            ImageColor3 = Color3.fromRGB(50, 50, 50),
+                            Position = UDim2.new(
+                                startPos.X.Scale,
+                                startPos.X.Offset + detachOffsetX,
+                                startPos.Y.Scale,
+                                startPos.Y.Offset + detachOffsetY
+                            )
+                        }):Play()
+                        
+                        
+                        TweenService:Create(NameSection, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                            Size = UDim2.new(0, 187, 0, 171)
+                        }):Play()
+                        task.wait(0.15)
+                        TweenService:Create(NameSection, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                            Size = UDim2.new(0, 197, 0, 181)
+                        }):Play()
+                        
+                        SectionTitle.Size = UDim2.new(0, NameSection.Size.X.Offset - 20, 0, 22)
+                        SectionTitle.Position = UDim2.new(0.5, -SectionTitle.Size.X.Offset / 2, 0, -12)
+                        break
+                    end
+                    task.wait()
+                end
+            end)()
+            
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                    isHolding = false
+                    if isDetached and NameSection then
+                        local nearestTab = nil
+                        local minDistance = math.huge
+                        for _, tab in pairs(Tabs:GetChildren()) do
+                            if tab:IsA("Frame") and tab.Visible then
+                                local tabPos = tab.AbsolutePosition
+                                local sectionPos = NameSection.AbsolutePosition
+                                local distance = math.sqrt((sectionPos.X - tabPos.X)^2 + (sectionPos.Y - tabPos.Y)^2)
+                                if distance < minDistance then
+                                    minDistance = distance
+                                    nearestTab = tab
+                                end
+                            end
+                        end
+                        
+                        if nearestTab then
+                            local tabPos = nearestTab.AbsolutePosition
+                            local distance = minDistance
+                            local minAttachDistance = 75
+                            if distance < minAttachDistance then
+                                local hasSectionAtDefault = false
+                                for _, child in pairs(nearestTab:GetChildren()) do
+                                    if child:IsA("ImageLabel") and child.Name:match("Section$") and
+                                       child.Position == UDim2.new(0, 0, 0.0574162677, 0) then
+                                        hasSectionAtDefault = true
+                                        break
+                                    end
+                                end
+                                
+                                if not hasSectionAtDefault then
+                                    
+                                    local relativeX = tabPos.X - UILibrary.AbsolutePosition.X
+                                    local relativeY = tabPos.Y - UILibrary.AbsolutePosition.Y
+                                    local targetPos = UDim2.new(0, relativeX, 0, relativeY + 12)
+                                    TweenService:Create(NameSection, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.In), {
+                                        Position = targetPos,
+                                        ImageColor3 = Library.Theme.BackgroundColor
+                                    }):Play()
+                                    
+                                    
+                                    TweenService:Create(NameSection, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                                        Size = UDim2.new(0, 207, 0, 191)
+                                    }):Play()
+                                    task.wait(0.15)
+                                    TweenService:Create(NameSection, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                                        Size = UDim2.new(0, 197, 0, 181)
+                                    }):Play()
+                                    
+                                    task.wait(0.3)
+                                    NameSection.Parent = nearestTab
+                                    isDetached = false
+                                    MinimizeBtn.Visible = false
+                                    SectionTitle.Size = UDim2.new(0, SectionTitle.TextBounds.X + 20, 0, 22)
+                                    SectionTitle.Position = UDim2.new(0.5, (-SectionTitle.TextBounds.X - 5) / 2, 0, -12)
+                                    NameSection.Position = UDim2.new(0, 0, 0.0574162677, 0)
+                                    Shadow.Visible = false
+                                    
+                                    local layout = nearestTab:FindFirstChild("SectionLayout")
+                                    if layout then
+                                        layout:ApplyLayout()
+                                    end
+                                else
+                                    
+                                    local availableTab = nil
+                                    for _, tab in pairs(Tabs:GetChildren()) do
+                                        if tab:IsA("Frame") and tab.Visible then
+                                            local hasDefaultSection = false
+                                            for _, child in pairs(tab:GetChildren()) do
+                                                if child:IsA("ImageLabel") and child.Name:match("Section$") and
+                                                   child.Position == UDim2.new(0, 0, 0.0574162677, 0) then
+                                                    hasDefaultSection = true
+                                                    break
+                                                end
+                                            end
+                                            if not hasDefaultSection then
+                                                availableTab = tab
+                                                break
+                                            end
+                                        end
+                                    end
+                                    
+                                    if availableTab then
+                                        local newTabPos = availableTab.AbsolutePosition
+                                        local relativeX = newTabPos.X - UILibrary.AbsolutePosition.X
+                                        local relativeY = newTabPos.Y - UILibrary.AbsolutePosition.Y
+                                        local targetPos = UDim2.new(0, relativeX, 0, relativeY + 12)
+                                        TweenService:Create(NameSection, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.In), {
+                                            Position = targetPos,
+                                            ImageColor3 = Library.Theme.BackgroundColor
+                                        }):Play()
+                                        
+                                        
+                                        TweenService:Create(NameSection, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                                            Size = UDim2.new(0, 207, 0, 191)
+                                        }):Play()
+                                        task.wait(0.15)
+                                        TweenService:Create(NameSection, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                                            Size = UDim2.new(0, 197, 0, 181)
+                                        }):Play()
+                                        
+                                        task.wait(0.3)
+                                        NameSection.Parent = availableTab
+                                        isDetached = false
+                                        MinimizeBtn.Visible = false
+                                        SectionTitle.Size = UDim2.new(0, SectionTitle.TextBounds.X + 20, 0, 22)
+                                        SectionTitle.Position = UDim2.new(0.5, (-SectionTitle.TextBounds.X - 5) / 2, 0, -12)
+                                        NameSection.Position = UDim2.new(0, 0, 0.0574162677, 0)
+                                        Shadow.Visible = false
+                                        
+                                        local layout = availableTab:FindFirstChild("SectionLayout")
+                                        if layout then
+                                            layout:ApplyLayout()
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end)
+        end
+    end)
+
+    SectionTitle.InputChanged:Connect(function(input)
+        if (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) and NameSection then
+            dragInput = input
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            update(input)
+        end
+    end)
+end
+    
+    local function ToggleMinimize()
+        if not isDetached then return end
+        
+        minimized = not minimized
+        if minimized then
+            TweenService:Create(NameSection, TweenInfo.new(0.3), {
+                Size = UDim2.new(0, 197, 0, 30),
+                ImageColor3 = Color3.fromRGB(70, 70, 70)
+            }):Play()
+            SectionContent.Visible = false
+            MinimizeBtn.Text = "⌄"
+        else
+            TweenService:Create(NameSection, TweenInfo.new(0.3), {
+                Size = UDim2.new(0, 197, 0, 181),
+                ImageColor3 = Color3.fromRGB(50, 50, 50)
+            }):Play()
+            SectionContent.Visible = true
+            MinimizeBtn.Text = "-"
+        end
+    end
+    
+    MinimizeBtn.MouseButton1Click:Connect(ToggleMinimize)
+    MakeSectionDraggable()
+    
+    task.spawn(function()
+        task.wait()
+        NameSection.Position = UDim2.new(0, 0, -0.5, 0)
+        TweenService:Create(NameSection, TweenInfo.new(0.5, Library.Theme.EasingStyle), {
+            Position = lastValidPosition,
+            ImageTransparency = 0,
+            ImageColor3 = Library.Theme.BackgroundColor
+        }):Play()
+    end)
     
     SectionContent.Name = "SectionContent"
     SectionContent.Parent = NameSection
@@ -875,15 +1184,13 @@ table.insert(Library.LibraryColorTable, SectionBorder)
         SectionContent.CanvasSize = UDim2.new(0, 0, 0, SectionContentLayout.AbsoluteContentSize.Y + 15)
     end)
 
-task.spawn(function()
-    task.wait()
-    TweenService:Create(NameSection, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-        ImageTransparency = 0,
-        ImageColor3 = Library.Theme.BackgroundColor
-    }):Play()
-end)
-
-    
+    task.spawn(function()
+        task.wait()
+        TweenService:Create(NameSection, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+            ImageTransparency = 0,
+            ImageColor3 = Library.Theme.BackgroundColor
+        }):Play()
+    end)
 function SectionElements:CreateLabel(name, text)
             local NameLabel = Instance.new("TextLabel")
 
