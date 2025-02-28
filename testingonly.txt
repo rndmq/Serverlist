@@ -1466,21 +1466,27 @@ function SectionElements:CreateToggle(name, ...)
         end)
     end
 
+    local function safeCallback(state)
+        if type(callback) == "function" then
+            local success, err = pcall(callback, state)
+            if not success then
+                print("Callback error for", name, ":", err)
+            end
+        else
+            print("Callback for", name, "is not a function, type is:", type(callback))
+        end
+    end
+
     Toggle.MouseButton1Down:Connect(function()
         Toggled = not Toggled
-        print("Toggle clicked, new state:", Toggled)
+        print("Toggle clicked, new state for", name, ":", Toggled)
         TweenService:Create(Title, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {TextColor3 = Toggled and (Library and Library.Theme and Library.Theme.TextColor or Color3.fromRGB(255, 255, 255)) or Color3.fromRGB(185, 185, 185)}):Play()
         TweenService:Create(TickCover, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Position = Toggled and UDim2.new(0.5, 0, 0.5, 0) or UDim2.new(0.5, -7, 0.5, -7), Size = Toggled and UDim2.new(0, 0, 0, 0) or UDim2.new(0, 14, 0, 14)}):Play()
         TweenService:Create(CheckboxOutline, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {ImageColor3 = Toggled and (Library and Library.Theme and Library.Theme.MainColor or Color3.fromRGB(255, 75, 75)) or Color3.fromRGB(65, 65, 65)}):Play()
         TweenService:Create(CheckboxTicked, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {ImageColor3 = Toggled and (Library and Library.Theme and Library.Theme.MainColor or Color3.fromRGB(255, 75, 75)) or Color3.fromRGB(65, 65, 65)}):Play()
         Settings[gameId][name] = Toggled
         SaveSettings()
-        if type(callback) == "function" then
-            print("Calling callback with:", Toggled)
-            callback(Toggled)
-        else
-            print("Callback is not a function, type is:", type(callback))
-        end
+        safeCallback(Toggled)
     end)
 
     if Library and Library.LibraryColorTable then
@@ -1489,15 +1495,9 @@ function SectionElements:CreateToggle(name, ...)
     end
 
     if Toggled then
-        if type(callback) == "function" then
-            print("Initial callback triggered with:", true)
-            local success, err = pcall(callback, true) -- Pake pcall buat tangkap error
-            if not success then
-                print("Callback error:", err)
-            end
-        else
-            print("Initial callback not triggered, type is:", type(callback))
-        end
+        print("Loading toggle", name, "with state:", Toggled)
+        task.wait(0.1)
+        safeCallback(Toggled)
     end
 
     if SectionContent and SectionContentLayout then
@@ -1507,21 +1507,14 @@ function SectionElements:CreateToggle(name, ...)
     return {
         SetState = function(state)
             Toggled = state
+            print("SetState for", name, "to:", state)
             TweenService:Create(Title, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {TextColor3 = Toggled and (Library and Library.Theme and Library.Theme.TextColor or Color3.fromRGB(255, 255, 255)) or Color3.fromRGB(185, 185, 185)}):Play()
             TweenService:Create(TickCover, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Position = Toggled and UDim2.new(0.5, 0, 0.5, 0) or UDim2.new(0.5, -7, 0.5, -7), Size = Toggled and UDim2.new(0, 0, 0, 0) or UDim2.new(0, 14, 0, 14)}):Play()
             TweenService:Create(CheckboxOutline, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {ImageColor3 = Toggled and (Library and Library.Theme and Library.Theme.MainColor or Color3.fromRGB(255, 75, 75)) or Color3.fromRGB(65, 65, 65)}):Play()
             TweenService:Create(CheckboxTicked, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {ImageColor3 = Toggled and (Library and Library.Theme and Library.Theme.MainColor or Color3.fromRGB(255, 75, 75)) or Color3.fromRGB(65, 65, 65)}):Play()
             Settings[gameId][name] = state
             SaveSettings()
-            if type(callback) == "function" then
-                print("SetState callback with:", state)
-                local success, err = pcall(callback, state)
-                if not success then
-                    print("Callback error:", err)
-                end
-            else
-                print("SetState callback not a function, type is:", type(callback))
-            end
+            safeCallback(state)
         end
     }
 end
