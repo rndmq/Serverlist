@@ -57,7 +57,7 @@ Library = {
         TextColor = Color3.fromRGB(255, 255, 255) 
     }
 }
-local selectedColor = Color3.fromRGB(255, 255, 255) -- Default
+local selectedColor = Color3.fromRGB(255, 75, 75) -- Default
 
 pcall(function()
     if getgenv and not getgenv().Color then
@@ -111,6 +111,7 @@ local function UpdateTextColors()
         end
     end
 end
+local selectedTextColor = Color3.fromRGB(255, 255, 255)
 pcall(function()
     if getgenv and getgenv().TextColor == "rgb" then
 default = Color3.fromRGB(255, 255, 255)
