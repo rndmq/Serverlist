@@ -59,8 +59,8 @@ Library = {
 }
 
 pcall(function()
-    if not getgenv().Color then
-        Library.Theme.Color = Color3.fromRGB(255, 75, 75)
+    if getgenv and not getgenv().Color then
+    Library.Theme.Color = Color3.fromRGB(255, 75, 75)
     elseif getgenv().Color == "rgb" then
         coroutine.wrap(function()
             while true do
@@ -111,8 +111,8 @@ local function UpdateTextColors()
     end
 end
 pcall(function()
-    if not getgenv().TextColor then
-        Library.Theme.TextColor = Color3.fromRGB(255, 255, 255)
+    if getgenv and getgenv().TextColor == "rgb" then
+default = Color3.fromRGB(255, 255, 255)
         UpdateTextColors()
     elseif getgenv().TextColor == "rgb" then
         coroutine.wrap(function()
