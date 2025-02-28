@@ -1321,10 +1321,21 @@ table.insert(Library.LibraryColorTable, Button)
 
             table.insert(Library.LibraryColorTable, ButtonRounded)
         end
-function SectionElements:CreateToggle(name, presetToggle, ...)
+function SectionElements:CreateToggle(name, ...)
     local args = {...}
-    local callback = args[1] or function() end -- Ambil callback dari argumen pertama kalau ada
-    local tooltipText = args[2] or nil -- Ambil tooltipText kalau ada
+    local presetToggle, callback, tooltipText = nil, nil, nil
+
+    -- Prioritaskan fungsi sebagai callback, lalu string sebagai tooltip
+    for i, v in ipairs(args) do
+        if type(v) == "boolean" then
+            presetToggle = v
+        elseif type(v) == "function" and not callback then
+            callback = v
+        elseif type(v) == "string" and not tooltipText then
+            tooltipText = v
+        end
+    end
+    callback = callback or function() end -- Default ke fungsi kosong kalau gak ada
 
     local NameToggle = Instance.new("Frame")
     local Title = Instance.new("TextLabel")
@@ -1336,7 +1347,7 @@ function SectionElements:CreateToggle(name, presetToggle, ...)
 
     local gameId = self.GameId or tostring(game.PlaceId)
     if not Settings[gameId] then Settings[gameId] = {} end
-    local Toggled = (type(presetToggle) == "boolean" and presetToggle) or false -- Cek kalau presetToggle boolean
+    local Toggled = (presetToggle ~= nil and presetToggle) or false
     if Settings[gameId][name] ~= nil then
         Toggled = Settings[gameId][name]
     end
