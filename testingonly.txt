@@ -1163,6 +1163,7 @@ function SectionElements:CreateSlider(name, minimumvalue, maximumvalue, presetva
     Title.Font = Library.Theme.TextFont
     Title.Text = name
     Title.TextColor3 = Library.Theme.TextColor
+table.insert(Library.LibraryColorTable, Title)
     Title.TextSize = 15.000
     Title.TextXAlignment = Enum.TextXAlignment.Left
 
