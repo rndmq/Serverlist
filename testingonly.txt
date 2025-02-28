@@ -827,15 +827,17 @@ end
 
   
 
-function TabElements:CreateSection(name)
+function SectionElements:CreateSection(name)
     local NameSection = Instance.new("ImageLabel")
     local SectionBorder = Instance.new("ImageLabel")
     local SectionTitle = Instance.new("TextLabel")
     local SectionContent = Instance.new("ScrollingFrame")
     local SectionContentLayout = Instance.new("UIListLayout")
+    local MinimizeSection = Instance.new("TextButton") -- Pastikan didefinisikan di sini
 
     local SectionElements = { GameId = self.GameId }
 
+    -- Definisi NameSection
     NameSection.Name = (name .. "Section")
     NameSection.Parent = NameTab
     NameSection.BackgroundColor3 = Library.Theme.BackgroundColor
@@ -845,12 +847,13 @@ function TabElements:CreateSection(name)
     NameSection.ZIndex = 4
     NameSection.Image = "rbxassetid://3570695787"
     NameSection.ImageColor3 = Library.Theme.MainColor
-table.insert(Library.LibraryColorTable, NameSection)
+    table.insert(Library.LibraryColorTable, NameSection)
     NameSection.ScaleType = Enum.ScaleType.Slice
     NameSection.SliceCenter = Rect.new(100, 100, 100, 100)
     NameSection.SliceScale = 0.025
     NameSection.ImageTransparency = 1
 
+    -- Definisi SectionBorder
     SectionBorder.Name = "SectionBorder"
     SectionBorder.Parent = NameSection
     SectionBorder.BackgroundColor3 = Library.Theme.MainColor
@@ -860,11 +863,12 @@ table.insert(Library.LibraryColorTable, NameSection)
     SectionBorder.ZIndex = 3
     SectionBorder.Image = "rbxassetid://3570695787"
     SectionBorder.ImageColor3 = Library.Theme.MainColor
-table.insert(Library.LibraryColorTable, SectionBorder)
+    table.insert(Library.LibraryColorTable, SectionBorder)
     SectionBorder.ScaleType = Enum.ScaleType.Slice
     SectionBorder.SliceCenter = Rect.new(100, 100, 100, 100)
     SectionBorder.SliceScale = 0.050
-    
+
+    -- Definisi SectionTitle
     SectionTitle.Name = "SectionTitle"
     SectionTitle.Parent = NameSection
     SectionTitle.BackgroundColor3 = Library.Theme.BackgroundColor
@@ -877,6 +881,26 @@ table.insert(Library.LibraryColorTable, SectionBorder)
     SectionTitle.TextColor3 = Library.Theme.TextColor
     table.insert(Library.LibraryColorTable, SectionTitle)
     SectionTitle.TextSize = 14.000
+
+    -- Definisi MinimizeSection
+    MinimizeSection.Name = "MinimizeSection"
+    MinimizeSection.Parent = NameSection
+    MinimizeSection.Size = UDim2.new(0, 20, 0, 20)
+    MinimizeSection.Position = UDim2.new(1, -25, 0, 5)
+    MinimizeSection.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    MinimizeSection.Text = "S"
+    MinimizeSection.TextSize = 14
+    MinimizeSection.Visible = false
+    MinimizeSection.ZIndex = 5
+    MinimizeSection.BackgroundTransparency = 0 -- Pastikan tidak transparan sepenuhnya
+
+    -- Validasi MinimizeSection
+    if not MinimizeSection then
+        warn("MinimizeSection failed to create for section: " .. name)
+        return SectionElements
+    end
+
+    -- Logika Dragging
     SectionTitle.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             local startPosition = input.Position
@@ -886,8 +910,8 @@ table.insert(Library.LibraryColorTable, SectionBorder)
                 if input.UserInputState == Enum.UserInputState.End then
                     dragging = false
                     if not checkProximity(NameSection) then
-                        -- Keep detached if not near any tab
                         NameSection.Parent = UILibrary
+                        Settings[game.PlaceId] = Settings[game.PlaceId] or {}
                         Settings[game.PlaceId]["DetachedSections"] = Settings[game.PlaceId]["DetachedSections"] or {}
                         Settings[game.PlaceId]["DetachedSections"][name] = true
                         SaveSettings()
@@ -907,13 +931,11 @@ table.insert(Library.LibraryColorTable, SectionBorder)
                         NameSection.ZIndex = 99
                         MinimizeSection.Visible = true
                         
-                        local newPos = UDim2.new(0, input.Position.X - startPosition.X, 
-                                               0, input.Position.Y - startPosition.Y)
+                        local newPos = UDim2.new(0, input.Position.X - startPosition.X, 0, input.Position.Y - startPosition.Y)
                         TweenService:Create(NameSection, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {Position = newPos}):Play()
                         
-                        -- Visual feedback saat mendekati tab
                         if checkProximity(NameSection, true) then
-                            SectionBorder.ImageColor3 = Color3.fromRGB(0, 255, 0) -- Glow hijau
+                            SectionBorder.ImageColor3 = Color3.fromRGB(0, 255, 0)
                         else
                             SectionBorder.ImageColor3 = Library.Theme.MainColor
                         end
@@ -923,45 +945,55 @@ table.insert(Library.LibraryColorTable, SectionBorder)
         end
     end)
 
-    -- Improve minimize functionality
-    MinimizeSection.MouseButton1Click:Connect(function()
-        TweenService:Create(NameSection, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {Size = UDim2.new(0, 0, 0, 0)}):Play()
-        task.wait(0.3)
-        NameSection.Visible = false
-        MinimizeSection.Visible = false
-        
-        -- Create floating minimized icon
-        local minimizedIcon = Instance.new("ImageButton")
-        minimizedIcon.Parent = UILibrary
-        minimizedIcon.Size = UDim2.new(0, 30, 0, 30)
-        minimizedIcon.Position = NameSection.Position
-        minimizedIcon.Image = "rbxassetid://3570695787"
-        minimizedIcon.ImageColor3 = Library.Theme.MainColor
-        minimizedIcon.ZIndex = 100
-        
-        local iconText = Instance.new("TextLabel")
-        iconText.Parent = minimizedIcon
-        iconText.Text = "S"
-        iconText.Size = UDim2.new(1, 0, 1, 0)
-        iconText.TextColor3 = Color3.fromRGB(255, 255, 255)
-        iconText.BackgroundTransparency = 1
-        iconText.Font = Library.Theme.TextFont
-        
-        -- Restore when clicked
-        minimizedIcon.MouseButton1Click:Connect(function()
-            NameSection.Visible = true
-            MinimizeSection.Visible = true
-            TweenService:Create(NameSection, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {Size = UDim2.new(0, 197, 0, 181)}):Play()
-            minimizedIcon:Destroy()
+    -- Logika Minimize dengan Pengecekan
+    if MinimizeSection then
+        MinimizeSection.MouseButton1Click:Connect(function()
+            if NameSection and MinimizeSection then
+                TweenService:Create(NameSection, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {Size = UDim2.new(0, 0, 0, 0)}):Play()
+                task.wait(0.3)
+                NameSection.Visible = false
+                MinimizeSection.Visible = false
+                
+                local minimizedIcon = Instance.new("ImageButton")
+                minimizedIcon.Parent = UILibrary
+                minimizedIcon.Size = UDim2.new(0, 30, 0, 30)
+                minimizedIcon.Position = NameSection.Position
+                minimizedIcon.Image = "rbxassetid://3570695787"
+                minimizedIcon.ImageColor3 = Library.Theme.MainColor
+                minimizedIcon.ZIndex = 100
+                
+                local iconText = Instance.new("TextLabel")
+                iconText.Parent = minimizedIcon
+                iconText.Text = "S"
+                iconText.Size = UDim2.new(1, 0, 1, 0)
+                iconText.TextColor3 = Color3.fromRGB(255, 255, 255)
+                iconText.BackgroundTransparency = 1
+                iconText.Font = Library.Theme.TextFont
+                
+                minimizedIcon.MouseButton1Click:Connect(function()
+                    if NameSection then
+                        NameSection.Visible = true
+                        MinimizeSection.Visible = true
+                        TweenService:Create(NameSection, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {Size = UDim2.new(0, 197, 0, 181)}):Play()
+                        minimizedIcon:Destroy()
+                    end
+                end)
+                
+                MakeDraggable(minimizedIcon, minimizedIcon)
+            end
         end)
-        
-        MakeDraggable(minimizedIcon, minimizedIcon)
-    end)
+    else
+        warn("MinimizeSection is nil for section: " .. name)
+    end
+
+    -- Load state dari Settings
     if Settings[game.PlaceId] and Settings[game.PlaceId]["DetachedSections"] and Settings[game.PlaceId]["DetachedSections"][name] then
         NameSection.Parent = UILibrary
         NameSection.ZIndex = 99
-        MinimizeSection.Visible = true
+        if MinimizeSection then MinimizeSection.Visible = true end
     end
+
+    -- Definisi SectionContent
     SectionContent.Name = "SectionContent"
     SectionContent.Parent = NameSection
     SectionContent.Active = true
@@ -986,13 +1018,14 @@ table.insert(Library.LibraryColorTable, SectionBorder)
         SectionContent.CanvasSize = UDim2.new(0, 0, 0, SectionContentLayout.AbsoluteContentSize.Y + 15)
     end)
 
-task.spawn(function()
-    task.wait()
-    TweenService:Create(NameSection, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-        ImageTransparency = 0,
-        ImageColor3 = Library.Theme.BackgroundColor
-    }):Play()
-end)
+    task.spawn(function()
+        task.wait()
+        TweenService:Create(NameSection, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+            ImageTransparency = 0,
+            ImageColor3 = Library.Theme.BackgroundColor
+        }):Play()
+    end)
+
 
     
 function SectionElements:CreateLabel(name, text)
