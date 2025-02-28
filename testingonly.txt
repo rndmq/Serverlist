@@ -884,25 +884,26 @@ function TabElements:CreateSection(name)
     MinimizeBtn.Visible = false
     
     local function MakeSectionDraggable()
-        local dragging = false
-        local dragInput
-        local dragStart
-        local startPos
-        local holdStartTime
-        local isHolding = false
+    local dragging = false
+    local dragInput
+    local dragStart
+    local startPos
+    local holdStartTime
+    local isHolding = false
 
-        local function update(input)
-            local delta = input.Position - dragStart
-            local newPos = UDim2.new(
-                startPos.X.Scale,
-                startPos.X.Offset + delta.X,
-                startPos.Y.Scale,
-                startPos.Y.Offset + delta.Y
-            )
-            
-            NameSection.Position = newPos
+    local function update(input)
+        local delta = input.Position - dragStart
+        local newPos = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
+        
+        NameSection.Position = newPos
 
-            -- Cek proximity ke semua tab
+        -- Cek proximity ke semua tab hanya saat sudah detached
+        if isDetached then
             local closestTab = nil
             local minDistance = 50 -- Jarak maksimum untuk snap
             
@@ -919,99 +920,105 @@ function TabElements:CreateSection(name)
                 end
             end
 
-            if closestTab and not isDetached then
-                Shadow.Position = UDim2.new(0, 0, 0, 0)
+            if closestTab then
+                Shadow.Position = UDim2.new(0, closestTab.Position.X.Offset, 0, closestTab.Position.Y.Offset)
                 Shadow.Visible = true
             else
                 Shadow.Visible = false
             end
+        else
+            Shadow.Visible = false
         end
-
-        SectionTitle.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or 
-               input.UserInputType == Enum.UserInputType.Touch then
-                dragging = true
-                dragStart = input.Position
-                startPos = NameSection.Position
-                holdStartTime = tick()
-                isHolding = true
-                
-                -- Coroutine untuk mendeteksi penahanan 2 detik
-                coroutine.wrap(function()
-                    while isHolding do
-                        if tick() - holdStartTime >= 2 and not isDetached then
-                            lastValidPosition = NameSection.Position
-                            NameSection.Parent = UILibrary
-                            isDetached = true
-                            MinimizeBtn.Visible = true
-                            TweenService:Create(NameSection, TweenInfo.new(0.3), {
-                                ImageColor3 = Color3.fromRGB(50, 50, 50)
-                            }):Play()
-                            break
-                        end
-                        task.wait()
-                    end
-                end)()
-                
-                input.Changed:Connect(function()
-                    if input.UserInputState == Enum.UserInputState.End then
-                        dragging = false
-                        isHolding = false
-                        
-                        -- Jika sudah detached dan dilepaskan di dekat tab
-                        if isDetached then
-                            local closestTab = nil
-                            local minDistance = 50
-                            
-                            for _, tab in pairs(Tabs:GetChildren()) do
-                                if tab:IsA("Frame") then
-                                    local tabPos = tab.AbsolutePosition
-                                    local sectionPos = NameSection.AbsolutePosition
-                                    local distance = math.sqrt((sectionPos.X - tabPos.X)^2 + (sectionPos.Y - tabPos.Y)^2)
-                                    
-                                    if distance < minDistance then
-                                        minDistance = distance
-                                        closestTab = tab
-                                    end
-                                end
-                            end
-                            
-                            if closestTab then
-                                -- Pindahkan section ke tab terdekat
-                                NameSection.Parent = closestTab
-                                isDetached = false
-                                MinimizeBtn.Visible = false
-                                TweenService:Create(NameSection, TweenInfo.new(0.3), {
-                                    Position = UDim2.new(0, 0, 0.0574162677, 0),
-                                    ImageColor3 = Library.Theme.BackgroundColor
-                                }):Play()
-                                Shadow.Visible = false
-                                
-                                -- Update layout tab
-                                local layout = closestTab:FindFirstChild("SectionLayout")
-                                if layout then
-                                    layout:ApplyLayout()
-                                end
-                            end
-                        end
-                    end
-                end)
-            end
-        end)
-
-        SectionTitle.InputChanged:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseMovement or 
-               input.UserInputType == Enum.UserInputType.Touch then
-                dragInput = input
-            end
-        end)
-
-        UserInputService.InputChanged:Connect(function(input)
-            if input == dragInput and dragging then
-                update(input)
-            end
-        end)
     end
+
+    SectionTitle.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or 
+           input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = NameSection.Position
+            holdStartTime = tick()
+            isHolding = true
+            
+            -- Coroutine untuk mendeteksi penahanan 2 detik
+            coroutine.wrap(function()
+                while isHolding do
+                    if tick() - holdStartTime >= 2 and not isDetached then
+                        -- Simpan posisi terakhir dan ubah parent tanpa mengubah posisi langsung
+                        lastValidPosition = NameSection.Position
+                        NameSection.Parent = UILibrary
+                        isDetached = true
+                        MinimizeBtn.Visible = true
+                        TweenService:Create(NameSection, TweenInfo.new(0.3), {
+                            ImageColor3 = Color3.fromRGB(50, 50, 50)
+                        }):Play()
+                        -- Pastikan posisi tetap sama saat detach
+                        NameSection.Position = startPos
+                        break
+                    end
+                    task.wait()
+                end
+            end)()
+            
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                    isHolding = false
+                    
+                    -- Jika sudah detached, cek apakah bisa dipasang kembali
+                    if isDetached then
+                        local closestTab = nil
+                        local minDistance = 50
+                        
+                        for _, tab in pairs(Tabs:GetChildren()) do
+                            if tab:IsA("Frame") then
+                                local tabPos = tab.AbsolutePosition
+                                local sectionPos = NameSection.AbsolutePosition
+                                local distance = math.sqrt((sectionPos.X - tabPos.X)^2 + (sectionPos.Y - tabPos.Y)^2)
+                                
+                                if distance < minDistance then
+                                    minDistance = distance
+                                    closestTab = tab
+                                end
+                            end
+                        end
+                        
+                        if closestTab then
+                            -- Pasang kembali ke tab terdekat
+                            NameSection.Parent = closestTab
+                            isDetached = false
+                            MinimizeBtn.Visible = false
+                            TweenService:Create(NameSection, TweenInfo.new(0.3), {
+                                Position = UDim2.new(0, 0, 0.0574162677, 0),
+                                ImageColor3 = Library.Theme.BackgroundColor
+                            }):Play()
+                            Shadow.Visible = false
+                            
+                            -- Update layout tab
+                            local layout = closestTab:FindFirstChild("SectionLayout")
+                            if layout then
+                                layout:ApplyLayout()
+                            end
+                        end
+                    end
+                end
+            end)
+        end
+    end)
+
+    SectionTitle.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or 
+           input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            update(input)
+        end
+    end)
+end
     
     local function ToggleMinimize()
         if not isDetached then return end
