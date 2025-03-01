@@ -2196,6 +2196,8 @@ function SectionElements:CreateDropdown(name, options, presetoption, callback)
     table.insert(options, 1, "None")
     if not Settings[gameId] then Settings[gameId] = {} end
     local SelectedOption = tostring(Settings[gameId][name] or options[presetoption] or options[1] or "None")
+
+    
     NameDropdown.Name = (name .. "Dropdown")
     NameDropdown.Parent = SectionContent
     NameDropdown.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -2292,16 +2294,17 @@ function SectionElements:CreateDropdown(name, options, presetoption, callback)
                 NameButton.Text = v
                 NameButton.TextColor3 = (v == SelectedOption) and Library.Theme.MainColor or Color3.fromRGB(255, 255, 255)
                 NameButton.TextSize = 15.000
-                NameButton.TextXAlignment = Enum.TextXAlignment.Left
+                
+                NameButton.TextXAlignment = Enum.TextXAlignment.Center
 
                 
-                local textBounds = NameButton.TextBounds.X + 10
+                local textBounds = NameButton.TextBounds.X + 20 
                 local ClickArea = Instance.new("TextButton")
                 ClickArea.Name = "ClickArea"
                 ClickArea.Parent = NameButton
                 ClickArea.BackgroundTransparency = 1.000
                 ClickArea.Size = UDim2.new(0, textBounds, 0, 25)
-                ClickArea.Position = UDim2.new(0, 0, 0, 0)
+                ClickArea.Position = UDim2.new(0.5, -textBounds / 2, 0, 0) 
                 ClickArea.ZIndex = 15
                 ClickArea.Text = ""
                 ClickArea.AutoButtonColor = false
@@ -2323,7 +2326,6 @@ function SectionElements:CreateDropdown(name, options, presetoption, callback)
                     ClearAllDropdownItems()
                 end)
 
-                
                 ClickArea.InputBegan:Connect(function(input)
                     if input.UserInputType == Enum.UserInputType.MouseMovement then
                         TweenService:Create(NameButton, TweenInfo.new(0.35, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {BackgroundTransparency = 0.95}):Play()
