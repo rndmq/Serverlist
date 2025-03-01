@@ -1358,7 +1358,7 @@ function SectionElements:CreateToggle(name, ...)
         CheckboxOutline = CheckboxOutline,
         CheckboxTicked = CheckboxTicked,
         Callback = callback,
-        EnabledDuringLoad = false -- Flag buat disable callback pas load
+        EnabledDuringLoad = false
     }
 
     NameToggle.Name = (name .. "Toggle")
@@ -1480,7 +1480,7 @@ function SectionElements:CreateToggle(name, ...)
 
     Toggle.MouseButton1Down:Connect(function()
         Toggled = not Toggled
-        UIReferences.Toggles[name].EnabledDuringLoad = true -- Aktifkan callback pas interaksi
+        UIReferences.Toggles[name].EnabledDuringLoad = true
         print("Toggle clicked, new state for", name, ":", Toggled)
         TweenService:Create(Title, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {TextColor3 = Toggled and (Library and Library.Theme and Library.Theme.TextColor or Color3.fromRGB(255, 255, 255)) or Color3.fromRGB(185, 185, 185)}):Play()
         TweenService:Create(TickCover, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Position = Toggled and UDim2.new(0.5, 0, 0.5, 0) or UDim2.new(0.5, -7, 0.5, -7), Size = Toggled and UDim2.new(0, 0, 0, 0) or UDim2.new(0, 14, 0, 14)}):Play()
@@ -1504,6 +1504,15 @@ function SectionElements:CreateToggle(name, ...)
     if SectionContent and SectionContentLayout then
         SectionContent.CanvasSize = UDim2.new(0, 0, 0, SectionContentLayout.AbsoluteContentSize.Y + 15)
     end
+
+    -- Aktifkan semua toggle yang nyala setelah loading
+    task.delay(1, function()
+        if UIReferences and UIReferences.Toggles[name] and UIReferences.Toggles[name].Toggled then
+            print("Activating callback for", name, "after load")
+            UIReferences.Toggles[name].EnabledDuringLoad = true
+            safeCallback(UIReferences.Toggles[name].Toggled)
+        end
+    end)
 
     return {
         SetState = function(state)
