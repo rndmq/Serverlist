@@ -390,23 +390,24 @@ TabButtons.ScaleType = Enum.ScaleType.Slice
 TabButtons.SliceCenter = Rect.new(100, 100, 100, 100)
 TabButtons.SliceScale = 0.050
 TabButtons.ClipsDescendants = true
-TabButtonLayout.Name = "TabButtonLayout"
 local TabScroll = Instance.new("ScrollingFrame")
 TabScroll.Name = "TabScroll"
 TabScroll.Parent = TabButtons
 TabScroll.BackgroundTransparency = 1
-TabScroll.Position = UDim2.new(0, 0, 0, 0)
-TabScroll.Size = UDim2.new(1, 0, 1, 0)
-TabScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+TabScroll.Position = UDim2.new(0, 0, 0, 0) 
+TabScroll.Size = UDim2.new(1, 0, 1, 0) 
+TabScroll.CanvasSize = UDim2.new(0, 0, 0, 0) 
 TabScroll.ScrollBarThickness = 5
-TabScroll.AutomaticCanvasSize = Enum.AutomaticSize.X
-TabScroll.ClipsDescendants = true
+TabScroll.AutomaticCanvasSize = Enum.AutomaticSize.X -
+TabScroll.ClipsDescendants = false
 TabScroll.ScrollBarImageColor3 = Color3.fromRGB(85, 85, 85)
+
+TabButtonLayout.Name = "TabButtonLayout"
 TabButtonLayout.Parent = TabScroll
 TabButtonLayout.FillDirection = Enum.FillDirection.Horizontal
 TabButtonLayout.SortOrder = Enum.SortOrder.LayoutOrder
+TabButtonLayout.Padding = UDim.new(0, 5)
 TweenService:Create(Main, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 450, 0, 250)}):Play()
-
 table.insert(Library.LibraryColorTable, Border)
 table.insert(Library.LibraryColorTable, TabButtons)
 MakeDraggable(Topbar, Main)
@@ -706,19 +707,13 @@ function Library:CreateTab(name)
     local gameId = tostring(game.PlaceId)
     local TabElements = { GameId = gameId }
     Library.TabCount = Library.TabCount + 1
-
-    if Library.TabCount == 1 then
-        Library.FirstTab = name
-    end
-    Library.TabCount = Library.TabCount + 1
-
     if Library.TabCount == 1 then
         Library.FirstTab = name
         TabButtons.Visible = false
     else
         TabButtons.Visible = true
-        TabScroll.ScrollBarThickness = (Library.TabCount > 5) and 5 or 0
     end
+
     NameTab.Name = (name .. "Tab")
     NameTab.Parent = Tabs
     NameTab.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -726,13 +721,13 @@ function Library:CreateTab(name)
     NameTab.Size = UDim2.new(1, 0, 1, 0)
     NameTab.ZIndex = 2
     NameTab.ClipsDescendants = true
-    NameTab.Position = UDim2.new(-1, 0, 0, 0)
+    NameTab.Visible = false
 
     NameTabButton.Name = (name .. "TabButton")
-    NameTabButton.Parent = TabButtons
+    NameTabButton.Parent = TabScroll -- Pastikan parent ke TabScroll, bukan TabButtons langsung
     NameTabButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     NameTabButton.BackgroundTransparency = 1.000
-    NameTabButton.Size = UDim2.new(0, 84, 0, 25)
+    NameTabButton.Size = UDim2.new(0, 84, 0, 25) -- Ukuran tombol tab
     NameTabButton.ZIndex = 2
     NameTabButton.Image = "rbxassetid://3570695787"
     NameTabButton.ImageColor3 = Library.Theme.MainColor
@@ -770,15 +765,19 @@ table.insert(Library.LibraryColorTable, Title)
     local smallSize = UDim2.new(0, 74, 0, 20)
 
 NameTabButton.MouseButton1Down:Connect(function()
-    if CloseAllTabs and type(CloseAllTabs) == "function" then 
-        CloseAllTabs() 
-    else
-        for _, v in pairs(Tabs:GetChildren()) do
-            if v:IsA("Frame") then 
-                v.Visible = false 
-                v.Position = UDim2.new(0, 0, 0, 0)
-            end
-        end
+        CloseAllTabs()
+        ResetAllTabButtons()
+        NameTab.Visible = true
+        TweenService:Create(NameTabButton, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+            ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 20),
+            Size = UDim2.new(0, 74, 0, 20) -- Efek klik
+        }):Play()
+        TweenService:Create(NameTab, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+            Position = UDim2.new(0, 0, 0, 0)
+        }):Play()
+    end)
+    if Library.TabCount == 1 then
+        NameTab.Visible = true
     end
     
     if ResetAllTabButtons and type(ResetAllTabButtons) == "function" then 
