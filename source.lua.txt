@@ -8,35 +8,89 @@ local CoreGui = game:GetService("CoreGui")
 local LocalPlayer = game:GetService("Players").LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 local Settings = {}
+local UIReferences = {
+    Toggles = {},
+    Dropdowns = {}
+}
 
 local function LoadSettings()
-    if isfile("Rdnm.json") then
+    local saveFile = "Rdnm.json"
+    pcall(function()
+        if getgenv and getgenv().SaveFile then
+            saveFile = getgenv().SaveFile
+        end
+    end)
+    if not saveFile:match("%.json$") then
+        saveFile = saveFile .. ".json"
+    end
+    if isfile(saveFile) then
         local success, result = pcall(function()
-            return HttpService:JSONDecode(readfile("Rdnm.json"))
+            return HttpService:JSONDecode(readfile(saveFile))
         end)
         if success and type(result) == "table" then
             Settings = result
+            if next(Settings) == nil or not Settings[tostring(game.PlaceId)] then
+                Settings[tostring(game.PlaceId)] = {}
+            end
         else
-            Settings = {}
+            Settings = { [tostring(game.PlaceId)] = {} }
             pcall(function()
-                writefile("Rdnm.json", HttpService:JSONEncode(Settings))
+                writefile(saveFile, HttpService:JSONEncode(Settings))
             end)
         end
     else
-        Settings = {}
+        Settings = { [tostring(game.PlaceId)] = {} }
         pcall(function()
-            writefile("Rdnm.json", HttpService:JSONEncode(Settings))
+            writefile(saveFile, HttpService:JSONEncode(Settings))
         end)
+    end
+    for gameId, gameSettings in pairs(Settings) do
+        if UIReferences.Toggles[gameId] then
+            for name, value in pairs(gameSettings) do
+                if UIReferences.Toggles[name] then
+                    local toggle = UIReferences.Toggles[name]
+                    toggle.Toggled = value
+                    toggle.TickCover.Position = value and UDim2.new(0.5, 0, 0.5, 0) or UDim2.new(0.5, -7, 0.5, -7)
+                    toggle.TickCover.Size = value and UDim2.new(0, 0, 0, 0) or UDim2.new(0, 14, 0, 14)
+                    toggle.CheckboxOutline.ImageColor3 = value and (Library and Library.Theme and Library.Theme.MainColor or Color3.fromRGB(255, 75, 75)) or Color3.fromRGB(65, 65, 65)
+                    toggle.CheckboxTicked.ImageColor3 = value and (Library and Library.Theme and Library.Theme.MainColor or Color3.fromRGB(255, 75, 75)) or Color3.fromRGB(65, 65, 65)
+                    if value and toggle.Callback then
+                        toggle.Callback(true)
+                    end
+                end
+            end
+        end
+        if UIReferences.Dropdowns[gameId] then
+            for name, value in pairs(gameSettings) do
+                if UIReferences.Dropdowns[name] then
+                    local dropdown = UIReferences.Dropdowns[name]
+                    dropdown.SelectedOption = value
+                    dropdown.TitleToggle.Text = name .. " - " .. value
+                    if dropdown.Callback then
+                        dropdown.Callback(value)
+                    end
+                end
+            end
+        end
     end
 end
 LoadSettings()
 
 local function SaveSettings()
+    local saveFile = "Rdnm.json"
+    pcall(function()
+        if getgenv and getgenv().SaveFile then
+            saveFile = getgenv().SaveFile
+        end
+    end)
+    if not saveFile:match("%.json$") then
+        saveFile = saveFile .. ".json"
+    end
     if not Settings then
-        Settings = {}
+        Settings = { [tostring(game.PlaceId)] = {} }
     end
     pcall(function()
-        writefile("Rdnm.json", HttpService:JSONEncode(Settings))
+        writefile(saveFile, HttpService:JSONEncode(Settings))
     end)
 end
 ContentProvider:PreloadAsync({"rbxassetid://3570695787", "rbxassetid://2708891598", "rbxassetid://4155801252", "rbxassetid://4695575676", "rbxassetid://4155801252"})
@@ -1282,169 +1336,209 @@ table.insert(Library.LibraryColorTable, Button)
 
             table.insert(Library.LibraryColorTable, ButtonRounded)
         end
+function SectionElements:CreateToggle(name, ...)
+    local args = {...}
+    local presetToggle, callback, tooltipText = nil, nil, nil
 
-function SectionElements:CreateToggle(name, callback, tooltipText)
-            local NameToggle = Instance.new("Frame")
-            local Title = Instance.new("TextLabel")
-            local Toggle = Instance.new("TextButton")
-            local CheckboxOutline = Instance.new("ImageLabel")
-            local CheckboxTicked = Instance.new("ImageLabel")
-            local TickCover = Instance.new("Frame")
-            local Tooltip
-            local gameId = self.GameId
-            if not Settings[gameId] then Settings[gameId] = {} end
-            local Toggled = (Settings[gameId][name] ~= nil and Settings[gameId][name]) or false
-
-            NameToggle.Name = (name .. "Toggle")
-            NameToggle.Parent = SectionContent
-            NameToggle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-            NameToggle.BackgroundTransparency = 1.000
-            NameToggle.Size = UDim2.new(0, 197, 0, 35)
-            NameToggle.ZIndex = 5
-            
-            Title.Name = "Title"
-            Title.Parent = NameToggle
-            Title.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-            Title.BackgroundTransparency = 1.000
-            Title.Position = UDim2.new(0, 13, 0, 0)
-            Title.Size = UDim2.new(0, 149, 0, 35)
-            Title.ZIndex = 5
-            Title.Font = Library.Theme.TextFont
-            Title.Text = name
-            Title.TextColor3 = Library.Theme.TextColor
-table.insert(Library.LibraryColorTable, Title)
-UpdateTextColors()
-            Title.TextSize = 15.000
-            Title.TextXAlignment = Enum.TextXAlignment.Left
-
-            Toggle.Name = "Toggle"
-            Toggle.Parent = NameToggle
-            Toggle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-            Toggle.BackgroundTransparency = 1.000
-            Toggle.Position = UDim2.new(0, 161, 0, 7)
-            Toggle.Size = UDim2.new(0, 20, 0, 20)
-            Toggle.ZIndex = 5
-            Toggle.AutoButtonColor = false
-            Toggle.Font = Library.Theme.TextFont
-            Toggle.Text = ""
-            Toggle.TextColor3 = Library.Theme.TextColor
-            Toggle.TextSize = 14.000
-
-            CheckboxOutline.Name = "CheckboxOutline"
-            CheckboxOutline.Parent = Toggle
-            CheckboxOutline.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-            CheckboxOutline.BackgroundTransparency = 1.000
-            CheckboxOutline.Position = UDim2.new(0.5, -12, 0.5, -12)
-            CheckboxOutline.Size = UDim2.new(0, 24, 0, 24)
-            CheckboxOutline.ZIndex = 5
-            CheckboxOutline.Image = "rbxassetid://5416796047"
-            CheckboxOutline.ImageColor3 = Color3.fromRGB(65, 65, 65)
-
-            CheckboxTicked.Name = "CheckboxTicked"
-            CheckboxTicked.Parent = Toggle
-            CheckboxTicked.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-            CheckboxTicked.BackgroundTransparency = 1.000
-            CheckboxTicked.Position = UDim2.new(0.5, -12, 0.5, -12)
-            CheckboxTicked.Size = UDim2.new(0, 24, 0, 24)
-            CheckboxTicked.ZIndex = 6
-            CheckboxTicked.Image = "rbxassetid://5416796675"
-            CheckboxTicked.ImageColor3 = Library.Theme.TextColor
-table.insert(Library.LibraryColorTable, CheckboxTicked)
-
-            TickCover.Name = "TickCover"
-            TickCover.Parent = Toggle
-            TickCover.BackgroundColor3 = Library.Theme.BackgroundColor
-            TickCover.BorderSizePixel = 0
-            TickCover.Position = UDim2.new(0.5, -7, 0.5, -7)
-            TickCover.Size = UDim2.new(0, 14, 0, 14)
-            TickCover.ZIndex = 7
-            if tooltipText then
-                Tooltip = Instance.new("TextLabel")
-                Tooltip.Name = "Tooltip"
-                Tooltip.Parent = NameToggle
-                Tooltip.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-                Tooltip.Position = UDim2.new(0, 10, 0, -10)
-                Tooltip.ZIndex = 10
-                Tooltip.Font = Library.Theme.TextFont
-                Tooltip.Text = tooltipText
-                Tooltip.TextColor3 = Color3.fromRGB(0, 0, 0)
-                Tooltip.TextSize = 14.000
-                Tooltip.Visible = false
-                Tooltip.ClipsDescendants = true
-                
-                local UICorner = Instance.new("UICorner")
-                UICorner.CornerRadius = UDim.new(0, 5)
-                UICorner.Parent = Tooltip
-
-                local lineCount = 0
-                for _ in tooltipText:gmatch("\n") do
-                    lineCount = lineCount + 1
-                end
-                Tooltip.Position = UDim2.new(0, 10, 0, -10 - (lineCount * 20))
-                Tooltip.Size = UDim2.new(0, math.min(Tooltip.TextBounds.X + 10, 187), 0, Tooltip.TextBounds.Y + 5)
-
-                Title.InputBegan:Connect(function(input)
-                    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
-                        Tooltip.Visible = true
-                    elseif input.UserInputType == Enum.UserInputType.MouseMovement then
-                        Tooltip.Visible = true
-                    end
-                end)
-
-                Title.InputEnded:Connect(function(input)
-                    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
-                        Tooltip.Visible = false
-                    elseif input.UserInputType == Enum.UserInputType.MouseMovement then
-                        Tooltip.Visible = false
-                    end
-                end)
-            end
-
-            local function UpdateVisual(state)
-                if state then
-                    Title.TextColor3 = Library.Theme.TextColor
-                    TickCover.Position = UDim2.new(0.5, 0, 0.5, 0)
-                    TickCover.Size = UDim2.new(0, 0, 0, 0)
-                    CheckboxOutline.ImageColor3 = Library.Theme.MainColor
-                    CheckboxTicked.ImageColor3 = Library.Theme.MainColor
-                else
-                    Title.TextColor3 = Color3.fromRGB(185, 185, 185)
-                    TickCover.Position = UDim2.new(0.5, -7, 0.5, -7)
-                    TickCover.Size = UDim2.new(0, 14, 0, 14)
-                    CheckboxOutline.ImageColor3 = Color3.fromRGB(65, 65, 65)
-                    CheckboxTicked.ImageColor3 = Color3.fromRGB(65, 65, 65)
-                end
-            end
-
-            UpdateVisual(Toggled)
-
-            Toggle.MouseButton1Down:Connect(function()
-                Toggled = not Toggled
-                TweenService:Create(Title, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {TextColor3 = Toggled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(185, 185, 185)}):Play()
-                TweenService:Create(TickCover, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Position = Toggled and UDim2.new(0.5, 0, 0.5, 0) or UDim2.new(0.5, -7, 0.5, -7), Size = Toggled and UDim2.new(0, 0, 0, 0) or UDim2.new(0, 14, 0, 14)}):Play()
-                TweenService:Create(CheckboxOutline, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {ImageColor3 = Toggled and Library.Theme.MainColor or Color3.fromRGB(65, 65, 65)}):Play()
-                TweenService:Create(CheckboxTicked, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {ImageColor3 = Toggled and Library.Theme.MainColor or Color3.fromRGB(65, 65, 65)}):Play()
-                if not Settings[gameId] then Settings[gameId] = {} end
-                Settings[gameId][name] = Toggled
-                SaveSettings()
-                callback(Toggled)
-            end)
-            table.insert(Library.LibraryColorTable, CheckboxOutline)
-            table.insert(Library.LibraryColorTable, CheckboxTicked)
-
-            SectionContent.CanvasSize = UDim2.new(0, 0, 0, SectionContentLayout.AbsoluteContentSize.Y + 15)
-
-            return {
-                SetState = function(state)
-                    Toggled = state
-                    UpdateVisual(state)
-                    if not Settings[gameId] then Settings[gameId] = {} end
-                    Settings[gameId][name] = state
-                    SaveSettings()
-                    callback(state)
-                end
-            }
+    for i, v in ipairs(args) do
+        if type(v) == "boolean" then
+            presetToggle = v
+        elseif type(v) == "function" and not callback then
+            callback = v
+        elseif type(v) == "string" and not tooltipText then
+            tooltipText = v
         end
+    end
+    callback = callback or function() end
+
+    local NameToggle = Instance.new("Frame")
+    local Title = Instance.new("TextLabel")
+    local Toggle = Instance.new("TextButton")
+    local CheckboxOutline = Instance.new("ImageLabel")
+    local CheckboxTicked = Instance.new("ImageLabel")
+    local TickCover = Instance.new("Frame")
+    local Tooltip
+
+    local gameId = self.GameId or tostring(game.PlaceId)
+    if not Settings[gameId] then Settings[gameId] = {} end
+    local Toggled = (presetToggle ~= nil and presetToggle) or false
+    if Settings[gameId][name] ~= nil then
+        Toggled = Settings[gameId][name]
+    end
+
+    if not UIReferences then UIReferences = { Toggles = {} } end
+    UIReferences.Toggles[name] = {
+        Toggled = Toggled,
+        TickCover = TickCover,
+        CheckboxOutline = CheckboxOutline,
+        CheckboxTicked = CheckboxTicked,
+        Callback = callback,
+        EnabledDuringLoad = true
+    }
+
+    NameToggle.Name = (name .. "Toggle")
+    NameToggle.Parent = SectionContent or error("SectionContent tidak ditemukan")
+    NameToggle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    NameToggle.BackgroundTransparency = 1.000
+    NameToggle.Size = UDim2.new(0, 197, 0, 35)
+    NameToggle.ZIndex = 5
+
+    Title.Name = "Title"
+    Title.Parent = NameToggle
+    Title.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    Title.BackgroundTransparency = 1.000
+    Title.Position = UDim2.new(0, 13, 0, 0)
+    Title.Size = UDim2.new(0, 149, 0, 35)
+    Title.ZIndex = 5
+    Title.Font = Library and Library.Theme and Library.Theme.TextFont or Enum.Font.SourceSansBold
+    Title.Text = name
+    Title.TextColor3 = Toggled and (Library and Library.Theme and Library.Theme.TextColor or Color3.fromRGB(255, 255, 255)) or Color3.fromRGB(185, 185, 185)
+    if Library and Library.LibraryColorTable then table.insert(Library.LibraryColorTable, Title) end
+    if _G.UpdateTextColors then UpdateTextColors() end
+    Title.TextSize = 15.000
+    Title.TextXAlignment = Enum.TextXAlignment.Left
+
+    Toggle.Name = "Toggle"
+    Toggle.Parent = NameToggle
+    Toggle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    Toggle.BackgroundTransparency = 1.000
+    Toggle.Position = UDim2.new(0, 161, 0, 7)
+    Toggle.Size = UDim2.new(0, 20, 0, 20)
+    Toggle.ZIndex = 5
+    Toggle.AutoButtonColor = false
+    Toggle.Font = Library and Library.Theme and Library.Theme.TextFont or Enum.Font.SourceSansBold
+    Toggle.Text = ""
+    Toggle.TextColor3 = Library and Library.Theme and Library.Theme.TextColor or Color3.fromRGB(255, 255, 255)
+    Toggle.TextSize = 14.000
+
+    CheckboxOutline.Name = "CheckboxOutline"
+    CheckboxOutline.Parent = Toggle
+    CheckboxOutline.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    CheckboxOutline.BackgroundTransparency = 1.000
+    CheckboxOutline.Position = UDim2.new(0.5, -12, 0.5, -12)
+    CheckboxOutline.Size = UDim2.new(0, 24, 0, 24)
+    CheckboxOutline.ZIndex = 5
+    CheckboxOutline.Image = "rbxassetid://5416796047"
+    CheckboxOutline.ImageColor3 = Toggled and (Library and Library.Theme and Library.Theme.MainColor or Color3.fromRGB(255, 75, 75)) or Color3.fromRGB(65, 65, 65)
+
+    CheckboxTicked.Name = "CheckboxTicked"
+    CheckboxTicked.Parent = Toggle
+    CheckboxTicked.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    CheckboxTicked.BackgroundTransparency = 1.000
+    CheckboxTicked.Position = UDim2.new(0.5, -12, 0.5, -12)
+    CheckboxTicked.Size = UDim2.new(0, 24, 0, 24)
+    CheckboxTicked.ZIndex = 6
+    CheckboxTicked.Image = "rbxassetid://5416796675"
+    CheckboxTicked.ImageColor3 = Toggled and (Library and Library.Theme and Library.Theme.MainColor or Color3.fromRGB(255, 75, 75)) or Color3.fromRGB(65, 65, 65)
+    if Library and Library.LibraryColorTable then table.insert(Library.LibraryColorTable, CheckboxTicked) end
+
+    TickCover.Name = "TickCover"
+    TickCover.Parent = Toggle
+    TickCover.BackgroundColor3 = Library and Library.Theme and Library.Theme.BackgroundColor or Color3.fromRGB(35, 35, 35)
+    TickCover.BorderSizePixel = 0
+    TickCover.Position = Toggled and UDim2.new(0.5, 0, 0.5, 0) or UDim2.new(0.5, -7, 0.5, -7)
+    TickCover.Size = Toggled and UDim2.new(0, 0, 0, 0) or UDim2.new(0, 14, 0, 14)
+    TickCover.ZIndex = 7
+
+    if tooltipText then
+        Tooltip = Instance.new("TextLabel")
+        Tooltip.Name = "Tooltip"
+        Tooltip.Parent = NameToggle
+        Tooltip.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        Tooltip.Position = UDim2.new(0, 10, 0, -10)
+        Tooltip.ZIndex = 10
+        Tooltip.Font = Library and Library.Theme and Library.Theme.TextFont or Enum.Font.SourceSansBold
+        Tooltip.Text = tooltipText
+        Tooltip.TextColor3 = Color3.fromRGB(0, 0, 0)
+        Tooltip.TextSize = 14.000
+        Tooltip.Visible = false
+        Tooltip.ClipsDescendants = true
+
+        local UICorner = Instance.new("UICorner")
+        UICorner.CornerRadius = UDim.new(0, 5)
+        UICorner.Parent = Tooltip
+
+        local lineCount = 0
+        for _ in tooltipText:gmatch("\n") do
+            lineCount = lineCount + 1
+        end
+        Tooltip.Position = UDim2.new(0, 10, 0, -10 - (lineCount * 20))
+        Tooltip.Size = UDim2.new(0, math.min(Tooltip.TextBounds.X + 10, 187), 0, Tooltip.TextBounds.Y + 5)
+
+        Title.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+                Tooltip.Visible = true
+            elseif input.UserInputType == Enum.UserInputType.MouseMovement then
+                Tooltip.Visible = true
+            end
+        end)
+
+        Title.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+                Tooltip.Visible = false
+            elseif input.UserInputType == Enum.UserInputType.MouseMovement then
+                Tooltip.Visible = false
+            end
+        end)
+    end
+
+    local function safeCallback(state)
+        if type(callback) == "function" and UIReferences.Toggles[name].EnabledDuringLoad then
+            local success, err = pcall(callback, state)
+            if not success then
+                warn(err)
+            end
+        end
+    end
+
+    Toggle.MouseButton1Down:Connect(function()
+        Toggled = not Toggled
+        UIReferences.Toggles[name].EnabledDuringLoad = true
+        TweenService:Create(Title, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {TextColor3 = Toggled and (Library and Library.Theme and Library.Theme.TextColor or Color3.fromRGB(255, 255, 255)) or Color3.fromRGB(185, 185, 185)}):Play()
+        TweenService:Create(TickCover, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Position = Toggled and UDim2.new(0.5, 0, 0.5, 0) or UDim2.new(0.5, -7, 0.5, -7), Size = Toggled and UDim2.new(0, 0, 0, 0) or UDim2.new(0, 14, 0, 14)}):Play()
+        TweenService:Create(CheckboxOutline, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {ImageColor3 = Toggled and (Library and Library.Theme and Library.Theme.MainColor or Color3.fromRGB(255, 75, 75)) or Color3.fromRGB(65, 65, 65)}):Play()
+        TweenService:Create(CheckboxTicked, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {ImageColor3 = Toggled and (Library and Library.Theme and Library.Theme.MainColor or Color3.fromRGB(255, 75, 75)) or Color3.fromRGB(65, 65, 65)}):Play()
+        Settings[gameId][name] = Toggled
+        SaveSettings()
+        safeCallback(Toggled)
+        task.wait()
+    end)
+
+    if Library and Library.LibraryColorTable then
+        table.insert(Library.LibraryColorTable, CheckboxOutline)
+        table.insert(Library.LibraryColorTable, CheckboxTicked)
+    end
+
+    if Toggled then
+        task.wait(0.1)
+    end
+
+    if SectionContent and SectionContentLayout then
+        SectionContent.CanvasSize = UDim2.new(0, 0, 0, SectionContentLayout.AbsoluteContentSize.Y + 15)
+    end
+
+    task.delay(1, function()
+        if UIReferences and UIReferences.Toggles[name] and UIReferences.Toggles[name].Toggled then
+            UIReferences.Toggles[name].EnabledDuringLoad = true
+            safeCallback(UIReferences.Toggles[name].Toggled)
+        end
+    end)
+
+    return {
+        SetState = function(state)
+            Toggled = state
+            UIReferences.Toggles[name].EnabledDuringLoad = true
+            TweenService:Create(Title, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {TextColor3 = Toggled and (Library and Library.Theme and Library.Theme.TextColor or Color3.fromRGB(255, 255, 255)) or Color3.fromRGB(185, 185, 185)}):Play()
+            TweenService:Create(TickCover, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Position = Toggled and UDim2.new(0.5, 0, 0.5, 0) or UDim2.new(0.5, -7, 0.5, -7), Size = Toggled and UDim2.new(0, 0, 0, 0) or UDim2.new(0, 14, 0, 14)}):Play()
+            TweenService:Create(CheckboxOutline, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {ImageColor3 = Toggled and (Library and Library.Theme and Library.Theme.MainColor or Color3.fromRGB(255, 75, 75)) or Color3.fromRGB(65, 65, 65)}):Play()
+            TweenService:Create(CheckboxTicked, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {ImageColor3 = Toggled and (Library and Library.Theme and Library.Theme.MainColor or Color3.fromRGB(255, 75, 75)) or Color3.fromRGB(65, 65, 65)}):Play()
+            Settings[gameId][name] = state
+            SaveSettings()
+            safeCallback(state)
+            task.wait()
+        end
+    }
+end
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 
@@ -2109,7 +2203,7 @@ function SectionElements:CreateDropdown(name, options, presetoption, callback)
     NameDropdown.BackgroundTransparency = 1.000
     NameDropdown.Position = UDim2.new(0, 0, 0.773480654, 0)
     NameDropdown.Size = UDim2.new(0, 197, 0, 35)
-    NameDropdown.ZIndex = 5
+    NameDropdown.ZIndex = 10
 
     TitleToggle.Name = "TitleToggle"
     TitleToggle.Parent = NameDropdown
@@ -2118,7 +2212,7 @@ function SectionElements:CreateDropdown(name, options, presetoption, callback)
     TitleToggle.BorderSizePixel = 0
     TitleToggle.Position = UDim2.new(0, 13, 0, 0)
     TitleToggle.Size = UDim2.new(0, 167, 0, 30)
-    TitleToggle.ZIndex = 7
+    TitleToggle.ZIndex = 11
     TitleToggle.Font = Library.Theme.TextFont
     TitleToggle.Text = (name .. " - " .. SelectedOption)
     TitleToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -2131,7 +2225,7 @@ function SectionElements:CreateDropdown(name, options, presetoption, callback)
     Dropdown.BackgroundTransparency = 1.000
     Dropdown.Position = UDim2.new(0, 15, 0, 30)
     Dropdown.Size = UDim2.new(0, 165, 0, 0)
-    Dropdown.ZIndex = 15
+    Dropdown.ZIndex = 12
     Dropdown.Image = "rbxassetid://3570695787"
     Dropdown.ImageColor3 = Color3.fromRGB(45, 45, 45)
     Dropdown.ScaleType = Enum.ScaleType.Slice
@@ -2154,7 +2248,7 @@ function SectionElements:CreateDropdown(name, options, presetoption, callback)
     searchTextBox.Visible = false
     searchTextBox.TextSize = 14
     searchTextBox.Font = Library.Theme.TextFont
-    searchTextBox.ZIndex = 16
+    searchTextBox.ZIndex = 13
 
     local function ResetAllDropdownItems()
         for i, v in pairs(Dropdown:GetChildren()) do
@@ -2193,7 +2287,7 @@ function SectionElements:CreateDropdown(name, options, presetoption, callback)
                 NameButton.BackgroundTransparency = 1.000
                 NameButton.BorderSizePixel = 0
                 NameButton.Size = UDim2.new(0, 165, 0, 25)
-                NameButton.ZIndex = 15
+                NameButton.ZIndex = 14
                 NameButton.AutoButtonColor = false
                 NameButton.Font = Library.Theme.TextFont
                 NameButton.Text = v
@@ -2210,7 +2304,9 @@ function SectionElements:CreateDropdown(name, options, presetoption, callback)
                     if not Settings[gameId] then Settings[gameId] = {} end
                     Settings[gameId][name] = SelectedOption
                     SaveSettings()
-                    callback(NameButton.Text)
+                    if type(callback) == "function" then
+                        callback(SelectedOption)
+                    end
                     ClearAllDropdownItems()
                 end)
 
@@ -2242,7 +2338,7 @@ function SectionElements:CreateDropdown(name, options, presetoption, callback)
             searchTextBox.Text = ""
             updateOptions("")
             TweenService:Create(TitleToggle, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(185, 185, 185)}):Play()
-            TweenService:Create(NameDropdown, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 197, 0, 35 + DropdownContentLayout.AbsoluteContentSize.Y + 20)}):Play() 
+            TweenService:Create(NameDropdown, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 197, 0, 35 + DropdownContentLayout.AbsoluteContentSize.Y + 20)}):Play()
             TweenService:Create(Dropdown, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 165, 0, DropdownContentLayout.AbsoluteContentSize.Y + 20)}):Play()
         end
     end)
@@ -2259,9 +2355,19 @@ function SectionElements:CreateDropdown(name, options, presetoption, callback)
         SelectedOption = Settings[gameId][name] or newoptions[newpresetoption] or newoptions[1]
         TitleToggle.Text = (name .. " - " .. SelectedOption)
         updateOptions("")
+        if type(callback) == "function" and SelectedOption ~= "None" and newcallback then
+            callback(SelectedOption)
+        end
     end
 
     updateOptions("")
+    if type(callback) == "function" and SelectedOption ~= "None" then
+        callback(SelectedOption)
+    end
+
+    if SectionContent and SectionContentLayout then
+        SectionContent.CanvasSize = UDim2.new(0, 0, 0, SectionContentLayout.AbsoluteContentSize.Y + 15)
+    end
 
     return {
         Refresh = Refresh
