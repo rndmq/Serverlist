@@ -23,6 +23,7 @@ local function LoadSettings()
     if not saveFile:match("%.json$") then
         saveFile = saveFile .. ".json"
     end
+    Settings = {} -- Reset Settings tiap load
     if isfile(saveFile) then
         local success, result = pcall(function()
             return HttpService:JSONDecode(readfile(saveFile))
@@ -1501,7 +1502,7 @@ function SectionElements:CreateToggle(name, ...)
         Settings[gameId][name] = Toggled
         SaveSettings()
         safeCallback(Toggled)
-        task.wait() -- Pastiin animasi selesai sebelum state final
+        task.wait()
     end)
 
     if Library and Library.LibraryColorTable then
