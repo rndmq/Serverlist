@@ -1357,7 +1357,8 @@ function SectionElements:CreateToggle(name, ...)
         TickCover = TickCover,
         CheckboxOutline = CheckboxOutline,
         CheckboxTicked = CheckboxTicked,
-        Callback = callback
+        Callback = callback,
+        EnabledDuringLoad = false -- Flag buat disable callback pas load
     }
 
     NameToggle.Name = (name .. "Toggle")
@@ -1424,7 +1425,6 @@ function SectionElements:CreateToggle(name, ...)
     TickCover.Size = Toggled and UDim2.new(0, 0, 0, 0) or UDim2.new(0, 14, 0, 14)
     TickCover.ZIndex = 7
 
-    -- Tooltip handling remains the same
     if tooltipText then
         Tooltip = Instance.new("TextLabel")
         Tooltip.Name = "Tooltip"
@@ -1468,18 +1468,19 @@ function SectionElements:CreateToggle(name, ...)
     end
 
     local function safeCallback(state)
-        if type(callback) == "function" then
+        if type(callback) == "function" and UIReferences.Toggles[name].EnabledDuringLoad then
             local success, err = pcall(callback, state)
             if not success then
                 print("Callback error for", name, ":", err)
             end
         else
-            print("Callback for", name, "is not a function, type is:", type(callback))
+            print("Callback for", name, "not executed, EnabledDuringLoad:", UIReferences.Toggles[name].EnabledDuringLoad, "type:", type(callback))
         end
     end
 
     Toggle.MouseButton1Down:Connect(function()
         Toggled = not Toggled
+        UIReferences.Toggles[name].EnabledDuringLoad = true -- Aktifkan callback pas interaksi
         print("Toggle clicked, new state for", name, ":", Toggled)
         TweenService:Create(Title, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {TextColor3 = Toggled and (Library and Library.Theme and Library.Theme.TextColor or Color3.fromRGB(255, 255, 255)) or Color3.fromRGB(185, 185, 185)}):Play()
         TweenService:Create(TickCover, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Position = Toggled and UDim2.new(0.5, 0, 0.5, 0) or UDim2.new(0.5, -7, 0.5, -7), Size = Toggled and UDim2.new(0, 0, 0, 0) or UDim2.new(0, 14, 0, 14)}):Play()
@@ -1490,8 +1491,15 @@ function SectionElements:CreateToggle(name, ...)
         safeCallback(Toggled)
     end)
 
-    -- Direct callback execution on toggle loading
-    safeCallback(Toggled)
+    if Library and Library.LibraryColorTable then
+        table.insert(Library.LibraryColorTable, CheckboxOutline)
+        table.insert(Library.LibraryColorTable, CheckboxTicked)
+    end
+
+    if Toggled then
+        print("Loading toggle", name, "with state:", Toggled)
+        task.wait(0.1)
+    end
 
     if SectionContent and SectionContentLayout then
         SectionContent.CanvasSize = UDim2.new(0, 0, 0, SectionContentLayout.AbsoluteContentSize.Y + 15)
@@ -1500,6 +1508,7 @@ function SectionElements:CreateToggle(name, ...)
     return {
         SetState = function(state)
             Toggled = state
+            UIReferences.Toggles[name].EnabledDuringLoad = true
             print("SetState for", name, "to:", state)
             TweenService:Create(Title, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {TextColor3 = Toggled and (Library and Library.Theme and Library.Theme.TextColor or Color3.fromRGB(255, 255, 255)) or Color3.fromRGB(185, 185, 185)}):Play()
             TweenService:Create(TickCover, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Position = Toggled and UDim2.new(0.5, 0, 0.5, 0) or UDim2.new(0.5, -7, 0.5, -7), Size = Toggled and UDim2.new(0, 0, 0, 0) or UDim2.new(0, 14, 0, 14)}):Play()
