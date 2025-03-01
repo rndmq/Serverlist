@@ -7,62 +7,57 @@ local CoreGui = game:GetService("CoreGui")
 
 local LocalPlayer = game:GetService("Players").LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
-local TweenService = game:GetService("TweenService")
-local RunService = game:GetService("RunService")
-local HttpService = game:GetService("HttpService")
-local UserInputService = game:GetService("UserInputService")
-local ContentProvider = game:GetService("ContentProvider")
-local CoreGui = game:GetService("CoreGui")
-
-local LocalPlayer = game:GetService("Players").LocalPlayer
-local Mouse = LocalPlayer:GetMouse()
 local Settings = {}
 local UIReferences = {
     Toggles = {},
-    Dropdowns = {},
-    Keybinds = {},
+    Dropdowns = {}
 }
 
 local function LoadSettings()
-    if isfile("Rdnm.json") then
+    local saveFile = getgenv() and getgenv().SaveFile or "Rdnm.json"
+    if isfile(saveFile) then
         local success, result = pcall(function()
-            return HttpService:JSONDecode(readfile("Rdnm.json"))
+            return HttpService:JSONDecode(readfile(saveFile))
         end)
         if success and type(result) == "table" then
             Settings = result
         else
             Settings = {}
             pcall(function()
-                writefile("Rdnm.json", HttpService:JSONEncode(Settings))
+                writefile(saveFile, HttpService:JSONEncode(Settings))
             end)
         end
     else
         Settings = {}
         pcall(function()
-            writefile("Rdnm.json", HttpService:JSONEncode(Settings))
+            writefile(saveFile, HttpService:JSONEncode(Settings))
         end)
     end
-    
-    local gameId = tostring(game.PlaceId)
-    if Settings[gameId] then
-        for name, value in pairs(Settings[gameId]) do
-            if UIReferences.Toggles[name] then
-                local toggle = UIReferences.Toggles[name]
-                toggle.Toggled = value
-                toggle.TickCover.Position = value and UDim2.new(0.5, 0, 0.5, 0) or UDim2.new(0.5, -7, 0.5, -7)
-                toggle.TickCover.Size = value and UDim2.new(0, 0, 0, 0) or UDim2.new(0, 14, 0, 14)
-                toggle.CheckboxOutline.ImageColor3 = value and Library.Theme.MainColor or Color3.fromRGB(65, 65, 65)
-                toggle.CheckboxTicked.ImageColor3 = value and Library.Theme.MainColor or Color3.fromRGB(65, 65, 65)
-                if value and toggle.Callback then
-                    toggle.Callback(true)
+    for gameId, gameSettings in pairs(Settings) do
+        if UIReferences.Toggles[gameId] then
+            for name, value in pairs(gameSettings) do
+                if UIReferences.Toggles[name] then
+                    local toggle = UIReferences.Toggles[name]
+                    toggle.Toggled = value
+                    toggle.TickCover.Position = value and UDim2.new(0.5, 0, 0.5, 0) or UDim2.new(0.5, -7, 0.5, -7)
+                    toggle.TickCover.Size = value and UDim2.new(0, 0, 0, 0) or UDim2.new(0, 14, 0, 14)
+                    toggle.CheckboxOutline.ImageColor3 = value and (Library and Library.Theme and Library.Theme.MainColor or Color3.fromRGB(255, 75, 75)) or Color3.fromRGB(65, 65, 65)
+                    toggle.CheckboxTicked.ImageColor3 = value and (Library and Library.Theme and Library.Theme.MainColor or Color3.fromRGB(255, 75, 75)) or Color3.fromRGB(65, 65, 65)
+                    if value and toggle.Callback then
+                        toggle.Callback(true)
+                    end
                 end
             end
-            if UIReferences.Dropdowns[name] then
-                local dropdown = UIReferences.Dropdowns[name]
-                dropdown.SelectedOption = value
-                dropdown.TitleToggle.Text = name .. " - " .. value
-                if dropdown.Callback then
-                    dropdown.Callback(value)
+        end
+        if UIReferences.Dropdowns[gameId] then
+            for name, value in pairs(gameSettings) do
+                if UIReferences.Dropdowns[name] then
+                    local dropdown = UIReferences.Dropdowns[name]
+                    dropdown.SelectedOption = value
+                    dropdown.TitleToggle.Text = name .. " - " .. value
+                    if dropdown.Callback then
+                        dropdown.Callback(value)
+                    end
                 end
             end
         end
@@ -71,11 +66,12 @@ end
 LoadSettings()
 
 local function SaveSettings()
+    local saveFile = getgenv() and getgenv().SaveFile or "Rdnm.json"
     if not Settings then
         Settings = {}
     end
     pcall(function()
-        writefile("Rdnm.json", HttpService:JSONEncode(Settings))
+        writefile(saveFile, HttpService:JSONEncode(Settings))
     end)
 end
 ContentProvider:PreloadAsync({"rbxassetid://3570695787", "rbxassetid://2708891598", "rbxassetid://4155801252", "rbxassetid://4695575676", "rbxassetid://4155801252"})
