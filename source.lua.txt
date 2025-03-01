@@ -732,7 +732,7 @@ function Library:CreateTab(name)
     Title.ZIndex = 2
     Title.Font = Library.Theme.TextFont
     Title.Text = name
-    Title.TextColor3 = Library.Theme.MainColor
+    Title.TextColor3 = Library.Theme.TextColor
 table.insert(Library.LibraryColorTable, Title) 
     Title.TextSize = 15.000
 
