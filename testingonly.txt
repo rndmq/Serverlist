@@ -1408,7 +1408,7 @@ function SectionElements:CreateToggle(name, ...)
     Toggle.AutoButtonColor = false
     Toggle.Font = Library and Library.Theme and Library.Theme.TextFont or Enum.Font.SourceSansBold
     Toggle.Text = ""
-    Toggle.TextColor3 = Library and Library.Theme and Library.Theme.TextColor or Color3.fromRGB(255, 255, 255)
+    Toggle.TextColor3 = Library and Library.Theme and Library.Theme.TextColor or Color3.fromRGB(255, 105, 180) or Color3.fromRGB(255, 255, 255)
     Toggle.TextSize = 14.000
 
     CheckboxOutline.Name = "CheckboxOutline"
