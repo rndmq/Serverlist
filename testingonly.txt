@@ -1392,7 +1392,7 @@ function SectionElements:CreateToggle(name, ...)
     Title.ZIndex = 5
     Title.Font = Library and Library.Theme and Library.Theme.TextFont or Enum.Font.SourceSansBold
     Title.Text = name
-    Title.TextColor3 = Toggled and (Library and Library.Theme and Library.Theme.TextColor or Color3.fromRGB(255, 255, 255)) or Color3.fromRGB(255, 105, 180)
+    Title.TextColor3 = Toggled and (Library and Library.Theme and Library.Theme.TextColor or Color3.fromRGB(255, 105, 180)) or Color3.fromRGB(255, 255, 255)
     if Library and Library.LibraryColorTable then table.insert(Library.LibraryColorTable, Title) end
     if _G.UpdateTextColors then UpdateTextColors() end
     Title.TextSize = 15.000
@@ -1419,7 +1419,7 @@ function SectionElements:CreateToggle(name, ...)
     CheckboxOutline.Size = UDim2.new(0, 24, 0, 24)
     CheckboxOutline.ZIndex = 5
     CheckboxOutline.Image = "rbxassetid://5416796047"
-    CheckboxOutline.ImageColor3 = Toggled and (Library and Library.Theme and Library.Theme.MainColor or Color3.fromRGB(255, 255, 255)) or Color3.fromRGB(255, 105, 180)
+    CheckboxOutline.ImageColor3 = Toggled and (Library and Library.Theme and Library.Theme.MainColor or Color3.fromRGB(255, 105, 180)) or Color3.fromRGB(255, 255, 255)
 
     CheckboxTicked.Name = "CheckboxTicked"
     CheckboxTicked.Parent = Toggle
@@ -1429,7 +1429,7 @@ function SectionElements:CreateToggle(name, ...)
     CheckboxTicked.Size = UDim2.new(0, 24, 0, 24)
     CheckboxTicked.ZIndex = 6
     CheckboxTicked.Image = "rbxassetid://5416796675"
-    CheckboxTicked.ImageColor3 = Toggled and (Library and Library.Theme and Library.Theme.MainColor or Color3.fromRGB(255, 255, 255)) or Color3.fromRGB(255, 105, 180)
+    CheckboxTicked.ImageColor3 = Toggled and (Library and Library.Theme and Library.Theme.MainColor or Color3.fromRGB(255, 105, 180)) or Color3.fromRGB(255, 255, 255)
     if Library and Library.LibraryColorTable then table.insert(Library.LibraryColorTable, CheckboxTicked) end
 
     TickCover.Name = "TickCover"
@@ -1494,10 +1494,10 @@ function SectionElements:CreateToggle(name, ...)
     Toggle.MouseButton1Down:Connect(function()
         Toggled = not Toggled
         UIReferences.Toggles[name].EnabledDuringLoad = true
-        TweenService:Create(Title, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {TextColor3 = Toggled and (Library and Library.Theme and Library.Theme.TextColor or Color3.fromRGB(255, 255, 255)) or Color3.fromRGB(185, 185, 185)}):Play()
+        TweenService:Create(Title, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {TextColor3 = Toggled and (Library and Library.Theme and Library.Theme.TextColor or Color3.fromRGB(255, 105, 180)) or Color3.fromRGB(255,255,255)}):Play()
         TweenService:Create(TickCover, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Position = Toggled and UDim2.new(0.5, 0, 0.5, 0) or UDim2.new(0.5, -7, 0.5, -7), Size = Toggled and UDim2.new(0, 0, 0, 0) or UDim2.new(0, 14, 0, 14)}):Play()
-        TweenService:Create(CheckboxOutline, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {ImageColor3 = Toggled and (Library and Library.Theme and Library.Theme.MainColor or Color3.fromRGB(255, 75, 75)) or Color3.fromRGB(65, 65, 65)}):Play()
-        TweenService:Create(CheckboxTicked, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {ImageColor3 = Toggled and (Library and Library.Theme and Library.Theme.MainColor or Color3.fromRGB(255, 75, 75)) or Color3.fromRGB(65, 65, 65)}):Play()
+        TweenService:Create(CheckboxOutline, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {ImageColor3 = Toggled and (Library and Library.Theme and Library.Theme.MainColor or Color3.fromRGB(255, 105, 180)) or Color3.fromRGB(255, 255 ,255)}):Play()
+        TweenService:Create(CheckboxTicked, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {ImageColor3 = Toggled and (Library and Library.Theme and Library.Theme.MainColor or Color3.fromRGB(255, 105, 180)) or Color3.fromRGB(255, 255, 255)}):Play()
         Settings[gameId][name] = Toggled
         SaveSettings()
         safeCallback(Toggled)
