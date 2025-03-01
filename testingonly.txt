@@ -14,7 +14,12 @@ local UIReferences = {
 }
 
 local function LoadSettings()
-    local saveFile = getgenv() and getgenv().SaveFile or "Rdnm.json"
+    local saveFile = "Rdnm.json"
+    pcall(function()
+        if getgenv and getgenv().SaveFile then
+            saveFile = getgenv().SaveFile
+        end
+    end)
     if not saveFile:match("%.json$") then
         saveFile = saveFile .. ".json"
     end
@@ -24,14 +29,17 @@ local function LoadSettings()
         end)
         if success and type(result) == "table" then
             Settings = result
+            if next(Settings) == nil or not Settings[tostring(game.PlaceId)] then
+                Settings[tostring(game.PlaceId)] = {}
+            end
         else
-            Settings = {}
+            Settings = { [tostring(game.PlaceId)] = {} }
             pcall(function()
                 writefile(saveFile, HttpService:JSONEncode(Settings))
             end)
         end
     else
-        Settings = {}
+        Settings = { [tostring(game.PlaceId)] = {} }
         pcall(function()
             writefile(saveFile, HttpService:JSONEncode(Settings))
         end)
@@ -69,12 +77,17 @@ end
 LoadSettings()
 
 local function SaveSettings()
-    local saveFile = getgenv() and getgenv().SaveFile or "Rdnm.json"
+    local saveFile = "Rdnm.json"
+    pcall(function()
+        if getgenv and getgenv().SaveFile then
+            saveFile = getgenv().SaveFile
+        end
+    end)
     if not saveFile:match("%.json$") then
         saveFile = saveFile .. ".json"
     end
     if not Settings then
-        Settings = {}
+        Settings = { [tostring(game.PlaceId)] = {} }
     end
     pcall(function()
         writefile(saveFile, HttpService:JSONEncode(Settings))
