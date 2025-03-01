@@ -2197,6 +2197,7 @@ function SectionElements:CreateDropdown(name, options, presetoption, callback)
     if not Settings[gameId] then Settings[gameId] = {} end
     local SelectedOption = tostring(Settings[gameId][name] or options[presetoption] or options[1] or "None")
 
+    
     NameDropdown.Name = (name .. "Dropdown")
     NameDropdown.Parent = SectionContent
     NameDropdown.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -2293,10 +2294,25 @@ function SectionElements:CreateDropdown(name, options, presetoption, callback)
                 NameButton.Text = v
                 NameButton.TextColor3 = (v == SelectedOption) and Library.Theme.MainColor or Color3.fromRGB(255, 255, 255)
                 NameButton.TextSize = 15.000
+                
+                NameButton.TextXAlignment = Enum.TextXAlignment.Center
+
+                
+                local textBounds = NameButton.TextBounds.X + 20 
+                local ClickArea = Instance.new("TextButton")
+                ClickArea.Name = "ClickArea"
+                ClickArea.Parent = NameButton
+                ClickArea.BackgroundTransparency = 1.000
+                ClickArea.Size = UDim2.new(0, textBounds, 0, 25)
+                ClickArea.Position = UDim2.new(0.5, -textBounds / 2, 0, 0) 
+                ClickArea.ZIndex = 15
+                ClickArea.Text = ""
+                ClickArea.AutoButtonColor = false
 
                 table.insert(Library.LibraryColorTable, NameButton)
 
-                NameButton.MouseButton1Down:Connect(function()
+                
+                ClickArea.MouseButton1Down:Connect(function()
                     SelectedOption = v
                     ResetAllDropdownItems()
                     TitleToggle.Text = (name .. " - " .. SelectedOption)
@@ -2310,13 +2326,13 @@ function SectionElements:CreateDropdown(name, options, presetoption, callback)
                     ClearAllDropdownItems()
                 end)
 
-                NameButton.InputBegan:Connect(function(input)
+                ClickArea.InputBegan:Connect(function(input)
                     if input.UserInputType == Enum.UserInputType.MouseMovement then
                         TweenService:Create(NameButton, TweenInfo.new(0.35, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {BackgroundTransparency = 0.95}):Play()
                     end
                 end)
 
-                NameButton.InputEnded:Connect(function(input)
+                ClickArea.InputEnded:Connect(function(input)
                     if input.UserInputType == Enum.UserInputType.MouseMovement then
                         TweenService:Create(NameButton, TweenInfo.new(0.35, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {BackgroundTransparency = 1}):Play()
                     end
@@ -2350,14 +2366,20 @@ function SectionElements:CreateDropdown(name, options, presetoption, callback)
     end)
 
     local function Refresh(newoptions, newpresetoption, newcallback)
-        ClearAllDropdownItems()
         options = newoptions or options
-        SelectedOption = Settings[gameId][name] or newoptions[newpresetoption] or newoptions[1]
-        TitleToggle.Text = (name .. " - " .. SelectedOption)
-        updateOptions("")
-        if type(callback) == "function" and SelectedOption ~= "None" and newcallback then
+        local presetValue = options[newpresetoption] or Settings[gameId][name] or options[1]
+        SelectedOption = presetValue
+        
+        if SelectedOption and SelectedOption ~= "None" and type(newcallback) == "function" then
             callback(SelectedOption)
         end
+        
+        TitleToggle.Text = (name .. " - " .. SelectedOption)
+        Settings[gameId][name] = SelectedOption
+        SaveSettings()
+        
+        ClearAllDropdownItems()
+        updateOptions("")
     end
 
     updateOptions("")
