@@ -1496,8 +1496,13 @@ function SectionElements:CreateToggle(name, ...)
         UIReferences.Toggles[name].EnabledDuringLoad = true
         TweenService:Create(Title, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {TextColor3 = Toggled and (Library and Library.Theme and Library.Theme.TextColor or Color3.fromRGB(255, 105, 180)) or Color3.fromRGB(255,255,255)}):Play()
         TweenService:Create(TickCover, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Position = Toggled and UDim2.new(0.5, 0, 0.5, 0) or UDim2.new(0.5, -7, 0.5, -7), Size = Toggled and UDim2.new(0, 0, 0, 0) or UDim2.new(0, 14, 0, 14)}):Play()
-        TweenService:Create(CheckboxOutline, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {ImageColor3 = Toggled and (Library and Library.Theme and Library.Theme.MainColor or Color3.fromRGB(255, 105, 180)) or Color3.fromRGB(255, 255 ,255)}):Play()
-        TweenService:Create(CheckboxTicked, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {ImageColor3 = Toggled and (Library and Library.Theme and Library.Theme.MainColor or Color3.fromRGB(255, 105, 180)) or Color3.fromRGB(255, 255, 255)}):Play()
+        TweenService
+    TweenService:Create(CheckboxOutline, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+        ImageColor3 = Toggled and Color3.fromRGB(255, 105, 180) or Color3.fromRGB(255, 255, 255)
+    }):Play()
+    TweenService:Create(CheckboxTicked, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+        ImageColor3 = Toggled and Color3.fromRGB(255, 105, 180) or Color3.fromRGB(255, 255, 255)
+    }):Play()
         Settings[gameId][name] = Toggled
         SaveSettings()
         safeCallback(Toggled)
