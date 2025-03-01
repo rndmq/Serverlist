@@ -15,6 +15,9 @@ local UIReferences = {
 
 local function LoadSettings()
     local saveFile = getgenv() and getgenv().SaveFile or "Rdnm.json"
+    if not saveFile:match("%.json$") then
+        saveFile = saveFile .. ".json"
+    end
     if isfile(saveFile) then
         local success, result = pcall(function()
             return HttpService:JSONDecode(readfile(saveFile))
@@ -67,6 +70,9 @@ LoadSettings()
 
 local function SaveSettings()
     local saveFile = getgenv() and getgenv().SaveFile or "Rdnm.json"
+    if not saveFile:match("%.json$") then
+        saveFile = saveFile .. ".json"
+    end
     if not Settings then
         Settings = {}
     end
