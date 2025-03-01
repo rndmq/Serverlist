@@ -2196,7 +2196,7 @@ function SectionElements:CreateDropdown(name, options, presetoption, callback)
     NameDropdown.BackgroundTransparency = 1.000
     NameDropdown.Position = UDim2.new(0, 0, 0.773480654, 0)
     NameDropdown.Size = UDim2.new(0, 197, 0, 35)
-    NameDropdown.ZIndex = 5
+    NameDropdown.ZIndex = 10
 
     TitleToggle.Name = "TitleToggle"
     TitleToggle.Parent = NameDropdown
@@ -2205,7 +2205,7 @@ function SectionElements:CreateDropdown(name, options, presetoption, callback)
     TitleToggle.BorderSizePixel = 0
     TitleToggle.Position = UDim2.new(0, 13, 0, 0)
     TitleToggle.Size = UDim2.new(0, 167, 0, 30)
-    TitleToggle.ZIndex = 7
+    TitleToggle.ZIndex = 11
     TitleToggle.Font = Library and Library.Theme and Library.Theme.TextFont or Enum.Font.SourceSansBold
     TitleToggle.Text = (name .. " - " .. SelectedOption)
     TitleToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -2218,7 +2218,7 @@ function SectionElements:CreateDropdown(name, options, presetoption, callback)
     Dropdown.BackgroundTransparency = 1.000
     Dropdown.Position = UDim2.new(0, 15, 0, 30)
     Dropdown.Size = UDim2.new(0, 165, 0, 0)
-    Dropdown.ZIndex = 15
+    Dropdown.ZIndex = 12
     Dropdown.Image = "rbxassetid://3570695787"
     Dropdown.ImageColor3 = Color3.fromRGB(45, 45, 45)
     Dropdown.ScaleType = Enum.ScaleType.Slice
@@ -2240,7 +2240,7 @@ function SectionElements:CreateDropdown(name, options, presetoption, callback)
     searchTextBox.Visible = false
     searchTextBox.TextSize = 14
     searchTextBox.Font = Library and Library.Theme and Library.Theme.TextFont or Enum.Font.SourceSansBold
-    searchTextBox.ZIndex = 16
+    searchTextBox.ZIndex = 13
 
     local function ResetAllDropdownItems()
         for i, v in pairs(Dropdown:GetChildren()) do
@@ -2319,7 +2319,6 @@ function SectionElements:CreateDropdown(name, options, presetoption, callback)
     end
 
     TitleToggle.MouseButton1Down:Connect(function()
-        DropdownToggled = not DropdownToggled
         if DropdownToggled then
             searchTextBox.Visible = false
             updateOptions("")
@@ -2334,6 +2333,7 @@ function SectionElements:CreateDropdown(name, options, presetoption, callback)
             TweenService:Create(NameDropdown, TweenInfo.new(0.5, Library and Library.Theme and Library.Theme.EasingStyle or Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(0, 197, 0, 35 + DropdownContentLayout.AbsoluteContentSize.Y + 20)})
             TweenService:Create(Dropdown, TweenInfo.new(0.5, Library and Library.Theme and Library.Theme.EasingStyle or Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(0, 165, 0, DropdownContentLayout.AbsoluteContentSize.Y + 20)})
         end
+        DropdownToggled = not DropdownToggled
     end)
 
     searchTextBox.Changed:Connect(function(property)
