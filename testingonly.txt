@@ -1424,6 +1424,7 @@ function SectionElements:CreateToggle(name, ...)
     TickCover.Size = Toggled and UDim2.new(0, 0, 0, 0) or UDim2.new(0, 14, 0, 14)
     TickCover.ZIndex = 7
 
+    -- Tooltip handling remains the same
     if tooltipText then
         Tooltip = Instance.new("TextLabel")
         Tooltip.Name = "Tooltip"
@@ -1489,16 +1490,8 @@ function SectionElements:CreateToggle(name, ...)
         safeCallback(Toggled)
     end)
 
-    if Library and Library.LibraryColorTable then
-        table.insert(Library.LibraryColorTable, CheckboxOutline)
-        table.insert(Library.LibraryColorTable, CheckboxTicked)
-    end
-
-    if Toggled then
-        print("Loading toggle", name, "with state:", Toggled)
-        task.wait(0.1)
-        safeCallback(Toggled)
-    end
+    -- Direct callback execution on toggle loading
+    safeCallback(Toggled)
 
     if SectionContent and SectionContentLayout then
         SectionContent.CanvasSize = UDim2.new(0, 0, 0, SectionContentLayout.AbsoluteContentSize.Y + 15)
