@@ -52,8 +52,8 @@ local function LoadSettings()
                     toggle.Toggled = value
                     toggle.TickCover.Position = value and UDim2.new(0.5, 0, 0.5, 0) or UDim2.new(0.5, -7, 0.5, -7)
                     toggle.TickCover.Size = value and UDim2.new(0, 0, 0, 0) or UDim2.new(0, 14, 0, 14)
-                    toggle.CheckboxOutline.ImageColor3 = value and (Library and Library.Theme and Library.Theme.MainColor or Color3.fromRGB(255, 75, 75)) or Color3.fromRGB(65, 65, 65)
-                    toggle.CheckboxTicked.ImageColor3 = value and (Library and Library.Theme and Library.Theme.MainColor or Color3.fromRGB(255, 75, 75)) or Color3.fromRGB(65, 65, 65)
+                    toggle.CheckboxOutline.ImageColor3 = value and (Library and Library.Theme and Library.Theme.MainColor or Color3.fromRGB(255, 255, 255)) or Color3.fromRGB(255, 105, 180)
+                    toggle.CheckboxTicked.ImageColor3 = value and (Library and Library.Theme and Library.Theme.MainColor or Color3.fromRGB(255, 255, 255)) or Color3.fromRGB(255, 105, 180)
                     if value and toggle.Callback then
                         toggle.Callback(true)
                     end
@@ -1392,7 +1392,7 @@ function SectionElements:CreateToggle(name, ...)
     Title.ZIndex = 5
     Title.Font = Library and Library.Theme and Library.Theme.TextFont or Enum.Font.SourceSansBold
     Title.Text = name
-    Title.TextColor3 = Toggled and (Library and Library.Theme and Library.Theme.TextColor or Color3.fromRGB(255, 255, 255)) or Color3.fromRGB(185, 185, 185)
+    Title.TextColor3 = Toggled and (Library and Library.Theme and Library.Theme.TextColor or Color3.fromRGB(255, 255, 255)) or Color3.fromRGB(255, 105, 180)
     if Library and Library.LibraryColorTable then table.insert(Library.LibraryColorTable, Title) end
     if _G.UpdateTextColors then UpdateTextColors() end
     Title.TextSize = 15.000
@@ -1419,7 +1419,7 @@ function SectionElements:CreateToggle(name, ...)
     CheckboxOutline.Size = UDim2.new(0, 24, 0, 24)
     CheckboxOutline.ZIndex = 5
     CheckboxOutline.Image = "rbxassetid://5416796047"
-    CheckboxOutline.ImageColor3 = Toggled and (Library and Library.Theme and Library.Theme.MainColor or Color3.fromRGB(255, 255, 255)) or Color3.fromRGB(255, 192, 203)
+    CheckboxOutline.ImageColor3 = Toggled and (Library and Library.Theme and Library.Theme.MainColor or Color3.fromRGB(255, 255, 255)) or Color3.fromRGB(255, 105, 180)
 
     CheckboxTicked.Name = "CheckboxTicked"
     CheckboxTicked.Parent = Toggle
@@ -1429,7 +1429,7 @@ function SectionElements:CreateToggle(name, ...)
     CheckboxTicked.Size = UDim2.new(0, 24, 0, 24)
     CheckboxTicked.ZIndex = 6
     CheckboxTicked.Image = "rbxassetid://5416796675"
-    CheckboxTicked.ImageColor3 = Toggled and (Library and Library.Theme and Library.Theme.MainColor or Color3.fromRGB(255, 75, 75)) or Color3.fromRGB(65, 65, 65)
+    CheckboxTicked.ImageColor3 = Toggled and (Library and Library.Theme and Library.Theme.MainColor or Color3.fromRGB(255, 255, 255)) or Color3.fromRGB(255, 105, 180)
     if Library and Library.LibraryColorTable then table.insert(Library.LibraryColorTable, CheckboxTicked) end
 
     TickCover.Name = "TickCover"
