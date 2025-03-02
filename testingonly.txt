@@ -2197,7 +2197,6 @@ function SectionElements:CreateDropdown(name, options, presetoption, callback)
     if not Settings[gameId] then Settings[gameId] = {} end
     local SelectedOption = tostring(Settings[gameId][name] or options[presetoption] or options[1] or "None")
 
-    
     NameDropdown.Name = (name .. "Dropdown")
     NameDropdown.Parent = SectionContent
     NameDropdown.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -2297,7 +2296,6 @@ function SectionElements:CreateDropdown(name, options, presetoption, callback)
                 
                 NameButton.TextXAlignment = Enum.TextXAlignment.Center
 
-                
                 local textBounds = NameButton.TextBounds.X + 20 
                 local ClickArea = Instance.new("TextButton")
                 ClickArea.Name = "ClickArea"
@@ -2311,7 +2309,6 @@ function SectionElements:CreateDropdown(name, options, presetoption, callback)
 
                 table.insert(Library.LibraryColorTable, NameButton)
 
-                
                 ClickArea.MouseButton1Down:Connect(function()
                     SelectedOption = v
                     ResetAllDropdownItems()
@@ -2367,11 +2364,14 @@ function SectionElements:CreateDropdown(name, options, presetoption, callback)
 
     local function Refresh(newoptions, newpresetoption, newcallback)
         options = newoptions or options
-        local presetIndex = newpresetoption or presetoption
-        local presetValue = (presetIndex and options[presetIndex]) or Settings[gameId][name] or "None"
+        local presetValue = options[newpresetoption] or Settings[gameId][name] or options[1] or "None"
+        if presetValue == nil then
+            presetValue = "None"
+            Settings[gameId][name] = "None" 
+        end
         SelectedOption = presetValue
-        
-        if SelectedOption and SelectedOption ~= "None" and type(newcallback) == "function" then
+       
+        if SelectedOption ~= "None" and type(newcallback) == "function" then
             newcallback(SelectedOption)
         elseif type(callback) == "function" then
             callback(SelectedOption)
