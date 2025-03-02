@@ -29,17 +29,20 @@ local function LoadSettings()
         end)
         if success and type(result) == "table" then
             Settings = result
-            if next(Settings) == nil or not Settings[tostring(game.PlaceId)] then
+            if tostring(game.PlaceId) ~= "13127800756" and (next(Settings) == nil or not Settings[tostring(game.PlaceId)]) then
                 Settings[tostring(game.PlaceId)] = {}
             end
         else
-            Settings = { [tostring(game.PlaceId)] = {} }
-            pcall(function()
-                writefile(saveFile, HttpService:JSONEncode(Settings))
-            end)
+            Settings = {}
+            if tostring(game.PlaceId) ~= "13127800756" then
+                Settings[tostring(game.PlaceId)] = {}
+            end
         end
     else
-        Settings = { [tostring(game.PlaceId)] = {} }
+        Settings = {}
+        if tostring(game.PlaceId) ~= "13127800756" then
+            Settings[tostring(game.PlaceId)] = {}
+        end
         pcall(function()
             writefile(saveFile, HttpService:JSONEncode(Settings))
         end)
@@ -87,11 +90,22 @@ local function SaveSettings()
         saveFile = saveFile .. ".json"
     end
     if not Settings then
-        Settings = { [tostring(game.PlaceId)] = {} }
+        Settings = {}
+        if tostring(game.PlaceId) ~= "13127800756" then
+            Settings[tostring(game.PlaceId)] = {}
+        end
     end
-    pcall(function()
-        writefile(saveFile, HttpService:JSONEncode(Settings))
-    end)
+    if tostring(game.PlaceId) ~= "13127800756" then
+        pcall(function()
+            local settingsToSave = {}
+            for gameId, gameSettings in pairs(Settings) do
+                if gameId ~= "13127800756" then
+                    settingsToSave[gameId] = gameSettings
+                end
+            end
+            writefile(saveFile, HttpService:JSONEncode(settingsToSave))
+        end)
+    end
 end
 ContentProvider:PreloadAsync({"rbxassetid://3570695787", "rbxassetid://2708891598", "rbxassetid://4155801252", "rbxassetid://4695575676", "rbxassetid://4155801252"})
 Library = {
