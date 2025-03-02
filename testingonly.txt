@@ -688,105 +688,10 @@ coroutine.wrap(function()
         end
     end
 end)()
-local useMainWindow = true
-pcall(function()
-    if getgenv and getgenv().Window ~= nil then
-        useMainWindow = getgenv().Window
-    end
-end)
-
-local UILibrary = Instance.new("ScreenGui")
-UILibrary.Name = HttpService:GenerateGUID(false)
-UILibrary.Parent = CoreGui
-UILibrary.DisplayOrder = 1
-UILibrary.ZIndexBehavior = Enum.ZIndexBehavior.Global
-local Main, Border, Topbar, UITabs, Tabs, TabButtons, TabButtonLayout
-if useMainWindow then
-    Main = Instance.new("ImageLabel")
-    Border = Instance.new("ImageLabel")
-    Topbar = Instance.new("Frame")
-    UITabs = Instance.new("Frame")
-    Tabs = Instance.new("Frame")
-    TabButtons = Instance.new("ImageLabel")
-    TabButtonLayout = Instance.new("UIListLayout")
-
-    Main.Name = "Main"
-    Main.Parent = UILibrary
-    Main.BackgroundColor3 = Library.Theme.BackgroundColor
-    Main.BackgroundTransparency = 1.000
-    Main.Position = UDim2.new(0.5, -225, 0.5, -125)
-    Main.Size = UDim2.new(0, 450, 0, 0)
-    Main.ZIndex = 2
-    Main.Image = "rbxassetid://3570695787"
-    Main.ImageColor3 = Library.Theme.BackgroundColor
-    Main.ScaleType = Enum.ScaleType.Slice
-    Main.SliceCenter = Rect.new(100, 100, 100, 100)
-    Main.SliceScale = 0.050
-    local UICorner = Instance.new("UICorner")
-    UICorner.CornerRadius = UDim.new(0, 10)
-    UICorner.Parent = Main
-
-    Border.Name = "Border"
-    Border.Parent = Main
-    Border.BackgroundColor3 = Library.Theme.MainColor
-    Border.BackgroundTransparency = 1.000
-    Border.Position = UDim2.new(0, -1, 0, -1)
-    Border.Size = UDim2.new(1, 2, 1, 2)
-    Border.Image = "rbxassetid://3570695787"
-    Border.ImageColor3 = Library.Theme.MainColor
-    Border.ScaleType = Enum.ScaleType.Slice
-    Border.SliceCenter = Rect.new(95, 95, 95, 95)
-    Border.SliceScale = 0.050
-
-    Topbar.Name = "Topbar"
-    Topbar.Parent = Main
-    Topbar.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    Topbar.BackgroundTransparency = 1.000
-    Topbar.Size = UDim2.new(0, 450, 0, 15)
-    Topbar.ZIndex = 2
-
-    UITabs.Name = "UITabs"
-    UITabs.Parent = Main
-    UITabs.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    UITabs.BackgroundTransparency = 1.000
-    UITabs.ClipsDescendants = true
-    UITabs.Size = UDim2.new(1, 0, 1, 0)
-
-    Tabs.Name = "Tabs"
-    Tabs.Parent = UITabs
-    Tabs.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    Tabs.BackgroundTransparency = 1.000
-    Tabs.Position = UDim2.new(0, 13, 0, 41)
-    Tabs.Size = UDim2.new(0, 421, 0, 209)
-    Tabs.ZIndex = 2
-    TabButtons.Name = "TabButtons"
-    TabButtons.Parent = UITabs
-    TabButtons.BackgroundColor3 = Library.Theme.MainColor
-    TabButtons.BackgroundTransparency = 1.000
-    TabButtons.Position = UDim2.new(0, 14, 0, 16)
-    TabButtons.Size = UDim2.new(0, 419, 0, 25)
-    TabButtons.ZIndex = 2
-    TabButtons.Image = "rbxassetid://3570695787"
-    TabButtons.ImageColor3 = Library.Theme.MainColor
-    TabButtons.ScaleType = Enum.ScaleType.Slice
-    TabButtons.SliceCenter = Rect.new(100, 100, 100, 100)
-    TabButtons.SliceScale = 0.050
-    TabButtons.ClipsDescendants = true
-
-    TabButtonLayout.Name = "TabButtonLayout"
-    TabButtonLayout.Parent = TabButtons
-    TabButtonLayout.FillDirection = Enum.FillDirection.Horizontal
-    TabButtonLayout.SortOrder = Enum.SortOrder.LayoutOrder
-
-    TweenService:Create(Main, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 450, 0, 250)}):Play()
-    TweenService:Create(Border, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageTransparency = 0}):Play()
-
-    table.insert(Library.LibraryColorTable, Border)
-    table.insert(Library.LibraryColorTable, TabButtons)
-    MakeDraggable(Topbar, Main)
-end
-local function CreateFloatingTab(name)
-    local TabFrame = Instance.new("ImageLabel")
+function Library:CreateTab(name)
+    local NameTab = Instance.new("Frame")
+    local NameTabButton = Instance.new("ImageButton")
+    local Title = Instance.new("TextLabel")
     local SectionLayout = Instance.new("UIListLayout")
     local SectionPadding = Instance.new("UIPadding")
 
@@ -794,231 +699,70 @@ local function CreateFloatingTab(name)
     local TabElements = { GameId = gameId }
     Library.TabCount = Library.TabCount + 1
 
-    TabFrame.Name = name .. "Tab"
-    TabFrame.Parent = UILibrary
-    TabFrame.BackgroundColor3 = Library.Theme.BackgroundColor
-    TabFrame.BackgroundTransparency = 1.000
-    TabFrame.Size = UDim2.new(0, 400, 0, 200) 
-    TabFrame.Position = UDim2.new(0, (Library.TabCount - 1) * 410, 0, 50)
-    TabFrame.ZIndex = 2
-    TabFrame.Image = "rbxassetid://3570695787"
-    TabFrame.ImageColor3 = Library.Theme.BackgroundColor
-    TabFrame.ScaleType = Enum.ScaleType.Slice
-    TabFrame.SliceCenter = Rect.new(100, 100, 100, 100)
-    TabFrame.SliceScale = 0.050
-    local TabCorner = Instance.new("UICorner")
-    TabCorner.CornerRadius = UDim.new(0, 10)
-    TabCorner.Parent = TabFrame
+    if Library.TabCount == 1 then
+        Library.FirstTab = name
+    end
 
-    local TabBorder = Instance.new("ImageLabel")
-    TabBorder.Name = "TabBorder"
-    TabBorder.Parent = TabFrame
-    TabBorder.BackgroundColor3 = Library.Theme.MainColor
-    TabBorder.BackgroundTransparency = 1.000
-    TabBorder.Position = UDim2.new(0, -1, 0, -1)
-    TabBorder.Size = UDim2.new(1, 2, 1, 2)
-    TabBorder.Image = "rbxassetid://3570695787"
-    TabBorder.ImageColor3 = Library.Theme.MainColor
-    TabBorder.ScaleType = Enum.ScaleType.Slice
-    TabBorder.SliceCenter = Rect.new(95, 95, 95, 95)
-    TabBorder.SliceScale = 0.050
-    table.insert(Library.LibraryColorTable, TabBorder)
-    local TabTitle = Instance.new("TextLabel")
-    TabTitle.Name = "TabTitle"
-    TabTitle.Parent = TabFrame
-    TabTitle.BackgroundColor3 = Library.Theme.BackgroundColor
-    TabTitle.BackgroundTransparency = 1.000
-    TabTitle.Position = UDim2.new(0, 10, 0, 5)
-    TabTitle.Size = UDim2.new(0, 200, 0, 20)
-    TabTitle.ZIndex = 3
-    TabTitle.Font = Library.Theme.TextFont
-    TabTitle.Text = name
-    TabTitle.TextColor3 = Library.Theme.TextColor
-    TabTitle.TextSize = 16.000
-    table.insert(Library.LibraryColorTable, TabTitle)
+    NameTab.Name = (name .. "Tab")
+    NameTab.Parent = Tabs
+    NameTab.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    NameTab.BackgroundTransparency = 1.000
+    NameTab.Size = UDim2.new(1, 0, 1, 0)
+    NameTab.ZIndex = 2
+    NameTab.ClipsDescendants = true
+    NameTab.Position = UDim2.new(-1, 0, 0, 0)
+
+    NameTabButton.Name = (name .. "TabButton")
+    NameTabButton.Parent = TabButtons
+    NameTabButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    NameTabButton.BackgroundTransparency = 1.000
+    NameTabButton.Size = UDim2.new(0, 84, 0, 25)
+    NameTabButton.ZIndex = 2
+    NameTabButton.Image = "rbxassetid://3570695787"
+    NameTabButton.ImageColor3 = Library.Theme.MainColor
+    NameTabButton.ScaleType = Enum.ScaleType.Slice
+    NameTabButton.SliceCenter = Rect.new(100, 100, 100, 100)
+    NameTabButton.SliceScale = 0.050
+
+    Title.Name = "Title"
+    Title.Parent = NameTabButton
+    Title.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    Title.BackgroundTransparency = 1.000
+    Title.Size = UDim2.new(1, 0, 1, 0)
+    Title.ZIndex = 2
+    Title.Font = Library.Theme.TextFont
+    Title.Text = name
+    Title.TextColor3 = Library.Theme.TextColor
+table.insert(Library.LibraryColorTable, Title) 
+    Title.TextSize = 15.000
 
     SectionLayout.Name = "SectionLayout"
-    SectionLayout.Parent = TabFrame
+    SectionLayout.Parent = NameTab
     SectionLayout.FillDirection = Enum.FillDirection.Horizontal
     SectionLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    SectionLayout.Padding = UDim.new(0, 10)
+    SectionLayout.Padding = UDim.new(0, 25)
 
     SectionPadding.Name = "SectionPadding"
-    SectionPadding.Parent = TabFrame
-    SectionPadding.PaddingTop = UDim.new(0, 30)
-    SectionPadding.PaddingLeft = UDim.new(0, 10)
-    MakeDraggable(TabTitle, TabFrame)
-    
-function Library:CreateTab(name)
-    local TabElements
-    if useMainWindow then
-        local NameTab = Instance.new("Frame")
-        local NameTabButton = Instance.new("ImageButton")
-        local Title = Instance.new("TextLabel")
-        local SectionLayout = Instance.new("UIListLayout")
-        local SectionPadding = Instance.new("UIPadding")
+    SectionPadding.Parent = NameTab
+    SectionPadding.PaddingTop = UDim.new(0, 12)
 
-        local gameId = tostring(game.PlaceId)
-        TabElements = { GameId = gameId }
-        Library.TabCount = Library.TabCount + 1
+    NameTab.Visible = false
 
-        if Library.TabCount == 1 then
-            Library.FirstTab = name
-        end
-
-        NameTab.Name = (name .. "Tab")
-        NameTab.Parent = Tabs
-        NameTab.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        NameTab.BackgroundTransparency = 1.000
-        NameTab.Size = UDim2.new(1, 0, 1, 0)
-        NameTab.ZIndex = 2
-        NameTab.ClipsDescendants = true
-        NameTab.Position = UDim2.new(-1, 0, 0, 0)
-
-        NameTabButton.Name = (name .. "TabButton")
-        NameTabButton.Parent = TabButtons
-        NameTabButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        NameTabButton.BackgroundTransparency = 1.000
-        NameTabButton.Size = UDim2.new(0, 84, 0, 25)
-        NameTabButton.ZIndex = 2
-        NameTabButton.Image = "rbxassetid://3570695787"
-        NameTabButton.ImageColor3 = Library.Theme.MainColor
-        NameTabButton.ScaleType = Enum.ScaleType.Slice
-        NameTabButton.SliceCenter = Rect.new(100, 100, 100, 100)
-        NameTabButton.SliceScale = 0.050
-
-        Title.Name = "Title"
-        Title.Parent = NameTabButton
-        Title.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        Title.BackgroundTransparency = 1.000
-        Title.Size = UDim2.new(1, 0, 1, 0)
-        Title.ZIndex = 2
-        Title.Font = Library.Theme.TextFont
-        Title.Text = name
-        Title.TextColor3 = Library.Theme.TextColor
-        table.insert(Library.LibraryColorTable, Title)
-        Title.TextSize = 15.000
-
-        SectionLayout.Name = "SectionLayout"
-        SectionLayout.Parent = NameTab
-        SectionLayout.FillDirection = Enum.FillDirection.Horizontal
-        SectionLayout.SortOrder = Enum.SortOrder.LayoutOrder
-        SectionLayout.Padding = UDim.new(0, 25)
-
-        SectionPadding.Name = "SectionPadding"
-        SectionPadding.Parent = NameTab
-        SectionPadding.PaddingTop = UDim.new(0, 12)
-
-        NameTab.Visible = false
-
-        table.insert(Library.LibraryColorTable, NameTabButton)
+    table.insert(Library.LibraryColorTable, NameTabButton)
 
     local originalSize = NameTabButton.Size
     local smallSize = UDim2.new(0, 74, 0, 20)
 
-Sepertinya Anda mencoba menggabungkan dua versi dari NameTabButton.MouseButton1Down:Connect yang sedikit berbeda. Namun, ada beberapa hal yang perlu diperhatikan agar kode tetap konsisten dan berfungsi dengan baik:
-
-Duplikasi Fungsi: Anda memiliki dua blok NameTabButton.MouseButton1Down:Connect yang berurutan. Ini tidak valid dalam Lua karena event handler hanya bisa diatur sekali per objek. Anda perlu menggabungkan logika dari kedua blok tersebut menjadi satu.
-Konsistensi Logika: Kedua blok tampaknya memiliki tujuan yang sama (menangani klik pada tombol tab), tetapi versi kedua mencakup penanganan fallback untuk CloseAllTabs jika fungsi tersebut tidak didefinisikan. Ini bisa digabungkan dengan versi pertama untuk keandalan.
-Posisi dalam Kode: Seperti yang telah disebutkan sebelumnya, blok ini harus diletakkan di dalam if useMainWindow then setelah definisi elemen UI dan sebelum else.
-Berikut adalah versi yang digabungkan dan ditempatkan dengan benar dalam konteks fungsi Library:CreateTab:
-
-lua
-Wrap
-Salin
-function Library:CreateTab(name)
-    local TabElements
-    if useMainWindow then
-        local NameTab = Instance.new("Frame")
-        local NameTabButton = Instance.new("ImageButton")
-        local Title = Instance.new("TextLabel")
-        local SectionLayout = Instance.new("UIListLayout")
-        local SectionPadding = Instance.new("UIPadding")
-
-        local gameId = tostring(game.PlaceId)
-        TabElements = { GameId = gameId }
-        Library.TabCount = Library.TabCount + 1
-
-        if Library.TabCount == 1 then
-            Library.FirstTab = name
-        end
-
-        NameTab.Name = (name .. "Tab")
-        NameTab.Parent = Tabs
-        NameTab.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        NameTab.BackgroundTransparency = 1.000
-        NameTab.Size = UDim2.new(1, 0, 1, 0)
-        NameTab.ZIndex = 2
-        NameTab.ClipsDescendants = true
-        NameTab.Position = UDim2.new(-1, 0, 0, 0)
-
-        NameTabButton.Name = (name .. "TabButton")
-        NameTabButton.Parent = TabButtons
-        NameTabButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        NameTabButton.BackgroundTransparency = 1.000
-        NameTabButton.Size = UDim2.new(0, 84, 0, 25)
-        NameTabButton.ZIndex = 2
-        NameTabButton.Image = "rbxassetid://3570695787"
-        NameTabButton.ImageColor3 = Library.Theme.MainColor
-        NameTabButton.ScaleType = Enum.ScaleType.Slice
-        NameTabButton.SliceCenter = Rect.new(100, 100, 100, 100)
-        NameTabButton.SliceScale = 0.050
-
-        Title.Name = "Title"
-        Title.Parent = NameTabButton
-        Title.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        Title.BackgroundTransparency = 1.000
-        Title.Size = UDim2.new(1, 0, 1, 0)
-        Title.ZIndex = 2
-        Title.Font = Library.Theme.TextFont
-        Title.Text = name
-        Title.TextColor3 = Library.Theme.TextColor
-        table.insert(Library.LibraryColorTable, Title)
-        Title.TextSize = 15.000
-
-        SectionLayout.Name = "SectionLayout"
-        SectionLayout.Parent = NameTab
-        SectionLayout.FillDirection = Enum.FillDirection.Horizontal
-        SectionLayout.SortOrder = Enum.SortOrder.LayoutOrder
-        SectionLayout.Padding = UDim.new(0, 25)
-
-        SectionPadding.Name = "SectionPadding"
-        SectionPadding.Parent = NameTab
-        SectionPadding.PaddingTop = UDim.new(0, 12)
-
-        NameTab.Visible = false
-
-        table.insert(Library.LibraryColorTable, NameTabButton)
-        NameTabButton.MouseButton1Down:Connect(function()
-            if CloseAllTabs and type(CloseAllTabs) == "function" then 
-                CloseAllTabs() 
-            else
-                for _, v in pairs(Tabs:GetChildren()) do
-                    if v:IsA("Frame") then 
-                        v.Visible = false 
-                        v.Position = UDim2.new(0, 0, 0, 0)
-                    end
-                end
-            end
-
-            ResetAllTabButtons()
-            NameTab.Visible = true
-            TweenService:Create(NameTabButton, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-                ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 20)
-            }):Play()
-            TweenService:Create(NameTab, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-                Position = UDim2.new(0, 0, 0, 0)
-            }):Play()
-        end)
-
-        if Library.TabCount == 1 then
-            NameTab.Visible = true
-            TweenService:Create(NameTabButton, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-                ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 20)
-            }):Play()
-        end
+NameTabButton.MouseButton1Down:Connect(function()
+    if CloseAllTabs and type(CloseAllTabs) == "function" then 
+        CloseAllTabs() 
     else
-        TabElements = CreateFloatingTab(name)
+        for _, v in pairs(Tabs:GetChildren()) do
+            if v:IsA("Frame") then 
+                v.Visible = false 
+                v.Position = UDim2.new(0, 0, 0, 0)
+            end
+        end
     end
     
     if ResetAllTabButtons and type(ResetAllTabButtons) == "function" then 
@@ -1107,63 +851,59 @@ end
 
   
 
-local sectionCount = 0
-    function TabElements:CreateSection(name)
-        if sectionCount >= 2 then return nil end
-        sectionCount = sectionCount + 1
+function TabElements:CreateSection(name)
+    local NameSection = Instance.new("ImageLabel")
+    local SectionBorder = Instance.new("ImageLabel")
+    local SectionTitle = Instance.new("TextLabel")
+    local SectionContent = Instance.new("ScrollingFrame")
+    local SectionContentLayout = Instance.new("UIListLayout")
 
-        local NameSection = Instance.new("ImageLabel")
-        local SectionBorder = Instance.new("ImageLabel")
-        local SectionTitle = Instance.new("TextLabel")
-        local SectionContent = Instance.new("ScrollingFrame")
-        local SectionContentLayout = Instance.new("UIListLayout")
+    local SectionElements = { GameId = self.GameId }
 
-        local SectionElements = { GameId = self.GameId }
+    NameSection.Name = (name .. "Section")
+    NameSection.Parent = NameTab
+    NameSection.BackgroundColor3 = Library.Theme.BackgroundColor
+    NameSection.BackgroundTransparency = 1.000
+    NameSection.Position = UDim2.new(0, 0, 0.0574162677, 0)
+    NameSection.Size = UDim2.new(0, 197, 0, 181)
+    NameSection.ZIndex = 4
+    NameSection.Image = "rbxassetid://3570695787"
+    NameSection.ImageColor3 = Library.Theme.MainColor
+    table.insert(Library.LibraryColorTable, NameSection)
+    NameSection.ScaleType = Enum.ScaleType.Slice
+    NameSection.SliceCenter = Rect.new(100, 100, 100, 100)
+    NameSection.SliceScale = 0.025
+    NameSection.ImageTransparency = 1
 
-        NameSection.Name = name .. "Section"
-        NameSection.Parent = TabFrame
-        NameSection.BackgroundColor3 = Library.Theme.BackgroundColor
-        NameSection.BackgroundTransparency = 1.000
-        NameSection.Position = UDim2.new(0, 10 + (sectionCount - 1) * 190, 0, 30)
-        NameSection.Size = UDim2.new(0, 180, 0, 160)
-        NameSection.ZIndex = 4
-        NameSection.Image = "rbxassetid://3570695787"
-        NameSection.ImageColor3 = Library.Theme.MainColor
-        table.insert(Library.LibraryColorTable, NameSection)
-        NameSection.ScaleType = Enum.ScaleType.Slice
-        NameSection.SliceCenter = Rect.new(100, 100, 100, 100)
-        NameSection.SliceScale = 0.025
-        NameSection.ImageTransparency = 0
-
-        SectionBorder.Name = "SectionBorder"
-        SectionBorder.Parent = NameSection
-        SectionBorder.BackgroundColor3 = Library.Theme.MainColor
-        SectionBorder.BackgroundTransparency = 1.000
-        SectionBorder.Position = UDim2.new(0, -1, 0, -1)
-        SectionBorder.Size = UDim2.new(1, 2, 1, 2)
-        SectionBorder.ZIndex = 3
-        SectionBorder.Image = "rbxassetid://3570695787"
-        SectionBorder.ImageColor3 = Library.Theme.MainColor
-        table.insert(Library.LibraryColorTable, SectionBorder)
-        SectionBorder.ScaleType = Enum.ScaleType.Slice
-        SectionBorder.SliceCenter = Rect.new(100, 100, 100, 100)
-        SectionBorder.SliceScale = 0.050
-
-        SectionTitle.Name = "SectionTitle"
-        SectionTitle.Parent = NameSection
-        SectionTitle.BackgroundColor3 = Library.Theme.BackgroundColor
-        SectionTitle.BorderSizePixel = 0
-        SectionTitle.Text = name
-        SectionTitle.Position = UDim2.new(0.5, (-SectionTitle.TextBounds.X - 5) / 2, 0, -12)
-        SectionTitle.Size = UDim2.new(0, SectionTitle.TextBounds.X + 20, 0, 22)
-        SectionTitle.ZIndex = 4
-        SectionTitle.Font = Library.Theme.TextFont
-        SectionTitle.TextColor3 = Library.Theme.TextColor
-        table.insert(Library.LibraryColorTable, SectionTitle)
-        SectionTitle.TextSize = 14.000
-        local titleCorner = Instance.new("UICorner")
-        titleCorner.CornerRadius = UDim.new(0, 10)
-        titleCorner.Parent = SectionTitle
+    SectionBorder.Name = "SectionBorder"
+    SectionBorder.Parent = NameSection
+    SectionBorder.BackgroundColor3 = Library.Theme.MainColor
+    SectionBorder.BackgroundTransparency = 1.000
+    SectionBorder.Position = UDim2.new(0, -1, 0, -1)
+    SectionBorder.Size = UDim2.new(1, 2, 1, 2)
+    SectionBorder.ZIndex = 3
+    SectionBorder.Image = "rbxassetid://3570695787"
+    SectionBorder.ImageColor3 = Library.Theme.MainColor
+    table.insert(Library.LibraryColorTable, SectionBorder)
+    SectionBorder.ScaleType = Enum.ScaleType.Slice
+    SectionBorder.SliceCenter = Rect.new(100, 100, 100, 100)
+    SectionBorder.SliceScale = 0.050
+    
+    SectionTitle.Name = "SectionTitle"
+    SectionTitle.Parent = NameSection
+    SectionTitle.BackgroundColor3 = Library.Theme.BackgroundColor
+    SectionTitle.BorderSizePixel = 0
+    SectionTitle.Text = name
+    SectionTitle.Position = UDim2.new(0.5, (-SectionTitle.TextBounds.X - 5) / 2, 0, -12)
+    SectionTitle.Size = UDim2.new(0, SectionTitle.TextBounds.X + 20, 0, 22)
+    SectionTitle.ZIndex = 4
+    SectionTitle.Font = Library.Theme.TextFont
+    SectionTitle.TextColor3 = Library.Theme.TextColor
+    table.insert(Library.LibraryColorTable, SectionTitle)
+    SectionTitle.TextSize = 14.000
+    local titleCorner = Instance.new("UICorner")
+    titleCorner.CornerRadius = UDim.new(0, 10)
+    titleCorner.Parent = SectionTitle
     
     local isDetached = false
     local lastValidPosition = NameSection.Position
@@ -1965,6 +1705,261 @@ table.insert(Library.LibraryColorTable, Title)
 
     callback(StartingValue)
 end
+--- Tambahkan fungsi berikut setelah definisi Library dan sebelum return Library
+
+function Library:CreateFloatingTab(name)
+    local NameTab, NameTabButton, Title, SectionLayout, SectionPadding, MinimizeBtn
+    local gameId = tostring(game.PlaceId)
+    local TabElements = { GameId = gameId }
+    Library.TabCount = Library.TabCount + 1
+
+    NameTab = Instance.new("Frame")
+    NameTabButton = Instance.new("TextButton")
+    Title = Instance.new("TextLabel")
+    SectionLayout = Instance.new("UIListLayout")
+    SectionPadding = Instance.new("UIPadding")
+    MinimizeBtn = Instance.new("TextButton")
+
+    NameTab.Name = (name .. "Tab")
+    NameTab.Parent = UILibrary
+    NameTab.BackgroundColor3 = Library.Theme.BackgroundColor
+    NameTab.BackgroundTransparency = 1.000
+    NameTab.Size = UDim2.new(0, 250, 0, 400) 
+    NameTab.Position = UDim2.new(0, (Library.TabCount - 1) * 260, 0, 50)
+    NameTab.ZIndex = 2
+    NameTab.ClipsDescendants = true
+
+    NameTabButton.Name = (name .. "TabButton")
+    NameTabButton.Parent = NameTab
+    NameTabButton.BackgroundColor3 = Library.Theme.MainColor
+    NameTabButton.Size = UDim2.new(1, -30, 0, 30)
+    NameTabButton.ZIndex = 2
+    NameTabButton.Font = Library.Theme.TextFont
+    NameTabButton.Text = name
+    NameTabButton.TextColor3 = Library.Theme.TextColor
+    NameTabButton.TextSize = 15.000
+    local UICorner = Instance.new("UICorner")
+    UICorner.CornerRadius = UDim.new(0, 5)
+    UICorner.Parent = NameTabButton
+
+    Title.Name = "Title"
+    Title.Parent = NameTabButton
+    Title.BackgroundTransparency = 1.000
+    Title.Size = UDim2.new(1, 0, 1, 0)
+    Title.ZIndex = 2
+    Title.Font = Library.Theme.TextFont
+    Title.Text = name
+    Title.TextColor3 = Library.Theme.TextColor
+    Title.TextSize = 15.000
+
+    MinimizeBtn.Name = "MinimizeBtn"
+    MinimizeBtn.Parent = NameTabButton
+    MinimizeBtn.BackgroundTransparency = 1
+    MinimizeBtn.Position = UDim2.new(1, -25, 0, 5)
+    MinimizeBtn.Size = UDim2.new(0, 20, 0, 20)
+    MinimizeBtn.ZIndex = 3
+    MinimizeBtn.Font = Library.Theme.TextFont
+    MinimizeBtn.Text = "-"
+    MinimizeBtn.TextColor3 = Library.Theme.TextColor
+    MinimizeBtn.TextSize = 16
+
+    SectionLayout.Name = "SectionLayout"
+    SectionLayout.Parent = NameTab
+    SectionLayout.FillDirection = Enum.FillDirection.Vertical
+    SectionLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    SectionLayout.Padding = UDim.new(0, 10)
+
+    SectionPadding.Name = "SectionPadding"
+    SectionPadding.Parent = NameTab
+    SectionPadding.PaddingTop = UDim.new(0, 40)
+
+    NameTab.Visible = (Library.TabCount == 1)
+
+    table.insert(Library.LibraryColorTable, NameTabButton)
+
+    
+    local function MakeDraggable(topbarobject, object)
+        local Dragging = nil
+        local DragInput = nil
+        local DragStart = nil
+        local StartPosition = nil
+        
+        local function Update(input)
+            local Delta = input.Position - DragStart
+            object.Position = UDim2.new(StartPosition.X.Scale, StartPosition.X.Offset + Delta.X, StartPosition.Y.Scale, StartPosition.Y.Offset + Delta.Y)
+        end
+        
+        topbarobject.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                Dragging = true
+                DragStart = input.Position
+                StartPosition = object.Position
+                
+                input.Changed:Connect(function()
+                    if input.UserInputState == Enum.UserInputState.End then
+                        Dragging = false
+                    end
+                end)
+            end
+        end)
+        
+        topbarobject.InputChanged:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+                DragInput = input
+            end
+        end)
+        
+        UserInputService.InputChanged:Connect(function(input)
+            if input == DragInput and Dragging then
+                Update(input)
+            end
+        end)
+    end
+    MakeDraggable(NameTabButton, NameTab)
+
+    
+    local minimized = false
+    local originalSize = NameTab.Size
+    MinimizeBtn.MouseButton1Click:Connect(function()
+        minimized = not minimized
+        if minimized then
+            TweenService:Create(NameTab, TweenInfo.new(0.3, Library.Theme.EasingStyle), {
+                Size = UDim2.new(0, 250, 0, 30),
+                ImageColor3 = Color3.fromRGB(50, 50, 50)
+            }):Play()
+            MinimizeBtn.Text = "⌄"
+        else
+            TweenService:Create(NameTab, TweenInfo.new(0.3, Library.Theme.EasingStyle), {
+                Size = originalSize,
+                ImageColor3 = Library.Theme.BackgroundColor
+            }):Play()
+            MinimizeBtn.Text = "-"
+        end
+    end)
+
+    
+    local sectionCount = 0
+    function TabElements:CreateFloatingSection(name)
+        if sectionCount >= 2 then
+            warn("only 2 section per tab!")
+            return
+        end
+        sectionCount = sectionCount + 1
+
+        local NameSection = Instance.new("ImageLabel")
+        local SectionBorder = Instance.new("ImageLabel")
+        local SectionTitle = Instance.new("TextLabel")
+        local SectionContent = Instance.new("ScrollingFrame")
+        local SectionContentLayout = Instance.new("UIListLayout")
+        local SectionMinimizeBtn = Instance.new("TextButton")
+
+        local SectionElements = { GameId = self.GameId }
+
+        NameSection.Name = (name .. "Section")
+        NameSection.Parent = NameTab
+        NameSection.BackgroundColor3 = Library.Theme.BackgroundColor
+        NameSection.BackgroundTransparency = 1.000
+        NameSection.Position = UDim2.new(0, 10, 0, 40 + (sectionCount - 1) * 200)
+        NameSection.Size = UDim2.new(0, 230, 0, 180)
+        NameSection.ZIndex = 4
+        NameSection.Image = "rbxassetid://3570695787"
+        NameSection.ImageColor3 = Library.Theme.MainColor
+        table.insert(Library.LibraryColorTable, NameSection)
+        NameSection.ScaleType = Enum.ScaleType.Slice
+        NameSection.SliceCenter = Rect.new(100, 100, 100, 100)
+        NameSection.SliceScale = 0.025
+        NameSection.ImageTransparency = 1
+
+        SectionBorder.Name = "SectionBorder"
+        SectionBorder.Parent = NameSection
+        SectionBorder.BackgroundColor3 = Library.Theme.MainColor
+        SectionBorder.BackgroundTransparency = 1.000
+        SectionBorder.Position = UDim2.new(0, -1, 0, -1)
+        SectionBorder.Size = UDim2.new(1, 2, 1, 2)
+        SectionBorder.ZIndex = 3
+        SectionBorder.Image = "rbxassetid://3570695787"
+        SectionBorder.ImageColor3 = Library.Theme.MainColor
+        table.insert(Library.LibraryColorTable, SectionBorder)
+        SectionBorder.ScaleType = Enum.ScaleType.Slice
+        SectionBorder.SliceCenter = Rect.new(100, 100, 100, 100)
+        SectionBorder.SliceScale = 0.050
+
+        SectionTitle.Name = "SectionTitle"
+        SectionTitle.Parent = NameSection
+        SectionTitle.BackgroundColor3 = Library.Theme.BackgroundColor
+        SectionTitle.BorderSizePixel = 0
+        SectionTitle.Text = name
+        SectionTitle.Position = UDim2.new(0.5, (-SectionTitle.TextBounds.X - 5) / 2, 0, -12)
+        SectionTitle.Size = UDim2.new(0, SectionTitle.TextBounds.X + 20, 0, 22)
+        SectionTitle.ZIndex = 4
+        SectionTitle.Font = Library.Theme.TextFont
+        SectionTitle.TextColor3 = Library.Theme.TextColor
+        table.insert(Library.LibraryColorTable, SectionTitle)
+        SectionTitle.TextSize = 14.000
+        local titleCorner = Instance.new("UICorner")
+        titleCorner.CornerRadius = UDim.new(0, 10)
+        titleCorner.Parent = SectionTitle
+
+        SectionMinimizeBtn.Name = "MinimizeBtn"
+        SectionMinimizeBtn.Parent = NameSection
+        SectionMinimizeBtn.BackgroundTransparency = 1
+        SectionMinimizeBtn.Position = UDim2.new(1, -25, 0, 5)
+        SectionMinimizeBtn.Size = UDim2.new(0, 20, 0, 20)
+        SectionMinimizeBtn.ZIndex = 5
+        SectionMinimizeBtn.Font = Library.Theme.TextFont
+        SectionMinimizeBtn.Text = "-"
+        SectionMinimizeBtn.TextColor3 = Library.Theme.TextColor
+        SectionMinimizeBtn.TextSize = 16
+
+        SectionContent.Name = "SectionContent"
+        SectionContent.Parent = NameSection
+        SectionContent.Active = true
+        SectionContent.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        SectionContent.BackgroundTransparency = 1.000
+        SectionContent.BorderSizePixel = 0
+        SectionContent.Size = UDim2.new(1, 0, 1, -22)
+        SectionContent.ZIndex = 4
+        SectionContent.BottomImage = "rbxasset://textures/ui/Scroll/scroll-middle.png"
+        SectionContent.ScrollBarImageColor3 = Color3.fromRGB(85, 85, 85)
+        SectionContent.ScrollBarThickness = 4
+        SectionContent.TopImage = "rbxasset://textures/ui/Scroll/scroll-middle.png"
+
+        SectionContentLayout.Name = "SectionContentLayout"
+        SectionContentLayout.Parent = SectionContent
+        SectionContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+        task.spawn(function()
+            task.wait()
+            NameSection.Position = UDim2.new(0, 10, 0, 40 + (sectionCount - 1) * 200)
+            TweenService:Create(NameSection, TweenInfo.new(0.5, Library.Theme.EasingStyle), {
+                ImageTransparency = 0,
+                ImageColor3 = Library.Theme.BackgroundColor
+            }):Play()
+        end)
+
+        SectionContent.CanvasSize = UDim2.new(0, 0, 0, SectionContentLayout.AbsoluteContentSize.Y + 15)
+
+        
+        local sectionMinimized = false
+        local sectionOriginalSize = NameSection.Size
+        SectionMinimizeBtn.MouseButton1Click:Connect(function()
+            sectionMinimized = not sectionMinimized
+            if sectionMinimized then
+                TweenService:Create(NameSection, TweenInfo.new(0.3, Library.Theme.EasingStyle), {
+                    Size = UDim2.new(0, 230, 0, 30),
+                    ImageColor3 = Color3.fromRGB(50, 50, 50)
+                }):Play()
+                SectionMinimizeBtn.Text = "⌄"
+                SectionContent.Visible = false
+            else
+                TweenService:Create(NameSection, TweenInfo.new(0.3, Library.Theme.EasingStyle), {
+                    Size = sectionOriginalSize,
+                    ImageColor3 = Library.Theme.BackgroundColor
+                }):Play()
+                SectionMinimizeBtn.Text = "-"
+                SectionContent.Visible = true
+            end
+        end)
 
 function SectionElements:CreateTextBox(name, characterLimit, placeholderText, callback)
             local NameTextBox = Instance.new("Frame")
