@@ -27,7 +27,7 @@ else
 end
 
 UILibrary.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-UILibrary.Enabled = false
+UILibrary.Enabled = true
 pcall(function()
     local colorMap = {
         black = Color3.fromRGB(0, 0, 0),
