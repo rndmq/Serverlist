@@ -1,6 +1,8 @@
 local TweenService = game:GetService("TweenService")
 local Player = game.Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
+getgenv().SShB = "black"
+getgenv().SJJs = "rgb"
 local Library = {
     LibraryColorTable = {},
     Theme = {
@@ -22,9 +24,9 @@ end
 local selectedColor = Color3.fromRGB(255, 75, 75) -- Default
 
 pcall(function()
-    if getgenv and not getgenv().Color then
+    if getgenv and not getgenv().SShB then
     Library.Theme.Color = Color3.fromRGB(255, 75, 75)
-    elseif getgenv().Color == "rgb" then
+    elseif getgenv().SShB == "rgb" then
         coroutine.wrap(function()
             while true do
                 if getgenv().StopRGB then break end
@@ -55,24 +57,16 @@ pcall(function()
             black = Color3.fromRGB(0, 0, 0),
             white = Color3.fromRGB(255, 255, 255)
         }
-        local colorKey = string.lower(getgenv().Color)
+        local colorKey = string.lower(getgenv().SShB)
         selectedColor = colorMap[colorKey] or colorMap.default
         Library.Theme.Color = selectedColor
     end
 end)
 -- Mengatur MainColor
-pcall(function()
-    local colorMap = {
-        black = Color3.fromRGB(0, 0, 0),
-        default = Color3.fromRGB(255, 75, 75)
-    }
-    local colorKey = string.lower(getgenv().MainColor)
-    Library.Theme.MainColor = colorMap[colorKey] or colorMap.default
-end)
 
 -- Mengatur TextColor ke RGB
 pcall(function()
-    if getgenv().TextColor == "rgb" then
+    if getgenv().SJJs == "rgb" then
         coroutine.wrap(function()
             while true do
                 if getgenv().StopRGB then break end
