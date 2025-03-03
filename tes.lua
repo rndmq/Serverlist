@@ -70,7 +70,7 @@ local function DarkenObjectColor(object, amount)
     s = math.clamp(s - (amount / 510), 0, 1)
     return Color3.fromHSV(h, s, v)
 end
-ActiveNotifications = {}
+Library.ActiveNotifications = {}
 function Library:CreateNotification(title, message, duration, buttons, buttonCallbacks)
     local NotificationFrame = Instance.new("Frame")
     local NotificationBackground = Instance.new("Frame")
