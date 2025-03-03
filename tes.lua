@@ -2,8 +2,7 @@ local TweenService = game:GetService("TweenService")
 local Player = game.Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
-getgenv().PKJ = "black"
-getgenv().SJJs = "rgb"
+
 Library = {
     LibraryColorTable = {},
     TabCount = 0,
@@ -38,7 +37,7 @@ UILibrary.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 UILibrary.Enabled = true
 pcall(function()
     local colorMap = {
-        black = Color3.fromRGB(0, 0, 0),
+        b = Color3.fromRGB(0, 0, 0),
         default = Color3.fromRGB(255, 75, 75)
     }
     local colorKey = string.lower(getgenv().PKJ)
@@ -59,7 +58,7 @@ local function UpdateTextColors()
 end
 local selectedTextColor = Color3.fromRGB(255, 255, 255)
 pcall(function()
-    if getgenv().SJJs == "rgb" then
+    if getgenv().SJJs == "rb" then
         coroutine.wrap(function()
             while true do
                 if getgenv().StopRGB then break end
