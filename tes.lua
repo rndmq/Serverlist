@@ -44,17 +44,35 @@ pcall(function()
     local colorKey = string.lower(getgenv().PKJ)
     Library.Theme.MainColor = colorMap[colorKey] or colorMap.default
 end)
-
--- Mengatur TextColor ke RGB
+local function UpdateTextColors()
+    for _, v in pairs(Library.LibraryColorTable) do
+        if typeof(v) == "Instance" then
+            if v:IsA("TextLabel") or v:IsA("TextButton") then
+                v.TextColor3 = Library.Theme.TextColor
+            elseif v:IsA("ImageLabel") and (v.Name == "CheckboxTicked" or v.Name == "CheckboxOutline") then
+                v.ImageColor3 = Library.Theme.TextColor
+            elseif v:IsA("TextLabel") and (v.Name == "Title" or v.Name == "TitleTab" or v.Name == "SectionTitle") then
+                v.TextColor3 = Library.Theme.TextColor
+            end
+        end
+    end
+end
+local selectedTextColor = Color3.fromRGB(255, 255, 255)
 pcall(function()
     if getgenv().SJJs == "rgb" then
         coroutine.wrap(function()
             while true do
-                if getcustomenv().StopRGB then break end
+                if getgenv().StopRGB then break end
                 for i = 0, 1, 0.002 do
                     Library.Theme.TextColor = Color3.fromHSV(i, 1, 1)
                     for _, v in pairs(Library.LibraryColorTable) do
                         if v:IsA("TextLabel") or v:IsA("TextButton") then
+                            v.TextColor3 = Library.Theme.TextColor
+                        elseif v:IsA("ImageLabel") and v.Name == "CheckboxTicked" then
+                            v.ImageColor3 = Library.Theme.TextColor
+                        elseif v:IsA("ImageLabel") and v.Name == "CheckboxOutline" then
+                            v.ImageColor3 = Library.Theme.TextColor
+                        elseif v:IsA("TextLabel") and (v.Name == "Title" or v.Name == "TitleTab" or v.Name == "SectionTitle") then
                             v.TextColor3 = Library.Theme.TextColor
                         end
                     end
@@ -62,9 +80,26 @@ pcall(function()
                 end
             end
         end)()
+    else
+        local colorMap = {
+            blue = Color3.fromRGB(0, 0, 255),
+            red = Color3.fromRGB(255, 0, 0),
+            green = Color3.fromRGB(0, 255, 0),
+            yellow = Color3.fromRGB(255, 255, 0),
+            purple = Color3.fromRGB(128, 0, 128),
+            pink = Color3.fromRGB(255, 105, 180),
+            default = Color3.fromRGB(255, 255, 255),
+            cyan = Color3.fromRGB(0, 255, 255),
+            brown = Color3.fromRGB(139, 69, 19),
+            orange = Color3.fromRGB(255, 165, 0),
+            black = Color3.fromRGB(0, 0, 0),
+            white = Color3.fromRGB(255, 255, 255)
+        }
+        local colorKey = string.lower(tostring(getgenv().TextColor))
+        Library.Theme.TextColor = colorMap[colorKey] or Color3.fromRGB(255, 255, 255)
+        UpdateTextColors()
     end
 end)
-
 local function DarkenObjectColor(object, amount)
     local h, s, v = Color3.toHSV(object)
     v = math.clamp(v - (amount / 255), 0, 1)
