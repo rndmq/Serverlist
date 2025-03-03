@@ -22,7 +22,6 @@ UILibrary.Parent = PlayerGui
 if not UILibrary.Parent then
     UILibrary.Parent = game:GetService("CoreGui")
 end
-UILibrary.Size = UDim2.new(0, 0, 0, 0) -- Ukuran 0
 UILibrary.BackgroundTransparency = 1 -- Transparan penuh
 UILibrary.Enabled = true
 
