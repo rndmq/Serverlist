@@ -1,28 +1,24 @@
 local TweenService = game:GetService("TweenService")
-local RunService = game:GetService("RunService")
-local HttpService = game:GetService("HttpService")
-local UserInputService = game:GetService("UserInputService")
-local ContentProvider = game:GetService("ContentProvider")
-local CoreGui = game:GetService("CoreGui")
-getgenv().Color = "black"
-getgenv().TextColor = "rgb"
-Library = {
+local Player = game.Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
+local Library = {
     LibraryColorTable = {},
-    TabCount = 0,
-    FirstTab = nil,
-    CurrentlyBinding = false,
-    RainbowColorValue = 0,
-    HueSelectionPosition = 0,
     Theme = {
         MainColor = Color3.fromRGB(255, 75, 75),
-        BackgroundColor = Color3.fromRGB(35, 35, 35),
-        UIToggleKey = Enum.KeyCode.RightControl,
         TextFont = Enum.Font.SourceSansBold,
         EasingStyle = Enum.EasingStyle.Quart,
-        Color = Color3.fromRGB(255, 75, 75),      
-        TextColor = Color3.fromRGB(255, 255, 255) 
-    }
+        TextColor = Color3.fromRGB(255, 255, 255)
+    },
+    ActiveNotifications = {}
 }
+
+-- Buat UILibrary minimal
+local UILibrary = Instance.new("ScreenGui")
+UILibrary.Name = "NotificationGui"
+UILibrary.Parent = PlayerGui
+if not UILibrary.Parent then
+    UILibrary.Parent = game:GetService("CoreGui")
+end
 local selectedColor = Color3.fromRGB(255, 75, 75) -- Default
 
 pcall(function()
@@ -64,20 +60,17 @@ pcall(function()
         Library.Theme.Color = selectedColor
     end
 end)
-local function UpdateTextColors()
-    for _, v in pairs(Library.LibraryColorTable) do
-        if typeof(v) == "Instance" then
-            if v:IsA("TextLabel") or v:IsA("TextButton") then
-                v.TextColor3 = Library.Theme.TextColor
-            elseif v:IsA("ImageLabel") and (v.Name == "CheckboxTicked" or v.Name == "CheckboxOutline") then
-                v.ImageColor3 = Library.Theme.TextColor
-            elseif v:IsA("TextLabel") and (v.Name == "Title" or v.Name == "TitleTab" or v.Name == "SectionTitle") then
-                v.TextColor3 = Library.Theme.TextColor
-            end
-        end
-    end
-end
-local selectedTextColor = Color3.fromRGB(255, 255, 255)
+-- Mengatur MainColor
+pcall(function()
+    local colorMap = {
+        black = Color3.fromRGB(0, 0, 0),
+        default = Color3.fromRGB(255, 75, 75)
+    }
+    local colorKey = string.lower(getgenv().MainColor)
+    Library.Theme.MainColor = colorMap[colorKey] or colorMap.default
+end)
+
+-- Mengatur TextColor ke RGB
 pcall(function()
     if getgenv().TextColor == "rgb" then
         coroutine.wrap(function()
@@ -88,80 +81,21 @@ pcall(function()
                     for _, v in pairs(Library.LibraryColorTable) do
                         if v:IsA("TextLabel") or v:IsA("TextButton") then
                             v.TextColor3 = Library.Theme.TextColor
-                        elseif v:IsA("ImageLabel") and v.Name == "CheckboxTicked" then
-                            v.ImageColor3 = Library.Theme.TextColor
-                        elseif v:IsA("ImageLabel") and v.Name == "CheckboxOutline" then
-                            v.ImageColor3 = Library.Theme.TextColor
-                        elseif v:IsA("TextLabel") and (v.Name == "Title" or v.Name == "TitleTab" or v.Name == "SectionTitle") then
-                            v.TextColor3 = Library.Theme.TextColor
                         end
                     end
                     task.wait(0.01)
                 end
             end
         end)()
-    else
-        local colorMap = {
-            blue = Color3.fromRGB(0, 0, 255),
-            red = Color3.fromRGB(255, 0, 0),
-            green = Color3.fromRGB(0, 255, 0),
-            yellow = Color3.fromRGB(255, 255, 0),
-            purple = Color3.fromRGB(128, 0, 128),
-            pink = Color3.fromRGB(255, 105, 180),
-            default = Color3.fromRGB(255, 255, 255),
-            cyan = Color3.fromRGB(0, 255, 255),
-            brown = Color3.fromRGB(139, 69, 19),
-            orange = Color3.fromRGB(255, 165, 0),
-            black = Color3.fromRGB(0, 0, 0),
-            white = Color3.fromRGB(255, 255, 255)
-        }
-        local colorKey = string.lower(tostring(getgenv().TextColor))
-        Library.Theme.TextColor = colorMap[colorKey] or Color3.fromRGB(255, 255, 255)
-        UpdateTextColors()
-    end
-end)
-pcall(function()
-    if getgenv().font then
-        local fontMap = {
-            bold = Enum.Font.SourceSansBold,
-            regular = Enum.Font.SourceSans,
-            italic = Enum.Font.SourceSansItalic,
-            light = Enum.Font.SourceSansLight,
-            semibold = Enum.Font.SourceSansSemibold,
-            arial = Enum.Font.Arial,
-            arialbold = Enum.Font.ArialBold,
-            legacy = Enum.Font.Legacy,
-            cartosil = Enum.Font.Cartosil,
-            specialelite = Enum.Font.SpecialElite
-        }
-        local fontKey = string.lower(getgenv().Font)
-        Library.Theme.TextFont = fontMap[fontKey] or Enum.Font.SourceSansBold
     end
 end)
 
-Library.Theme.MainColor = selectedColor
 local function DarkenObjectColor(object, amount)
     local h, s, v = Color3.toHSV(object)
     v = math.clamp(v - (amount / 255), 0, 1)
     s = math.clamp(s - (amount / 510), 0, 1)
     return Color3.fromHSV(h, s, v)
 end
-
-coroutine.wrap(function()
-    while wait() do
-        Library.RainbowColorValue = Library.RainbowColorValue + 1/255
-        Library.HueSelectionPosition = Library.HueSelectionPosition + 1
-
-        if Library.RainbowColorValue >= 1 then
-            Library.RainbowColorValue = 0
-        end
-
-        if Library.HueSelectionPosition == 105 then
-            Library.HueSelectionPosition = 0
-        end
-    end
-end)()
-Library.ActiveNotifications = {}
 
 function Library:CreateNotification(title, message, duration, buttons, buttonCallbacks)
     local NotificationFrame = Instance.new("Frame")
@@ -178,10 +112,15 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
 
     NotificationFrame.Name = "Notification"
     NotificationFrame.Parent = UILibrary
+    if not NotificationFrame.Parent then
+        print("Gagal set Parent ke UILibrary, coba CoreGui...")
+        NotificationFrame.Parent = game:GetService("CoreGui")
+    end
     NotificationFrame.BackgroundTransparency = 1
-    NotificationFrame.Position = UDim2.new(1, 0, 1, -110)
+    NotificationFrame.Position = UDim2.new(0.5, -150, 0.9, -50)
     NotificationFrame.Size = UDim2.new(0, 300, 0, notifHeight)
     NotificationFrame.ZIndex = 100
+    print("NotificationFrame dibuat di posisi: ", NotificationFrame.Position)
 
     NotificationBackground.Name = "Background"
     NotificationBackground.Parent = NotificationFrame
@@ -217,16 +156,6 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
     MessageLabel.TextSize = 14
     MessageLabel.TextWrapped = true
     MessageLabel.TextXAlignment = Enum.TextXAlignment.Left
-
-
-    pcall(function()
-        local envColor = getgenv().Color and string.lower(getgenv().Color) or nil
-        if envColor == "white" then
-            TitleLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
-        elseif envColor == "black" then
-            MessageLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-        end
-    end)
 
     CloseButton.Name = "CloseButton"
     CloseButton.Parent = NotificationBackground
@@ -286,8 +215,8 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
             ActionButton.ZIndex = 102
             ActionButton.Font = Library.Theme.TextFont
             ActionButton.Text = buttons[i] or "Button " .. i
-                ActionButton.TextColor3 = Library.Theme.TextColor
-    table.insert(Library.LibraryColorTable, ActionButton)
+            ActionButton.TextColor3 = Library.Theme.TextColor
+            table.insert(Library.LibraryColorTable, ActionButton)
             ActionButton.TextSize = 14
             
             local ButtonRounded = Instance.new("UICorner")
