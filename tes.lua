@@ -19,9 +19,9 @@ local UILibrary = Instance.new("ScreenGui")
 UILibrary.Name = "NotificationGui"
 UILibrary.ResetOnSpawn = false
 
-local player = game.Players.LocalPlayer
+local player = game:GetService("Players").LocalPlayer
 if player and player:FindFirstChild("PlayerGui") then
-    UILibrary.Parent = player.PlayerGui
+    UILibrary.Parent = player:WaitForChild("PlayerGui")
 else
     UILibrary.Parent = game:GetService("CoreGui")
 end
