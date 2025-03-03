@@ -2,8 +2,8 @@ local TweenService = game:GetService("TweenService")
 local Player = game.Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
-getcustomenv().MainColor = "black"
-getcustomenv().TextColor = "rgb"
+getgenv().PKJ = "black"
+getgenv().SJJs = "rgb"
 local Library = {
     LibraryColorTable = {},
     Theme = {
@@ -32,13 +32,13 @@ pcall(function()
         black = Color3.fromRGB(0, 0, 0),
         default = Color3.fromRGB(255, 75, 75)
     }
-    local colorKey = string.lower(getcustomenv().MainColor)
+    local colorKey = string.lower(getgenv().PKJ)
     Library.Theme.MainColor = colorMap[colorKey] or colorMap.default
 end)
 
 -- Mengatur TextColor ke RGB
 pcall(function()
-    if getcustomenv().TextColor == "rgb" then
+    if getgenv().SJJs == "rgb" then
         coroutine.wrap(function()
             while true do
                 if getcustomenv().StopRGB then break end
