@@ -15,17 +15,19 @@ local Library = {
     ActiveNotifications = {}
 }
 
--- Buat UILibrary transparan
 local UILibrary = Instance.new("ScreenGui")
 UILibrary.Name = "NotificationGui"
-UILibrary.Parent = PlayerGui
-if not UILibrary.Parent then
+UILibrary.ResetOnSpawn = false
+
+local player = game.Players.LocalPlayer
+if player and player:FindFirstChild("PlayerGui") then
+    UILibrary.Parent = player.PlayerGui
+else
     UILibrary.Parent = game:GetService("CoreGui")
 end
-UILibrary.BackgroundTransparency = 1 -- Transparan penuh
-UILibrary.Enabled = true
 
--- Mengatur MainColor
+UILibrary.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+UILibrary.Enabled = false
 pcall(function()
     local colorMap = {
         black = Color3.fromRGB(0, 0, 0),
