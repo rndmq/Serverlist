@@ -19,7 +19,8 @@ Library = {
         EasingStyle = Enum.EasingStyle.Quart,
         Color = Color3.fromRGB(255, 75, 75),      
         TextColor = Color3.fromRGB(255, 255, 255) 
-    }
+    },
+    ActiveNotifications = {}
 }
 
 local UILibrary = Instance.new("ScreenGui")
@@ -70,7 +71,7 @@ local function DarkenObjectColor(object, amount)
     s = math.clamp(s - (amount / 510), 0, 1)
     return Color3.fromHSV(h, s, v)
 end
-Library.ActiveNotifications = {}
+
 function Library:CreateNotification(title, message, duration, buttons, buttonCallbacks)
     local NotificationFrame = Instance.new("Frame")
     local NotificationBackground = Instance.new("Frame")
