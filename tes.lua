@@ -79,15 +79,10 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
 
     NotificationFrame.Name = "Notification"
     NotificationFrame.Parent = UILibrary
-    if not NotificationFrame.Parent then
-        print("Gagal set Parent ke UILibrary, coba CoreGui...")
-        NotificationFrame.Parent = game:GetService("CoreGui")
-    end
     NotificationFrame.BackgroundTransparency = 1
-    NotificationFrame.Position = UDim2.new(0.5, -150, 0.9, -50)
+    NotificationFrame.Position = UDim2.new(1, 0, 1, -110)
     NotificationFrame.Size = UDim2.new(0, 300, 0, notifHeight)
     NotificationFrame.ZIndex = 100
-    print("NotificationFrame dibuat di posisi: ", NotificationFrame.Position)
 
     NotificationBackground.Name = "Background"
     NotificationBackground.Parent = NotificationFrame
@@ -123,6 +118,16 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
     MessageLabel.TextSize = 14
     MessageLabel.TextWrapped = true
     MessageLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+
+    pcall(function()
+        local envColor = getgenv().Color and string.lower(getgenv().Color) or nil
+        if envColor == "white" then
+            TitleLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
+        elseif envColor == "black" then
+            MessageLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+        end
+    end)
 
     CloseButton.Name = "CloseButton"
     CloseButton.Parent = NotificationBackground
@@ -221,4 +226,3 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
     return NotificationFrame
 end
 
--- Tes notifikasi
