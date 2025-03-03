@@ -4,15 +4,22 @@ local PlayerGui = Player:WaitForChild("PlayerGui")
 
 getgenv().PKJ = "black"
 getgenv().SJJs = "rgb"
-local Library = {
+Library = {
     LibraryColorTable = {},
+    TabCount = 0,
+    FirstTab = nil,
+    CurrentlyBinding = false,
+    RainbowColorValue = 0,
+    HueSelectionPosition = 0,
     Theme = {
         MainColor = Color3.fromRGB(255, 75, 75),
+        BackgroundColor = Color3.fromRGB(35, 35, 35),
+        UIToggleKey = Enum.KeyCode.RightControl,
         TextFont = Enum.Font.SourceSansBold,
         EasingStyle = Enum.EasingStyle.Quart,
-        TextColor = Color3.fromRGB(255, 255, 255)
-    },
-    ActiveNotifications = {}
+        Color = Color3.fromRGB(255, 75, 75),      
+        TextColor = Color3.fromRGB(255, 255, 255) 
+    }
 }
 
 local UILibrary = Instance.new("ScreenGui")
@@ -63,7 +70,7 @@ local function DarkenObjectColor(object, amount)
     s = math.clamp(s - (amount / 510), 0, 1)
     return Color3.fromHSV(h, s, v)
 end
-
+ActiveNotifications = {}
 function Library:CreateNotification(title, message, duration, buttons, buttonCallbacks)
     local NotificationFrame = Instance.new("Frame")
     local NotificationBackground = Instance.new("Frame")
