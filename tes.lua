@@ -43,15 +43,12 @@ pcall(function()
     local colorKey = string.lower(getgenv().PKJ)
     Library.Theme.MainColor = colorMap[colorKey] or colorMap.default
 end)
-local function UpdateTextColors()
+local function Update()
     for _, v in pairs(Library.LibraryColorTable) do
         if typeof(v) == "Instance" then
             if v:IsA("TextLabel") or v:IsA("TextButton") then
                 v.TextColor3 = Library.Theme.Textcolorrr
-            elseif v:IsA("ImageLabel") and (v.Name == "CheckboxTicked" or v.Name == "CheckboxOutline") then
-                v.ImageColor3 = Library.Theme.Textcolorrr
-            elseif v:IsA("TextLabel") and (v.Name == "Title" or v.Name == "TitleTab" or v.Name == "SectionTitle") then
-                v.TextColor3 = Library.Theme.Textcolorrr
+            
             end
         end
     end
@@ -67,11 +64,7 @@ pcall(function()
                     for _, v in pairs(Library.LibraryColorTable) do
                         if v:IsA("TextLabel") or v:IsA("TextButton") then
                             v.TextColor3 = Library.Theme.Textcolorrr
-                        elseif v:IsA("ImageLabel") and v.Name == "CheckboxTicked" then
-                            v.ImageColor3 = Library.Theme.Textcolorrr
-                        elseif v:IsA("ImageLabel") and v.Name == "CheckboxOutline" then
-                            v.ImageColor3 = Library.Theme.Textcolorrr
-                        elseif v:IsA("TextLabel") and (v.Name == "Title" or v.Name == "TitleTab" or v.Name == "SectionTitle") then
+                        elseif v:IsA("TextLabel") and (v.Name == "Title" or v.Name == "MessageLabel" or v.Name == "TitleLabel") then
                             v.TextColor3 = Library.Theme.Textcolorrr
                         end
                     end
@@ -96,10 +89,10 @@ pcall(function()
         }
         local colorKey = string.lower(tostring(getgenv().SJJs))
         Library.Theme.Textcolorrr = colorMap[colorKey] or Color3.fromRGB(255, 255, 255)
-        UpdateTextColors()
+        Update()
     end
 end)
-local function DarkenObjectColor(object, amount)
+local function Darkned(object, amount)
     local h, s, v = Color3.toHSV(object)
     v = math.clamp(v - (amount / 255), 0, 1)
     s = math.clamp(s - (amount / 510), 0, 1)
@@ -223,7 +216,7 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
             local ActionButton = Instance.new("TextButton")
             ActionButton.Name = "ActionButton" .. i
             ActionButton.Parent = NotificationBackground
-            ActionButton.BackgroundColor3 = DarkenObjectColor(Library.Theme.MainColor, 20)
+            ActionButton.BackgroundColor3 = Darkned(Library.Theme.MainColor, 20)
             ActionButton.Position = UDim2.new(0, 10 + (i - 1) * (buttonWidth + 5), 0, 65)
             ActionButton.Size = UDim2.new(0, buttonWidth, 0, 20)
             ActionButton.ZIndex = 102
