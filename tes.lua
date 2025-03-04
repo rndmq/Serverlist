@@ -69,6 +69,7 @@ pcall(function()
         end)
     end
 end)
+Library.Theme.NotificationTextColor = Library.Theme.Textcolorrr
     else
         local colorMap = {
             blue = Color3.fromRGB(0, 0, 255),
@@ -89,7 +90,7 @@ end)
         Update()
     end
 end)
-Library.Theme.NotificationTextColor = Library.Theme.Textcolorrr
+
 local function Darkned(object, amount)
     local h, s, v = Color3.toHSV(object)
     v = math.clamp(v - (amount / 255), 0, 1)
