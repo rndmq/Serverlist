@@ -18,7 +18,9 @@ Library = {
         EasingStyle = Enum.EasingStyle.Quart,
         Color = Color3.fromRGB(255, 75, 75),      
         Textcolorrr = Color3.fromRGB(255, 255, 255) 
+        
     },
+    Library.Theme.NotificationTextColor = Library.Theme.Textcolorrr
     ActiveNotifications = {}
 }
 
@@ -46,8 +48,8 @@ end)
 local function Update()
     for _, v in pairs(Library.LibraryColorTable) do
         if typeof(v) == "Instance" then
-if (v:IsA("TextLabel") or v:IsA("TextButton")) and (v.Name == "Title" or v.Name == "Message" or v.Name == "CloseButton" or string.match(v.Name, "ActionButton")) then
-    v.TextColor3 = Library.Theme.Textcolorrr
+            if (v:IsA("TextLabel") or v:IsA("TextButton")) and (v.Name == "Title" or v.Name == "Message" or v.Name == "CloseButton" or string.match(v.Name, "ActionButton")) then
+                v.TextColor3 = Library.Theme.NotificationTextColor
             end
         end
     end
@@ -60,8 +62,8 @@ task.spawn(function()
             if getgenv().Stop then break end
             Library.Theme.Textcolorrr = Color3.fromHSV(i, 1, 1)
             for _, v in pairs(Library.LibraryColorTable) do
-                if (v:IsA("TextLabel") or v:IsA("TextButton")) and (v.Name == "Title" or v.Name == "Message" or v.Name == "CloseButton" or string.match(v.Name, "ActionButton")) then
-                    v.TextColor3 = Library.Theme.Textcolorrr
+if (v:IsA("TextLabel") or v:IsA("TextButton")) and (v.Name == "Title" or v.Name == "Message" or v.Name == "CloseButton" or string.match(v.Name, "ActionButton")) then
+    v.TextColor3 = Library.Theme.NotificationTextColor 
                 end
             end
             task.wait(0.01)
