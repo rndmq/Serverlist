@@ -46,8 +46,8 @@ end)
 local function Update()
     for _, v in pairs(Library.LibraryColorTable) do
         if typeof(v) == "Instance" then
-            if v:IsA("TextLabel") or v:IsA("TextButton") then
-                v.TextColor3 = Library.Theme.Textcolorrr
+                if v:IsA("TextLabel") and (v.Name == "TitleLabel" or v.Name == "MessageLabel" or v.Name == "CloseButton") then
+                    v.TextColor3 = Library.Theme.Textcolorrr
             end
         end
     end
@@ -61,7 +61,7 @@ pcall(function()
         for i = 0, 1, 0.002 do
             Library.Theme.Textcolorrr = Color3.fromHSV(i, 1, 1)
             for _, v in pairs(Library.LibraryColorTable) do
-                if v:IsA("TextLabel") and (v.Name == "Title" or v.Name == "MessageLabel" or v.Name == "CloseButton") then
+                if v:IsA("TextLabel") and (v.Name == "TitleLabel" or v.Name == "MessageLabel" or v.Name == "CloseButton") then
                     v.TextColor3 = Library.Theme.Textcolorrr
                 end
             end
