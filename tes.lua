@@ -46,11 +46,7 @@ end)
 local function Update()
     for _, v in pairs(Library.LibraryColorTable) do
         if typeof(v) == "Instance" then
-            if v:IsA("TextButton") and v.Name == "CloseButton" then
-                v.TextColor3 = Library.Theme.Textcolorrr
-            elseif v:IsA("TextLabel") and (v.Name == "Title" or v.Name == "TitleLabel" or v.Name == "MessageLabel" or v.Name == "Message") then
-                v.TextColor3 = Library.Theme.Textcolorrr
-            elseif v:IsA("TextButton") and string.match(v.Name, "ActionButton") then
+            if v:IsA("TextLabel") or v:IsA("TextButton") then
                 v.TextColor3 = Library.Theme.Textcolorrr
             end
         end
