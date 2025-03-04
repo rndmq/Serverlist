@@ -230,8 +230,12 @@ function Library:CreateTab(name)
                 }):Play()
                 ToggleButton.Text = "↓"
             else
+                local targetSize = UDim2.new(0, 200, 0, ContentLayout.AbsoluteContentSize.Y + 5)
                 TweenService:Create(ContentFrame, TweenInfo.new(0.3, Library.Theme.EasingStyle), {
-                    Size = UDim2.new(0, 200, 0, ContentLayout.AbsoluteContentSize.Y + 5)
+                    Size = targetSize
+                }):Play()
+                TweenService:Create(SectionFrame, TweenInfo.new(0.3, Library.Theme.EasingStyle), {
+                    Size = UDim2.new(0, 200, 0, 30 + ContentLayout.AbsoluteContentSize.Y + 5)
                 }):Play()
                 ToggleButton.Text = "↑"
             end
