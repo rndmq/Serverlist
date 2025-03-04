@@ -1,15 +1,12 @@
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
-local HttpService = game:GetService("HttpService")
 local CoreGui = game:GetService("CoreGui")
 
 local Library = {
     Theme = {
-        MainColor = Color3.fromRGB(255, 75, 75),
-        BackgroundColor = Color3.fromRGB(35, 35, 35),
-        DarkBackgroundColor = Color3.fromRGB(20, 20, 20),
+        TabColor = Color3.fromRGB(0, 0, 0), -- Warna tab hitam
+        SectionColor = Color3.fromRGB(50, 50, 50), -- Warna section abu-abu
         TextColor = Color3.fromRGB(255, 255, 255),
-        DefaultTextColor = Color3.fromRGB(185, 185, 185),
         TextFont = Enum.Font.SourceSansBold,
         EasingStyle = Enum.EasingStyle.Quart
     },
@@ -18,84 +15,22 @@ local Library = {
     ActiveNotifications = {}
 }
 
-local colorMap = {
-    blue = Color3.fromRGB(0, 0, 255),
-    red = Color3.fromRGB(255, 0, 0),
-    green = Color3.fromRGB(0, 255, 0),
-    yellow = Color3.fromRGB(255, 255, 0),
-    purple = Color3.fromRGB(128, 0, 128),
-    pink = Color3.fromRGB(255, 105, 180),
-    default = Color3.fromRGB(255, 75, 75),
-    cyan = Color3.fromRGB(0, 255, 255),
-    brown = Color3.fromRGB(139, 69, 19),
-    orange = Color3.fromRGB(255, 165, 0),
-    black = Color3.fromRGB(0, 0, 0),
-    white = Color3.fromRGB(255, 255, 255)
-}
-
 local function UpdateColors()
-    pcall(function()
-        if getgenv().Color then
-            local colorKey = string.lower(getgenv().Color)
-            if colorKey == "rgb" then
-                coroutine.wrap(function()
-                    while true do
-                        if getgenv().StopRGB then break end
-                        for i = 0, 1, 0.001 do
-                            Library.Theme.MainColor = Color3.fromHSV(i, 1, 1)
-                            UpdateColors()
-                            task.wait(0.01)
-                        end
-                    end
-                end)()
-            else
-                Library.Theme.MainColor = colorMap[colorKey] or colorMap.default
-            end
-        end
-        if getgenv().TextColor then
-            local textColorKey = string.lower(getgenv().TextColor)
-            if textColorKey == "rgb" then
-                coroutine.wrap(function()
-                    while true do
-                        if getgenv().StopRGB then break end
-                        for i = 0, 1, 0.002 do
-                            Library.Theme.TextColor = Color3.fromHSV(i, 1, 1)
-                            UpdateColors()
-                            task.wait(0.01)
-                        end
-                    end
-                end)()
-            else
-                Library.Theme.TextColor = colorMap[textColorKey] or Color3.fromRGB(255, 255, 255)
-            end
-        end
-    end)
-    
     for _, obj in pairs(Library.LibraryColorTable) do
         if obj:IsA("ImageLabel") then
             if obj.Name == "TabButton" then
-                obj.ImageColor3 = Library.Theme.DarkBackgroundColor
+                obj.ImageColor3 = Library.Theme.TabColor
             elseif obj.Name:find("Section") then
-                obj.ImageColor3 = Library.Theme.BackgroundColor
-            elseif obj.Name:find("Border") then
-                obj.ImageColor3 = Library.Theme.MainColor
+                obj.ImageColor3 = Library.Theme.SectionColor
             end
-        elseif obj:IsA("Frame") and obj.Name == "ToggleCircle" then
-            obj.BackgroundColor3 = obj.Parent.Toggled and Library.Theme.MainColor or Color3.fromRGB(65, 65, 65)
         elseif obj:IsA("TextLabel") or obj:IsA("TextButton") then
-            if obj.Name == "ToggleTitle" then
-                obj.TextColor3 = obj.Parent.Toggled and Library.Theme.TextColor or Library.Theme.DefaultTextColor
-            elseif obj.Name:find("DropdownOption") then
-                obj.TextColor3 = obj.Selected and Library.Theme.MainColor or Library.Theme.TextColor
-            else
-                obj.TextColor3 = Library.Theme.TextColor
-            end
+            obj.TextColor3 = Library.Theme.TextColor
         end
     end
 end
 
 local UILibrary = Instance.new("ScreenGui")
-UILibrary.Name = HttpService:GenerateGUID(false)
+UILibrary.Name = "FloatingGUI"
 UILibrary.Parent = CoreGui
 UILibrary.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
@@ -163,7 +98,7 @@ function Library:CreateTab(name)
     TabButton.BackgroundTransparency = 1
     TabButton.Size = UDim2.new(1, 0, 1, 0)
     TabButton.Image = "rbxassetid://3570695787"
-    TabButton.ImageColor3 = Library.Theme.DarkBackgroundColor
+    TabButton.ImageColor3 = Library.Theme.TabColor
     TabButton.ScaleType = Enum.ScaleType.Slice
     TabButton.SliceCenter = Rect.new(100, 100, 100, 100)
     TabButton.SliceScale = 0.050
@@ -183,15 +118,15 @@ function Library:CreateTab(name)
     TabTitle.TextSize = 16
     TabTitle.TextXAlignment = Enum.TextXAlignment.Left
     
-    local CloseButton = Instance.new("TextButton")
-    CloseButton.Parent = TabButton
-    CloseButton.BackgroundTransparency = 1
-    CloseButton.Position = UDim2.new(1, -20, 0, 0)
-    CloseButton.Size = UDim2.new(0, 20, 0, 20)
-    CloseButton.Text = "X"
-    CloseButton.TextColor3 = Library.Theme.TextColor
-    CloseButton.Font = Library.Theme.TextFont
-    CloseButton.TextSize = 16
+    local ToggleButton = Instance.new("TextButton")
+    ToggleButton.Parent = TabButton
+    ToggleButton.BackgroundTransparency = 1
+    ToggleButton.Position = UDim2.new(1, -20, 0, 0)
+    ToggleButton.Size = UDim2.new(0, 20, 0, 20)
+    ToggleButton.Text = "↓"
+    ToggleButton.TextColor3 = Library.Theme.TextColor
+    ToggleButton.Font = Library.Theme.TextFont
+    ToggleButton.TextSize = 16
     
     local SectionsFrame = Instance.new("Frame")
     SectionsFrame.Name = "Sections"
@@ -205,16 +140,28 @@ function Library:CreateTab(name)
     SectionLayout.SortOrder = Enum.SortOrder.LayoutOrder
     SectionLayout.Padding = UDim.new(0, 5)
     
+    local minimized = true
+    
     table.insert(Library.LibraryColorTable, TabButton)
     table.insert(Library.LibraryColorTable, TabTitle)
-    table.insert(Library.LibraryColorTable, CloseButton)
+    table.insert(Library.LibraryColorTable, ToggleButton)
     
-    local function CloseTab()
-        TabFrame:Destroy()
-        UpdateColors()
+    local function ToggleMinimize()
+        minimized = not minimized
+        if minimized then
+            TweenService:Create(SectionsFrame, TweenInfo.new(0.3, Library.Theme.EasingStyle), {
+                Size = UDim2.new(0, 200, 0, 0)
+            }):Play()
+            ToggleButton.Text = "↓"
+        else
+            TweenService:Create(SectionsFrame, TweenInfo.new(0.3, Library.Theme.EasingStyle), {
+                Size = UDim2.new(0, 200, 0, SectionLayout.AbsoluteContentSize.Y + 5)
+            }):Play()
+            ToggleButton.Text = "↑"
+        end
     end
     
-    CloseButton.MouseButton1Click:Connect(CloseTab)
+    ToggleButton.MouseButton1Click:Connect(ToggleMinimize)
     MakeDraggable(TabButton)
     
     UpdateColors()
@@ -228,7 +175,7 @@ function Library:CreateTab(name)
         SectionFrame.BackgroundTransparency = 1
         SectionFrame.Size = UDim2.new(0, 200, 0, 30)
         SectionFrame.Image = "rbxassetid://3570695787"
-        SectionFrame.ImageColor3 = Library.Theme.BackgroundColor
+        SectionFrame.ImageColor3 = Library.Theme.SectionColor
         SectionFrame.ScaleType = Enum.ScaleType.Slice
         SectionFrame.SliceCenter = Rect.new(100, 100, 100, 100)
         SectionFrame.SliceScale = 0.050
@@ -248,15 +195,15 @@ function Library:CreateTab(name)
         SectionTitle.TextSize = 14
         SectionTitle.TextXAlignment = Enum.TextXAlignment.Left
         
-        local CloseButton = Instance.new("TextButton")
-        CloseButton.Parent = SectionFrame
-        CloseButton.BackgroundTransparency = 1
-        CloseButton.Position = UDim2.new(1, -20, 0, 0)
-        CloseButton.Size = UDim2.new(0, 20, 0, 20)
-        CloseButton.Text = "X"
-        CloseButton.TextColor3 = Library.Theme.TextColor
-        CloseButton.Font = Library.Theme.TextFont
-        CloseButton.TextSize = 16
+        local ToggleButton = Instance.new("TextButton")
+        ToggleButton.Parent = SectionFrame
+        ToggleButton.BackgroundTransparency = 1
+        ToggleButton.Position = UDim2.new(1, -20, 0, 0)
+        ToggleButton.Size = UDim2.new(0, 20, 0, 20)
+        ToggleButton.Text = "↓"
+        ToggleButton.TextColor3 = Library.Theme.TextColor
+        ToggleButton.Font = Library.Theme.TextFont
+        ToggleButton.TextSize = 16
         
         local ContentFrame = Instance.new("Frame")
         ContentFrame.Parent = SectionFrame
@@ -269,19 +216,28 @@ function Library:CreateTab(name)
         ContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
         ContentLayout.Padding = UDim.new(0, 5)
         
+        local minimized = true
+        
         table.insert(Library.LibraryColorTable, SectionFrame)
         table.insert(Library.LibraryColorTable, SectionTitle)
-        table.insert(Library.LibraryColorTable, CloseButton)
+        table.insert(Library.LibraryColorTable, ToggleButton)
         
-        local function CloseSection()
-            SectionFrame:Destroy()
-            if SectionsFrame.AbsoluteContentSize.Y == 0 then
-                TabFrame:Destroy()
+        local function ToggleSection()
+            minimized = not minimized
+            if minimized then
+                TweenService:Create(ContentFrame, TweenInfo.new(0.3, Library.Theme.EasingStyle), {
+                    Size = UDim2.new(0, 200, 0, 0)
+                }):Play()
+                ToggleButton.Text = "↓"
+            else
+                TweenService:Create(ContentFrame, TweenInfo.new(0.3, Library.Theme.EasingStyle), {
+                    Size = UDim2.new(0, 200, 0, ContentLayout.AbsoluteContentSize.Y + 5)
+                }):Play()
+                ToggleButton.Text = "↑"
             end
-            UpdateColors()
         end
         
-        CloseButton.MouseButton1Click:Connect(CloseSection)
+        ToggleButton.MouseButton1Click:Connect(ToggleSection)
         
         local SectionElements = {}
         
@@ -302,6 +258,7 @@ function Library:CreateTab(name)
             Button.MouseButton1Click:Connect(callback)
             table.insert(Library.LibraryColorTable, Button)
             UpdateColors()
+            ToggleSection()
         end
         
         function SectionElements:CreateTextBox(name, default, callback)
@@ -313,7 +270,7 @@ function Library:CreateTab(name)
             local TextBoxLabel = Instance.new("TextLabel")
             TextBoxLabel.Parent = TextBoxFrame
             TextBoxLabel.BackgroundTransparency = 1
-            TextBoxLabel.Size = UDim2.new(0, 180, 1, 0)
+            TextBoxLabel.Size = UDim2.new(0, 150, 1, 0)
             TextBoxLabel.Position = UDim2.new(0, 10, 0, 0)
             TextBoxLabel.Text = name
             TextBoxLabel.TextColor3 = Library.Theme.TextColor
@@ -323,9 +280,9 @@ function Library:CreateTab(name)
             
             local TextBoxInput = Instance.new("TextBox")
             TextBoxInput.Parent = TextBoxFrame
-            TextBoxInput.BackgroundColor3 = Library.Theme.BackgroundColor
-            TextBoxInput.Size = UDim2.new(0, 50, 0, 20)
-            TextBoxInput.Position = UDim2.new(1, -60, 0, 2)
+            TextBoxInput.BackgroundColor3 = Library.Theme.SectionColor
+            TextBoxInput.Size = UDim2.new(0, 40, 0, 20)
+            TextBoxInput.Position = UDim2.new(1, -50, 0, 2)
             TextBoxInput.Text = default or ""
             TextBoxInput.TextColor3 = Library.Theme.TextColor
             TextBoxInput.Font = Library.Theme.TextFont
@@ -342,6 +299,7 @@ function Library:CreateTab(name)
             table.insert(Library.LibraryColorTable, TextBoxLabel)
             table.insert(Library.LibraryColorTable, TextBoxInput)
             UpdateColors()
+            ToggleSection()
         end
         
         function SectionElements:CreateToggle(name, default, callback)
@@ -358,7 +316,7 @@ function Library:CreateTab(name)
             ToggleTitle.Size = UDim2.new(0, 170, 1, 0)
             ToggleTitle.Position = UDim2.new(0, 10, 0, 0)
             ToggleTitle.Text = name
-            ToggleTitle.TextColor3 = ToggleFrame.Toggled and Library.Theme.TextColor or Library.Theme.DefaultTextColor
+            ToggleTitle.TextColor3 = ToggleFrame.Toggled and Library.Theme.TextColor or Library.Theme.TextColor
             ToggleTitle.Font = Library.Theme.TextFont
             ToggleTitle.TextSize = 14
             ToggleTitle.TextXAlignment = Enum.TextXAlignment.Left
@@ -385,13 +343,14 @@ function Library:CreateTab(name)
                 TweenService:Create(ToggleCircle, TweenInfo.new(0.3, Library.Theme.EasingStyle), {
                     BackgroundColor3 = ToggleFrame.Toggled and Library.Theme.MainColor or Color3.fromRGB(65, 65, 65)
                 }):Play()
-                ToggleTitle.TextColor3 = ToggleFrame.Toggled and Library.Theme.TextColor or Library.Theme.DefaultTextColor
                 callback(ToggleFrame.Toggled)
             end)
             
             table.insert(Library.LibraryColorTable, ToggleTitle)
             table.insert(Library.LibraryColorTable, ToggleCircle)
             UpdateColors()
+            ToggleSection()
+            callback(ToggleFrame.Toggled)
         end
         
         function SectionElements:CreateDropdown(name, options, presetoption, callback)
@@ -428,7 +387,7 @@ function Library:CreateTab(name)
             DropdownContent.Position = UDim2.new(0, 0, 1, 0)
             DropdownContent.Size = UDim2.new(0, 200, 0, 0)
             DropdownContent.Image = "rbxassetid://3570695787"
-            DropdownContent.ImageColor3 = Library.Theme.BackgroundColor
+            DropdownContent.ImageColor3 = Library.Theme.SectionColor
             DropdownContent.ScaleType = Enum.ScaleType.Slice
             DropdownContent.SliceCenter = Rect.new(100, 100, 100, 100)
             DropdownContent.SliceScale = 0.050
@@ -499,6 +458,7 @@ function Library:CreateTab(name)
                         Size = UDim2.new(0, 200, 0, 0)
                     }):Play()
                 end
+                ToggleSection()
             end)
             
             table.insert(Library.LibraryColorTable, TitleToggle)
@@ -506,6 +466,7 @@ function Library:CreateTab(name)
             table.insert(Library.LibraryColorTable, DropdownContent)
             UpdateColors()
             callback(selectedOption)
+            ToggleSection()
         end
         
         function SectionElements:CreateSlider(name, min, max, default, callback)
@@ -538,7 +499,7 @@ function Library:CreateTab(name)
             
             local SliderBar = Instance.new("Frame")
             SliderBar.Parent = SliderFrame
-            SliderBar.BackgroundColor3 = Library.Theme.BackgroundColor
+            SliderBar.BackgroundColor3 = Library.Theme.SectionColor
             SliderBar.Size = UDim2.new(0, 180, 0, 5)
             SliderBar.Position = UDim2.new(0, 10, 0, 20)
             
@@ -599,6 +560,7 @@ function Library:CreateTab(name)
             table.insert(Library.LibraryColorTable, SliderFill)
             table.insert(Library.LibraryColorTable, SliderHandle)
             UpdateColors()
+            ToggleSection()
         end
         
         function SectionElements:CreatePicker(name, default, callback)
@@ -629,7 +591,6 @@ function Library:CreateTab(name)
             Corner.Parent = PickerButton
             
             PickerButton.MouseButton1Click:Connect(function()
-                -- Implementasi picker sederhana (bisa diperluas)
                 local newColor = Color3.fromRGB(math.random(0, 255), math.random(0, 255), math.random(0, 255))
                 PickerButton.BackgroundColor3 = newColor
                 callback(newColor)
@@ -638,6 +599,7 @@ function Library:CreateTab(name)
             table.insert(Library.LibraryColorTable, PickerLabel)
             table.insert(Library.LibraryColorTable, PickerButton)
             UpdateColors()
+            ToggleSection()
         end
         
         UpdateColors()
