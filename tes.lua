@@ -18,11 +18,11 @@ Library = {
         EasingStyle = Enum.EasingStyle.Quart,
         Color = Color3.fromRGB(255, 75, 75),      
         Textcolorrr = Color3.fromRGB(255, 255, 255) 
-        
     },
-    Library.Theme.NotificationTextColor = Library.Theme.Textcolorrr
     ActiveNotifications = {}
 }
+
+Library.Theme.NotificationTextColor = Library.Theme.Textcolorrr
 
 local UILibrary = Instance.new("ScreenGui")
 UILibrary.Name = "NotificationGui"
@@ -54,20 +54,19 @@ local function Update()
         end
     end
 end
+
 pcall(function()
     if getgenv().SJJs == "rb" then
-task.spawn(function()
-    while not getgenv().Stop do 
-        for i = 0, 1, 0.002 do
-            if getgenv().Stop then break end
-            Library.Theme.Textcolorrr = Color3.fromHSV(i, 1, 1)
-            for _, v in pairs(Library.LibraryColorTable) do
-if (v:IsA("TextLabel") or v:IsA("TextButton")) and (v.Name == "Title" or v.Name == "Message" or v.Name == "CloseButton" or string.match(v.Name, "ActionButton")) then
-    v.TextColor3 = Library.Theme.NotificationTextColor 
+        task.spawn(function()
+            while not getgenv().Stop do
+                for i = 0, 1, 0.002 do
+                    if getgenv().Stop then break end
+                    Library.Theme.NotificationTextColor = Color3.fromHSV(i, 1, 1)
+                    Update()
+                    task.wait(0.01)
                 end
             end
-            task.wait(0.01)
-        end
+        end)
     end
 end)
     else
