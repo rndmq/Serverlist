@@ -26,16 +26,11 @@ UILibrary.Name = "NotificationGui"
 UILibrary.ResetOnSpawn = false
 UILibrary.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 UILibrary.Enabled = true
-local function getHighestZIndex()
+local function getNextZIndex(parent)
     local highestZ = 0
-    for _, gui in pairs(game:GetService("CoreGui"):GetChildren()) do
-        if gui:IsA("ScreenGui") and gui.Enabled then
-            highestZ = math.max(highestZ, gui.ZIndex)
-        end
-    end
-    for _, gui in pairs(PlayerGui:GetChildren()) do
-        if gui:IsA("ScreenGui") and gui.Enabled then
-            highestZ = math.max(highestZ, gui.ZIndex)
+    for _, obj in pairs(parent:GetChildren()) do
+        if obj:IsA("GuiObject") then
+            highestZ = math.max(highestZ, obj.ZIndex)
         end
     end
     return highestZ + 1
@@ -46,7 +41,6 @@ if player and player:FindFirstChild("PlayerGui") then
 else
     UILibrary.Parent = game:GetService("CoreGui")
 end
-UILibrary.ZIndex = getHighestZIndex()
 pcall(function()
     local colorMap = {
         b = Color3.fromRGB(0, 0, 0),
@@ -109,9 +103,8 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
     NotificationFrame.BackgroundTransparency = 1
     NotificationFrame.Position = UDim2.new(1, 0, 1, -110)
     NotificationFrame.Size = UDim2.new(0, 300, 0, notifHeight)
-    NotificationFrame.ZIndex = getHighestZIndex()  -- Set ZIndex lebih tinggi dari semua GUI
+    NotificationFrame.ZIndex = getNextZIndex(UILibrary)
 
-    -- Sisanya kode untuk setup UI elements tetap sama
     NotificationBackground.Name = "Background"
     NotificationBackground.Parent = NotificationFrame
     NotificationBackground.BackgroundColor3 = Library.Theme.MainColor
@@ -147,7 +140,32 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
     MessageLabel.TextWrapped = true
     MessageLabel.TextXAlignment = Enum.TextXAlignment.Left
 
-    -- Setup lainnya tetap sama sampai ke fungsi closeNotification
+    CloseButton.Name = "CloseButton"
+    CloseButton.Parent = NotificationBackground
+    CloseButton.BackgroundTransparency = 1
+    CloseButton.Position = UDim2.new(1, -25, 0, 5)
+    CloseButton.Size = UDim2.new(0, 20, 0, 20)
+    CloseButton.ZIndex = NotificationFrame.ZIndex + 2
+    CloseButton.Font = Library.Theme.TextFont
+    CloseButton.Text = "X"
+    CloseButton.TextColor3 = Library.Theme.OnlyTest
+    table.insert(Library.LibraryColorTable, CloseButton)
+    CloseButton.TextSize = 16
+
+    TimerBar.Name = "TimerBar"
+    TimerBar.Parent = NotificationBackground
+    TimerBar.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    TimerBar.BorderSizePixel = 0
+    TimerBar.Position = UDim2.new(0, 10, 1, -15)
+    TimerBar.Size = UDim2.new(0, 280, 0, 5)
+    TimerBar.ZIndex = NotificationFrame.ZIndex + 1
+    TimerBarFill.Name = "TimerBarFill"
+    TimerBarFill.Parent = TimerBar
+    TimerBarFill.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    TimerBarFill.BorderSizePixel = 0
+    TimerBarFill.Size = UDim2.new(1, 0, 1, 0)
+    TimerBarFill.ZIndex = NotificationFrame.ZIndex + 2
+
     local function closeNotification()
         local index = table.find(Library.ActiveNotifications, NotificationFrame)
         if index then
@@ -157,10 +175,9 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
             }):Play()
             task.wait(0.5)
             NotificationFrame:Destroy()
-            -- Perbarui posisi semua notifikasi yang tersisa
             for i, notif in pairs(Library.ActiveNotifications) do
                 local targetY = -110 - (i - 1) * (notif.Size.Y.Offset + 10)
-                notif.Position = UDim2.new(1, -310, 1, targetY) -- Set posisi langsung
+                notif.Position = UDim2.new(1, -310, 1, targetY)
                 TweenService:Create(notif, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
                     Position = UDim2.new(1, -310, 1, targetY)
                 }):Play()
@@ -168,7 +185,6 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
         end
     end
 
-    -- Setup button dan animasi masuk
     if hasButtons then
         local buttonCount = math.clamp(#buttons, 1, 5)
         local buttonWidth = 280 / buttonCount - 5
@@ -201,11 +217,10 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
 
     table.insert(Library.ActiveNotifications, 1, NotificationFrame)
     
-    -- Hitung posisi dengan mempertimbangkan semua notifikasi yang ada
     local function updateNotificationPositions()
         for i, notif in pairs(Library.ActiveNotifications) do
             local targetY = -110 - (i - 1) * (notif.Size.Y.Offset + 10)
-            if notif.Position.X.Offset ~= -310 then -- Jika belum di posisi akhir
+            if notif.Position.X.Offset ~= -310 then
                 TweenService:Create(notif, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
                     Position = UDim2.new(1, -310, 1, targetY)
                 }):Play()
@@ -214,13 +229,12 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
     end
 
     updateNotificationPositions()
-
     local duration = duration or 5
     TweenService:Create(TimerBarFill, TweenInfo.new(duration, Enum.EasingStyle.Linear), {
         Size = UDim2.new(0, 0, 1, 0)
     }):Play()
     spawn(function()
-        wait(duration)
+        task.wait(duration)
         closeNotification()
     end)
 
