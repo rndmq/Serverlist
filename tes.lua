@@ -56,7 +56,7 @@ pcall(function()
     if getgenv().SJJs == "rb" then
         coroutine.wrap(function()
     while true do
-        if getgenv().Stop then break end
+        if getgenv().Stop == true then break end
         for i = 0, 1, 0.002 do
             Library.Theme.Textcolorrr = Color3.fromHSV(i, 1, 1)
             for _, v in pairs(Library.LibraryColorTable) do
@@ -169,7 +169,7 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
     CloseButton.Font = Library.Theme.TextFont
     CloseButton.Text = "X"
     CloseButton.TextColor3 = Library.Theme.Textcolorrr
-    table.insert(Library.LibraryColorTable, CloseButton)
+    table.insert(Library.LibraryColorTable, MessageLabel)
     CloseButton.TextSize = 16
 
     TimerBar.Name = "TimerBar"
