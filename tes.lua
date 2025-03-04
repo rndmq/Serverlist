@@ -43,13 +43,15 @@ pcall(function()
     local colorKey = string.lower(getgenv().PKJ)
     Library.Theme.MainColor = colorMap[colorKey] or colorMap.default
 end)
-local function UpdateTextColors()
+local function Update()
     for _, v in pairs(Library.LibraryColorTable) do
         if typeof(v) == "Instance" then
             if v:IsA("TextButton") and v.Name == "CloseButton" then
-    v.TextColor3 = Library.Theme.TextColor
-            elseif v:IsA("TextLabel") and (v.Name == "Title" or v.Name == "TitleLabel" or v.Name == "MessageLabel") then
-                v.TextColor3 = Library.Theme.TextColor
+                v.TextColor3 = Library.Theme.Textcolorrr
+            elseif v:IsA("TextLabel") and (v.Name == "Title" or v.Name == "TitleLabel" or v.Name == "MessageLabel" or v.Name == "Message") then
+                v.TextColor3 = Library.Theme.Textcolorrr
+            elseif v:IsA("TextButton") and string.match(v.Name, "ActionButton") then
+                v.TextColor3 = Library.Theme.Textcolorrr
             end
         end
     end
