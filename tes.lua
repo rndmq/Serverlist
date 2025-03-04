@@ -43,12 +43,13 @@ pcall(function()
     local colorKey = string.lower(getgenv().PKJ)
     Library.Theme.MainColor = colorMap[colorKey] or colorMap.default
 end)
-local function Update()
+local function UpdateTextColors()
     for _, v in pairs(Library.LibraryColorTable) do
         if typeof(v) == "Instance" then
-            if v:IsA("TextLabel") or v:IsA("TextButton") then
-                v.TextColor3 = Library.Theme.Textcolorrr
-            
+            if v:IsA("TextButton") and v.Name == "CloseButton" then
+    v.TextColor3 = Library.Theme.TextColor
+            elseif v:IsA("TextLabel") and (v.Name == "Title" or v.Name == "TitleLabel" or v.Name == "MessageLabel") then
+                v.TextColor3 = Library.Theme.TextColor
             end
         end
     end
@@ -57,21 +58,19 @@ local selectedTextColor = Color3.fromRGB(255, 255, 255)
 pcall(function()
     if getgenv().SJJs == "rb" then
         coroutine.wrap(function()
-            while true do
-                if getgenv().StopRGB then break end
-                for i = 0, 1, 0.002 do
-                    Library.Theme.Textcolorrr = Color3.fromHSV(i, 1, 1)
-                    for _, v in pairs(Library.LibraryColorTable) do
-                        if v:IsA("TextLabel") or v:IsA("TextButton") then
-                            v.TextColor3 = Library.Theme.Textcolorrr
-                        elseif v:IsA("TextLabel") and (v.Name == "Title" or v.Name == "MessageLabel" or v.Name == "TitleLabel") then
-                            v.TextColor3 = Library.Theme.Textcolorrr
-                        end
-                    end
-                    task.wait(0.01)
+    while true do
+        if getgenv().StopRGB then break end
+        for i = 0, 1, 0.002 do
+            Library.Theme.Textcolorrr = Color3.fromHSV(i, 1, 1)
+            for _, v in pairs(Library.LibraryColorTable) do
+                if v:IsA("TextLabel") and (v.Name == "Title" or v.Name == "MessageLabel" or v.Name == "CloseButton") then
+                    v.TextColor3 = Library.Theme.Textcolorrr
                 end
             end
-        end)()
+            task.wait(0.01)
+        end
+    end
+end)()
     else
         local colorMap = {
             blue = Color3.fromRGB(0, 0, 255),
