@@ -7,7 +7,7 @@ local Library = {
     Theme = {
         MainColor = Color3.fromRGB(255, 75, 75),
         BackgroundColor = Color3.fromRGB(35, 35, 35),
-        DarkBackgroundColor = Color3.fromRGB(20, 20, 20), 
+        DarkBackgroundColor = Color3.fromRGB(20, 20, 20),
         TextColor = Color3.fromRGB(255, 255, 255),
         DefaultTextColor = Color3.fromRGB(185, 185, 185),
         TextFont = Enum.Font.SourceSansBold,
@@ -17,9 +17,6 @@ local Library = {
     LibraryColorTable = {},
     ActiveNotifications = {}
 }
-
-local Settings = {}
-local saveFile = "FloatRndm.json"
 
 local colorMap = {
     blue = Color3.fromRGB(0, 0, 255),
@@ -35,28 +32,6 @@ local colorMap = {
     black = Color3.fromRGB(0, 0, 0),
     white = Color3.fromRGB(255, 255, 255)
 }
-
-local function LoadSettings()
-    if isfile(saveFile) then
-        local success, result = pcall(function()
-            return HttpService:JSONDecode(readfile(saveFile))
-        end)
-        if success and type(result) == "table" then
-            Settings = result
-        end
-    end
-end
-
-local function SaveSettings()
-    local settingsToSave = {
-        Tabs = Settings.Tabs or {}
-    }
-    pcall(function()
-        writefile(saveFile, HttpService:JSONEncode(settingsToSave))
-    end)
-end
-
-LoadSettings()
 
 local function UpdateColors()
     pcall(function()
@@ -179,7 +154,7 @@ function Library:CreateTab(name)
     TabFrame.Name = name .. "Tab"
     TabFrame.Parent = TabsContainer
     TabFrame.BackgroundTransparency = 1
-    TabFrame.Size = UDim2.new(0, 150, 0, 40) -- Lebar lebih besar agar sesuai gambar
+    TabFrame.Size = UDim2.new(0, 200, 0, 40)
     TabFrame.LayoutOrder = Library.TabCount
     
     local TabButton = Instance.new("ImageLabel")
@@ -193,6 +168,10 @@ function Library:CreateTab(name)
     TabButton.SliceCenter = Rect.new(100, 100, 100, 100)
     TabButton.SliceScale = 0.050
     
+    local Corner = Instance.new("UICorner")
+    Corner.CornerRadius = UDim.new(0, 8)
+    Corner.Parent = TabButton
+    
     local TabTitle = Instance.new("TextLabel")
     TabTitle.Parent = TabButton
     TabTitle.BackgroundTransparency = 1
@@ -204,50 +183,38 @@ function Library:CreateTab(name)
     TabTitle.TextSize = 16
     TabTitle.TextXAlignment = Enum.TextXAlignment.Left
     
+    local CloseButton = Instance.new("TextButton")
+    CloseButton.Parent = TabButton
+    CloseButton.BackgroundTransparency = 1
+    CloseButton.Position = UDim2.new(1, -20, 0, 0)
+    CloseButton.Size = UDim2.new(0, 20, 0, 20)
+    CloseButton.Text = "X"
+    CloseButton.TextColor3 = Library.Theme.TextColor
+    CloseButton.Font = Library.Theme.TextFont
+    CloseButton.TextSize = 16
+    
     local SectionsFrame = Instance.new("Frame")
     SectionsFrame.Name = "Sections"
     SectionsFrame.Parent = TabFrame
     SectionsFrame.BackgroundTransparency = 1
     SectionsFrame.Position = UDim2.new(0, 0, 1, 0)
-    SectionsFrame.Size = UDim2.new(0, 150, 0, 0)
+    SectionsFrame.Size = UDim2.new(0, 200, 0, 0)
     
     local SectionLayout = Instance.new("UIListLayout")
     SectionLayout.Parent = SectionsFrame
     SectionLayout.SortOrder = Enum.SortOrder.LayoutOrder
     SectionLayout.Padding = UDim.new(0, 5)
     
-    local minimized = false
-    
-    local MinimizeButton = Instance.new("TextButton")
-    MinimizeButton.Parent = TabButton
-    MinimizeButton.BackgroundTransparency = 1
-    MinimizeButton.Position = UDim2.new(1, -20, 0, 0)
-    MinimizeButton.Size = UDim2.new(0, 20, 0, 20)
-    MinimizeButton.Text = "-"
-    MinimizeButton.TextColor3 = Library.Theme.TextColor
-    MinimizeButton.Font = Library.Theme.TextFont
-    MinimizeButton.TextSize = 16
-    
     table.insert(Library.LibraryColorTable, TabButton)
     table.insert(Library.LibraryColorTable, TabTitle)
-    table.insert(Library.LibraryColorTable, MinimizeButton)
+    table.insert(Library.LibraryColorTable, CloseButton)
     
-    local function ToggleMinimize()
-        minimized = not minimized
-        if minimized then
-            TweenService:Create(SectionsFrame, TweenInfo.new(0.3, Library.Theme.EasingStyle), {
-                Size = UDim2.new(0, 150, 0, 0)
-            }):Play()
-            MinimizeButton.Text = "+"
-        else
-            TweenService:Create(SectionsFrame, TweenInfo.new(0.3, Library.Theme.EasingStyle), {
-                Size = UDim2.new(0, 150, 0, SectionLayout.AbsoluteContentSize.Y + 5)
-            }):Play()
-            MinimizeButton.Text = "-"
-        end
+    local function CloseTab()
+        TabFrame:Destroy()
+        UpdateColors()
     end
     
-    MinimizeButton.MouseButton1Click:Connect(ToggleMinimize)
+    CloseButton.MouseButton1Click:Connect(CloseTab)
     MakeDraggable(TabButton)
     
     UpdateColors()
@@ -259,12 +226,16 @@ function Library:CreateTab(name)
         SectionFrame.Name = name .. "Section"
         SectionFrame.Parent = SectionsFrame
         SectionFrame.BackgroundTransparency = 1
-        SectionFrame.Size = UDim2.new(0, 150, 0, 30)
+        SectionFrame.Size = UDim2.new(0, 200, 0, 30)
         SectionFrame.Image = "rbxassetid://3570695787"
         SectionFrame.ImageColor3 = Library.Theme.BackgroundColor
         SectionFrame.ScaleType = Enum.ScaleType.Slice
         SectionFrame.SliceCenter = Rect.new(100, 100, 100, 100)
         SectionFrame.SliceScale = 0.050
+        
+        local Corner = Instance.new("UICorner")
+        Corner.CornerRadius = UDim.new(0, 8)
+        Corner.Parent = SectionFrame
         
         local SectionTitle = Instance.new("TextLabel")
         SectionTitle.Parent = SectionFrame
@@ -277,58 +248,40 @@ function Library:CreateTab(name)
         SectionTitle.TextSize = 14
         SectionTitle.TextXAlignment = Enum.TextXAlignment.Left
         
+        local CloseButton = Instance.new("TextButton")
+        CloseButton.Parent = SectionFrame
+        CloseButton.BackgroundTransparency = 1
+        CloseButton.Position = UDim2.new(1, -20, 0, 0)
+        CloseButton.Size = UDim2.new(0, 20, 0, 20)
+        CloseButton.Text = "X"
+        CloseButton.TextColor3 = Library.Theme.TextColor
+        CloseButton.Font = Library.Theme.TextFont
+        CloseButton.TextSize = 16
+        
         local ContentFrame = Instance.new("Frame")
         ContentFrame.Parent = SectionFrame
         ContentFrame.BackgroundTransparency = 1
         ContentFrame.Position = UDim2.new(0, 0, 0, 30)
-        ContentFrame.Size = UDim2.new(0, 150, 0, 0)
+        ContentFrame.Size = UDim2.new(0, 200, 0, 0)
         
         local ContentLayout = Instance.new("UIListLayout")
         ContentLayout.Parent = ContentFrame
         ContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
         ContentLayout.Padding = UDim.new(0, 5)
         
-        local minimized = false
-        
-        local MinimizeButton = Instance.new("TextButton")
-        MinimizeButton.Parent = SectionFrame
-        MinimizeButton.BackgroundTransparency = 1
-        MinimizeButton.Position = UDim2.new(1, -20, 0, 0)
-        MinimizeButton.Size = UDim2.new(0, 20, 0, 20)
-        MinimizeButton.Text = "-"
-        MinimizeButton.TextColor3 = Library.Theme.TextColor
-        MinimizeButton.Font = Library.Theme.TextFont
-        MinimizeButton.TextSize = 14
-        
         table.insert(Library.LibraryColorTable, SectionFrame)
         table.insert(Library.LibraryColorTable, SectionTitle)
-        table.insert(Library.LibraryColorTable, MinimizeButton)
+        table.insert(Library.LibraryColorTable, CloseButton)
         
-        local function ToggleSection()
-            minimized = not minimized
-            if minimized then
-                TweenService:Create(ContentFrame, TweenInfo.new(0.3, Library.Theme.EasingStyle), {
-                    Size = UDim2.new(0, 150, 0, 0)
-                }):Play()
-                TweenService:Create(SectionFrame, TweenInfo.new(0.3, Library.Theme.EasingStyle), {
-                    Size = UDim2.new(0, 150, 0, 30)
-                }):Play()
-                MinimizeButton.Text = "+"
-            else
-                TweenService:Create(ContentFrame, TweenInfo.new(0.3, Library.Theme.EasingStyle), {
-                    Size = UDim2.new(0, 150, 0, ContentLayout.AbsoluteContentSize.Y + 5)
-                }):Play()
-                TweenService:Create(SectionFrame, TweenInfo.new(0.3, Library.Theme.EasingStyle), {
-                    Size = UDim2.new(0, 150, 0, ContentLayout.AbsoluteContentSize.Y + 35)
-                }):Play()
-                MinimizeButton.Text = "-"
+        local function CloseSection()
+            SectionFrame:Destroy()
+            if SectionsFrame.AbsoluteContentSize.Y == 0 then
+                TabFrame:Destroy()
             end
-            if not minimized then
-                ToggleMinimize()
-            end
+            UpdateColors()
         end
         
-        MinimizeButton.MouseButton1Click:Connect(ToggleSection)
+        CloseButton.MouseButton1Click:Connect(CloseSection)
         
         local SectionElements = {}
         
@@ -336,7 +289,7 @@ function Library:CreateTab(name)
             local Button = Instance.new("TextButton")
             Button.Parent = ContentFrame
             Button.BackgroundColor3 = Library.Theme.MainColor
-            Button.Size = UDim2.new(0, 130, 0, 25)
+            Button.Size = UDim2.new(0, 180, 0, 25)
             Button.Text = name
             Button.TextColor3 = Library.Theme.TextColor
             Button.Font = Library.Theme.TextFont
@@ -348,23 +301,61 @@ function Library:CreateTab(name)
             
             Button.MouseButton1Click:Connect(callback)
             table.insert(Library.LibraryColorTable, Button)
-            
             UpdateColors()
-            ToggleSection()
+        end
+        
+        function SectionElements:CreateTextBox(name, default, callback)
+            local TextBoxFrame = Instance.new("Frame")
+            TextBoxFrame.Parent = ContentFrame
+            TextBoxFrame.BackgroundTransparency = 1
+            TextBoxFrame.Size = UDim2.new(0, 200, 0, 25)
+            
+            local TextBoxLabel = Instance.new("TextLabel")
+            TextBoxLabel.Parent = TextBoxFrame
+            TextBoxLabel.BackgroundTransparency = 1
+            TextBoxLabel.Size = UDim2.new(0, 180, 1, 0)
+            TextBoxLabel.Position = UDim2.new(0, 10, 0, 0)
+            TextBoxLabel.Text = name
+            TextBoxLabel.TextColor3 = Library.Theme.TextColor
+            TextBoxLabel.Font = Library.Theme.TextFont
+            TextBoxLabel.TextSize = 14
+            TextBoxLabel.TextXAlignment = Enum.TextXAlignment.Left
+            
+            local TextBoxInput = Instance.new("TextBox")
+            TextBoxInput.Parent = TextBoxFrame
+            TextBoxInput.BackgroundColor3 = Library.Theme.BackgroundColor
+            TextBoxInput.Size = UDim2.new(0, 50, 0, 20)
+            TextBoxInput.Position = UDim2.new(1, -60, 0, 2)
+            TextBoxInput.Text = default or ""
+            TextBoxInput.TextColor3 = Library.Theme.TextColor
+            TextBoxInput.Font = Library.Theme.TextFont
+            TextBoxInput.TextSize = 14
+            
+            local Corner = Instance.new("UICorner")
+            Corner.CornerRadius = UDim.new(0, 8)
+            Corner.Parent = TextBoxInput
+            
+            TextBoxInput.FocusLost:Connect(function(enterPressed)
+                callback(TextBoxInput.Text, enterPressed)
+            end)
+            
+            table.insert(Library.LibraryColorTable, TextBoxLabel)
+            table.insert(Library.LibraryColorTable, TextBoxInput)
+            UpdateColors()
         end
         
         function SectionElements:CreateToggle(name, default, callback)
             local ToggleFrame = Instance.new("Frame")
             ToggleFrame.Parent = ContentFrame
             ToggleFrame.BackgroundTransparency = 1
-            ToggleFrame.Size = UDim2.new(0, 150, 0, 25)
+            ToggleFrame.Size = UDim2.new(0, 200, 0, 25)
             ToggleFrame.Toggled = default or false
             
             local ToggleTitle = Instance.new("TextLabel")
             ToggleTitle.Name = "ToggleTitle"
             ToggleTitle.Parent = ToggleFrame
             ToggleTitle.BackgroundTransparency = 1
-            ToggleTitle.Size = UDim2.new(0, 120, 1, 0)
+            ToggleTitle.Size = UDim2.new(0, 170, 1, 0)
             ToggleTitle.Position = UDim2.new(0, 10, 0, 0)
             ToggleTitle.Text = name
             ToggleTitle.TextColor3 = ToggleFrame.Toggled and Library.Theme.TextColor or Library.Theme.DefaultTextColor
@@ -401,32 +392,41 @@ function Library:CreateTab(name)
             table.insert(Library.LibraryColorTable, ToggleTitle)
             table.insert(Library.LibraryColorTable, ToggleCircle)
             UpdateColors()
-            ToggleSection()
-            callback(ToggleFrame.Toggled)
         end
         
         function SectionElements:CreateDropdown(name, options, presetoption, callback)
             local DropdownFrame = Instance.new("Frame")
             DropdownFrame.Parent = ContentFrame
             DropdownFrame.BackgroundTransparency = 1
-            DropdownFrame.Size = UDim2.new(0, 150, 0, 25)
+            DropdownFrame.Size = UDim2.new(0, 200, 0, 25)
             
             local TitleToggle = Instance.new("TextButton")
             TitleToggle.Parent = DropdownFrame
             TitleToggle.BackgroundTransparency = 1
             TitleToggle.Size = UDim2.new(1, -20, 0, 25)
             TitleToggle.Position = UDim2.new(0, 10, 0, 0)
-            TitleToggle.Text = name .. " - " .. (options[presetoption] or options[1])
+            TitleToggle.Text = name .. " "
             TitleToggle.TextColor3 = Library.Theme.TextColor
             TitleToggle.Font = Library.Theme.TextFont
             TitleToggle.TextSize = 14
             TitleToggle.TextXAlignment = Enum.TextXAlignment.Left
             
+            local DropdownArrow = Instance.new("TextLabel")
+            DropdownArrow.Parent = TitleToggle
+            DropdownArrow.BackgroundTransparency = 1
+            DropdownArrow.Size = UDim2.new(0, 20, 1, 0)
+            DropdownArrow.Position = UDim2.new(1, 0, 0, 0)
+            DropdownArrow.Text = ">"
+            DropdownArrow.TextColor3 = Library.Theme.TextColor
+            DropdownArrow.Font = Library.Theme.TextFont
+            DropdownArrow.TextSize = 14
+            DropdownArrow.TextXAlignment = Enum.TextXAlignment.Right
+            
             local DropdownContent = Instance.new("ImageLabel")
             DropdownContent.Parent = DropdownFrame
             DropdownContent.BackgroundTransparency = 1
-            DropdownContent.Position = UDim2.new(1, 5, 0, 0)
-            DropdownContent.Size = UDim2.new(0, 150, 0, 0)
+            DropdownContent.Position = UDim2.new(0, 0, 1, 0)
+            DropdownContent.Size = UDim2.new(0, 200, 0, 0)
             DropdownContent.Image = "rbxassetid://3570695787"
             DropdownContent.ImageColor3 = Library.Theme.BackgroundColor
             DropdownContent.ScaleType = Enum.ScaleType.Slice
@@ -439,6 +439,7 @@ function Library:CreateTab(name)
             DropdownLayout.SortOrder = Enum.SortOrder.LayoutOrder
             
             local selectedOption = options[presetoption] or options[1]
+            TitleToggle.Text = name .. " " .. selectedOption
             local toggled = false
             
             local function UpdateDropdown()
@@ -450,8 +451,8 @@ function Library:CreateTab(name)
                     OptionButton.Name = "DropdownOption"
                     OptionButton.Parent = DropdownContent
                     OptionButton.BackgroundTransparency = 1
-                    OptionButton.Size = UDim2.new(0, 130, 0, 20) -- Lebar tetap 130
-                    OptionButton.Position = UDim2.new(0, 10, 0, 0) -- Padding kiri 10
+                    OptionButton.Size = UDim2.new(0, 180, 0, 20)
+                    OptionButton.Position = UDim2.new(0, 10, 0, 0)
                     OptionButton.Text = option
                     OptionButton.TextColor3 = option == selectedOption and Library.Theme.MainColor or Library.Theme.TextColor
                     OptionButton.Font = Library.Theme.TextFont
@@ -468,11 +469,11 @@ function Library:CreateTab(name)
                     
                     ClickArea.MouseButton1Click:Connect(function()
                         selectedOption = option
-                        TitleToggle.Text = name .. " - " .. selectedOption
+                        TitleToggle.Text = name .. " " .. selectedOption
                         callback(selectedOption)
                         toggled = false
                         TweenService:Create(DropdownContent, TweenInfo.new(0.3, Library.Theme.EasingStyle), {
-                            Size = UDim2.new(0, 150, 0, 0)
+                            Size = UDim2.new(0, 200, 0, 0)
                         }):Play()
                         for _, btn in pairs(DropdownContent:GetChildren()) do
                             if btn:IsA("TextButton") and btn.Name == "DropdownOption" then
@@ -491,20 +492,152 @@ function Library:CreateTab(name)
                 if toggled then
                     UpdateDropdown()
                     TweenService:Create(DropdownContent, TweenInfo.new(0.3, Library.Theme.EasingStyle), {
-                        Size = UDim2.new(0, 150, 0, #options * 20)
+                        Size = UDim2.new(0, 200, 0, #options * 20)
                     }):Play()
                 else
                     TweenService:Create(DropdownContent, TweenInfo.new(0.3, Library.Theme.EasingStyle), {
-                        Size = UDim2.new(0, 150, 0, 0)
+                        Size = UDim2.new(0, 200, 0, 0)
                     }):Play()
                 end
-                ToggleSection()
             end)
             
             table.insert(Library.LibraryColorTable, TitleToggle)
+            table.insert(Library.LibraryColorTable, DropdownArrow)
             table.insert(Library.LibraryColorTable, DropdownContent)
             UpdateColors()
             callback(selectedOption)
+        end
+        
+        function SectionElements:CreateSlider(name, min, max, default, callback)
+            local SliderFrame = Instance.new("Frame")
+            SliderFrame.Parent = ContentFrame
+            SliderFrame.BackgroundTransparency = 1
+            SliderFrame.Size = UDim2.new(0, 200, 0, 25)
+            
+            local SliderLabel = Instance.new("TextLabel")
+            SliderLabel.Parent = SliderFrame
+            SliderLabel.BackgroundTransparency = 1
+            SliderLabel.Size = UDim2.new(0, 150, 1, 0)
+            SliderLabel.Position = UDim2.new(0, 10, 0, 0)
+            SliderLabel.Text = name .. " "
+            SliderLabel.TextColor3 = Library.Theme.TextColor
+            SliderLabel.Font = Library.Theme.TextFont
+            SliderLabel.TextSize = 14
+            SliderLabel.TextXAlignment = Enum.TextXAlignment.Left
+            
+            local SliderValue = Instance.new("TextLabel")
+            SliderValue.Parent = SliderFrame
+            SliderValue.BackgroundTransparency = 1
+            SliderValue.Size = UDim2.new(0, 40, 1, 0)
+            SliderValue.Position = UDim2.new(1, -50, 0, 0)
+            SliderValue.Text = tostring(default or min)
+            SliderValue.TextColor3 = Library.Theme.TextColor
+            SliderValue.Font = Library.Theme.TextFont
+            SliderValue.TextSize = 14
+            SliderValue.TextXAlignment = Enum.TextXAlignment.Right
+            
+            local SliderBar = Instance.new("Frame")
+            SliderBar.Parent = SliderFrame
+            SliderBar.BackgroundColor3 = Library.Theme.BackgroundColor
+            SliderBar.Size = UDim2.new(0, 180, 0, 5)
+            SliderBar.Position = UDim2.new(0, 10, 0, 20)
+            
+            local Corner = Instance.new("UICorner")
+            Corner.CornerRadius = UDim.new(0, 2)
+            Corner.Parent = SliderBar
+            
+            local SliderFill = Instance.new("Frame")
+            SliderFill.Parent = SliderBar
+            SliderFill.BackgroundColor3 = Library.Theme.MainColor
+            SliderFill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
+            SliderFill.BorderSizePixel = 0
+            
+            local CornerFill = Instance.new("UICorner")
+            CornerFill.CornerRadius = UDim.new(0, 2)
+            CornerFill.Parent = SliderFill
+            
+            local SliderHandle = Instance.new("Frame")
+            SliderHandle.Parent = SliderFill
+            SliderHandle.BackgroundColor3 = Library.Theme.TextColor
+            SliderHandle.Size = UDim2.new(0, 10, 0, 15)
+            SliderHandle.Position = UDim2.new(1, -5, -0.5, -5)
+            
+            local CornerHandle = Instance.new("UICorner")
+            CornerHandle.CornerRadius = UDim.new(1, 0)
+            CornerHandle.Parent = SliderHandle
+            
+            local dragging = false
+            local function UpdateSlider(input)
+                local sizeX = math.clamp((input.Position.X - SliderBar.AbsolutePosition.X) / SliderBar.AbsoluteSize.X, 0, 1)
+                local value = math.floor(min + (max - min) * sizeX)
+                SliderFill.Size = UDim2.new(sizeX, 0, 1, 0)
+                SliderValue.Text = tostring(value)
+                callback(value)
+            end
+            
+            SliderHandle.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    dragging = true
+                end
+            end)
+            
+            SliderHandle.InputChanged:Connect(function(input)
+                if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+                    UpdateSlider(input)
+                end
+            end)
+            
+            UserInputService.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    dragging = false
+                end
+            end)
+            
+            table.insert(Library.LibraryColorTable, SliderLabel)
+            table.insert(Library.LibraryColorTable, SliderValue)
+            table.insert(Library.LibraryColorTable, SliderBar)
+            table.insert(Library.LibraryColorTable, SliderFill)
+            table.insert(Library.LibraryColorTable, SliderHandle)
+            UpdateColors()
+        end
+        
+        function SectionElements:CreatePicker(name, default, callback)
+            local PickerFrame = Instance.new("Frame")
+            PickerFrame.Parent = ContentFrame
+            PickerFrame.BackgroundTransparency = 1
+            PickerFrame.Size = UDim2.new(0, 200, 0, 25)
+            
+            local PickerLabel = Instance.new("TextLabel")
+            PickerLabel.Parent = PickerFrame
+            PickerLabel.BackgroundTransparency = 1
+            PickerLabel.Size = UDim2.new(0, 170, 1, 0)
+            PickerLabel.Position = UDim2.new(0, 10, 0, 0)
+            PickerLabel.Text = name .. " "
+            PickerLabel.TextColor3 = Library.Theme.TextColor
+            PickerLabel.Font = Library.Theme.TextFont
+            PickerLabel.TextSize = 14
+            PickerLabel.TextXAlignment = Enum.TextXAlignment.Left
+            
+            local PickerButton = Instance.new("TextButton")
+            PickerButton.Parent = PickerFrame
+            PickerButton.BackgroundColor3 = default or Color3.fromRGB(255, 255, 255)
+            PickerButton.Size = UDim2.new(0, 20, 0, 20)
+            PickerButton.Position = UDim2.new(1, -30, 0, 2)
+            
+            local Corner = Instance.new("UICorner")
+            Corner.CornerRadius = UDim.new(0, 8)
+            Corner.Parent = PickerButton
+            
+            PickerButton.MouseButton1Click:Connect(function()
+                -- Implementasi picker sederhana (bisa diperluas)
+                local newColor = Color3.fromRGB(math.random(0, 255), math.random(0, 255), math.random(0, 255))
+                PickerButton.BackgroundColor3 = newColor
+                callback(newColor)
+            end)
+            
+            table.insert(Library.LibraryColorTable, PickerLabel)
+            table.insert(Library.LibraryColorTable, PickerButton)
+            UpdateColors()
         end
         
         UpdateColors()
