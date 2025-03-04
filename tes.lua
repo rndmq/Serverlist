@@ -54,38 +54,22 @@ if (v:IsA("TextLabel") or v:IsA("TextButton")) and (v.Name == "Title" or v.Name 
 end
 pcall(function()
     if getgenv().SJJs == "rb" then
-task.spawn(function()
-    while not getgenv().Stop do 
-        for i = 0, 1, 0.002 do
-            if getgenv().Stop then break end
-            Library.Theme.OnlyTest = Color3.fromHSV(i, 1, 1)
-            for _, v in pairs(Library.LibraryColorTable) do
-                if (v:IsA("TextLabel") or v:IsA("TextButton")) and (v.Name == "Title" or v.Name == "Message" or v.Name == "CloseButton" or string.match(v.Name, "ActionButton")) then
-                    v.TextColor3 = Library.Theme.OnlyTest
+        getgenv().NotifSpeed = getgenv().NotifSpeed or 0.01 
+
+        task.spawn(function()
+            while not getgenv().Stop do
+                for i = 0, 1, 0.002 do
+                    if getgenv().Stop then break end
+                    Library.Theme.OnlyTest = Color3.fromHSV(i, 1, 1)
+                    for _, v in pairs(Library.LibraryColorTable) do
+                        if (v:IsA("TextLabel") or v:IsA("TextButton")) and (v.Name == "Title" or v.Name == "Message" or v.Name == "CloseButton" or string.match(v.Name, "ActionButton")) then
+                            v.TextColor3 = Library.Theme.OnlyTest
+                        end
+                    end
+                    task.wait(getgenv().NotifSpeed)
                 end
             end
-            task.wait(0.01)
-        end
-    end
-end)
-    else
-        local colorMap = {
-            blue = Color3.fromRGB(0, 0, 255),
-            red = Color3.fromRGB(255, 0, 0),
-            green = Color3.fromRGB(0, 255, 0),
-            yellow = Color3.fromRGB(255, 255, 0),
-            purple = Color3.fromRGB(128, 0, 128),
-            pink = Color3.fromRGB(255, 105, 180),
-            default = Color3.fromRGB(255, 255, 255),
-            cyan = Color3.fromRGB(0, 255, 255),
-            brown = Color3.fromRGB(139, 69, 19),
-            orange = Color3.fromRGB(255, 165, 0),
-            black = Color3.fromRGB(0, 0, 0),
-            white = Color3.fromRGB(255, 255, 255)
-        }
-        local colorKey = string.lower(tostring(getgenv().SJJs))
-        Library.Theme.OnlyTest = colorMap[colorKey] or Color3.fromRGB(255, 255, 255)
-        Update()
+        end)
     end
 end)
 local function Darkned(object, amount)
