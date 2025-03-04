@@ -1,6 +1,8 @@
 local TweenService = game:GetService("TweenService")
 local Player = game.Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
+local CoreGui = game:GetService("CoreGui")
+local StarterGui = game:GetService("StarterGui")
 
 Library = {
     LibraryColorTable = {},
@@ -26,14 +28,27 @@ UILibrary.Name = "NotificationGui"
 UILibrary.ResetOnSpawn = false
 UILibrary.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 UILibrary.Enabled = true
-local function getNextZIndex(parent)
+local function getHighestZIndexAcrossGuis()
     local highestZ = 0
-    for _, obj in pairs(parent:GetChildren()) do
-        if obj:IsA("GuiObject") then
-            highestZ = math.max(highestZ, obj.ZIndex)
+    for _, gui in pairs(PlayerGui:GetChildren()) do
+        if gui:IsA("ScreenGui") and gui.Enabled then
+            for _, obj in pairs(gui:GetDescendants()) do
+                if obj:IsA("GuiObject") then
+                    highestZ = math.max(highestZ, obj.ZIndex)
+                end
+            end
         end
     end
-    return highestZ + 1
+    for _, gui in pairs(CoreGui:GetChildren()) do
+        if gui:IsA("ScreenGui") and gui.Enabled then
+            for _, obj in pairs(gui:GetDescendants()) do
+                if obj:IsA("GuiObject") then
+                    highestZ = math.max(highestZ, obj.ZIndex)
+                end
+            end
+        end
+    end
+    return highestZ + 100
 end
 local player = game:GetService("Players").LocalPlayer
 if player and player:FindFirstChild("PlayerGui") then
@@ -41,6 +56,7 @@ if player and player:FindFirstChild("PlayerGui") then
 else
     UILibrary.Parent = game:GetService("CoreGui")
 end
+
 pcall(function()
     local colorMap = {
         b = Color3.fromRGB(0, 0, 0),
@@ -103,7 +119,7 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
     NotificationFrame.BackgroundTransparency = 1
     NotificationFrame.Position = UDim2.new(1, 0, 1, -110)
     NotificationFrame.Size = UDim2.new(0, 300, 0, notifHeight)
-    NotificationFrame.ZIndex = getNextZIndex(UILibrary)
+    NotificationFrame.ZIndex = getHighestZIndexAcrossGuis()  -- Set ZIndex tertinggi + offset
 
     NotificationBackground.Name = "Background"
     NotificationBackground.Parent = NotificationFrame
@@ -159,6 +175,7 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
     TimerBar.Position = UDim2.new(0, 10, 1, -15)
     TimerBar.Size = UDim2.new(0, 280, 0, 5)
     TimerBar.ZIndex = NotificationFrame.ZIndex + 1
+
     TimerBarFill.Name = "TimerBarFill"
     TimerBarFill.Parent = TimerBar
     TimerBarFill.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
