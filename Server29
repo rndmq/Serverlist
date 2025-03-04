@@ -1058,6 +1058,12 @@ wait(1)
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server72"))()
     
     
+elseif game.PlaceId == 9731911476 then
+Library:CreateNotification("Founded!!", "Enjoyy the script :D", 1.5, {"Yessirr", "ThankYou!"}) getgenv().Stop = true
+wait(1)
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server73"))()
+    
+    
 else
 Library:CreateNotification("Sadly", game.Name .. " isn't Supported 😭", 1.5)
 wait(1)
