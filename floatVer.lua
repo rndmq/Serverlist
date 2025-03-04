@@ -7,6 +7,7 @@ local Library = {
     Theme = {
         MainColor = Color3.fromRGB(255, 75, 75),
         BackgroundColor = Color3.fromRGB(35, 35, 35),
+        DarkBackgroundColor = Color3.fromRGB(20, 20, 20), 
         TextColor = Color3.fromRGB(255, 255, 255),
         DefaultTextColor = Color3.fromRGB(185, 185, 185),
         TextFont = Enum.Font.SourceSansBold,
@@ -97,9 +98,11 @@ local function UpdateColors()
     
     for _, obj in pairs(Library.LibraryColorTable) do
         if obj:IsA("ImageLabel") then
-            if obj.Name:find("Background") or obj.Name:find("Border") then
+            if obj.Name == "TabButton" then
+                obj.ImageColor3 = Library.Theme.DarkBackgroundColor
+            elseif obj.Name:find("Section") then
                 obj.ImageColor3 = Library.Theme.BackgroundColor
-            else
+            elseif obj.Name:find("Border") then
                 obj.ImageColor3 = Library.Theme.MainColor
             end
         elseif obj:IsA("Frame") and obj.Name == "ToggleCircle" then
@@ -176,16 +179,16 @@ function Library:CreateTab(name)
     TabFrame.Name = name .. "Tab"
     TabFrame.Parent = TabsContainer
     TabFrame.BackgroundTransparency = 1
-    TabFrame.Size = UDim2.new(0, 100, 0, 40)
+    TabFrame.Size = UDim2.new(0, 150, 0, 40) -- Lebar lebih besar agar sesuai gambar
     TabFrame.LayoutOrder = Library.TabCount
     
     local TabButton = Instance.new("ImageLabel")
     TabButton.Name = "TabButton"
     TabButton.Parent = TabFrame
     TabButton.BackgroundTransparency = 1
-    TabButton.Size = UDim2.new(1, 0, 0, 40)
+    TabButton.Size = UDim2.new(1, 0, 1, 0)
     TabButton.Image = "rbxassetid://3570695787"
-    TabButton.ImageColor3 = Library.Theme.MainColor
+    TabButton.ImageColor3 = Library.Theme.DarkBackgroundColor
     TabButton.ScaleType = Enum.ScaleType.Slice
     TabButton.SliceCenter = Rect.new(100, 100, 100, 100)
     TabButton.SliceScale = 0.050
@@ -193,23 +196,25 @@ function Library:CreateTab(name)
     local TabTitle = Instance.new("TextLabel")
     TabTitle.Parent = TabButton
     TabTitle.BackgroundTransparency = 1
-    TabTitle.Size = UDim2.new(1, 0, 1, 0)
+    TabTitle.Size = UDim2.new(1, -30, 1, 0)
+    TabTitle.Position = UDim2.new(0, 10, 0, 0)
     TabTitle.Text = name
     TabTitle.TextColor3 = Library.Theme.TextColor
     TabTitle.Font = Library.Theme.TextFont
     TabTitle.TextSize = 16
+    TabTitle.TextXAlignment = Enum.TextXAlignment.Left
     
     local SectionsFrame = Instance.new("Frame")
     SectionsFrame.Name = "Sections"
     SectionsFrame.Parent = TabFrame
     SectionsFrame.BackgroundTransparency = 1
     SectionsFrame.Position = UDim2.new(0, 0, 1, 0)
-    SectionsFrame.Size = UDim2.new(0, 100, 0, 0)
+    SectionsFrame.Size = UDim2.new(0, 150, 0, 0)
     
     local SectionLayout = Instance.new("UIListLayout")
     SectionLayout.Parent = SectionsFrame
     SectionLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    SectionLayout.Padding = UDim.new(0, 10)
+    SectionLayout.Padding = UDim.new(0, 5)
     
     local minimized = false
     
@@ -231,12 +236,12 @@ function Library:CreateTab(name)
         minimized = not minimized
         if minimized then
             TweenService:Create(SectionsFrame, TweenInfo.new(0.3, Library.Theme.EasingStyle), {
-                Size = UDim2.new(0, 100, 0, 0)
+                Size = UDim2.new(0, 150, 0, 0)
             }):Play()
             MinimizeButton.Text = "+"
         else
             TweenService:Create(SectionsFrame, TweenInfo.new(0.3, Library.Theme.EasingStyle), {
-                Size = UDim2.new(0, 100, 0, SectionLayout.AbsoluteContentSize.Y + 10)
+                Size = UDim2.new(0, 150, 0, SectionLayout.AbsoluteContentSize.Y + 5)
             }):Play()
             MinimizeButton.Text = "-"
         end
@@ -254,7 +259,7 @@ function Library:CreateTab(name)
         SectionFrame.Name = name .. "Section"
         SectionFrame.Parent = SectionsFrame
         SectionFrame.BackgroundTransparency = 1
-        SectionFrame.Size = UDim2.new(0, 100, 0, 30)
+        SectionFrame.Size = UDim2.new(0, 150, 0, 30)
         SectionFrame.Image = "rbxassetid://3570695787"
         SectionFrame.ImageColor3 = Library.Theme.BackgroundColor
         SectionFrame.ScaleType = Enum.ScaleType.Slice
@@ -264,17 +269,19 @@ function Library:CreateTab(name)
         local SectionTitle = Instance.new("TextLabel")
         SectionTitle.Parent = SectionFrame
         SectionTitle.BackgroundTransparency = 1
-        SectionTitle.Size = UDim2.new(1, 0, 0, 30)
+        SectionTitle.Size = UDim2.new(1, -30, 0, 30)
+        SectionTitle.Position = UDim2.new(0, 10, 0, 0)
         SectionTitle.Text = name
         SectionTitle.TextColor3 = Library.Theme.TextColor
         SectionTitle.Font = Library.Theme.TextFont
         SectionTitle.TextSize = 14
+        SectionTitle.TextXAlignment = Enum.TextXAlignment.Left
         
         local ContentFrame = Instance.new("Frame")
         ContentFrame.Parent = SectionFrame
         ContentFrame.BackgroundTransparency = 1
         ContentFrame.Position = UDim2.new(0, 0, 0, 30)
-        ContentFrame.Size = UDim2.new(0, 100, 0, 0)
+        ContentFrame.Size = UDim2.new(0, 150, 0, 0)
         
         local ContentLayout = Instance.new("UIListLayout")
         ContentLayout.Parent = ContentFrame
@@ -301,18 +308,18 @@ function Library:CreateTab(name)
             minimized = not minimized
             if minimized then
                 TweenService:Create(ContentFrame, TweenInfo.new(0.3, Library.Theme.EasingStyle), {
-                    Size = UDim2.new(0, 100, 0, 0)
+                    Size = UDim2.new(0, 150, 0, 0)
                 }):Play()
                 TweenService:Create(SectionFrame, TweenInfo.new(0.3, Library.Theme.EasingStyle), {
-                    Size = UDim2.new(0, 100, 0, 30)
+                    Size = UDim2.new(0, 150, 0, 30)
                 }):Play()
                 MinimizeButton.Text = "+"
             else
                 TweenService:Create(ContentFrame, TweenInfo.new(0.3, Library.Theme.EasingStyle), {
-                    Size = UDim2.new(0, 100, 0, ContentLayout.AbsoluteContentSize.Y + 5)
+                    Size = UDim2.new(0, 150, 0, ContentLayout.AbsoluteContentSize.Y + 5)
                 }):Play()
                 TweenService:Create(SectionFrame, TweenInfo.new(0.3, Library.Theme.EasingStyle), {
-                    Size = UDim2.new(0, 100, 0, ContentLayout.AbsoluteContentSize.Y + 35)
+                    Size = UDim2.new(0, 150, 0, ContentLayout.AbsoluteContentSize.Y + 35)
                 }):Play()
                 MinimizeButton.Text = "-"
             end
@@ -329,7 +336,7 @@ function Library:CreateTab(name)
             local Button = Instance.new("TextButton")
             Button.Parent = ContentFrame
             Button.BackgroundColor3 = Library.Theme.MainColor
-            Button.Size = UDim2.new(0, 90, 0, 25)
+            Button.Size = UDim2.new(0, 130, 0, 25)
             Button.Text = name
             Button.TextColor3 = Library.Theme.TextColor
             Button.Font = Library.Theme.TextFont
@@ -350,14 +357,15 @@ function Library:CreateTab(name)
             local ToggleFrame = Instance.new("Frame")
             ToggleFrame.Parent = ContentFrame
             ToggleFrame.BackgroundTransparency = 1
-            ToggleFrame.Size = UDim2.new(0, 100, 0, 25)
+            ToggleFrame.Size = UDim2.new(0, 150, 0, 25)
             ToggleFrame.Toggled = default or false
             
             local ToggleTitle = Instance.new("TextLabel")
             ToggleTitle.Name = "ToggleTitle"
             ToggleTitle.Parent = ToggleFrame
             ToggleTitle.BackgroundTransparency = 1
-            ToggleTitle.Size = UDim2.new(0, 70, 1, 0)
+            ToggleTitle.Size = UDim2.new(0, 120, 1, 0)
+            ToggleTitle.Position = UDim2.new(0, 10, 0, 0)
             ToggleTitle.Text = name
             ToggleTitle.TextColor3 = ToggleFrame.Toggled and Library.Theme.TextColor or Library.Theme.DefaultTextColor
             ToggleTitle.Font = Library.Theme.TextFont
@@ -367,7 +375,7 @@ function Library:CreateTab(name)
             local ToggleCircle = Instance.new("Frame")
             ToggleCircle.Name = "ToggleCircle"
             ToggleCircle.Parent = ToggleFrame
-            ToggleCircle.Position = UDim2.new(0, 80, 0, 5)
+            ToggleCircle.Position = UDim2.new(1, -25, 0, 5)
             ToggleCircle.Size = UDim2.new(0, 15, 0, 15)
             ToggleCircle.BackgroundColor3 = ToggleFrame.Toggled and Library.Theme.MainColor or Color3.fromRGB(65, 65, 65)
             
@@ -401,12 +409,13 @@ function Library:CreateTab(name)
             local DropdownFrame = Instance.new("Frame")
             DropdownFrame.Parent = ContentFrame
             DropdownFrame.BackgroundTransparency = 1
-            DropdownFrame.Size = UDim2.new(0, 100, 0, 25)
+            DropdownFrame.Size = UDim2.new(0, 150, 0, 25)
             
             local TitleToggle = Instance.new("TextButton")
             TitleToggle.Parent = DropdownFrame
             TitleToggle.BackgroundTransparency = 1
-            TitleToggle.Size = UDim2.new(1, 0, 0, 25)
+            TitleToggle.Size = UDim2.new(1, -20, 0, 25)
+            TitleToggle.Position = UDim2.new(0, 10, 0, 0)
             TitleToggle.Text = name .. " - " .. (options[presetoption] or options[1])
             TitleToggle.TextColor3 = Library.Theme.TextColor
             TitleToggle.Font = Library.Theme.TextFont
@@ -417,7 +426,7 @@ function Library:CreateTab(name)
             DropdownContent.Parent = DropdownFrame
             DropdownContent.BackgroundTransparency = 1
             DropdownContent.Position = UDim2.new(1, 5, 0, 0)
-            DropdownContent.Size = UDim2.new(0, 100, 0, 0)
+            DropdownContent.Size = UDim2.new(0, 150, 0, 0)
             DropdownContent.Image = "rbxassetid://3570695787"
             DropdownContent.ImageColor3 = Library.Theme.BackgroundColor
             DropdownContent.ScaleType = Enum.ScaleType.Slice
@@ -441,32 +450,38 @@ function Library:CreateTab(name)
                     OptionButton.Name = "DropdownOption"
                     OptionButton.Parent = DropdownContent
                     OptionButton.BackgroundTransparency = 1
-                    OptionButton.Size = UDim2.new(0, 100, 0, 20)
+                    OptionButton.Size = UDim2.new(0, 130, 0, 20) -- Lebar tetap 130
+                    OptionButton.Position = UDim2.new(0, 10, 0, 0) -- Padding kiri 10
                     OptionButton.Text = option
                     OptionButton.TextColor3 = option == selectedOption and Library.Theme.MainColor or Library.Theme.TextColor
                     OptionButton.Font = Library.Theme.TextFont
                     OptionButton.TextSize = 14
                     OptionButton.Selected = option == selectedOption
                     
-                    local textBounds = OptionButton.TextBounds
-                    OptionButton.Size = UDim2.new(0, textBounds.X + 10, 0, 20)
-                    OptionButton.Position = UDim2.new(0, (100 - textBounds.X - 10) / 2, 0, 0)
+                    local ClickArea = Instance.new("TextButton")
+                    ClickArea.Parent = OptionButton
+                    ClickArea.BackgroundTransparency = 1
+                    ClickArea.Size = UDim2.new(0, OptionButton.TextBounds.X + 10, 1, 0)
+                    ClickArea.Position = UDim2.new(0, 0, 0, 0)
+                    ClickArea.Text = ""
+                    ClickArea.ZIndex = OptionButton.ZIndex + 1
                     
-                    OptionButton.MouseButton1Click:Connect(function()
+                    ClickArea.MouseButton1Click:Connect(function()
                         selectedOption = option
                         TitleToggle.Text = name .. " - " .. selectedOption
                         callback(selectedOption)
                         toggled = false
                         TweenService:Create(DropdownContent, TweenInfo.new(0.3, Library.Theme.EasingStyle), {
-                            Size = UDim2.new(0, 100, 0, 0)
+                            Size = UDim2.new(0, 150, 0, 0)
                         }):Play()
                         for _, btn in pairs(DropdownContent:GetChildren()) do
-                            if btn:IsA("TextButton") then
+                            if btn:IsA("TextButton") and btn.Name == "DropdownOption" then
                                 btn.Selected = btn.Text == selectedOption
                                 btn.TextColor3 = btn.Selected and Library.Theme.MainColor or Library.Theme.TextColor
                             end
                         end
                     end)
+                    
                     table.insert(Library.LibraryColorTable, OptionButton)
                 end
             end
@@ -476,11 +491,11 @@ function Library:CreateTab(name)
                 if toggled then
                     UpdateDropdown()
                     TweenService:Create(DropdownContent, TweenInfo.new(0.3, Library.Theme.EasingStyle), {
-                        Size = UDim2.new(0, 100, 0, #options * 20)
+                        Size = UDim2.new(0, 150, 0, #options * 20)
                     }):Play()
                 else
                     TweenService:Create(DropdownContent, TweenInfo.new(0.3, Library.Theme.EasingStyle), {
-                        Size = UDim2.new(0, 100, 0, 0)
+                        Size = UDim2.new(0, 150, 0, 0)
                     }):Play()
                 end
                 ToggleSection()
@@ -539,6 +554,7 @@ function Library:CreateTab(name)
                 Position = UDim2.new(1, -210, 1, -60 - (i * 60))
             }):Play()
         end
+        
         spawn(function()
             wait(duration or 5)
             local index = table.find(Library.ActiveNotifications, NotificationFrame)
