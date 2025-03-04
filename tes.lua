@@ -17,7 +17,7 @@ Library = {
         TextFont = Enum.Font.SourceSansBold,
         EasingStyle = Enum.EasingStyle.Quart,
         Color = Color3.fromRGB(255, 75, 75),      
-        Textcolorrr = Color3.fromRGB(255, 255, 255) 
+        OnlyTest = Color3.fromRGB(255, 255, 255) 
     },
     ActiveNotifications = {}
 }
@@ -47,7 +47,7 @@ local function Update()
     for _, v in pairs(Library.LibraryColorTable) do
         if typeof(v) == "Instance" then
 if (v:IsA("TextLabel") or v:IsA("TextButton")) and (v.Name == "Title" or v.Name == "Message" or v.Name == "CloseButton" or string.match(v.Name, "ActionButton")) then
-    v.TextColor3 = Library.Theme.Textcolorrr
+    v.TextColor3 = Library.Theme.OnlyTest
             end
         end
     end
@@ -58,10 +58,10 @@ task.spawn(function()
     while not getgenv().Stop do 
         for i = 0, 1, 0.002 do
             if getgenv().Stop then break end
-            Library.Theme.Textcolorrr = Color3.fromHSV(i, 1, 1)
+            Library.Theme.OnlyTest = Color3.fromHSV(i, 1, 1)
             for _, v in pairs(Library.LibraryColorTable) do
                 if (v:IsA("TextLabel") or v:IsA("TextButton")) and (v.Name == "Title" or v.Name == "Message" or v.Name == "CloseButton" or string.match(v.Name, "ActionButton")) then
-                    v.TextColor3 = Library.Theme.Textcolorrr
+                    v.TextColor3 = Library.Theme.OnlyTest
                 end
             end
             task.wait(0.01)
@@ -84,7 +84,7 @@ end)
             white = Color3.fromRGB(255, 255, 255)
         }
         local colorKey = string.lower(tostring(getgenv().SJJs))
-        Library.Theme.Textcolorrr = colorMap[colorKey] or Color3.fromRGB(255, 255, 255)
+        Library.Theme.OnlyTest = colorMap[colorKey] or Color3.fromRGB(255, 255, 255)
         Update()
     end
 end)
@@ -131,7 +131,7 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
     TitleLabel.ZIndex = 101
     TitleLabel.Font = Library.Theme.TextFont
     TitleLabel.Text = title or "Notification"
-    TitleLabel.TextColor3 = Library.Theme.Textcolorrr
+    TitleLabel.TextColor3 = Library.Theme.OnlyTest
     table.insert(Library.LibraryColorTable, TitleLabel)
     TitleLabel.TextSize = 16
     TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -144,7 +144,7 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
     MessageLabel.ZIndex = 101
     MessageLabel.Font = Library.Theme.TextFont
     MessageLabel.Text = message or ""
-    MessageLabel.TextColor3 = Library.Theme.Textcolorrr
+    MessageLabel.TextColor3 = Library.Theme.OnlyTest
     table.insert(Library.LibraryColorTable, MessageLabel)
     MessageLabel.TextSize = 14
     MessageLabel.TextWrapped = true
@@ -168,7 +168,7 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
     CloseButton.ZIndex = 102
     CloseButton.Font = Library.Theme.TextFont
     CloseButton.Text = "X"
-    CloseButton.TextColor3 = Library.Theme.Textcolorrr
+    CloseButton.TextColor3 = Library.Theme.OnlyTest
     table.insert(Library.LibraryColorTable, CloseButton)
     CloseButton.TextSize = 16
 
@@ -218,7 +218,7 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
             ActionButton.ZIndex = 102
             ActionButton.Font = Library.Theme.TextFont
             ActionButton.Text = buttons[i] or "Button " .. i
-            ActionButton.TextColor3 = Library.Theme.Textcolorrr
+            ActionButton.TextColor3 = Library.Theme.OnlyTest
             table.insert(Library.LibraryColorTable, ActionButton)
             ActionButton.TextSize = 14
             
