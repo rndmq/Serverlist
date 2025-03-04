@@ -22,7 +22,7 @@ Library = {
     ActiveNotifications = {}
 }
 
-Library.Theme.NotificationTextColor = Library.Theme.Textcolorrr
+
 
 local UILibrary = Instance.new("ScreenGui")
 UILibrary.Name = "NotificationGui"
@@ -89,6 +89,7 @@ end)
         Update()
     end
 end)
+Library.Theme.NotificationTextColor = Library.Theme.Textcolorrr
 local function Darkned(object, amount)
     local h, s, v = Color3.toHSV(object)
     v = math.clamp(v - (amount / 255), 0, 1)
