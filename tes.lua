@@ -17,7 +17,7 @@ Library = {
         TextFont = Enum.Font.SourceSansBold,
         EasingStyle = Enum.EasingStyle.Quart,
         Color = Color3.fromRGB(255, 75, 75),      
-        TextColor = Color3.fromRGB(255, 255, 255) 
+        Textcolorrr = Color3.fromRGB(255, 255, 255) 
     },
     ActiveNotifications = {}
 }
@@ -47,11 +47,11 @@ local function UpdateTextColors()
     for _, v in pairs(Library.LibraryColorTable) do
         if typeof(v) == "Instance" then
             if v:IsA("TextLabel") or v:IsA("TextButton") then
-                v.TextColor3 = Library.Theme.TextColor
+                v.TextColor3 = Library.Theme.Textcolorrr
             elseif v:IsA("ImageLabel") and (v.Name == "CheckboxTicked" or v.Name == "CheckboxOutline") then
-                v.ImageColor3 = Library.Theme.TextColor
+                v.ImageColor3 = Library.Theme.Textcolorrr
             elseif v:IsA("TextLabel") and (v.Name == "Title" or v.Name == "TitleTab" or v.Name == "SectionTitle") then
-                v.TextColor3 = Library.Theme.TextColor
+                v.TextColor3 = Library.Theme.Textcolorrr
             end
         end
     end
@@ -63,16 +63,16 @@ pcall(function()
             while true do
                 if getgenv().StopRGB then break end
                 for i = 0, 1, 0.002 do
-                    Library.Theme.TextColor = Color3.fromHSV(i, 1, 1)
+                    Library.Theme.Textcolorrr = Color3.fromHSV(i, 1, 1)
                     for _, v in pairs(Library.LibraryColorTable) do
                         if v:IsA("TextLabel") or v:IsA("TextButton") then
-                            v.TextColor3 = Library.Theme.TextColor
+                            v.TextColor3 = Library.Theme.Textcolorrr
                         elseif v:IsA("ImageLabel") and v.Name == "CheckboxTicked" then
-                            v.ImageColor3 = Library.Theme.TextColor
+                            v.ImageColor3 = Library.Theme.Textcolorrr
                         elseif v:IsA("ImageLabel") and v.Name == "CheckboxOutline" then
-                            v.ImageColor3 = Library.Theme.TextColor
+                            v.ImageColor3 = Library.Theme.Textcolorrr
                         elseif v:IsA("TextLabel") and (v.Name == "Title" or v.Name == "TitleTab" or v.Name == "SectionTitle") then
-                            v.TextColor3 = Library.Theme.TextColor
+                            v.TextColor3 = Library.Theme.Textcolorrr
                         end
                     end
                     task.wait(0.01)
@@ -94,8 +94,8 @@ pcall(function()
             black = Color3.fromRGB(0, 0, 0),
             white = Color3.fromRGB(255, 255, 255)
         }
-        local colorKey = string.lower(tostring(getgenv().TextColor))
-        Library.Theme.TextColor = colorMap[colorKey] or Color3.fromRGB(255, 255, 255)
+        local colorKey = string.lower(tostring(getgenv().SJJs))
+        Library.Theme.Textcolorrr = colorMap[colorKey] or Color3.fromRGB(255, 255, 255)
         UpdateTextColors()
     end
 end)
@@ -142,7 +142,7 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
     TitleLabel.ZIndex = 101
     TitleLabel.Font = Library.Theme.TextFont
     TitleLabel.Text = title or "Notification"
-    TitleLabel.TextColor3 = Library.Theme.TextColor
+    TitleLabel.TextColor3 = Library.Theme.Textcolorrr
     table.insert(Library.LibraryColorTable, TitleLabel)
     TitleLabel.TextSize = 16
     TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -155,7 +155,7 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
     MessageLabel.ZIndex = 101
     MessageLabel.Font = Library.Theme.TextFont
     MessageLabel.Text = message or ""
-    MessageLabel.TextColor3 = Library.Theme.TextColor
+    MessageLabel.TextColor3 = Library.Theme.Textcolorrr
     table.insert(Library.LibraryColorTable, MessageLabel)
     MessageLabel.TextSize = 14
     MessageLabel.TextWrapped = true
@@ -179,7 +179,7 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
     CloseButton.ZIndex = 102
     CloseButton.Font = Library.Theme.TextFont
     CloseButton.Text = "X"
-    CloseButton.TextColor3 = Library.Theme.TextColor
+    CloseButton.TextColor3 = Library.Theme.Textcolorrr
     table.insert(Library.LibraryColorTable, CloseButton)
     CloseButton.TextSize = 16
 
@@ -229,7 +229,7 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
             ActionButton.ZIndex = 102
             ActionButton.Font = Library.Theme.TextFont
             ActionButton.Text = buttons[i] or "Button " .. i
-            ActionButton.TextColor3 = Library.Theme.TextColor
+            ActionButton.TextColor3 = Library.Theme.Textcolorrr
             table.insert(Library.LibraryColorTable, ActionButton)
             ActionButton.TextSize = 14
             
