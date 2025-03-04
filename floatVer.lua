@@ -6,6 +6,7 @@ local Library = {
     Theme = {
         TabColor = Color3.fromRGB(0, 0, 0), -- Warna tab hitam
         SectionColor = Color3.fromRGB(50, 50, 50), -- Warna section abu-abu
+        MainColor = Color3.fromRGB(255, 75, 75), -- Warna utama untuk elemen interaktif
         TextColor = Color3.fromRGB(255, 255, 255),
         TextFont = Enum.Font.SourceSansBold,
         EasingStyle = Enum.EasingStyle.Quart
@@ -22,6 +23,22 @@ local function UpdateColors()
                 obj.ImageColor3 = Library.Theme.TabColor
             elseif obj.Name:find("Section") then
                 obj.ImageColor3 = Library.Theme.SectionColor
+            end
+        elseif obj:IsA("Frame") or obj:IsA("TextButton") or obj:IsA("TextBox") then
+            if obj.Name == "ContentFrame" or obj.Name == "ToggleCircle" then
+                obj.BackgroundColor3 = obj.Parent.Toggled and Library.Theme.MainColor or Library.Theme.SectionColor
+            elseif obj.Name == "TextBoxInput" then
+                obj.BackgroundColor3 = Library.Theme.SectionColor
+            elseif obj.Name == "SliderBar" then
+                obj.BackgroundColor3 = Library.Theme.SectionColor
+            elseif obj.Name == "SliderFill" then
+                obj.BackgroundColor3 = Library.Theme.MainColor
+            elseif obj.Name == "SliderHandle" then
+                obj.BackgroundColor3 = Library.Theme.TextColor
+            elseif obj.Name == "Button" then
+                obj.BackgroundColor3 = Library.Theme.MainColor
+            else
+                obj.BackgroundColor3 = Library.Theme.TabColor
             end
         elseif obj:IsA("TextLabel") or obj:IsA("TextButton") then
             obj.TextColor3 = Library.Theme.TextColor
@@ -206,6 +223,7 @@ function Library:CreateTab(name)
         ToggleButton.TextSize = 16
         
         local ContentFrame = Instance.new("Frame")
+        ContentFrame.Name = "ContentFrame"
         ContentFrame.Parent = SectionFrame
         ContentFrame.BackgroundTransparency = 1
         ContentFrame.Position = UDim2.new(0, 0, 0, 30)
@@ -221,6 +239,7 @@ function Library:CreateTab(name)
         table.insert(Library.LibraryColorTable, SectionFrame)
         table.insert(Library.LibraryColorTable, SectionTitle)
         table.insert(Library.LibraryColorTable, ToggleButton)
+        table.insert(Library.LibraryColorTable, ContentFrame)
         
         local function ToggleSection()
             minimized = not minimized
@@ -247,6 +266,7 @@ function Library:CreateTab(name)
         
         function SectionElements:CreateButton(name, callback)
             local Button = Instance.new("TextButton")
+            Button.Name = "Button"
             Button.Parent = ContentFrame
             Button.BackgroundColor3 = Library.Theme.MainColor
             Button.Size = UDim2.new(0, 180, 0, 25)
@@ -283,6 +303,7 @@ function Library:CreateTab(name)
             TextBoxLabel.TextXAlignment = Enum.TextXAlignment.Left
             
             local TextBoxInput = Instance.new("TextBox")
+            TextBoxInput.Name = "TextBoxInput"
             TextBoxInput.Parent = TextBoxFrame
             TextBoxInput.BackgroundColor3 = Library.Theme.SectionColor
             TextBoxInput.Size = UDim2.new(0, 40, 0, 20)
@@ -502,6 +523,7 @@ function Library:CreateTab(name)
             SliderValue.TextXAlignment = Enum.TextXAlignment.Right
             
             local SliderBar = Instance.new("Frame")
+            SliderBar.Name = "SliderBar"
             SliderBar.Parent = SliderFrame
             SliderBar.BackgroundColor3 = Library.Theme.SectionColor
             SliderBar.Size = UDim2.new(0, 180, 0, 5)
@@ -512,6 +534,7 @@ function Library:CreateTab(name)
             Corner.Parent = SliderBar
             
             local SliderFill = Instance.new("Frame")
+            SliderFill.Name = "SliderFill"
             SliderFill.Parent = SliderBar
             SliderFill.BackgroundColor3 = Library.Theme.MainColor
             SliderFill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
@@ -522,6 +545,7 @@ function Library:CreateTab(name)
             CornerFill.Parent = SliderFill
             
             local SliderHandle = Instance.new("Frame")
+            SliderHandle.Name = "SliderHandle"
             SliderHandle.Parent = SliderFill
             SliderHandle.BackgroundColor3 = Library.Theme.TextColor
             SliderHandle.Size = UDim2.new(0, 10, 0, 15)
