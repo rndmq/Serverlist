@@ -1086,8 +1086,8 @@ Library:CreateNotification("Founded!!", "Enjoyy the script :D", 1.5, {"Yessirr",
 wait(2)
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server76"))()
     
-    15907416221
-elseif game.PlaceId == 87557890946310 then
+    
+elseif game.PlaceId == 15907416221 then
 Library:CreateNotification("Founded!!", "Enjoyy the script :D", 1.5, {"Yessirr", "ThankYou!"}) getgenv().Stop = true
 wait(2)
     loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Server77"))()
