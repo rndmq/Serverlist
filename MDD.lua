@@ -4265,19 +4265,13 @@ local EmbeddedModules = {
 				save.TextColor3 = Color3.new(1,1,1)
 
 				save.MouseButton1Click:Connect(function()
-				if env.writefile then
-        local fileName = "script_" .. os.time() .. ".lua"
-        pcall(function()
-            env.writefile("dex/saved/" .. fileName, codeFrame:GetText())
-            Library:CreateNotification("Mobile Dark Dex", "Saved as " .. fileName .. ", 5, {"Alright", "Thanks"})
-        end)
-    end
 					local source = codeFrame:GetText()
 					local marketplace = game:GetService("MarketplaceService")
 local gameName = marketplace:GetProductInfo(game.PlaceId).Name:gsub("[%c%p]", "_")
 local filename = gameName .. "_Script_" .. os.time() .. ".lua"
 
 					env.writefile(filename, source)
+					            Library:CreateNotification("Mobile Dark Dex", "Saved as " .. fileName .. ", 5, {"Alright", "Thanks"})
 					if env.movefileas then
 						env.movefileas(filename, ".txt")
 					end
