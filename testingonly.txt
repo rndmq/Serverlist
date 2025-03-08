@@ -29,17 +29,20 @@ local function LoadSettings()
         end)
         if success and type(result) == "table" then
             Settings = result
-            if next(Settings) == nil or not Settings[tostring(game.PlaceId)] then
+            if tostring(game.PlaceId) ~= "13127800756" and (next(Settings) == nil or not Settings[tostring(game.PlaceId)]) then
                 Settings[tostring(game.PlaceId)] = {}
             end
         else
-            Settings = { [tostring(game.PlaceId)] = {} }
-            pcall(function()
-                writefile(saveFile, HttpService:JSONEncode(Settings))
-            end)
+            Settings = {}
+            if tostring(game.PlaceId) ~= "13127800756" then
+                Settings[tostring(game.PlaceId)] = {}
+            end
         end
     else
-        Settings = { [tostring(game.PlaceId)] = {} }
+        Settings = {}
+        if tostring(game.PlaceId) ~= "13127800756" then
+            Settings[tostring(game.PlaceId)] = {}
+        end
         pcall(function()
             writefile(saveFile, HttpService:JSONEncode(Settings))
         end)
@@ -87,11 +90,22 @@ local function SaveSettings()
         saveFile = saveFile .. ".json"
     end
     if not Settings then
-        Settings = { [tostring(game.PlaceId)] = {} }
+        Settings = {}
+        if tostring(game.PlaceId) ~= "13127800756" then
+            Settings[tostring(game.PlaceId)] = {}
+        end
     end
-    pcall(function()
-        writefile(saveFile, HttpService:JSONEncode(Settings))
-    end)
+    if tostring(game.PlaceId) ~= "13127800756" then
+        pcall(function()
+            local settingsToSave = {}
+            for gameId, gameSettings in pairs(Settings) do
+                if gameId ~= "13127800756" then
+                    settingsToSave[gameId] = gameSettings
+                end
+            end
+            writefile(saveFile, HttpService:JSONEncode(settingsToSave))
+        end)
+    end
 end
 ContentProvider:PreloadAsync({"rbxassetid://3570695787", "rbxassetid://2708891598", "rbxassetid://4155801252", "rbxassetid://4695575676", "rbxassetid://4155801252"})
 Library = {
@@ -249,6 +263,204 @@ local function SetUIAccent(color)
             end
         end
     end
+end
+local Translations = {
+    -- Nama Tab
+    ["Pengaturan"] = {
+        br = "Configurações",  -- Br
+        th = "การตั้งค่า",     -- Thai
+        en = "Settings",       -- Ingg
+        id = "Pengaturan",     -- Ind
+        vi = "Cài đặt"         -- Vietnam
+    },
+    ["Permainan"] = {
+        br = "Jogo",
+        th = "เกม",
+        en = "Game",
+        id = "Permainan",
+        vi = "Trò chơi"
+    },
+    ["Tentang"] = {
+        br = "Sobre",
+        th = "เกี่ยวกับ",
+        en = "About",
+        id = "Tentang",
+        vi = "Giới thiệu"
+    },
+
+
+    ["Aktif"] = {
+        br = "Ativado",
+        th = "เปิด",
+        en = "Enabled",
+        id = "Aktif",
+        vi = "Bật"
+    },
+    ["Nonaktif"] = {
+        br = "Desativado",
+        th = "ปิด",
+        en = "Disabled",
+        id = "Nonaktif",
+        vi = "Tắt"
+    },
+    ["Simpan"] = {
+        br = "Salvar",
+        th = "บันทึก",
+        en = "Save",
+        id = "Simpan",
+        vi = "Lưu"
+    },
+    ["Tutup"] = {
+        br = "Fechar",
+        th = "ปิด",
+        en = "Close",
+        id = "Tutup",
+        vi = "Đóng"
+    },
+    ["Pilih"] = {
+        br = "Selecionar",
+        th = "เลือก",
+        en = "Select",
+        id = "Pilih",
+        vi = "Chọn"
+    },
+    ["Batal"] = {
+        br = "Cancelar",
+        th = "ยกเลิก",
+        en = "Cancel",
+        id = "Batal",
+        vi = "Hủy"
+    },
+    ["Hapus"] = {
+        br = "Excluir",
+        th = "ลบ",
+        en = "Delete",
+        id = "Hapus",
+        vi = "Xóa"
+    },
+    ["Muat Ulang"] = {
+        br = "Recarregar",
+        th = "รีเฟรช",
+        en = "Reload",
+        id = "Muat Ulang",
+        vi = "Tải lại"
+    },
+    ["Kecepatan"] = {
+        br = "Velocidade",
+        th = "ความเร็ว",
+        en = "Speed",
+        id = "Kecepatan",
+        vi = "Tốc độ"
+    },
+    ["Pemberitahuan"] = {
+        br = "Notificação",
+        th = "การแจ้งเตือน",
+        en = "Notification",
+        id = "Pemberitahuan",
+        vi = "Thông báo"
+    },
+    ["Sukses"] = {
+        br = "Sucesso",
+        th = "สำเร็จ",
+        en = "Success",
+        id = "Sukses",
+        vi = "Thành công"
+    },
+    ["Gagal"] = {
+        br = "Falha",
+        th = "ล้มเหลว",
+        en = "Failed",
+        id = "Gagal",
+        vi = "Thất bại"
+    },
+    ["Peringatan"] = {
+        br = "Aviso",
+        th = "คำเตือน",
+        en = "Warning",
+        id = "Peringatan",
+        vi = "Cảnh báo"
+    },
+    ["Bagian"] = {
+        br = "Seção",
+        th = "ส่วน",
+        en = "Section",
+        id = "Bagian",
+        vi = "Phần"
+    },
+    ["Dropdown"] = {
+        br = "Menu suspenso",
+        th = "เมนูดรอปดาวน์",
+        en = "Dropdown",
+        id = "Dropdown",
+        vi = "Thả xuống"
+    },
+    ["Warna"] = {
+        br = "Cor",
+        th = "สี",
+        en = "Color",
+        id = "Warna",
+        vi = "Màu sắc"
+    },
+    ["Kunci"] = {
+        br = "Tecla",
+        th = "คีย์",
+        en = "Keybind",
+        id = "Kunci",
+        vi = "Phím tắt"
+    },
+    ["Title"] = {
+        br = "Título",
+        th = "ชื่อเรื่อง",
+        en = "Title",
+        id = "Judul",
+        vi = "Tiêu đề"
+    },
+    ["Textbox"] = {
+        br = "Caixa de texto",
+        th = "กล่องข้อความ",
+        en = "Textbox",
+        id = "Kotak Teks",
+        vi = "Hộp văn bản"
+    },
+    ["Tab"] = {
+        br = "Aba",
+        th = "แท็บ",
+        en = "Tab",
+        id = "Tab",
+        vi = "Thẻ"
+    },
+    ["Slider"] = {
+        br = "Controle deslizante",
+        th = "สไลเดอร์",
+        en = "Slider",
+        id = "Slider",
+        vi = "Thanh trượt"
+    },
+    ["Label"] = {
+        br = "Rótulo",
+        th = "ป้ายชื่อ",
+        en = "Label",
+        id = "Label",
+        vi = "Nhãn"
+    },
+    ["Tooltip"] = {
+        br = "Dica de ferramenta",
+        th = "เคล็ดลับเครื่องมือ",
+        en = "Tooltip",
+        id = "Tooltip",
+        vi = "Chú giải"
+    }
+    }
+}
+local function TranslateText(text)
+    if getgenv and getgenv().Translate == true then
+        local targetLang = getgenv().TargetLanguage or "en"
+        local translationTable = Translations[text]
+        if translationTable then
+            return translationTable[targetLang] or translationTable["en"] or text 
+        end
+    end
+    return text
 end
 
 local function RippleEffect(object)
@@ -725,16 +937,16 @@ function Library:CreateTab(name)
     NameTabButton.SliceScale = 0.050
 
     Title.Name = "Title"
-    Title.Parent = NameTabButton
-    Title.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    Title.BackgroundTransparency = 1.000
-    Title.Size = UDim2.new(1, 0, 1, 0)
-    Title.ZIndex = 2
-    Title.Font = Library.Theme.TextFont
-    Title.Text = name
-    Title.TextColor3 = Library.Theme.TextColor
+Title.Parent = NameTabButton
+Title.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+Title.BackgroundTransparency = 1.000
+Title.Size = UDim2.new(1, 0, 1, 0)
+Title.ZIndex = 2
+Title.Font = Library.Theme.TextFont
+Title.Text = TranslateText(name)
+Title.TextColor3 = Library.Theme.TextColor
 table.insert(Library.LibraryColorTable, Title) 
-    Title.TextSize = 15.000
+Title.TextSize = 15.000
 
     SectionLayout.Name = "SectionLayout"
     SectionLayout.Parent = NameTab
@@ -890,17 +1102,18 @@ function TabElements:CreateSection(name)
     SectionBorder.SliceScale = 0.050
     
     SectionTitle.Name = "SectionTitle"
-    SectionTitle.Parent = NameSection
-    SectionTitle.BackgroundColor3 = Library.Theme.BackgroundColor
-    SectionTitle.BorderSizePixel = 0
-    SectionTitle.Text = name
-    SectionTitle.Position = UDim2.new(0.5, (-SectionTitle.TextBounds.X - 5) / 2, 0, -12)
-    SectionTitle.Size = UDim2.new(0, SectionTitle.TextBounds.X + 20, 0, 22)
-    SectionTitle.ZIndex = 4
-    SectionTitle.Font = Library.Theme.TextFont
-    SectionTitle.TextColor3 = Library.Theme.TextColor
-    table.insert(Library.LibraryColorTable, SectionTitle)
-    SectionTitle.TextSize = 14.000
+SectionTitle.Parent = NameSection
+SectionTitle.BackgroundColor3 = Library.Theme.BackgroundColor
+SectionTitle.BorderSizePixel = 0
+SectionTitle.Text = TranslateText(name) -- Terjemahkan nama section
+SectionTitle.Position = UDim2.new(0.5, (-SectionTitle.TextBounds.X - 5) / 2, 0, -12)
+SectionTitle.Size = UDim2.new(0, SectionTitle.TextBounds.X + 20, 0, 22)
+SectionTitle.ZIndex = 4
+SectionTitle.Font = Library.Theme.TextFont
+SectionTitle.TextColor3 = Library.Theme.TextColor
+table.insert(Library.LibraryColorTable, SectionTitle)
+SectionTitle.TextSize = 14.000
+
     local titleCorner = Instance.new("UICorner")
     titleCorner.CornerRadius = UDim.new(0, 10)
     titleCorner.Parent = SectionTitle
@@ -1383,20 +1596,21 @@ function SectionElements:CreateToggle(name, ...)
     NameToggle.Size = UDim2.new(0, 197, 0, 35)
     NameToggle.ZIndex = 5
 
+
     Title.Name = "Title"
-    Title.Parent = NameToggle
-    Title.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    Title.BackgroundTransparency = 1.000
-    Title.Position = UDim2.new(0, 13, 0, 0)
-    Title.Size = UDim2.new(0, 149, 0, 35)
-    Title.ZIndex = 5
-    Title.Font = Library and Library.Theme and Library.Theme.TextFont or Enum.Font.SourceSansBold
-    Title.Text = name
-    Title.TextColor3 = Toggled and (Library and Library.Theme and Library.Theme.TextColor or Color3.fromRGB(255, 255, 255)) or Color3.fromRGB(185, 185, 185)
+Title.Parent = NameToggle
+Title.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+Title.BackgroundTransparency = 1.000
+Title.Position = UDim2.new(0, 13, 0, 0)
+Title.Size = UDim2.new(0, 151, 0, 30)
+Title.ZIndex = 5
+Title.Font = Library.Theme.TextFont
+Title.Text = TranslateText(name)
+Title.TextColor3 = Toggled and (Library and Library.Theme and Library.Theme.TextColor or Color3.fromRGB(255, 255, 255)) or Color3.fromRGB(185, 185, 185)
     if Library and Library.LibraryColorTable then table.insert(Library.LibraryColorTable, Title) end
     if _G.UpdateTextColors then UpdateTextColors() end
-    Title.TextSize = 15.000
-    Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.TextSize = 15.000
+Title.TextXAlignment = Enum.TextXAlignment.Left
 
     Toggle.Name = "Toggle"
     Toggle.Parent = NameToggle
@@ -2197,6 +2411,7 @@ function SectionElements:CreateDropdown(name, options, presetoption, callback)
     if not Settings[gameId] then Settings[gameId] = {} end
     local SelectedOption = tostring(Settings[gameId][name] or options[presetoption] or options[1] or "None")
 
+    
     NameDropdown.Name = (name .. "Dropdown")
     NameDropdown.Parent = SectionContent
     NameDropdown.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -2205,19 +2420,19 @@ function SectionElements:CreateDropdown(name, options, presetoption, callback)
     NameDropdown.Size = UDim2.new(0, 197, 0, 35)
     NameDropdown.ZIndex = 10
 
-    TitleToggle.Name = "TitleToggle"
-    TitleToggle.Parent = NameDropdown
-    TitleToggle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    TitleToggle.BackgroundTransparency = 1.000
-    TitleToggle.BorderSizePixel = 0
-    TitleToggle.Position = UDim2.new(0, 13, 0, 0)
-    TitleToggle.Size = UDim2.new(0, 167, 0, 30)
-    TitleToggle.ZIndex = 11
-    TitleToggle.Font = Library.Theme.TextFont
-    TitleToggle.Text = (name .. " - " .. SelectedOption)
-    TitleToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
-    TitleToggle.TextSize = 15.000
-    TitleToggle.TextXAlignment = Enum.TextXAlignment.Left
+TitleToggle.Name = "TitleToggle"
+TitleToggle.Parent = NameDropdown
+TitleToggle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+TitleToggle.BackgroundTransparency = 1.000
+TitleToggle.BorderSizePixel = 0
+TitleToggle.Position = UDim2.new(0, 13, 0, 0)
+TitleToggle.Size = UDim2.new(0, 167, 0, 30)
+TitleToggle.ZIndex = 11
+TitleToggle.Font = Library.Theme.TextFont
+TitleToggle.Text = TranslateText(name) .. " - " .. SelectedOption
+TitleToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleToggle.TextSize = 15.000
+TitleToggle.TextXAlignment = Enum.TextXAlignment.Left
 
     Dropdown.Name = "Dropdown"
     Dropdown.Parent = NameDropdown
@@ -2296,6 +2511,7 @@ function SectionElements:CreateDropdown(name, options, presetoption, callback)
                 
                 NameButton.TextXAlignment = Enum.TextXAlignment.Center
 
+                
                 local textBounds = NameButton.TextBounds.X + 20 
                 local ClickArea = Instance.new("TextButton")
                 ClickArea.Name = "ClickArea"
@@ -2309,6 +2525,7 @@ function SectionElements:CreateDropdown(name, options, presetoption, callback)
 
                 table.insert(Library.LibraryColorTable, NameButton)
 
+                
                 ClickArea.MouseButton1Down:Connect(function()
                     SelectedOption = v
                     ResetAllDropdownItems()
@@ -2364,16 +2581,10 @@ function SectionElements:CreateDropdown(name, options, presetoption, callback)
 
     local function Refresh(newoptions, newpresetoption, newcallback)
         options = newoptions or options
-        local presetValue = options[newpresetoption] or Settings[gameId][name] or options[1] or "None"
-        if presetValue == nil then
-            presetValue = "None"
-            Settings[gameId][name] = "None" 
-        end
+        local presetValue = options[newpresetoption] or Settings[gameId][name] or options[1]
         SelectedOption = presetValue
-       
-        if SelectedOption ~= "None" and type(newcallback) == "function" then
-            newcallback(SelectedOption)
-        elseif type(callback) == "function" then
+        
+        if SelectedOption and SelectedOption ~= "None" and type(newcallback) == "function" then
             callback(SelectedOption)
         end
         
