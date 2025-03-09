@@ -1257,36 +1257,58 @@ end
         }):Play()
     end)
 function SectionElements:CreateLabel(name, text)
-            local NameLabel = Instance.new("TextLabel")
+    local NameLabel = Instance.new("TextLabel")
 
-            NameLabel.Name = (name .. "Label")
-            NameLabel.Parent = SectionContent
-            NameLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-            NameLabel.BackgroundTransparency = 1.000
-            NameLabel.Text = text
-            NameLabel.Size = UDim2.new(0, 197, 0, NameLabel.TextBounds.Y)
-            NameLabel.ZIndex = 5
-            NameLabel.Font = Library.Theme.TextFont
-            NameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-            table.insert(Library.LibraryColorTable, NameLabel)
-            NameLabel.TextSize = 15.000
+    NameLabel.Name = (name .. "Label")  
+    NameLabel.Parent = SectionContent  
+    NameLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)  
+    NameLabel.BackgroundTransparency = 1.000  
+    NameLabel.Text = text  
+    NameLabel.Size = UDim2.new(0, 197, 0, NameLabel.TextBounds.Y)  
+    NameLabel.ZIndex = 5  
+    NameLabel.Font = Library.Theme.TextFont  
+    NameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)  
+    table.insert(Library.LibraryColorTable, NameLabel)  
+    NameLabel.TextSize = 15.000  
+    local function ChangeText(newtext)  
+        NameLabel.Text = newtext  
+    end  
+    local function RefreshLabel(newtext)  
+        TweenService:Create(
+            NameLabel, 
+            TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), 
+            {TextTransparency = 1} -- Fade out
+        ):Play()
+        
+        wait(0.3) 
+        NameLabel.Text = newtext
+        TweenService:Create(
+            NameLabel, 
+            TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), 
+            {TextTransparency = 0} -- Fade in
+        ):Play()
+    end
+NameLabel:GetPropertyChangedSignal("TextBounds"):Connect(function()  
+        if NameLabel.Text ~= "" then  
+            TweenService:Create(
+                NameLabel, 
+                TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), 
+                {Size = UDim2.new(0, 197, 0, NameLabel.TextBounds.Y)}
+            ):Play()  
+        else  
+            TweenService:Create(
+                NameLabel, 
+                TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), 
+                {Size = UDim2.new(0, 197, 0, 0)}
+            ):Play()  
+        end  
+    end)  
 
-            local function ChangeText(newtext)
-                NameLabel.Text = newtext
-            end
-
-            NameLabel:GetPropertyChangedSignal("TextBounds"):Connect(function()
-                if NameLabel.Text ~= "" then
-                    TweenService:Create(NameLabel, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 197, 0, NameLabel.TextBounds.Y)}):Play()
-                else
-                    TweenService:Create(NameLabel, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 197, 0, 0)}):Play()
-                end
-            end)
-
-            return {
-                ChangeText = ChangeText
-            }
-        end
+    return {  
+        ChangeText = ChangeText, 
+        Refresh = RefreshLabel
+    }  
+end
 
         function SectionElements:CreateButton(name, callback)
             local NameButton = Instance.new("Frame")
