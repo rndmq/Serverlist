@@ -1277,7 +1277,7 @@ function SectionElements:CreateLabel(name, text)
         TweenService:Create(
             NameLabel, 
             TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), 
-            {TextTransparency = 1} 
+            {TextTransparency = 1} -- Fade out
         ):Play()
         
         wait(0.3) 
@@ -1285,7 +1285,7 @@ function SectionElements:CreateLabel(name, text)
         TweenService:Create(
             NameLabel, 
             TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), 
-            {TextTransparency = 0} 
+            {TextTransparency = 0} -- Fade in
         ):Play()
     end
 NameLabel:GetPropertyChangedSignal("TextBounds"):Connect(function()  
@@ -1799,89 +1799,7 @@ function SectionElements:CreateTextBox(name, characterLimit, placeholderText, ca
 
             return NameTextBox, InputBox
         end
-function TabElements:CreateFullSection(name)
-    local FullSection = Instance.new("ImageLabel")
-    local FullSectionBorder = Instance.new("ImageLabel")
-    local FullSectionTitle = Instance.new("TextLabel")
-    local FullSectionContent = Instance.new("ScrollingFrame")
-    local FullSectionContentLayout = Instance.new("UIListLayout")
-
-    
-    FullSection.Name = (name .. "FullSection")
-    FullSection.Parent = NameTab
-    FullSection.BackgroundColor3 = Library.Theme.BackgroundColor
-    FullSection.BackgroundTransparency = 1.000
-    FullSection.Position = UDim2.new(0, 0, 0.0574162677, 0)
-    FullSection.Size = UDim2.new(0, 419, 0, 181)
-    FullSection.ZIndex = 4
-    FullSection.Image = "rbxassetid://3570695787"
-    FullSection.ImageColor3 = Library.Theme.BackgroundColor
-    FullSection.ScaleType = Enum.ScaleType.Slice
-    FullSection.SliceCenter = Rect.new(100, 100, 100, 100)
-    FullSection.SliceScale = 0.025
-
-    
-    FullSectionBorder.Name = "FullSectionBorder"
-    FullSectionBorder.Parent = FullSection
-    FullSectionBorder.BackgroundColor3 = Library.Theme.MainColor
-    FullSectionBorder.BackgroundTransparency = 1.000
-    FullSectionBorder.Position = UDim2.new(0, -1, 0, -1)
-    FullSectionBorder.Size = UDim2.new(1, 2, 1, 2)
-    FullSectionBorder.ZIndex = 3
-    FullSectionBorder.Image = "rbxassetid://3570695787"
-    FullSectionBorder.ImageColor3 = Library.Theme.MainColor
-    FullSectionBorder.ScaleType = Enum.ScaleType.Slice
-    FullSectionBorder.SliceCenter = Rect.new(100, 100, 100, 100)
-    FullSectionBorder.SliceScale = 0.050
-
-    
-    FullSectionTitle.Name = "FullSectionTitle"
-    FullSectionTitle.Parent = FullSection
-    FullSectionTitle.BackgroundColor3 = Library.Theme.BackgroundColor
-    FullSectionTitle.BorderSizePixel = 0
-    FullSectionTitle.Text = name
-    FullSectionTitle.Position = UDim2.new(0, 10, 0, -12) 
-    FullSectionTitle.Size = UDim2.new(0, FullSectionTitle.TextBounds.X + 20, 0, 22)
-    FullSectionTitle.ZIndex = 4
-    FullSectionTitle.Font = Library.Theme.TextFont
-    FullSectionTitle.TextColor3 = Library.Theme.TextColor
-    FullSectionTitle.TextSize = 14.000
-    local titleCorner = Instance.new("UICorner")
-    titleCorner.CornerRadius = UDim.new(0, 10)
-    titleCorner.Parent = FullSectionTitle
-
-    
-    FullSectionContent.Name = "FullSectionContent"
-    FullSectionContent.Parent = FullSection
-    FullSectionContent.Active = true
-    FullSectionContent.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    FullSectionContent.BackgroundTransparency = 1.000
-    FullSectionContent.BorderSizePixel = 0
-    FullSectionContent.Position = UDim2.new(0, 0, 0, 0)
-    FullSectionContent.Size = UDim2.new(1, 0, 1, 0)
-    FullSectionContent.ZIndex = 5
-    FullSectionContent.BottomImage = "rbxasset://textures/ui/Scroll/scroll-middle.png"
-    FullSectionContent.CanvasSize = UDim2.new(0, 0, 0, 0)
-    FullSectionContent.ScrollBarThickness = 5
-    FullSectionContent.TopImage = "rbxasset://textures/ui/Scroll/scroll-middle.png"
-
-    FullSectionContentLayout.Name = "FullSectionContentLayout"
-    FullSectionContentLayout.Parent = FullSectionContent
-    FullSectionContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    FullSectionContentLayout.Padding = UDim.new(0, 5)
-
-    table.insert(Library.LibraryColorTable, FullSection)
-    table.insert(Library.LibraryColorTable, FullSectionBorder)
-    table.insert(Library.LibraryColorTable, FullSectionTitle)
-    task.spawn(function()
-        task.wait()
-        FullSection.Position = UDim2.new(0, 0, -0.5, 0)
-        TweenService:Create(FullSection, TweenInfo.new(0.5, Library.Theme.EasingStyle), {
-            Position = UDim2.new(0, 0, 0.0574162677, 0),
-            ImageTransparency = 0
-        }):Play()
-    end)
-    
+        
         function SectionElements:CreateColorPicker(name, presetcolor, callback)
             local NameColorPicker = Instance.new("Frame")
             local Title = Instance.new("TextLabel")
