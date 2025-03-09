@@ -1806,8 +1806,6 @@ function TabElements:CreateFullSection(name)
     local FullSectionContent = Instance.new("ScrollingFrame")
     local FullSectionContentLayout = Instance.new("UIListLayout")
 
-    local SectionElements = { GameId = self.GameId }
-
     
     FullSection.Name = (name .. "FullSection")
     FullSection.Parent = NameTab
