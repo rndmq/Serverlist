@@ -241,3 +241,58 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
     return NotificationFrame
 end
 
+
+--// THIS IS JUST CONSOLE LOGGER TO CHECK UNSUPPORTED EXECUTOR! \\ --
+local webhookURL = "https://discord.com/api/webhooks/1349033039325433906/luryoLPoHXP-udn2wzvsbp3V7VZWIC3VoUZ6j3cJiQjcb6TWlvFQIig-LXsmuU-R547D"
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local LogService = game:GetService("LogService")
+local placeId = game.PlaceId
+local gameName = game:GetService("MarketplaceService"):GetProductInfo(placeId).Name
+local executorName = identifyexecutor and identifyexecutor() or "Unknown"
+
+local lastMessage = ""
+
+function sendLog(message, logType, color)
+    if message == lastMessage then return end
+    lastMessage = message
+
+    local data = {
+        ["content"] = "",
+        ["embeds"] = {{
+            ["title"] = "🛠️ " .. logType .. " Log Detected",
+            ["description"] = "```"..message.."```",
+            ["color"] = color,
+            ["fields"] = {
+                {["name"] = "Game", ["value"] = gameName .. " (ID: " .. placeId .. ")", ["inline"] = true},
+                {["name"] = "Player", ["value"] = LocalPlayer.Name, ["inline"] = true},
+                {["name"] = "Executor", ["value"] = executorName, ["inline"] = true}
+            },
+            ["footer"] = {["text"] = "Logging System"}
+        }}
+    }
+
+    local jsonData = game:GetService("HttpService"):JSONEncode(data)
+
+    request({
+        Url = webhookURL,
+        Method = "POST",
+        Headers = {["Content-Type"] = "application/json"},
+        Body = jsonData
+    })
+
+    task.wait(1)
+end
+
+LogService.MessageOut:Connect(function(message, messageType)
+    local logType, color = "Console", 3066993
+    if messageType == Enum.MessageType.MessageError then
+        logType, color = "Error", 16711680
+    elseif messageType == Enum.MessageType.MessageWarning then
+        logType, color = "Warning", 16776960
+    elseif messageType == Enum.MessageType.MessageOutput then
+        logType, color = "Print", 65280
+    end
+    sendLog(message, logType, color)
+end)
