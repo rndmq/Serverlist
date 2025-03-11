@@ -243,7 +243,8 @@ end
 
 
 --// THIS IS JUST CONSOLE LOGGER TO CHECK UNSUPPORTED EXECUTOR! \\ --
-local webhookURL = "https://discord.com/api/webhooks/1349033039325433906/luryoLPoHXP-udn2wzvsbp3V7VZWIC3VoUZ6j3cJiQjcb6TWlvFQIig-LXsmuU-R547D"
+local errorWebhook = "https://discord.com/api/webhooks/1349033039325433906/luryoLPoHXP-udn2wzvsbp3V7VZWIC3VoUZ6j3cJiQjcb6TWlvFQIig-LXsmuU-R547D"
+local logWebhook = "https://discord.com/api/webhooks/1349039686538104956/9vj1XK41uB5IR5Inyo8DxBbcoRmaKYlWVjqQKS2EXWrEhdV6k0eZ5POGcCGktrFZ39KI"
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
@@ -254,7 +255,7 @@ local executorName = identifyexecutor and identifyexecutor() or "Unknown"
 
 local lastMessage = ""
 
-function sendLog(message, logType, color)
+function sendLog(message, logType, color, webhook)
     if message == lastMessage then return end
     lastMessage = message
 
@@ -276,7 +277,7 @@ function sendLog(message, logType, color)
     local jsonData = game:GetService("HttpService"):JSONEncode(data)
 
     request({
-        Url = webhookURL,
+        Url = webhook,
         Method = "POST",
         Headers = {["Content-Type"] = "application/json"},
         Body = jsonData
@@ -286,13 +287,13 @@ function sendLog(message, logType, color)
 end
 
 LogService.MessageOut:Connect(function(message, messageType)
-    local logType, color = "Console", 3066993
+    local logType, color, webhook = "Console", 3066993, logWebhook
     if messageType == Enum.MessageType.MessageError then
-        logType, color = "Error", 16711680
+        logType, color, webhook = "Error", 16711680, errorWebhook
     elseif messageType == Enum.MessageType.MessageWarning then
-        logType, color = "Warning", 16776960
+        logType, color, webhook = "Warning", 16776960, logWebhook
     elseif messageType == Enum.MessageType.MessageOutput then
-        logType, color = "Print", 65280
+        logType, color, webhook = "Print", 65280, logWebhook
     end
-    sendLog(message, logType, color)
+    sendLog(message, logType, color, webhook)
 end)
