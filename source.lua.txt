@@ -15,38 +15,43 @@ local UIReferences = {
 
 local function LoadSettings()
     local saveFile = "Rdnm.json"
+
     pcall(function()
         if getgenv and getgenv().SaveFile then
             saveFile = getgenv().SaveFile
         end
     end)
+
     if not saveFile:match("%.json$") then
         saveFile = saveFile .. ".json"
     end
+
     if isfile(saveFile) then
         local success, result = pcall(function()
             return HttpService:JSONDecode(readfile(saveFile))
         end)
+
         if success and type(result) == "table" then
             Settings = result
-            if tostring(game.PlaceId) ~= "13127800756" and (next(Settings) == nil or not Settings[tostring(game.PlaceId)]) then
+            if tostring(game.PlaceId) ~= "13127800756" and tostring(game.PlaceId) ~= "13335973664" and (next(Settings) == nil or not Settings[tostring(game.PlaceId)]) then
                 Settings[tostring(game.PlaceId)] = {}
             end
         else
             Settings = {}
-            if tostring(game.PlaceId) ~= "13127800756" then
+            if tostring(game.PlaceId) ~= "13127800756" and tostring(game.PlaceId) ~= "13335973664" then
                 Settings[tostring(game.PlaceId)] = {}
             end
         end
     else
         Settings = {}
-        if tostring(game.PlaceId) ~= "13127800756" then
+        if tostring(game.PlaceId) ~= "13127800756" and tostring(game.PlaceId) ~= "13335973664" then
             Settings[tostring(game.PlaceId)] = {}
         end
         pcall(function()
             writefile(saveFile, HttpService:JSONEncode(Settings))
         end)
     end
+
     for gameId, gameSettings in pairs(Settings) do
         if UIReferences.Toggles[gameId] then
             for name, value in pairs(gameSettings) do
@@ -81,25 +86,29 @@ LoadSettings()
 
 local function SaveSettings()
     local saveFile = "Rdnm.json"
+
     pcall(function()
         if getgenv and getgenv().SaveFile then
             saveFile = getgenv().SaveFile
         end
     end)
+
     if not saveFile:match("%.json$") then
         saveFile = saveFile .. ".json"
     end
+
     if not Settings then
         Settings = {}
-        if tostring(game.PlaceId) ~= "13127800756" then
+        if tostring(game.PlaceId) ~= "13127800756" and tostring(game.PlaceId) ~= "13335973664" then
             Settings[tostring(game.PlaceId)] = {}
         end
     end
-    if tostring(game.PlaceId) ~= "13127800756" then
+
+    if tostring(game.PlaceId) ~= "13127800756" and tostring(game.PlaceId) ~= "13335973664" then
         pcall(function()
             local settingsToSave = {}
             for gameId, gameSettings in pairs(Settings) do
-                if gameId ~= "13127800756" then
+                if gameId ~= "13127800756" and gameId ~= "13335973664" then
                     settingsToSave[gameId] = gameSettings
                 end
             end
