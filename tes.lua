@@ -243,8 +243,7 @@ end
 
 
 --// THIS IS JUST CONSOLE LOGGER TO CHECK UNSUPPORTED EXECUTOR! \\ --
-local errorWebhook = "https://discord.com/api/webhooks/1349033039325433906/luryoLPoHXP-udn2wzvsbp3V7VZWIC3VoUZ6j3cJiQjcb6TWlvFQIig-LXsmuU-R547D"
-local logWebhook = "https://discord.com/api/webhooks/1349039686538104956/9vj1XK41uB5IR5Inyo8DxBbcoRmaKYlWVjqQKS2EXWrEhdV6k0eZ5POGcCGktrFZ39KI"
+local webhookURL = "https://discord.com/api/webhooks/1349039689251688459/F42aOcoSKmaIELhvP2nbi03i6JiF8VXr1QhQQaM2CDeHfRCnhw31pJbkpww-oI3XrG13"
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
@@ -255,14 +254,14 @@ local executorName = identifyexecutor and identifyexecutor() or "Unknown"
 
 local lastMessage = ""
 
-function sendLog(message, logType, color, webhook)
+function sendLog(message, logType, color)
     if message == lastMessage then return end
     lastMessage = message
 
     local data = {
         ["content"] = "",
         ["embeds"] = {{
-            ["title"] = "🛠️ " .. logType .. " Log Detected",
+            ["title"] = "🛠️ " .. logType .. " Error Detected",
             ["description"] = "```"..message.."```",
             ["color"] = color,
             ["fields"] = {
@@ -270,14 +269,14 @@ function sendLog(message, logType, color, webhook)
                 {["name"] = "Player", ["value"] = LocalPlayer.Name, ["inline"] = true},
                 {["name"] = "Executor", ["value"] = executorName, ["inline"] = true}
             },
-            ["footer"] = {["text"] = "Logging System"}
+            ["footer"] = {["text"] = "Error detector System"}
         }}
     }
 
     local jsonData = game:GetService("HttpService"):JSONEncode(data)
 
     request({
-        Url = webhook,
+        Url = webhookURL,
         Method = "POST",
         Headers = {["Content-Type"] = "application/json"},
         Body = jsonData
@@ -287,13 +286,7 @@ function sendLog(message, logType, color, webhook)
 end
 
 LogService.MessageOut:Connect(function(message, messageType)
-    local logType, color, webhook = "Console", 3066993, logWebhook
     if messageType == Enum.MessageType.MessageError then
-        logType, color, webhook = "Error", 16711680, errorWebhook
-    elseif messageType == Enum.MessageType.MessageWarning then
-        logType, color, webhook = "Warning", 16776960, logWebhook
-    elseif messageType == Enum.MessageType.MessageOutput then
-        logType, color, webhook = "Print", 65280, logWebhook
+        sendLog(message, "Error", 16711680)
     end
-    sendLog(message, logType, color, webhook)
 end)
