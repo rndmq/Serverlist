@@ -1633,8 +1633,7 @@ end
         FullSectionContent.CanvasSize = UDim2.new(0, 0, 0, FullSectionContentLayout.AbsoluteContentSize.Y + 15)
     end)
 
-    return FullSectionElements
-end
+    
 function SectionElements:CreateLabel(name, text, callback, options)
     local NameLabel = Instance.new("TextLabel")
     local LabelButton = nil
@@ -3409,6 +3408,8 @@ end
 
         return SectionElements
     end
+    return FullSectionElements
+end
 
     return TabElements
 end
