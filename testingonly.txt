@@ -864,6 +864,7 @@ if NameTab.Name == (Library.FirstTab .. "Tab") then
 end
 
 
+
 function TabElements:CreateSection(name)
     local NameSection = Instance.new("ImageLabel")
     local SectionBorder = Instance.new("ImageLabel")
@@ -1255,6 +1256,198 @@ end
             ImageColor3 = Library.Theme.BackgroundColor
         }):Play()
     end)
+    function TabElements:CreateFullSection(name)
+    local FullSection = Instance.new("ImageLabel")
+    local FullSectionBorder = Instance.new("ImageLabel")
+    local FullSectionTitle = Instance.new("TextLabel")
+    local LeftContent = Instance.new("ScrollingFrame")
+    local LeftContentLayout = Instance.new("UIListLayout")
+    local RightContent = Instance.new("ScrollingFrame")
+    local RightContentLayout = Instance.new("UIListLayout")
+
+    local FullSectionElements = { GameId = self.GameId }
+
+    FullSection.Name = (name .. "FullSection")
+    FullSection.Parent = NameTab
+    FullSection.BackgroundColor3 = Library.Theme.BackgroundColor
+    FullSection.BackgroundTransparency = 1.000
+    FullSection.Position = UDim2.new(0, 0, 0.0574162677, 0)
+    FullSection.Size = UDim2.new(0, 421, 0, 181)
+    FullSection.ZIndex = 4
+    FullSection.Image = "rbxassetid://3570695787"
+    FullSection.ImageColor3 = Library.Theme.BackgroundColor
+    FullSection.ScaleType = Enum.ScaleType.Slice
+    FullSection.SliceCenter = Rect.new(100, 100, 100, 100)
+    FullSection.SliceScale = 0.025
+    FullSection.ImageTransparency = 1
+
+    FullSectionBorder.Name = "FullSectionBorder"
+    FullSectionBorder.Parent = FullSection
+    FullSectionBorder.BackgroundColor3 = Library.Theme.MainColor
+    FullSectionBorder.BackgroundTransparency = 1.000
+    FullSectionBorder.Position = UDim2.new(0, -1, 0, -1)
+    FullSectionBorder.Size = UDim2.new(1, 2, 1, 2)
+    FullSectionBorder.ZIndex = 3
+    FullSectionBorder.Image = "rbxassetid://3570695787"
+    FullSectionBorder.ImageColor3 = Library.Theme.MainColor
+    FullSectionBorder.ScaleType = Enum.ScaleType.Slice
+    FullSectionBorder.SliceCenter = Rect.new(100, 100, 100, 100)
+    FullSectionBorder.SliceScale = 0.050
+
+    FullSectionTitle.Name = "FullSectionTitle"
+    FullSectionTitle.Parent = FullSection
+    FullSectionTitle.BackgroundColor3 = Library.Theme.BackgroundColor
+    FullSectionTitle.BorderSizePixel = 0
+    FullSectionTitle.Text = name
+    FullSectionTitle.Position = UDim2.new(0.5, (-FullSectionTitle.TextBounds.X - 5) / 2, 0, -12)
+    FullSectionTitle.Size = UDim2.new(0, FullSectionTitle.TextBounds.X + 20, 0, 22)
+    FullSectionTitle.ZIndex = 4
+    FullSectionTitle.Font = Library.Theme.TextFont
+    FullSectionTitle.TextColor3 = Library.Theme.TextColor
+    FullSectionTitle.TextSize = 14.000
+    local titleCorner = Instance.new("UICorner")
+    titleCorner.CornerRadius = UDim.new(0, 10)
+    titleCorner.Parent = FullSectionTitle
+
+    LeftContent.Name = "LeftContent"
+    LeftContent.Parent = FullSection
+    LeftContent.Active = true
+    LeftContent.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    LeftContent.BackgroundTransparency = 1.000
+    LeftContent.Position = UDim2.new(0, 5, 0, 5)
+    LeftContent.Size = UDim2.new(0, 203, 0, 171)
+    LeftContent.ZIndex = 5
+    LeftContent.CanvasSize = UDim2.new(0, 0, 0, 0)
+    LeftContent.ScrollBarThickness = 2
+
+    LeftContentLayout.Name = "LeftContentLayout"
+    LeftContentLayout.Parent = LeftContent
+    LeftContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    LeftContentLayout.Padding = UDim.new(0, 5)
+
+    RightContent.Name = "RightContent"
+    RightContent.Parent = FullSection
+    RightContent.Active = true
+    RightContent.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    RightContent.BackgroundTransparency = 1.000
+    RightContent.Position = UDim2.new(0, 213, 0, 5)
+    RightContent.Size = UDim2.new(0, 203, 0, 171)
+    RightContent.ZIndex = 5
+    RightContent.CanvasSize = UDim2.new(0, 0, 0, 0)
+    RightContent.ScrollBarThickness = 2
+
+    RightContentLayout.Name = "RightContentLayout"
+    RightContentLayout.Parent = RightContent
+    RightContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    RightContentLayout.Padding = UDim.new(0, 5)
+
+    task.spawn(function()
+        task.wait()
+        FullSection.Position = UDim2.new(0, 0, -0.5, 0)
+        TweenService:Create(FullSection, TweenInfo.new(0.5, Library.Theme.EasingStyle), {
+            Position = UDim2.new(0, 0, 0.0574162677, 0),
+            ImageTransparency = 0
+        }):Play()
+    end)
+
+    table.insert(Library.LibraryColorTable, FullSection)
+    table.insert(Library.LibraryColorTable, FullSectionBorder)
+    table.insert(Library.LibraryColorTable, FullSectionTitle)
+
+    function FullSectionElements:CreateLeftButton(name, callback)
+        local Button = Instance.new("TextButton")
+        local ButtonRounded = Instance.new("UICorner")
+
+        Button.Name = (name .. "Button")
+        Button.Parent = LeftContent
+        Button.BackgroundColor3 = Library.Theme.MainColor
+        Button.Size = UDim2.new(0, 193, 0, 35)
+        Button.ZIndex = 6
+        Button.Font = Library.Theme.TextFont
+        Button.Text = name
+        Button.TextColor3 = Library.Theme.TextColor
+        Button.TextSize = 15.000
+
+        ButtonRounded.CornerRadius = UDim.new(0, 5)
+        ButtonRounded.Parent = Button
+
+        Button.MouseButton1Click:Connect(function()
+            RippleEffect(Button)
+            if callback then
+                callback()
+            end
+        end)
+
+        LeftContent.CanvasSize = UDim2.new(0, 0, 0, LeftContentLayout.AbsoluteContentSize.Y + 10)
+        table.insert(Library.LibraryColorTable, Button)
+    end
+
+    function FullSectionElements:CreateRightButton(name, callback)
+        local Button = Instance.new("TextButton")
+        local ButtonRounded = Instance.new("UICorner")
+
+        Button.Name = (name .. "Button")
+        Button.Parent = RightContent
+        Button.BackgroundColor3 = Library.Theme.MainColor
+        Button.Size = UDim2.new(0, 193, 0, 35)
+        Button.ZIndex = 6
+        Button.Font = Library.Theme.TextFont
+        Button.Text = name
+        Button.TextColor3 = Library.Theme.TextColor
+        Button.TextSize = 15.000
+
+        ButtonRounded.CornerRadius = UDim.new(0, 5)
+        ButtonRounded.Parent = Button
+
+        Button.MouseButton1Click:Connect(function()
+            RippleEffect(Button)
+            if callback then
+                callback()
+            end
+        end)
+
+        RightContent.CanvasSize = UDim2.new(0, 0, 0, RightContentLayout.AbsoluteContentSize.Y + 10)
+        table.insert(Library.LibraryColorTable, Button)
+    end
+
+    function FullSectionElements:CreateLeftLabel(text)
+        local Label = Instance.new("TextLabel")
+
+        Label.Name = (text .. "Label")
+        Label.Parent = LeftContent
+        Label.BackgroundTransparency = 1.000
+        Label.Size = UDim2.new(0, 193, 0, 20)
+        Label.ZIndex = 6
+        Label.Font = Library.Theme.TextFont
+        Label.Text = text
+        Label.TextColor3 = Library.Theme.TextColor
+        Label.TextSize = 15.000
+        Label.TextXAlignment = Enum.TextXAlignment.Left
+
+        LeftContent.CanvasSize = UDim2.new(0, 0, 0, LeftContentLayout.AbsoluteContentSize.Y + 10)
+        table.insert(Library.LibraryColorTable, Label)
+    end
+
+    function FullSectionElements:CreateRightLabel(text)
+        local Label = Instance.new("TextLabel")
+
+        Label.Name = (text .. "Label")
+        Label.Parent = RightContent
+        Label.BackgroundTransparency = 1.000
+        Label.Size = UDim2.new(0, 193, 0, 20)
+        Label.ZIndex = 6
+        Label.Font = Library.Theme.TextFont
+        Label.Text = text
+        Label.TextColor3 = Library.Theme.TextColor
+        Label.TextSize = 15.000
+        Label.TextXAlignment = Enum.TextXAlignment.Left
+
+        RightContent.CanvasSize = UDim2.new(0, 0, 0, RightContentLayout.AbsoluteContentSize.Y + 10)
+        table.insert(Library.LibraryColorTable, Label)
+    end
+
+    return FullSectionElements
+end
 function SectionElements:CreateLabel(name, text, callback, options)
     local NameLabel = Instance.new("TextLabel")
     local LabelButton = nil
@@ -2293,118 +2486,6 @@ function SectionElements:CreateTextBox(name, characterLimit, placeholderText, ca
             table.insert(Library.LibraryColorTable, CheckboxOutline)
             table.insert(Library.LibraryColorTable, CheckboxTicked)
         end
-function TabElements:CreateFullSection(name)
-    local FullSectionFrame = Instance.new("Frame")
-    local LeftSection = Instance.new("Frame")
-    local LeftSectionContent = Instance.new("ScrollingFrame")
-    local LeftSectionLayout = Instance.new("UIListLayout")
-    local RightSection = Instance.new("Frame")
-    local RightSectionContent = Instance.new("ScrollingFrame")
-    local RightSectionLayout = Instance.new("UIListLayout")
-
-    FullSectionFrame.Name = (name .. "FullSection")
-    FullSectionFrame.Parent = TabContent
-    FullSectionFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    FullSectionFrame.BackgroundTransparency = 1.000
-    FullSectionFrame.Size = UDim2.new(1, 0, 0, 300) 
-    LeftSection.Name = "LeftSection"
-    LeftSection.Parent = FullSectionFrame
-    LeftSection.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    LeftSection.BackgroundTransparency = 1.000
-    LeftSection.Size = UDim2.new(0.5, -5, 1, 0)
-    LeftSection.Position = UDim2.new(0, 0, 0, 0)
-
-    LeftSectionContent.Name = "LeftSectionContent"
-    LeftSectionContent.Parent = LeftSection
-    LeftSectionContent.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    LeftSectionContent.BackgroundTransparency = 1.000
-    LeftSectionContent.BorderSizePixel = 0
-    LeftSectionContent.Size = UDim2.new(1, 0, 1, 0)
-    LeftSectionContent.CanvasSize = UDim2.new(0, 0, 0, 0)
-    LeftSectionContent.ScrollBarThickness = 0
-
-    LeftSectionLayout.Name = "LeftSectionLayout"
-    LeftSectionLayout.Parent = LeftSectionContent
-    LeftSectionLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    LeftSectionLayout.Padding = UDim.new(0, 5)
-
-    
-    RightSection.Name = "RightSection"
-    RightSection.Parent = FullSectionFrame
-    RightSection.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    RightSection.BackgroundTransparency = 1.000
-    RightSection.Size = UDim2.new(0.5, -5, 1, 0)
-    RightSection.Position = UDim2.new(0.5, 5, 0, 0)
-
-    RightSectionContent.Name = "RightSectionContent"
-    RightSectionContent.Parent = RightSection
-    RightSectionContent.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    RightSectionContent.BackgroundTransparency = 1.000
-    RightSectionContent.BorderSizePixel = 0
-    RightSectionContent.Size = UDim2.new(1, 0, 1, 0)
-    RightSectionContent.CanvasSize = UDim2.new(0, 0, 0, 0)
-    RightSectionContent.ScrollBarThickness = 0
-
-    RightSectionLayout.Name = "RightSectionLayout"
-    RightSectionLayout.Parent = RightSectionContent
-    RightSectionLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    RightSectionLayout.Padding = UDim.new(0, 5)
-
-    
-    LeftSectionLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        LeftSectionContent.CanvasSize = UDim2.new(0, 0, 0, LeftSectionLayout.AbsoluteContentSize.Y + 15)
-    end)
-
-    RightSectionLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        RightSectionContent.CanvasSize = UDim2.new(0, 0, 0, RightSectionLayout.AbsoluteContentSize.Y + 15)
-    end)
-
-    local FullSectionElements = {}
-
-    
-    function FullSectionElements:CreateLeftButton(text, callback)
-        local Button = Instance.new("TextButton")
-        Button.Name = (text .. "Button")
-        Button.Parent = LeftSectionContent
-        Button.BackgroundColor3 = Library.Theme.MainColor
-        Button.Size = UDim2.new(0, 197, 0, 30)
-        Button.Font = Library.Theme.TextFont
-        Button.Text = text
-        Button.TextColor3 = Color3.fromRGB(255, 255, 255)
-        Button.TextSize = 15.000
-        Button.MouseButton1Click:Connect(callback)
-        return Button
-    end
-
-    function FullSectionElements:CreateLeftLabel(name, text, callback, options)
-        local SectionContent = LeftSectionContent
-        local SectionContentLayout = LeftSectionLayout
-        return SectionElements:CreateLabel(name, text, callback, options)
-    end
-
-   
-    function FullSectionElements:CreateRightButton(text, callback)
-        local Button = Instance.new("TextButton")
-        Button.Name = (text .. "Button")
-        Button.Parent = RightSectionContent
-        Button.BackgroundColor3 = Library.Theme.MainColor
-        Button.Size = UDim2.new(0, 197, 0, 30)
-        Button.Font = Library.Theme.TextFont
-        Button.Text = text
-        Button.TextColor3 = Color3.fromRGB(255, 255, 255)
-        Button.TextSize = 15.000
-        Button.MouseButton1Click:Connect(callback)
-        return Button
-    end
-
-    function FullSectionElements:CreateRightLabel(name, text, callback, options)
-        local SectionContent = RightSectionContent
-        local SectionContentLayout = RightSectionLayout
-        return SectionElements:CreateLabel(name, text, callback, options)
-    end
-
-    return FullSectionElements
-end
 
 function SectionElements:CreateDropdown(name, options, presetoption, callback)
     local NameDropdown = Instance.new("Frame")
