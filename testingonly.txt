@@ -1270,7 +1270,7 @@ end
     FullNameSection.BackgroundColor3 = Library.Theme.BackgroundColor
     FullNameSection.BackgroundTransparency = 1.000
     FullNameSection.Position = UDim2.new(0, 0, 0.0574162677, 0)
-    FullNameSection.Size = UDim2.new(0, 419, 0, 181) -- Lebar penuh (421 - padding)
+    FullNameSection.Size = UDim2.new(0, 419, 0, 181) 
     FullNameSection.ZIndex = 4
     FullNameSection.Image = "rbxassetid://3570695787"
     FullNameSection.ImageColor3 = Library.Theme.MainColor
@@ -1617,12 +1617,24 @@ end
     FullSectionContent.BackgroundTransparency = 1.000
     FullSectionContent.BorderColor3 = Color3.fromRGB(27, 42, 53)
     FullSectionContent.Position = UDim2.new(0, 10, 0, 10)
-    FullSectionContent.Size = UDim2.new(0, 399, 0, 161) -- Lebar penuh dengan padding
+    FullSectionContent.Size = UDim2.new(0, 399, 0, 161) 
     FullSectionContent.ZIndex = 4
     FullSectionContent.BottomImage = "rbxasset://textures/ui/Scroll/scroll-middle.png"
     FullSectionContent.CanvasSize = UDim2.new(0, 0, 0, 0)
     FullSectionContent.ScrollBarThickness = 5
-    FullSectionContent.TopImage = "rbxasset://text
+    FullSectionContent.TopImage = "rbxasset://textures/ui/Scroll/scroll-middle.png"
+
+    FullSectionContentLayout.Name = "FullSectionContentLayout"
+    FullSectionContentLayout.Parent = FullSectionContent
+    FullSectionContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    FullSectionContentLayout.Padding = UDim.new(0, 5)
+
+    FullSectionContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        FullSectionContent.CanvasSize = UDim2.new(0, 0, 0, FullSectionContentLayout.AbsoluteContentSize.Y + 15)
+    end)
+
+    return FullSectionElements
+end
 function SectionElements:CreateLabel(name, text, callback, options)
     local NameLabel = Instance.new("TextLabel")
     local LabelButton = nil
