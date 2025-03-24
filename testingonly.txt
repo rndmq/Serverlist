@@ -1256,9 +1256,12 @@ end
             ImageColor3 = Library.Theme.BackgroundColor
         }):Play()
     end)
-function SectionElements:CreateLabel(name, text, callback)
+function SectionElements:CreateLabel(name, text, callback, options)
     local NameLabel = Instance.new("TextLabel")
     local LabelButton = nil
+
+    local opts = options or {}
+    local holdColor = opts.holdColor or false
 
     NameLabel.Name = (name .. "Label")
     NameLabel.Parent = SectionContent
@@ -1271,6 +1274,8 @@ function SectionElements:CreateLabel(name, text, callback)
     NameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     table.insert(Library.LibraryColorTable, NameLabel)
     NameLabel.TextSize = 15.000
+
+    local isColorHeld = false
 
     if callback and type(callback) == "function" then
         LabelButton = Instance.new("TextButton")
@@ -1287,15 +1292,52 @@ function SectionElements:CreateLabel(name, text, callback)
 
         LabelButton.MouseButton1Click:Connect(function()
             callback()
+            if holdColor then
+                for _, child in pairs(SectionContent:GetChildren()) do
+                    if child:IsA("TextLabel") and child ~= NameLabel then
+                        TweenService:Create(
+                            child,
+                            TweenInfo.new(0.2, Enum.EasingStyle.Quad),
+                            {TextColor3 = Color3.fromRGB(255, 255, 255)}
+                        ):Play()
+                    end
+                end
+                TweenService:Create(
+                    NameLabel,
+                    TweenInfo.new(0.2, Enum.EasingStyle.Quad),
+                    {TextColor3 = Library.Theme.MainColor}
+                ):Play()
+                isColorHeld = true
+            end
         end)
 
-        LabelButton.MouseEnter:Connect(function()
-            TweenService:Create(NameLabel, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {TextColor3 = Library.Theme.MainColor}):Play()
-        end)
+        if holdColor then
+            LabelButton.MouseEnter:Connect(function()
+                if not isColorHeld then
+                    TweenService:Create(
+                        NameLabel,
+                        TweenInfo.new(0.2, Enum.EasingStyle.Quad),
+                        {TextColor3 = Library.Theme.MainColor}
+                    ):Play()
+                end
+            end)
+        else
+            LabelButton.MouseEnter:Connect(function()
+                TweenService:Create(
+                    NameLabel,
+                    TweenInfo.new(0.2, Enum.EasingStyle.Quad),
+                    {TextColor3 = Library.Theme.MainColor}
+                ):Play()
+            end)
 
-        LabelButton.MouseLeave:Connect(function()
-            TweenService:Create(NameLabel, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
-        end)
+            LabelButton.MouseLeave:Connect(function()
+                TweenService:Create(
+                    NameLabel,
+                    TweenInfo.new(0.2, Enum.EasingStyle.Quad),
+                    {TextColor3 = Color3.fromRGB(255, 255, 255)}
+                ):Play()
+            end)
+        end
     end
 
     local function ChangeText(newtext)
