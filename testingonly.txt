@@ -863,7 +863,7 @@ if NameTab.Name == (Library.FirstTab .. "Tab") then
     end
 end
 
-
+  
 
 function TabElements:CreateSection(name)
     local NameSection = Instance.new("ImageLabel")
@@ -1257,32 +1257,31 @@ end
         }):Play()
     end)
     function TabElements:CreateFullSection(name)
-    local FullSection = Instance.new("ImageLabel")
+    local FullNameSection = Instance.new("ImageLabel")
     local FullSectionBorder = Instance.new("ImageLabel")
     local FullSectionTitle = Instance.new("TextLabel")
-    local LeftContent = Instance.new("ScrollingFrame")
-    local LeftContentLayout = Instance.new("UIListLayout")
-    local RightContent = Instance.new("ScrollingFrame")
-    local RightContentLayout = Instance.new("UIListLayout")
+    local FullSectionContent = Instance.new("ScrollingFrame")
+    local FullSectionContentLayout = Instance.new("UIListLayout")
 
     local FullSectionElements = { GameId = self.GameId }
 
-    FullSection.Name = (name .. "FullSection")
-    FullSection.Parent = NameTab
-    FullSection.BackgroundColor3 = Library.Theme.BackgroundColor
-    FullSection.BackgroundTransparency = 1.000
-    FullSection.Position = UDim2.new(0, 0, 0.0574162677, 0)
-    FullSection.Size = UDim2.new(0, 421, 0, 181)
-    FullSection.ZIndex = 4
-    FullSection.Image = "rbxassetid://3570695787"
-    FullSection.ImageColor3 = Library.Theme.BackgroundColor
-    FullSection.ScaleType = Enum.ScaleType.Slice
-    FullSection.SliceCenter = Rect.new(100, 100, 100, 100)
-    FullSection.SliceScale = 0.025
-    FullSection.ImageTransparency = 1
+    FullNameSection.Name = (name .. "FullSection")
+    FullNameSection.Parent = NameTab
+    FullNameSection.BackgroundColor3 = Library.Theme.BackgroundColor
+    FullNameSection.BackgroundTransparency = 1.000
+    FullNameSection.Position = UDim2.new(0, 0, 0.0574162677, 0)
+    FullNameSection.Size = UDim2.new(0, 419, 0, 181) -- Lebar penuh (421 - padding)
+    FullNameSection.ZIndex = 4
+    FullNameSection.Image = "rbxassetid://3570695787"
+    FullNameSection.ImageColor3 = Library.Theme.MainColor
+    table.insert(Library.LibraryColorTable, FullNameSection)
+    FullNameSection.ScaleType = Enum.ScaleType.Slice
+    FullNameSection.SliceCenter = Rect.new(100, 100, 100, 100)
+    FullNameSection.SliceScale = 0.025
+    FullNameSection.ImageTransparency = 1
 
     FullSectionBorder.Name = "FullSectionBorder"
-    FullSectionBorder.Parent = FullSection
+    FullSectionBorder.Parent = FullNameSection
     FullSectionBorder.BackgroundColor3 = Library.Theme.MainColor
     FullSectionBorder.BackgroundTransparency = 1.000
     FullSectionBorder.Position = UDim2.new(0, -1, 0, -1)
@@ -1290,12 +1289,13 @@ end
     FullSectionBorder.ZIndex = 3
     FullSectionBorder.Image = "rbxassetid://3570695787"
     FullSectionBorder.ImageColor3 = Library.Theme.MainColor
+    table.insert(Library.LibraryColorTable, FullSectionBorder)
     FullSectionBorder.ScaleType = Enum.ScaleType.Slice
     FullSectionBorder.SliceCenter = Rect.new(100, 100, 100, 100)
     FullSectionBorder.SliceScale = 0.050
-
+    
     FullSectionTitle.Name = "FullSectionTitle"
-    FullSectionTitle.Parent = FullSection
+    FullSectionTitle.Parent = FullNameSection
     FullSectionTitle.BackgroundColor3 = Library.Theme.BackgroundColor
     FullSectionTitle.BorderSizePixel = 0
     FullSectionTitle.Text = name
@@ -1304,150 +1304,325 @@ end
     FullSectionTitle.ZIndex = 4
     FullSectionTitle.Font = Library.Theme.TextFont
     FullSectionTitle.TextColor3 = Library.Theme.TextColor
+    table.insert(Library.LibraryColorTable, FullSectionTitle)
     FullSectionTitle.TextSize = 14.000
     local titleCorner = Instance.new("UICorner")
     titleCorner.CornerRadius = UDim.new(0, 10)
     titleCorner.Parent = FullSectionTitle
+    
+    local FullIsDetached = false
+    local FullLastValidPosition = FullNameSection.Position
+    local FullOriginalParent = FullNameSection.Parent
+    local FullMaximized = true
+    
+    local FullShadow = Instance.new("ImageLabel")
+    FullShadow.Name = "FullShadow"
+    FullShadow.BackgroundTransparency = 1
+    FullShadow.Image = "rbxassetid://3570695787"
+    FullShadow.ImageColor3 = Color3.fromRGB(255, 255, 255)
+    FullShadow.ImageTransparency = 0.7
+    FullShadow.ScaleType = Enum.ScaleType.Slice
+    FullShadow.SliceCenter = Rect.new(100, 100, 100, 100)
+    FullShadow.SliceScale = 0.025
+    FullShadow.Size = UDim2.new(0, 419, 0, 181)
+    FullShadow.ZIndex = 3
+    FullShadow.Visible = false
+    FullShadow.Parent = UITabs
+    
+    local FullMaximizeBtn = Instance.new("TextButton")
+    FullMaximizeBtn.Name = "FullMaximizeBtn"
+    FullMaximizeBtn.Parent = FullNameSection
+    FullMaximizeBtn.BackgroundTransparency = 1
+    FullMaximizeBtn.Position = UDim2.new(1, -25, 0, 5)
+    FullMaximizeBtn.Size = UDim2.new(0, 20, 0, 20)
+    FullMaximizeBtn.ZIndex = 5
+    FullMaximizeBtn.Font = Library.Theme.TextFont
+    FullMaximizeBtn.Text = "□"
+    FullMaximizeBtn.TextColor3 = Library.Theme.TextColor
+    FullMaximizeBtn.TextSize = 16
+    FullMaximizeBtn.Visible = false
+    
+    local function MakeFullSectionDraggable()
+        local FullDragging = false
+        local FullDragInput
+        local FullDragStart
+        local FullStartPos
+        local FullHoldStartTime
+        local FullIsHolding = false
 
-    LeftContent.Name = "LeftContent"
-    LeftContent.Parent = FullSection
-    LeftContent.Active = true
-    LeftContent.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    LeftContent.BackgroundTransparency = 1.000
-    LeftContent.Position = UDim2.new(0, 5, 0, 5)
-    LeftContent.Size = UDim2.new(0, 203, 0, 171)
-    LeftContent.ZIndex = 5
-    LeftContent.CanvasSize = UDim2.new(0, 0, 0, 0)
-    LeftContent.ScrollBarThickness = 2
+        local function update(input)
+            if FullDragging and FullNameSection then
+                local delta = input.Position - FullDragStart
+                local newPos = UDim2.new(
+                    FullStartPos.X.Scale,
+                    FullStartPos.X.Offset + delta.X,
+                    FullStartPos.Y.Scale,
+                    FullStartPos.Y.Offset + delta.Y
+                )
+                FullNameSection.Position = newPos
+                
+                if FullIsDetached then
+                    local nearestTab = nil
+                    local minDistance = math.huge
+                    for _, tab in pairs(Tabs:GetChildren()) do
+                        if tab:IsA("Frame") and tab.Visible then
+                            local tabPos = tab.AbsolutePosition
+                            local sectionPos = FullNameSection.AbsolutePosition
+                            local distance = math.sqrt((sectionPos.X - tabPos.X)^2 + (sectionPos.Y - tabPos.Y)^2)
+                            if distance < minDistance then
+                                minDistance = distance
+                                nearestTab = tab
+                            end
+                        end
+                    end
+                    
+                    if nearestTab and FullNameSection then
+                        local tabPos = nearestTab.AbsolutePosition
+                        local distance = minDistance
+                        local minAttachDistance = 75
+                        
+                        if distance < minAttachDistance then
+                            local relativeX = tabPos.X - UILibrary.AbsolutePosition.X
+                            local relativeY = tabPos.Y - UILibrary.AbsolutePosition.Y
+                            FullShadow.Position = UDim2.new(0, relativeX, 0, relativeY)
+                            FullShadow.Visible = true
+                        else
+                            FullShadow.Visible = false
+                        end
+                    else
+                        FullShadow.Visible = false
+                    end
+                end
+            end
+        end
 
-    LeftContentLayout.Name = "LeftContentLayout"
-    LeftContentLayout.Parent = LeftContent
-    LeftContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    LeftContentLayout.Padding = UDim.new(0, 5)
+        FullSectionTitle.InputBegan:Connect(function(input)
+            if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) and FullNameSection then
+                FullDragging = true
+                FullDragStart = input.Position
+                FullStartPos = FullNameSection.Position
+                FullHoldStartTime = tick()
+                FullIsHolding = true
+                
+                coroutine.wrap(function()
+                    while FullIsHolding do
+                        if tick() - FullHoldStartTime >= 0.5 and not FullIsDetached then
+                            FullLastValidPosition = FullNameSection.Position
+                            FullIsDetached = true
+                            FullMaximizeBtn.Visible = true
+                            
+                            FullNameSection.Parent = UILibrary
+                            local detachOffsetX = 15
+                            local detachOffsetY = -15
+                            TweenService:Create(FullNameSection, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                                ImageColor3 = Color3.fromRGB(50, 50, 50),
+                                Position = UDim2.new(
+                                    FullStartPos.X.Scale,
+                                    FullStartPos.X.Offset + detachOffsetX,
+                                    FullStartPos.Y.Scale,
+                                    FullStartPos.Y.Offset + detachOffsetY
+                                )
+                            }):Play()
+                            
+                            TweenService:Create(FullNameSection, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                                Size = UDim2.new(0, 409, 0, 171)
+                            }):Play()
+                            task.wait(0.15)
+                            TweenService:Create(FullNameSection, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                                Size = UDim2.new(0, 419, 0, 181)
+                            }):Play()
+                            
+                            FullSectionTitle.Size = UDim2.new(0, FullNameSection.Size.X.Offset - 20, 0, 22)
+                            FullSectionTitle.Position = UDim2.new(0.5, -FullSectionTitle.Size.X.Offset / 2, 0, -12)
+                            break
+                        end
+                        task.wait()
+                    end
+                end)()
+                
+                input.Changed:Connect(function()
+                    if input.UserInputState == Enum.UserInputState.End then
+                        FullDragging = false
+                        FullIsHolding = false
+                        if FullIsDetached and FullNameSection then
+                            local nearestTab = nil
+                            local minDistance = math.huge
+                            for _, tab in pairs(Tabs:GetChildren()) do
+                                if tab:IsA("Frame") and tab.Visible then
+                                    local tabPos = tab.AbsolutePosition
+                                    local sectionPos = FullNameSection.AbsolutePosition
+                                    local distance = math.sqrt((sectionPos.X - tabPos.X)^2 + (sectionPos.Y - tabPos.Y)^2)
+                                    if distance < minDistance then
+                                        minDistance = distance
+                                        nearestTab = tab
+                                    end
+                                end
+                            end
+                            
+                            if nearestTab then
+                                local tabPos = nearestTab.AbsolutePosition
+                                local distance = minDistance
+                                local minAttachDistance = 75
+                                if distance < minAttachDistance then
+                                    local hasSectionAtDefault = false
+                                    for _, child in pairs(nearestTab:GetChildren()) do
+                                        if child:IsA("ImageLabel") and child.Name:match("Section$") and
+                                           child.Position == UDim2.new(0, 0, 0.0574162677, 0) then
+                                            hasSectionAtDefault = true
+                                            break
+                                        end
+                                    end
+                                    
+                                    if not hasSectionAtDefault then
+                                        local relativeX = tabPos.X - UILibrary.AbsolutePosition.X
+                                        local relativeY = tabPos.Y - UILibrary.AbsolutePosition.Y
+                                        local targetPos = UDim2.new(0, relativeX, 0, relativeY + 12)
+                                        TweenService:Create(FullNameSection, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.In), {
+                                            Position = targetPos,
+                                            ImageColor3 = Library.Theme.BackgroundColor
+                                        }):Play()
+                                        
+                                        TweenService:Create(FullNameSection, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                                            Size = UDim2.new(0, 429, 0, 191)
+                                        }):Play()
+                                        task.wait(0.15)
+                                        TweenService:Create(FullNameSection, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                                            Size = UDim2.new(0, 419, 0, 181)
+                                        }):Play()
+                                        
+                                        task.wait(0.3)
+                                        FullNameSection.Parent = nearestTab
+                                        FullIsDetached = false
+                                        FullMaximizeBtn.Visible = false
+                                        FullSectionTitle.Size = UDim2.new(0, FullSectionTitle.TextBounds.X + 20, 0, 22)
+                                        FullSectionTitle.Position = UDim2.new(0.5, (-FullSectionTitle.TextBounds.X - 5) / 2, 0, -12)
+                                        FullNameSection.Position = UDim2.new(0, 0, 0.0574162677, 0)
+                                        FullShadow.Visible = false
+                                        
+                                        local layout = nearestTab:FindFirstChild("SectionLayout")
+                                        if layout then
+                                            layout:ApplyLayout()
+                                        end
+                                    else
+                                        local availableTab = nil
+                                        for _, tab in pairs(Tabs:GetChildren()) do
+                                            if tab:IsA("Frame") and tab.Visible then
+                                                local hasDefaultSection = false
+                                                for _, child in pairs(tab:GetChildren()) do
+                                                    if child:IsA("ImageLabel") and child.Name:match("Section$") and
+                                                       child.Position == UDim2.new(0, 0, 0.0574162677, 0) then
+                                                        hasDefaultSection = true
+                                                        break
+                                                    end
+                                                end
+                                                if not hasDefaultSection then
+                                                    availableTab = tab
+                                                    break
+                                                end
+                                            end
+                                        end
+                                        
+                                        if availableTab then
+                                            local newTabPos = availableTab.AbsolutePosition
+                                            local relativeX = newTabPos.X - UILibrary.AbsolutePosition.X
+                                            local relativeY = newTabPos.Y - UILibrary.AbsolutePosition.Y
+                                            local targetPos = UDim2.new(0, relativeX, 0, relativeY + 12)
+                                            TweenService:Create(FullNameSection, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.In), {
+                                                Position = targetPos,
+                                                ImageColor3 = Library.Theme.BackgroundColor
+                                            }):Play()
+                                            
+                                            TweenService:Create(FullNameSection, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                                                Size = UDim2.new(0, 429, 0, 191)
+                                            }):Play()
+                                            task.wait(0.15)
+                                            TweenService:Create(FullNameSection, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                                                Size = UDim2.new(0, 419, 0, 181)
+                                            }):Play()
+                                            
+                                            task.wait(0.3)
+                                            FullNameSection.Parent = availableTab
+                                            FullIsDetached = false
+                                            FullMaximizeBtn.Visible = false
+                                            FullSectionTitle.Size = UDim2.new(0, FullSectionTitle.TextBounds.X + 20, 0, 22)
+                                            FullSectionTitle.Position = UDim2.new(0.5, (-FullSectionTitle.TextBounds.X - 5) / 2, 0, -12)
+                                            FullNameSection.Position = UDim2.new(0, 0, 0.0574162677, 0)
+                                            FullShadow.Visible = false
+                                            
+                                            local layout = availableTab:FindFirstChild("SectionLayout")
+                                            if layout then
+                                                layout:ApplyLayout()
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end)
+            end
+        end)
 
-    RightContent.Name = "RightContent"
-    RightContent.Parent = FullSection
-    RightContent.Active = true
-    RightContent.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    RightContent.BackgroundTransparency = 1.000
-    RightContent.Position = UDim2.new(0, 213, 0, 5)
-    RightContent.Size = UDim2.new(0, 203, 0, 171)
-    RightContent.ZIndex = 5
-    RightContent.CanvasSize = UDim2.new(0, 0, 0, 0)
-    RightContent.ScrollBarThickness = 2
+        FullSectionTitle.InputChanged:Connect(function(input)
+            if (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) and FullNameSection then
+                FullDragInput = input
+            end
+        end)
 
-    RightContentLayout.Name = "RightContentLayout"
-    RightContentLayout.Parent = RightContent
-    RightContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    RightContentLayout.Padding = UDim.new(0, 5)
-
+        UserInputService.InputChanged:Connect(function(input)
+            if input == FullDragInput and FullDragging then
+                update(input)
+            end
+        end)
+    end
+    
+    local function ToggleFullMaximize()
+        if not FullIsDetached then return end
+        
+        FullMaximized = not FullMaximized
+        if not FullMaximized then
+            TweenService:Create(FullNameSection, TweenInfo.new(0.3), {
+                Size = UDim2.new(0, 419, 0, 30),
+                ImageColor3 = Color3.fromRGB(70, 70, 70)
+            }):Play()
+            FullSectionContent.Visible = false
+            FullMaximizeBtn.Text = "⌄"
+        else
+            TweenService:Create(FullNameSection, TweenInfo.new(0.3), {
+                Size = UDim2.new(0, 419, 0, 181),
+                ImageColor3 = Color3.fromRGB(50, 50, 50)
+            }):Play()
+            FullSectionContent.Visible = true
+            FullMaximizeBtn.Text = "□"
+        end
+    end
+    
+    FullMaximizeBtn.MouseButton1Click:Connect(ToggleFullMaximize)
+    MakeFullSectionDraggable()
+    
     task.spawn(function()
         task.wait()
-        FullSection.Position = UDim2.new(0, 0, -0.5, 0)
-        TweenService:Create(FullSection, TweenInfo.new(0.5, Library.Theme.EasingStyle), {
-            Position = UDim2.new(0, 0, 0.0574162677, 0),
-            ImageTransparency = 0
+        FullNameSection.Position = UDim2.new(0, 0, -0.5, 0)
+        TweenService:Create(FullNameSection, TweenInfo.new(0.5, Library.Theme.EasingStyle), {
+            Position = FullLastValidPosition,
+            ImageTransparency = 0,
+            ImageColor3 = Library.Theme.BackgroundColor
         }):Play()
     end)
-
-    table.insert(Library.LibraryColorTable, FullSection)
-    table.insert(Library.LibraryColorTable, FullSectionBorder)
-    table.insert(Library.LibraryColorTable, FullSectionTitle)
-
-    function FullSectionElements:CreateLeftButton(name, callback)
-        local Button = Instance.new("TextButton")
-        local ButtonRounded = Instance.new("UICorner")
-
-        Button.Name = (name .. "Button")
-        Button.Parent = LeftContent
-        Button.BackgroundColor3 = Library.Theme.MainColor
-        Button.Size = UDim2.new(0, 193, 0, 35)
-        Button.ZIndex = 6
-        Button.Font = Library.Theme.TextFont
-        Button.Text = name
-        Button.TextColor3 = Library.Theme.TextColor
-        Button.TextSize = 15.000
-
-        ButtonRounded.CornerRadius = UDim.new(0, 5)
-        ButtonRounded.Parent = Button
-
-        Button.MouseButton1Click:Connect(function()
-            RippleEffect(Button)
-            if callback then
-                callback()
-            end
-        end)
-
-        LeftContent.CanvasSize = UDim2.new(0, 0, 0, LeftContentLayout.AbsoluteContentSize.Y + 10)
-        table.insert(Library.LibraryColorTable, Button)
-    end
-
-    function FullSectionElements:CreateRightButton(name, callback)
-        local Button = Instance.new("TextButton")
-        local ButtonRounded = Instance.new("UICorner")
-
-        Button.Name = (name .. "Button")
-        Button.Parent = RightContent
-        Button.BackgroundColor3 = Library.Theme.MainColor
-        Button.Size = UDim2.new(0, 193, 0, 35)
-        Button.ZIndex = 6
-        Button.Font = Library.Theme.TextFont
-        Button.Text = name
-        Button.TextColor3 = Library.Theme.TextColor
-        Button.TextSize = 15.000
-
-        ButtonRounded.CornerRadius = UDim.new(0, 5)
-        ButtonRounded.Parent = Button
-
-        Button.MouseButton1Click:Connect(function()
-            RippleEffect(Button)
-            if callback then
-                callback()
-            end
-        end)
-
-        RightContent.CanvasSize = UDim2.new(0, 0, 0, RightContentLayout.AbsoluteContentSize.Y + 10)
-        table.insert(Library.LibraryColorTable, Button)
-    end
-
-    function FullSectionElements:CreateLeftLabel(text)
-        local Label = Instance.new("TextLabel")
-
-        Label.Name = (text .. "Label")
-        Label.Parent = LeftContent
-        Label.BackgroundTransparency = 1.000
-        Label.Size = UDim2.new(0, 193, 0, 20)
-        Label.ZIndex = 6
-        Label.Font = Library.Theme.TextFont
-        Label.Text = text
-        Label.TextColor3 = Library.Theme.TextColor
-        Label.TextSize = 15.000
-        Label.TextXAlignment = Enum.TextXAlignment.Left
-
-        LeftContent.CanvasSize = UDim2.new(0, 0, 0, LeftContentLayout.AbsoluteContentSize.Y + 10)
-        table.insert(Library.LibraryColorTable, Label)
-    end
-
-    function FullSectionElements:CreateRightLabel(text)
-        local Label = Instance.new("TextLabel")
-
-        Label.Name = (text .. "Label")
-        Label.Parent = RightContent
-        Label.BackgroundTransparency = 1.000
-        Label.Size = UDim2.new(0, 193, 0, 20)
-        Label.ZIndex = 6
-        Label.Font = Library.Theme.TextFont
-        Label.Text = text
-        Label.TextColor3 = Library.Theme.TextColor
-        Label.TextSize = 15.000
-        Label.TextXAlignment = Enum.TextXAlignment.Left
-
-        RightContent.CanvasSize = UDim2.new(0, 0, 0, RightContentLayout.AbsoluteContentSize.Y + 10)
-        table.insert(Library.LibraryColorTable, Label)
-    end
-
-    return FullSectionElements
-end
+    
+    FullSectionContent.Name = "FullSectionContent"
+    FullSectionContent.Parent = FullNameSection
+    FullSectionContent.Active = true
+    FullSectionContent.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    FullSectionContent.BackgroundTransparency = 1.000
+    FullSectionContent.BorderColor3 = Color3.fromRGB(27, 42, 53)
+    FullSectionContent.Position = UDim2.new(0, 10, 0, 10)
+    FullSectionContent.Size = UDim2.new(0, 399, 0, 161) -- Lebar penuh dengan padding
+    FullSectionContent.ZIndex = 4
+    FullSectionContent.BottomImage = "rbxasset://textures/ui/Scroll/scroll-middle.png"
+    FullSectionContent.CanvasSize = UDim2.new(0, 0, 0, 0)
+    FullSectionContent.ScrollBarThickness = 5
+    FullSectionContent.TopImage = "rbxasset://text
 function SectionElements:CreateLabel(name, text, callback, options)
     local NameLabel = Instance.new("TextLabel")
     local LabelButton = nil
