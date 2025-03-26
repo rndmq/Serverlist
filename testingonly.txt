@@ -2834,14 +2834,14 @@ function TabElements:CreateFullSection(name, side)
     local FullSectionBodyLayout = Instance.new("UIListLayout")
     
     local FullSectionElements = { GameId = self.GameId }
-    side = side or "center"
+    side = side or "left"
 
     FullSectionFrame.Name = (name .. "FullSectionFrame")
     FullSectionFrame.Parent = NameTab
     FullSectionFrame.BackgroundColor3 = Library.Theme.BackgroundColor
     FullSectionFrame.BackgroundTransparency = 1.000
     FullSectionFrame.Position = UDim2.new(0, 0, 0.0574162677, 0)
-    FullSectionFrame.Size = UDim2.new(1, -26, 0, 181) 
+    FullSectionFrame.Size = UDim2.new(1, -26, 0, 181)
     FullSectionFrame.ZIndex = 4
     FullSectionFrame.Image = "rbxassetid://3570695787"
     FullSectionFrame.ImageColor3 = Library.Theme.BackgroundColor
@@ -2868,14 +2868,13 @@ function TabElements:CreateFullSection(name, side)
     FullSectionHeader.BackgroundColor3 = Library.Theme.BackgroundColor
     FullSectionHeader.BorderSizePixel = 0
     FullSectionHeader.Text = name
-    
     if side == "center" then
         FullSectionHeader.Position = UDim2.new(0.5, -(FullSectionHeader.TextBounds.X + 20) / 2, 0, -12)
         FullSectionHeader.TextXAlignment = Enum.TextXAlignment.Center
     elseif side == "right" then
         FullSectionHeader.Position = UDim2.new(0.98, 0, 0, -12)
         FullSectionHeader.TextXAlignment = Enum.TextXAlignment.Right
-    else -- left
+    else
         FullSectionHeader.Position = UDim2.new(0.02, 0, 0, -12)
         FullSectionHeader.TextXAlignment = Enum.TextXAlignment.Left
     end
@@ -2911,7 +2910,6 @@ function TabElements:CreateFullSection(name, side)
     table.insert(Library.LibraryColorTable, FullSectionOutline)
     table.insert(Library.LibraryColorTable, FullSectionHeader)
 
-    
     task.spawn(function()
         task.wait()
         FullSectionFrame.Position = UDim2.new(0, 0, -0.5, 0)
@@ -2921,7 +2919,7 @@ function TabElements:CreateFullSection(name, side)
         }):Play()
     end)
 
-    FullSectionElements:CreateButton(name, callback, position)
+    function FullSectionElements:CreateButton(name, callback, position)
         local FullSectionButton = Instance.new("TextButton")
         local ButtonRounded = Instance.new("UICorner")
 
@@ -2948,7 +2946,7 @@ function TabElements:CreateFullSection(name, side)
         table.insert(Library.LibraryColorTable, FullSectionButton)
     end
 
-    FullSectionElements:CreateLabel(name, position)
+    function FullSectionElements:CreateLabel(name, position)
         local FullSectionLabel = Instance.new("TextLabel")
 
         FullSectionLabel.Name = (name .. "FullSectionLabel")
