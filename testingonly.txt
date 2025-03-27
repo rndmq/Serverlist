@@ -409,6 +409,17 @@ TabButtonLayout.Name = "TabButtonLayout"
 TabButtonLayout.Parent = TabButtons
 TabButtonLayout.FillDirection = Enum.FillDirection.Horizontal
 TabButtonLayout.SortOrder = Enum.SortOrder.LayoutOrder
+local TabScrollingFrame = Instance.new("ScrollingFrame")
+TabScrollingFrame.Name = "TabScrollingFrame"
+TabScrollingFrame.Parent = TabButtons
+TabScrollingFrame.Position = UDim2.new(0, 0, 0, 0)
+TabScrollingFrame.Size = UDim2.new(1, 0, 1, 0)
+TabScrollingFrame.BackgroundTransparency = 1
+TabScrollingFrame.ScrollBarThickness = 10
+TabScrollingFrame.ScrollingDirection = Enum.ScrollingDirection.X
+TabScrollingFrame.AutomaticCanvasSize = Enum.AutomaticSize.X
+TabScrollingFrame.ClipsDescendants = true
+TabButtonLayout.Parent = TabScrollingFrame
 
 TweenService:Create(Main, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 450, 0, 250)}):Play()
 TweenService:Create(Border, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageTransparency = 0}):Play()
@@ -647,7 +658,7 @@ local function CloseAllTabs()
 end
 
 local function ResetAllTabButtons()
-    for i, v in pairs(TabButtons:GetChildren()) do
+    for i, v in pairs(TabScrollingFrame:GetChildren()) do
         if v:IsA("ImageButton") then
             TweenService:Create(v, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageColor3 = Library.Theme.MainColor}):Play()
         end
@@ -664,7 +675,7 @@ local function KeepFirstTabOpen()
             end
         end
 
-        for i, v in pairs(TabButtons:GetChildren()) do
+        for i, v in pairs(TabScrollingFrame:GetChildren()) do
             if v:IsA("ImageButton") then
                 if v.Name:find(Library.FirstTab .. "TabButton") then
                     TweenService:Create(v, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 15)}):Play()
@@ -727,7 +738,7 @@ function Library:CreateTab(name)
     NameTab.Position = UDim2.new(-1, 0, 0, 0)
 
     NameTabButton.Name = (name .. "TabButton")
-    NameTabButton.Parent = TabButtons
+    NameTabButton.Parent = TabScrollingFrame
     NameTabButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     NameTabButton.BackgroundTransparency = 1.000
     NameTabButton.Size = UDim2.new(0, 84, 0, 25)
@@ -816,15 +827,15 @@ NameTabButton.MouseButton1Down:Connect(function()
 end)
 
     ResetAllTabButtons = function()
-        for _, v in pairs(TabButtons:GetChildren()) do
-            if v:IsA("ImageButton") then
-                TweenService:Create(v, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-                    ImageColor3 = Library.Theme.MainColor,
-                    Size = originalSize
-                }):Play()
-            end
+    for _, v in pairs(TabScrollingFrame:GetChildren()) do
+        if v:IsA("ImageButton") then
+            TweenService:Create(v, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                ImageColor3 = Library.Theme.MainColor,
+                Size = originalSize
+            }):Play()
         end
     end
+end
 
 local function ShowFirstTab()
     if NameTab.Name == (Library.FirstTab .. "Tab") then
@@ -2825,148 +2836,6 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
     CloseButton.MouseButton1Click:Connect(closeNotification)
 
     return NotificationFrame
-end
-function TabElements:CreateFullSection(name, side)
-    local FullSectionFrame = Instance.new("ImageLabel")
-    local FullSectionOutline = Instance.new("ImageLabel")
-    local FullSectionHeader = Instance.new("TextLabel")
-    local FullSectionBody = Instance.new("ScrollingFrame")
-    local FullSectionBodyLayout = Instance.new("UIListLayout")
-    
-    local FullSectionElements = { GameId = self.GameId }
-    side = side or "left"
-
-    FullSectionFrame.Name = (name .. "FullSectionFrame")
-    FullSectionFrame.Parent = NameTab
-    FullSectionFrame.BackgroundColor3 = Library.Theme.BackgroundColor
-    FullSectionFrame.BackgroundTransparency = 1.000
-    FullSectionFrame.Position = UDim2.new(0, 0, 0.0574162677, 0)
-    FullSectionFrame.Size = UDim2.new(1, -26, 0, 181)
-    FullSectionFrame.ZIndex = 4
-    FullSectionFrame.Image = "rbxassetid://3570695787"
-    FullSectionFrame.ImageColor3 = Library.Theme.BackgroundColor
-    FullSectionFrame.ScaleType = Enum.ScaleType.Slice
-    FullSectionFrame.SliceCenter = Rect.new(100, 100, 100, 100)
-    FullSectionFrame.SliceScale = 0.025
-    FullSectionFrame.ImageTransparency = 1
-
-    FullSectionOutline.Name = "FullSectionOutline"
-    FullSectionOutline.Parent = FullSectionFrame
-    FullSectionOutline.BackgroundColor3 = Library.Theme.MainColor
-    FullSectionOutline.BackgroundTransparency = 1.000
-    FullSectionOutline.Position = UDim2.new(0, -1, 0, -1)
-    FullSectionOutline.Size = UDim2.new(1, 2, 1, 2)
-    FullSectionOutline.ZIndex = 3
-    FullSectionOutline.Image = "rbxassetid://3570695787"
-    FullSectionOutline.ImageColor3 = Library.Theme.MainColor
-    FullSectionOutline.ScaleType = Enum.ScaleType.Slice
-    FullSectionOutline.SliceCenter = Rect.new(100, 100, 100, 100)
-    FullSectionOutline.SliceScale = 0.050
-
-    FullSectionHeader.Name = "FullSectionHeader"
-    FullSectionHeader.Parent = FullSectionFrame
-    FullSectionHeader.BackgroundColor3 = Library.Theme.BackgroundColor
-    FullSectionHeader.BorderSizePixel = 0
-    FullSectionHeader.Text = name
-    if side == "center" then
-        FullSectionHeader.Position = UDim2.new(0.5, -(FullSectionHeader.TextBounds.X + 20) / 2, 0, -12)
-        FullSectionHeader.TextXAlignment = Enum.TextXAlignment.Center
-    elseif side == "right" then
-        FullSectionHeader.Position = UDim2.new(0.98, 0, 0, -12)
-        FullSectionHeader.TextXAlignment = Enum.TextXAlignment.Right
-    else
-        FullSectionHeader.Position = UDim2.new(0.02, 0, 0, -12)
-        FullSectionHeader.TextXAlignment = Enum.TextXAlignment.Left
-    end
-    FullSectionHeader.Size = UDim2.new(0, FullSectionHeader.TextBounds.X + 20, 0, 22)
-    FullSectionHeader.ZIndex = 4
-    FullSectionHeader.Font = Library.Theme.TextFont
-    FullSectionHeader.TextColor3 = Library.Theme.TextColor
-    FullSectionHeader.TextSize = 14.000
-    local headerCorner = Instance.new("UICorner")
-    headerCorner.CornerRadius = UDim.new(0, 10)
-    headerCorner.Parent = FullSectionHeader
-
-    FullSectionBody.Name = "FullSectionBody"
-    FullSectionBody.Parent = FullSectionFrame
-    FullSectionBody.Active = true
-    FullSectionBody.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    FullSectionBody.BackgroundTransparency = 1.000
-    FullSectionBody.BorderColor3 = Color3.fromRGB(27, 42, 53)
-    FullSectionBody.Position = UDim2.new(0, 10, 0, 10)
-    FullSectionBody.Size = UDim2.new(1, -20, 1, -20)
-    FullSectionBody.ZIndex = 4
-    FullSectionBody.BottomImage = "rbxasset://textures/ui/Scroll/scroll-middle.png"
-    FullSectionBody.CanvasSize = UDim2.new(0, 0, 0, 0)
-    FullSectionBody.ScrollBarThickness = 5
-    FullSectionBody.TopImage = "rbxasset://textures/ui/Scroll/scroll-middle.png"
-
-    FullSectionBodyLayout.Name = "FullSectionBodyLayout"
-    FullSectionBodyLayout.Parent = FullSectionBody
-    FullSectionBodyLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    FullSectionBodyLayout.Padding = UDim.new(0, 5)
-
-    table.insert(Library.LibraryColorTable, FullSectionFrame)
-    table.insert(Library.LibraryColorTable, FullSectionOutline)
-    table.insert(Library.LibraryColorTable, FullSectionHeader)
-
-    task.spawn(function()
-        task.wait()
-        FullSectionFrame.Position = UDim2.new(0, 0, -0.5, 0)
-        TweenService:Create(FullSectionFrame, TweenInfo.new(0.5, Library.Theme.EasingStyle), {
-            Position = UDim2.new(0, 0, 0.0574162677, 0),
-            ImageTransparency = 0
-        }):Play()
-    end)
-
-    function FullSectionElements:CreateButton(name, callback, position)
-        local FullSectionButton = Instance.new("TextButton")
-        local ButtonRounded = Instance.new("UICorner")
-
-        FullSectionButton.Name = (name .. "FullSectionButton")
-        FullSectionButton.Parent = FullSectionBody
-        FullSectionButton.BackgroundColor3 = Library.Theme.MainColor
-        FullSectionButton.Size = UDim2.new(0, 150, 0, 30)
-        FullSectionButton.ZIndex = 5
-        FullSectionButton.Font = Library.Theme.TextFont
-        FullSectionButton.Text = name
-        FullSectionButton.TextColor3 = Library.Theme.TextColor
-        FullSectionButton.TextSize = 15.000
-        FullSectionButton.Position = position == "right" and UDim2.new(1, -160, 0, 0) or UDim2.new(0, 10, 0, 0)
-        
-        ButtonRounded.CornerRadius = UDim.new(0, 5)
-        ButtonRounded.Parent = FullSectionButton
-
-        FullSectionButton.MouseButton1Click:Connect(function()
-            RippleEffect(FullSectionButton)
-            if callback then callback() end
-        end)
-
-        FullSectionBody.CanvasSize = UDim2.new(0, 0, 0, FullSectionBodyLayout.AbsoluteContentSize.Y + 15)
-        table.insert(Library.LibraryColorTable, FullSectionButton)
-    end
-
-    function FullSectionElements:CreateLabel(name, position)
-        local FullSectionLabel = Instance.new("TextLabel")
-
-        FullSectionLabel.Name = (name .. "FullSectionLabel")
-        FullSectionLabel.Parent = FullSectionBody
-        FullSectionLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        FullSectionLabel.BackgroundTransparency = 1.000
-        FullSectionLabel.Size = UDim2.new(0, 180, 0, 25)
-        FullSectionLabel.ZIndex = 5
-        FullSectionLabel.Font = Library.Theme.TextFont
-        FullSectionLabel.Text = name
-        FullSectionLabel.TextColor3 = Library.Theme.TextColor
-        FullSectionLabel.TextSize = 15.000
-        FullSectionLabel.TextXAlignment = position == "right" and Enum.TextXAlignment.Right or Enum.TextXAlignment.Left
-        FullSectionLabel.Position = position == "right" and UDim2.new(1, -190, 0, 0) or UDim2.new(0, 10, 0, 0)
-
-        FullSectionBody.CanvasSize = UDim2.new(0, 0, 0, FullSectionBodyLayout.AbsoluteContentSize.Y + 15)
-        table.insert(Library.LibraryColorTable, FullSectionLabel)
-    end
-
-    return FullSectionElements
 end
         function SectionElements:CreateKeybind(name, presetbind, keyboardonly, holdmode, callback)
             local NameKeybind = Instance.new("Frame")
