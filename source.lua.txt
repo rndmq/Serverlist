@@ -2315,6 +2315,45 @@ function SectionElements:CreateTextBox(name, characterLimit, placeholderText, ca
             table.insert(Library.LibraryColorTable, CheckboxOutline)
             table.insert(Library.LibraryColorTable, CheckboxTicked)
         end
+function Library:CreateWindow(text)
+    local WindowTitle = Instance.new("TextLabel")
+    WindowTitle.Name = "WindowTitle"
+    WindowTitle.Parent = Topbar
+    WindowTitle.BackgroundTransparency = 1
+    WindowTitle.Position = UDim2.new(0, 10, 0, 0)
+    WindowTitle.Size = UDim2.new(0, 200, 1, 0)
+    WindowTitle.ZIndex = 3
+    WindowTitle.Font = Library.Theme.TextFont
+    WindowTitle.Text = text or "Window Title"
+    WindowTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    WindowTitle.TextSize = 14
+    WindowTitle.TextXAlignment = Enum.TextXAlignment.Left
+
+    table.insert(Library.LibraryColorTable, WindowTitle)
+
+    local function ColorTransition()
+        while true do
+            for i = 0, 1, 0.01 do
+                local r = 255
+                local g = 255 - (i * (255 - 75))
+                local b = 255 - (i * (255 - 75))
+                WindowTitle.TextColor3 = Color3.fromRGB(r, g, b)
+                task.wait(0.02)
+            end
+            for i = 0, 1, 0.01 do
+                local r = 255
+                local g = 75 + (i * (255 - 75))
+                local b = 75 + (i * (255 - 75))
+                WindowTitle.TextColor3 = Color3.fromRGB(r, g, b)
+                task.wait(0.02)
+            end
+        end
+    end
+
+    coroutine.wrap(ColorTransition)()
+
+    return WindowTitle
+end
 
 function SectionElements:CreateDropdown(name, options, presetoption, callback)
     local NameDropdown = Instance.new("Frame")
