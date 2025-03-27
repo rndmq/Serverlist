@@ -758,17 +758,27 @@ function Library:CreateTab(name)
     Title.Font = Library.Theme.TextFont
     Title.Text = name
     Title.TextColor3 = Library.Theme.TextColor
-table.insert(Library.LibraryColorTable, Title) 
+    table.insert(Library.LibraryColorTable, Title) 
     Title.TextSize = 15.000
-
+    local SectionScrollingFrame = Instance.new("ScrollingFrame")
+    SectionScrollingFrame.Name = "SectionScrollingFrame"
+    SectionScrollingFrame.Parent = NameTab
+    SectionScrollingFrame.BackgroundTransparency = 1
+    SectionScrollingFrame.Position = UDim2.new(0, 0, 0, 0)
+    SectionScrollingFrame.Size = UDim2.new(1, 0, 1, 0)
+    SectionScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+    SectionScrollingFrame.ScrollBarThickness = 6
+    SectionScrollingFrame.ScrollingDirection = Enum.ScrollingDirection.X
+    SectionScrollingFrame.AutomaticCanvasSize = Enum.AutomaticSize.X
+    SectionScrollingFrame.ClipsDescendants = true
     SectionLayout.Name = "SectionLayout"
-    SectionLayout.Parent = NameTab
+    SectionLayout.Parent = SectionScrollingFrame
     SectionLayout.FillDirection = Enum.FillDirection.Horizontal
     SectionLayout.SortOrder = Enum.SortOrder.LayoutOrder
     SectionLayout.Padding = UDim.new(0, 25)
 
     SectionPadding.Name = "SectionPadding"
-    SectionPadding.Parent = NameTab
+    SectionPadding.Parent = SectionScrollingFrame
     SectionPadding.PaddingTop = UDim.new(0, 12)
 
     NameTab.Visible = false
@@ -886,7 +896,7 @@ function TabElements:CreateSection(name)
     local SectionElements = { GameId = self.GameId }
 
     NameSection.Name = (name .. "Section")
-    NameSection.Parent = NameTab
+    NameSection.Parent = SectionScrollingFrame
     NameSection.BackgroundColor3 = Library.Theme.BackgroundColor
     NameSection.BackgroundTransparency = 1.000
     NameSection.Position = UDim2.new(0, 0, 0.0574162677, 0)
@@ -1115,7 +1125,7 @@ local function MakeSectionDraggable()
                                     }):Play()
                                     
                                     task.wait(0.3)
-                                    NameSection.Parent = nearestTab
+                                    NameSection.Parent = nearestTab.SectionScrollingFrame
                                     isDetached = false
                                     MinimizeBtn.Visible = false
                                     SectionTitle.Size = UDim2.new(0, SectionTitle.TextBounds.X + 20, 0, 22)
