@@ -409,6 +409,17 @@ TabButtonLayout.Name = "TabButtonLayout"
 TabButtonLayout.Parent = TabButtons
 TabButtonLayout.FillDirection = Enum.FillDirection.Horizontal
 TabButtonLayout.SortOrder = Enum.SortOrder.LayoutOrder
+local TabScrollingFrame = Instance.new("ScrollingFrame")
+TabScrollingFrame.Name = "TabScrollingFrame"
+TabScrollingFrame.Parent = TabButtons
+TabScrollingFrame.Position = UDim2.new(0, 0, 0, 0)
+TabScrollingFrame.Size = UDim2.new(1, 0, 1, 0)
+TabScrollingFrame.BackgroundTransparency = 1
+TabScrollingFrame.ScrollBarThickness = 5
+TabScrollingFrame.ScrollingDirection = Enum.ScrollingDirection.X
+TabScrollingFrame.AutomaticCanvasSize = Enum.AutomaticSize.X
+TabScrollingFrame.ClipsDescendants = true
+TabButtonLayout.Parent = TabScrollingFrame
 
 TweenService:Create(Main, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, 450, 0, 250)}):Play()
 TweenService:Create(Border, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageTransparency = 0}):Play()
@@ -647,7 +658,7 @@ local function CloseAllTabs()
 end
 
 local function ResetAllTabButtons()
-    for i, v in pairs(TabButtons:GetChildren()) do
+    for i, v in pairs(TabScrollingFrame:GetChildren()) do
         if v:IsA("ImageButton") then
             TweenService:Create(v, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageColor3 = Library.Theme.MainColor}):Play()
         end
@@ -664,7 +675,7 @@ local function KeepFirstTabOpen()
             end
         end
 
-        for i, v in pairs(TabButtons:GetChildren()) do
+        for i, v in pairs(TabScrollingFrame:GetChildren()) do
             if v:IsA("ImageButton") then
                 if v.Name:find(Library.FirstTab .. "TabButton") then
                     TweenService:Create(v, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 15)}):Play()
@@ -727,7 +738,7 @@ function Library:CreateTab(name)
     NameTab.Position = UDim2.new(-1, 0, 0, 0)
 
     NameTabButton.Name = (name .. "TabButton")
-    NameTabButton.Parent = TabButtons
+    NameTabButton.Parent = TabScrollingFrame
     NameTabButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     NameTabButton.BackgroundTransparency = 1.000
     NameTabButton.Size = UDim2.new(0, 84, 0, 25)
@@ -816,15 +827,15 @@ NameTabButton.MouseButton1Down:Connect(function()
 end)
 
     ResetAllTabButtons = function()
-        for _, v in pairs(TabButtons:GetChildren()) do
-            if v:IsA("ImageButton") then
-                TweenService:Create(v, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-                    ImageColor3 = Library.Theme.MainColor,
-                    Size = originalSize
-                }):Play()
-            end
+    for _, v in pairs(TabScrollingFrame:GetChildren()) do
+        if v:IsA("ImageButton") then
+            TweenService:Create(v, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                ImageColor3 = Library.Theme.MainColor,
+                Size = originalSize
+            }):Play()
         end
     end
+end
 
 local function ShowFirstTab()
     if NameTab.Name == (Library.FirstTab .. "Tab") then
