@@ -763,11 +763,11 @@ function Library:CreateTab(name)
     local SectionScrollingFrame = Instance.new("ScrollingFrame")
     SectionScrollingFrame.Name = "SectionScrollingFrame"
     SectionScrollingFrame.Parent = NameTab
-    SectionScrollingFrame.BackgroundTransparency = 1
+    SectionScrollingFrame.BackgroundTransparency = 0
     SectionScrollingFrame.Position = UDim2.new(0, 0, 0, 0)
     SectionScrollingFrame.Size = UDim2.new(1, 0, 1, 0)
     SectionScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
-    SectionScrollingFrame.ScrollBarThickness = 6
+    SectionScrollingFrame.ScrollBarThickness = 10
     SectionScrollingFrame.ScrollingDirection = Enum.ScrollingDirection.X
     SectionScrollingFrame.AutomaticCanvasSize = Enum.AutomaticSize.X
     SectionScrollingFrame.ClipsDescendants = true
