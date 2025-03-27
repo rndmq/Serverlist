@@ -2320,29 +2320,43 @@ function Library:CreateWindow(text)
     WindowTitle.Name = "WindowTitle"
     WindowTitle.Parent = Topbar
     WindowTitle.BackgroundTransparency = 1
-    WindowTitle.Position = UDim2.new(0, 10, 0, 0)
+    WindowTitle.Position = UDim2.new(0.5, 0, 0, 0)
     WindowTitle.Size = UDim2.new(0, 200, 1, 0)
     WindowTitle.ZIndex = 3
     WindowTitle.Font = Library.Theme.TextFont
     WindowTitle.Text = text or "Window Title"
     WindowTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
     WindowTitle.TextSize = 14
-    WindowTitle.TextXAlignment = Enum.TextXAlignment.Left
+    WindowTitle.TextXAlignment = Enum.TextXAlignment.Center
 
     table.insert(Library.LibraryColorTable, WindowTitle)
 
     local function ColorTransition()
         while true do
             for i = 0, 1, 0.01 do
-                local r = 255
+                local r = 255 - (i * (255 - 255))
                 local g = 255 - (i * (255 - 75))
                 local b = 255 - (i * (255 - 75))
                 WindowTitle.TextColor3 = Color3.fromRGB(r, g, b)
                 task.wait(0.02)
             end
             for i = 0, 1, 0.01 do
-                local r = 255
+                local r = 255 - (i * 255)
                 local g = 75 + (i * (255 - 75))
+                local b = 75 + (i * (255 - 75))
+                WindowTitle.TextColor3 = Color3.fromRGB(r, g, b)
+                task.wait(0.02)
+            end
+            for i = 0, 1, 0.01 do
+                local r = 0
+                local g = 255 - (i * 255)
+                local b = 255 - (i * (255 - 75))
+                WindowTitle.TextColor3 = Color3.fromRGB(r, g, b)
+                task.wait(0.02)
+            end
+            for i = 0, 1, 0.01 do
+                local r = 0 + (i * 255)
+                local g = 0 + (i * 255)
                 local b = 75 + (i * (255 - 75))
                 WindowTitle.TextColor3 = Color3.fromRGB(r, g, b)
                 task.wait(0.02)
