@@ -112,6 +112,7 @@ Library = {
     LibraryColorTable = {},
     TabCount = 0,
     FirstTab = nil,
+    sectionCount = 0,
     CurrentlyBinding = false,
     RainbowColorValue = 0,
     HueSelectionPosition = 0,
@@ -763,14 +764,71 @@ function Library:CreateTab(name)
     local SectionScrollingFrame = Instance.new("ScrollingFrame")
     SectionScrollingFrame.Name = "SectionScrollingFrame"
     SectionScrollingFrame.Parent = NameTab
-    SectionScrollingFrame.BackgroundTransparency = 0
+    SectionScrollingFrame.BackgroundTransparency = 1
     SectionScrollingFrame.Position = UDim2.new(0, 0, 0, 0)
     SectionScrollingFrame.Size = UDim2.new(1, 0, 1, 0)
     SectionScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
-    SectionScrollingFrame.ScrollBarThickness = 10
+    SectionScrollingFrame.ScrollBarThickness = 0 
     SectionScrollingFrame.ScrollingDirection = Enum.ScrollingDirection.X
     SectionScrollingFrame.AutomaticCanvasSize = Enum.AutomaticSize.X
     SectionScrollingFrame.ClipsDescendants = true
+
+    local ScrollIndicator = Instance.new("Frame")
+    ScrollIndicator.Name = "ScrollIndicator"
+    ScrollIndicator.Parent = SectionScrollingFrame
+    ScrollIndicator.BackgroundColor3 = Library.Theme.MainColor
+    ScrollIndicator.BackgroundTransparency = 0.7
+    ScrollIndicator.BorderSizePixel = 0
+    ScrollIndicator.Size = UDim2.new(0, 4, 0.5, 0)
+    ScrollIndicator.Position = UDim2.new(1, -6, 0, 0)
+    ScrollIndicator.AnchorPoint = Vector2.new(1, 0)
+    ScrollIndicator.ZIndex = 100
+    ScrollIndicator.Visible = false
+
+    local UICorner = Instance.new("UICorner")
+    UICorner.CornerRadius = UDim.new(1, 0)
+    UICorner.Parent = ScrollIndicator
+    local sectionCount = 0
+    local function updateScrollVisibility()
+        ScrollIndicator.Visible = sectionCount > 2 and 
+            (SectionScrollingFrame.AbsoluteCanvasSize.X > SectionScrollingFrame.AbsoluteWindowSize.X)
+    end
+local function updateScrollIndicator()
+    if sectionCount <= 2 then return end
+    
+    local visibleRatio = SectionScrollingFrame.AbsoluteWindowSize.X / SectionScrollingFrame.AbsoluteCanvasSize.X
+    local scrollRatio = SectionScrollingFrame.CanvasPosition.X / (SectionScrollingFrame.AbsoluteCanvasSize.X - SectionScrollingFrame.AbsoluteWindowSize.X)
+    
+    ScrollIndicator.Size = UDim2.new(0, 4, visibleRatio, 0)
+    ScrollIndicator.Position = UDim2.new(
+        1, 
+        -6, 
+        scrollRatio * (1 - visibleRatio),
+        0
+    )
+    
+    ScrollIndicator.Visible = visibleRatio < 1
+end
+
+    SectionScrollingFrame:GetPropertyChangedSignal("CanvasPosition"):Connect(updateScrollIndicator)
+    SectionScrollingFrame:GetPropertyChangedSignal("AbsoluteCanvasSize"):Connect(updateScrollIndicator)
+    SectionScrollingFrame:GetPropertyChangedSignal("AbsoluteWindowSize"):Connect(updateScrollIndicator)
+
+    SectionScrollingFrame.MouseEnter:Connect(function()
+    if sectionCount > 2 then
+        TweenService:Create(ScrollIndicator, TweenInfo.new(0.2), {
+            BackgroundTransparency = 0.4
+        }):Play()
+    end
+end)
+
+SectionScrollingFrame.MouseLeave:Connect(function()
+    if sectionCount > 2 then
+        TweenService:Create(ScrollIndicator, TweenInfo.new(0.2), {
+            BackgroundTransparency = 0.7
+        }):Play()
+    end
+end)
     SectionLayout.Name = "SectionLayout"
     SectionLayout.Parent = SectionScrollingFrame
     SectionLayout.FillDirection = Enum.FillDirection.Horizontal
@@ -1265,7 +1323,19 @@ end
     SectionContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
     table.insert(Library.LibraryColorTable, SectionBorder)
+self.sectionCount = self.sectionCount + 1
+    if self.updateScrollVisibility then
+        self.updateScrollVisibility()
+    end
 
+    NameSection.AncestryChanged:Connect(function()
+        if not NameSection:IsDescendantOf(game) then
+            self.sectionCount = math.max(0, self.sectionCount - 1)
+            if self.updateScrollVisibility then
+                self.updateScrollVisibility()
+            end
+        end
+    end)
     SectionContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
         SectionContent.CanvasSize = UDim2.new(0, 0, 0, SectionContentLayout.AbsoluteContentSize.Y + 15)
     end)
@@ -1405,218 +1475,6 @@ function SectionElements:CreateLabel(name, text, callback, options)
     }
 end
 
-function Library:CreateKey(keySource, getKeyLink, keyList)
-    local ValidKeys = {}
-    if not keySource or not keySource:match("^https?://") then
-        if type(keyList) == "table" then
-            ValidKeys = keyList
-        elseif type(keyList) == "string" then
-            for key in keyList:gmatch("[^,]+") do
-                table.insert(ValidKeys, key:match("^%s*(.-)%s*$"))
-            end
-        else
-            error("keyList must be a table or a comma-separated string if keySource is not a URL")
-        end
-    end
-
-    self.KeySource = keySource
-    self.GetKeyLink = getKeyLink
-
-    if not (getgenv and getgenv().Key == true) then
-        print("Key system is disabled. Proceeding with main script...")
-        return true
-    end
-
-    local co = coroutine.running()
-    local validated = false
-
-    local KeyWindow = Instance.new("ScreenGui")
-    KeyWindow.Name = "KeySystemUI"
-    KeyWindow.Parent = game:GetService("CoreGui")
-    KeyWindow.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-
-    local MainFrame = Instance.new("Frame")
-    MainFrame.Name = "MainFrame"
-    MainFrame.Parent = KeyWindow
-    MainFrame.BackgroundColor3 = Library.Theme.BackgroundColor
-    MainFrame.Position = UDim2.new(0.5, -150, 0.5, -100)
-    MainFrame.Size = UDim2.new(0, 300, 0, 200)
-    MainFrame.ZIndex = 1000
-
-    local UICorner = Instance.new("UICorner")
-    UICorner.CornerRadius = UDim.new(0, 10)
-    UICorner.Parent = MainFrame
-
-    local Title = Instance.new("TextLabel")
-    Title.Name = "Title"
-    Title.Parent = MainFrame
-    Title.BackgroundTransparency = 1
-    Title.Position = UDim2.new(0, 10, 0, 10)
-    Title.Size = UDim2.new(1, -20, 0, 30)
-    Title.Font = Library.Theme.TextFont
-    Title.Text = "Key System"
-    Title.TextColor3 = Library.Theme.TextColor
-    Title.TextSize = 20
-    Title.TextXAlignment = Enum.TextXAlignment.Center
-
-    local KeyInput = Instance.new("TextBox")
-    KeyInput.Name = "KeyInput"
-    KeyInput.Parent = MainFrame
-    KeyInput.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-    KeyInput.Position = UDim2.new(0, 50, 0, 50)
-    KeyInput.Size = UDim2.new(0, 200, 0, 30)
-    KeyInput.Font = Library.Theme.TextFont
-    KeyInput.PlaceholderText = "Enter your key here..."
-    KeyInput.Text = ""
-    KeyInput.TextColor3 = Color3.fromRGB(255, 255, 255)
-    KeyInput.TextSize = 14
-    KeyInput.ZIndex = 1001
-
-    local UICornerInput = Instance.new("UICorner")
-    UICornerInput.CornerRadius = UDim.new(0, 5)
-    UICornerInput.Parent = KeyInput
-
-    local StatusLabel = Instance.new("TextLabel")
-    StatusLabel.Name = "StatusLabel"
-    StatusLabel.Parent = MainFrame
-    StatusLabel.BackgroundTransparency = 1
-    StatusLabel.Position = UDim2.new(0, 10, 0, 90)
-    StatusLabel.Size = UDim2.new(1, -20, 0, 20)
-    StatusLabel.Font = Library.Theme.TextFont
-    StatusLabel.Text = ""
-    StatusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
-    StatusLabel.TextSize = 14
-    StatusLabel.TextXAlignment = Enum.TextXAlignment.Center
-
-    local GetKeyButton = Instance.new("TextButton")
-    GetKeyButton.Name = "GetKeyButton"
-    GetKeyButton.Parent = MainFrame
-    GetKeyButton.BackgroundColor3 = Library.Theme.MainColor
-    GetKeyButton.Position = UDim2.new(0, 30, 0, 120)
-    GetKeyButton.Size = UDim2.new(0, 100, 0, 40)
-    GetKeyButton.Font = Library.Theme.TextFont
-    GetKeyButton.Text = "Get Key"
-    GetKeyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    GetKeyButton.TextSize = 16
-    GetKeyButton.ZIndex = 1001
-
-    local UICornerGetKey = Instance.new("UICorner")
-    UICornerGetKey.CornerRadius = UDim.new(0, 5)
-    UICornerGetKey.Parent = GetKeyButton
-
-    local CheckKeyButton = Instance.new("TextButton")
-    CheckKeyButton.Name = "CheckKeyButton"
-    CheckKeyButton.Parent = MainFrame
-    CheckKeyButton.BackgroundColor3 = Library.Theme.MainColor
-    CheckKeyButton.Position = UDim2.new(0, 170, 0, 120)
-    CheckKeyButton.Size = UDim2.new(0, 100, 0, 40)
-    CheckKeyButton.Font = Library.Theme.TextFont
-    CheckKeyButton.Text = "Check Key"
-    CheckKeyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    CheckKeyButton.TextSize = 16
-    CheckKeyButton.ZIndex = 1001
-
-    local UICornerCheckKey = Instance.new("UICorner")
-    UICornerCheckKey.CornerRadius = UDim.new(0, 5)
-    UICornerCheckKey.Parent = CheckKeyButton
-
-    GetKeyButton.MouseButton1Click:Connect(function()
-        if self.GetKeyLink then
-            if setclipboard then
-                setclipboard(self.GetKeyLink)
-                StatusLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
-                StatusLabel.Text = "Link copied to clipboard!"
-            else
-                StatusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
-                StatusLabel.Text = "Clipboard not supported!"
-            end
-        else
-            StatusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
-            StatusLabel.Text = "No get key link provided!"
-        end
-    end)
-
-    local function ValidateKey(enteredKey)
-        if self.KeySource and self.KeySource:match("^https?://") then
-            local success, response = pcall(function()
-                local url = self.KeySource .. "?key=" .. enteredKey
-                return HttpService:GetAsync(url)
-            end)
-            if success then
-                if response == "valid" then
-                    return true
-                end
-            else
-                StatusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
-                StatusLabel.Text = "Failed to validate key via web!"
-            end
-            return false
-        else
-            for _, key in ipairs(ValidKeys) do
-                if enteredKey == key then
-                    return true
-                end
-            end
-            return false
-        end
-    end
-
-    CheckKeyButton.MouseButton1Click:Connect(function()
-        local enteredKey = KeyInput.Text:match("^%s*(.-)%s*$")
-        if enteredKey == "" then
-            StatusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
-            StatusLabel.Text = "Please enter a key!"
-            return
-        end
-
-        if ValidateKey(enteredKey) then
-            StatusLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
-            StatusLabel.Text = "Key validated successfully!"
-            validated = true
-            KeyWindow:Destroy()
-            coroutine.resume(co, true)
-        else
-            StatusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
-            StatusLabel.Text = "Invalid key! Please try again."
-        end
-    end)
-
-    local UserInputService = game:GetService("UserInputService")
-    local dragging, dragInput, dragStart, startPos
-
-    local function update(input)
-        local delta = input.Position - dragStart
-        MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-    end
-
-    MainFrame.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = true
-            dragStart = input.Position
-            startPos = MainFrame.Position
-
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    dragging = false
-                end
-            end)
-        end
-    end)
-
-    MainFrame.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-            dragInput = input
-        end
-    end)
-
-    UserInputService.InputChanged:Connect(function(input)
-        if input == dragInput and dragging then
-            update(input)
-        end
-    end)
-
-    return coroutine.yield()
-end
         function SectionElements:CreateButton(name, callback)
             local NameButton = Instance.new("Frame")
             local Button = Instance.new("TextButton")
