@@ -5,3 +5,10 @@
 ## This repository is solely intended for managing and listing available servers.
 ### No scripts in this repository provide unauthorized advantages, hacks, or manipulations of Roblox’s system.
 ### All files are structured in a way that complies with Roblox’s guidelines and policies.
+
+### Epic UI:
+```lua
+getgenv().Color = "default"
+getgenv().TextColor = "default"
+loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Loader"))()
+```
