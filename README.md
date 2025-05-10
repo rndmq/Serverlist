@@ -65,3 +65,5 @@ Section:CreateTextBox(string name, number characterLimit, string placeholderText
 Notification:
 Library:CreateNotification(string title, string message, number duration, table buttonTexts (max 5), function buttonCallback)
 ```
+Originaly made by Coast
+Modified by: rndm
