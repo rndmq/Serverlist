@@ -67,4 +67,4 @@ Library:CreateNotification(string title, string message, number duration, table 
 ```
 ### Originaly made by Coast
 ### Modified by: rndm
-### Taken from @GhostDuckyy
+### Taken from [@GhostDuckyy](https://github.com/GhostDuckyy)
