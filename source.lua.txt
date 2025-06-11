@@ -2368,18 +2368,21 @@ function Library:CreateText(texts, duration, colorHex)
     local textContainer = Instance.new("Frame")
     local textLabel = Instance.new("TextLabel")
     local currentIndex = 1
+
     if not texts or #texts < 1 or #texts > 5 then
         warn("Texts must be an array with 1 to 5 entries")
         return
     end
     duration = duration or 2
     local color = colorHex and Color3.fromHex(colorHex) or Library.Theme.TextColor
+
     textContainer.Name = "TextContainer"
-    textContainer.Parent = UILibrary
+    textContainer.Parent = game:GetService("CoreGui")["Rndm."].Main.UITabs.Tabs
     textContainer.BackgroundTransparency = 1
-    textContainer.Position = UDim2.new(0, 10, 1, -50)
+    textContainer.Position = UDim2.new(0, 10, 1, -10)
     textContainer.Size = UDim2.new(0, 200, 0, 40)
     textContainer.ZIndex = 100
+
     textLabel.Name = "TextLabel"
     textLabel.Parent = textContainer
     textLabel.BackgroundTransparency = 1
@@ -2391,6 +2394,7 @@ function Library:CreateText(texts, duration, colorHex)
     textLabel.TextTransparency = 0.5
     textLabel.TextSize = 16
     textLabel.TextWrapped = true
+
     local function transitionText()
         while true do
             local nextIndex = currentIndex % #texts + 1
@@ -2406,6 +2410,7 @@ function Library:CreateText(texts, duration, colorHex)
             wait(duration)
         end
     end
+
     spawn(transitionText)
 
     return textContainer
