@@ -2379,7 +2379,7 @@ function Library:CreateText(texts, duration, colorHex)
     textContainer.Name = "TextContainer"
     textContainer.Parent = game:GetService("CoreGui")["Rndm."].Main.UITabs.Tabs
     textContainer.BackgroundTransparency = 1
-    textContainer.Position = UDim2.new(0, 10, 1, -10)
+    textContainer.Position = UDim2.new(0, 10, 1, -15)
     textContainer.Size = UDim2.new(0, 200, 0, 40)
     textContainer.ZIndex = 100
 
