@@ -1277,6 +1277,47 @@ end
             ImageColor3 = Library.Theme.BackgroundColor
         }):Play()
     end)
+    local function CreateText(textList, switchDelay, hexColor)
+    local ScreenGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
+    ScreenGui.Name = "DynamicTextDisplay"
+
+    local TextLabel = Instance.new("TextLabel")
+    TextLabel.Parent = ScreenGui
+    TextLabel.Size = UDim2.new(1, 0, 0, 50)
+    TextLabel.Position = UDim2.new(0.5, 0, 1, -60)
+    TextLabel.AnchorPoint = Vector2.new(0.5, 1)
+    TextLabel.BackgroundTransparency = 1
+    TextLabel.TextColor3 = Color3.fromHex(hexColor or "#FFFFFF")
+    TextLabel.Font = Enum.Font.SourceSansBold
+    TextLabel.TextScaled = true
+    TextLabel.TextTransparency = 1 -- start fully invisible
+    TextLabel.Text = ""
+
+    local TweenService = game:GetService("TweenService")
+
+    coroutine.wrap(function()
+        while true do
+            for _, text in ipairs(textList) do
+                TextLabel.Text = text
+
+                -- Fade in
+                TweenService:Create(TextLabel, TweenInfo.new(0.5), {
+                    TextTransparency = 0.5
+                }):Play()
+                wait(0.5)
+
+                wait(switchDelay)
+
+                -- Fade out
+                TweenService:Create(TextLabel, TweenInfo.new(0.5), {
+                    TextTransparency = 1
+                }):Play()
+                wait(0.5)
+            end
+        end
+    end)()
+end
+
 function SectionElements:CreateLabel(name, text, callback, options)
     local NameLabel = Instance.new("TextLabel")
     local LabelButton = nil
@@ -2361,6 +2402,52 @@ function Library:CreateWindow(text)
     coroutine.wrap(ColorTransition)()
 
     return WindowTitle
+end
+function Library:CreateText(texts, duration, colorHex)
+    local textContainer = Instance.new("Frame")
+    local textLabel = Instance.new("TextLabel")
+    local currentIndex = 1
+    if not texts or #texts < 1 or #texts > 5 then
+        warn("Texts must be an array with 1 to 5 entries")
+        return
+    end
+    duration = duration or 2
+    local color = colorHex and Color3.fromHex(colorHex) or Library.Theme.TextColor
+    textContainer.Name = "TextContainer"
+    textContainer.Parent = UILibrary
+    textContainer.BackgroundTransparency = 1
+    textContainer.Position = UDim2.new(0, 10, 1, -50)
+    textContainer.Size = UDim2.new(0, 200, 0, 40)
+    textContainer.ZIndex = 100
+    textLabel.Name = "TextLabel"
+    textLabel.Parent = textContainer
+    textLabel.BackgroundTransparency = 1
+    textLabel.Size = UDim2.new(1, 0, 1, 0)
+    textLabel.ZIndex = 101
+    textLabel.Font = Library.Theme.TextFont
+    textLabel.Text = texts[1]
+    textLabel.TextColor3 = color
+    textLabel.TextTransparency = 0.5 -- 50% transparansi
+    textLabel.TextSize = 16
+    textLabel.TextWrapped = true
+    local function transitionText()
+        while true do
+            local nextIndex = currentIndex % #texts + 1
+            TweenService:Create(textLabel, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                TextTransparency = 1
+            }):Play()
+            wait(0.5)
+            textLabel.Text = texts[nextIndex]
+            TweenService:Create(textLabel, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                TextTransparency = 0.5
+            }):Play()
+            currentIndex = nextIndex
+            wait(duration)
+        end
+    end
+    spawn(transitionText)
+
+    return textContainer
 end
 
 function SectionElements:CreateDropdown(name, options, presetoption, callback)
