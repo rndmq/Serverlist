@@ -2379,8 +2379,8 @@ function Library:CreateText(texts, duration, colorHex)
     textContainer.Name = "TextContainer"
     textContainer.Parent = game:GetService("CoreGui")["Rndm."].Main.UITabs.Tabs
     textContainer.BackgroundTransparency = 1
-    textContainer.Position = UDim2.new(0, 10, 1, -17.5) 
-    textContainer.Size = UDim2.new(0, 300, 0, 20)
+    textContainer.Position = UDim2.new(0, 7, 1, -17.5) 
+    textContainer.Size = UDim2.new(0, 350, 0, 20)
     textContainer.ZIndex = 100
 
     textLabel.Name = "TextLabel"
@@ -2394,6 +2394,7 @@ function Library:CreateText(texts, duration, colorHex)
     textLabel.TextTransparency = 0
     textLabel.TextSize = 14 
     textLabel.TextWrapped = true
+    textLabel.TextXAlignment = Enum.TextXAlignment.Left
 
     local function transitionText()
         while true do
