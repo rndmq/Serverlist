@@ -2380,7 +2380,7 @@ function Library:CreateText(texts, duration, colorHex)
     textContainer.Parent = game:GetService("CoreGui")["Rndm."].Main.UITabs.Tabs
     textContainer.BackgroundTransparency = 1
     textContainer.Position = UDim2.new(0, 10, 1, -17.5) 
-    textContainer.Size = UDim2.new(0, 300, 0, 20)
+    textContainer.Size = UDim2.new(0, 425, 0, 20)
     textContainer.ZIndex = 100
 
     textLabel.Name = "TextLabel"
