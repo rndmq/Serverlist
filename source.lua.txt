@@ -2379,7 +2379,7 @@ function Library:CreateText(texts, duration, colorHex)
     textContainer.Name = "TextContainer"
     textContainer.Parent = game:GetService("CoreGui")["Rndm."].Main
     textContainer.BackgroundTransparency = 1
-    textContainer.Position = UDim2.new(0, 10, 0, 225)
+    textContainer.Position = UDim2.new(0, 10, 0, 232)
     textContainer.Size = UDim2.new(0, 425, 0, 20)
     textContainer.ZIndex = 100
 
