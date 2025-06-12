@@ -2391,7 +2391,7 @@ function Library:CreateText(texts, duration, colorHex)
     textLabel.Font = Library.Theme.TextFont
     textLabel.Text = texts[1]
     textLabel.TextColor3 = color
-    textLabel.TextTransparency = 0.5
+    textLabel.TextTransparency = 0
     textLabel.TextSize = 14 
     textLabel.TextWrapped = true
 
