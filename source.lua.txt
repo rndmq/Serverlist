@@ -2377,9 +2377,9 @@ function Library:CreateText(texts, duration, colorHex)
     local color = colorHex and Color3.fromHex(colorHex) or Library.Theme.TextColor
 
     textContainer.Name = "TextContainer"
-    textContainer.Parent = game:GetService("CoreGui")["Rndm."].Main.UITabs.Tabs
+    textContainer.Parent = game:GetService("CoreGui")["Rndm."]
     textContainer.BackgroundTransparency = 1
-    textContainer.Position = UDim2.new(0, 10, 1, -17.5) 
+    textContainer.Position = UDim2.new(0, 10, 0, 260)
     textContainer.Size = UDim2.new(0, 425, 0, 20)
     textContainer.ZIndex = 100
 
