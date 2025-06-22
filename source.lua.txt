@@ -1912,7 +1912,7 @@ function SectionElements:CreateImage(name, imageId, size)
     NameImage.ImageColor3 = Library.Theme.MainColor
     NameImage.ScaleType = Enum.ScaleType.Fit
     NameImage.Position = UDim2.new(0.5, -NameImage.Size.X.Offset/2, 0, 0) 
-    NameImage.IgnoreLayout = true 
+    
 
     ImageTitle.Name = "ImageTitle"
     ImageTitle.Parent = NameImage
