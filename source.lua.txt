@@ -1896,6 +1896,60 @@ function SectionElements:CreateTextBox(name, characterLimit, placeholderText, ca
 
             return NameTextBox, InputBox
         end
+        function SectionElements:CreateImage(name, imageId, size)
+    local NameImage = Instance.new("ImageLabel")
+    local ImageTitle = Instance.new("TextLabel")
+
+    size = size or {X = {1, 0}, Y = {1, 0}}
+
+    NameImage.Name = (name .. "Image")
+    NameImage.Parent = SectionContent
+    NameImage.BackgroundTransparency = 1
+    NameImage.Size = UDim2.new(size.X[1], size.X[2], size.Y[1], size.Y[2])
+    NameImage.ZIndex = 10
+    NameImage.Image = imageId or "rbxassetid://3570695787"
+    NameImage.ImageColor3 = Library.Theme.MainColor
+    NameImage.ScaleType = Enum.ScaleType.Fit
+    NameImage.Position = UDim2.new(0.5, -NameImage.Size.X.Offset/2, 0, 0) 
+
+    ImageTitle.Name = "ImageTitle"
+    ImageTitle.Parent = NameImage
+    ImageTitle.BackgroundTransparency = 1
+    ImageTitle.Position = UDim2.new(0.5, 0, -0.2, 0)
+    ImageTitle.Size = UDim2.new(1, 0, 0, 20)
+    ImageTitle.ZIndex = 11
+    ImageTitle.Font = Library.Theme.TextFont
+    ImageTitle.Text = name
+    ImageTitle.TextColor3 = Library.Theme.TextColor
+    ImageTitle.TextSize = 14
+    ImageTitle.TextXAlignment = Enum.TextXAlignment.Center
+
+
+    table.insert(Library.LibraryColorTable, NameImage)
+    table.insert(Library.LibraryColorTable, ImageTitle)
+    if SectionContent and SectionContentLayout then
+        SectionContent.CanvasSize = UDim2.new(0, 0, 0, SectionContentLayout.AbsoluteContentSize.Y + 15)
+    end
+
+    
+    NameImage.ImageTransparency = 1
+    TweenService:Create(NameImage, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+        ImageTransparency = 0
+    }):Play()
+
+    return {
+        SetImage = function(newImageId)
+            NameImage.Image = newImageId
+        end,
+        SetSize = function(newSize)
+            NameImage.Size = UDim2.new(newSize.X[1], newSize.X[2], newSize.Y[1], newSize.Y[2])
+            NameImage.Position = UDim2.new(0.5, -NameImage.Size.X.Offset/2, 0, 0)
+        end,
+        SetTitle = function(newTitle)
+            ImageTitle.Text = newTitle
+        end
+    }
+end
         function SectionElements:CreateColorPicker(name, presetcolor, callback)
             local NameColorPicker = Instance.new("Frame")
             local Title = Instance.new("TextLabel")
