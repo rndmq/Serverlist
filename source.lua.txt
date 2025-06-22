@@ -1266,10 +1266,16 @@ end
 
     table.insert(Library.LibraryColorTable, SectionBorder)
 
+local updating = false
+
 SectionContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-    task.defer(function()
-        SectionContent.CanvasSize = UDim2.new(0, 0, 0, SectionContentLayout.AbsoluteContentSize.Y + 15)
-    end)
+    if not updating then
+        updating = true
+        task.defer(function()
+            SectionContent.CanvasSize = UDim2.new(0, 0, 0, SectionContentLayout.AbsoluteContentSize.Y + 15)
+            updating = false
+        end)
+    end
 end)
 
     task.spawn(function()
