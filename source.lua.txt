@@ -1909,34 +1909,34 @@ function SectionElements:CreateImage(name, imageId, size)
     ImageHolder.Name = name .. "_ImageHolder"
     ImageHolder.BackgroundTransparency = 1
     ImageHolder.Size = UDim2.new(1, 0, 0, (size and size.Y and size.Y[2]) or 100)
-    ImageHolder.Parent = self.Content
+    ImageHolder.Parent = SectionContent -- HARUS ini, bukan self.Content
 
     local ImageLabel = Instance.new("ImageLabel")
     ImageLabel.Name = name .. "_Image"
     ImageLabel.AnchorPoint = Vector2.new(0.5, 0)
     ImageLabel.Position = UDim2.new(0.5, 0, 0, 0)
     ImageLabel.Size = UDim2.new(
-        (size and size.X and size.X[1]) or 0,
-        (size and size.X and size.X[2]) or 100,
-        (size and size.Y and size.Y[1]) or 0,
-        (size and size.Y and size.Y[2]) or 100
+        size and size.X and size.X[1] or 0,
+        size and size.X and size.X[2] or 100,
+        size and size.Y and size.Y[1] or 0,
+        size and size.Y and size.Y[2] or 100
     )
     ImageLabel.Image = imageId or ""
     ImageLabel.BackgroundTransparency = 1
     ImageLabel.ScaleType = Enum.ScaleType.Fit
     ImageLabel.Parent = ImageHolder
 
+
+
     local Element = {
         Type = "Image",
         Holder = ImageHolder,
         Image = ImageLabel,
+        Refresh = function(self, newImage)
+            self.Image.Image = newImage
+        end
     }
 
-    function Element:Refresh(newImageId)
-        self.Image.Image = newImageId or self.Image.Image
-    end
-
---    table.insert(self.Elements, Element)
     return Element
 end
         function SectionElements:CreateColorPicker(name, presetcolor, callback)
