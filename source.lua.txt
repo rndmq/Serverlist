@@ -1266,9 +1266,11 @@ end
 
     table.insert(Library.LibraryColorTable, SectionBorder)
 
-    SectionContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+SectionContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    task.defer(function()
         SectionContent.CanvasSize = UDim2.new(0, 0, 0, SectionContentLayout.AbsoluteContentSize.Y + 15)
     end)
+end)
 
     task.spawn(function()
         task.wait()
@@ -1900,19 +1902,29 @@ function SectionElements:CreateImage(name, imageId, size)
     local NameImage = Instance.new("ImageLabel")
     local ImageTitle = Instance.new("TextLabel")
 
-    
     size = size or {X = {1, 0}, Y = {1, 0}}
+
+    local updatingCanvas = false
+    local function UpdateCanvasSize()
+        if SectionContent and SectionContentLayout and not updatingCanvas then
+            updatingCanvas = true
+            task.defer(function()
+                SectionContent.CanvasSize = UDim2.new(0, 0, 0, SectionContentLayout.AbsoluteContentSize.Y + 15)
+                updatingCanvas = false
+            end)
+        end
+    end
 
     NameImage.Name = (name .. "Image")
     NameImage.Parent = SectionContent
     NameImage.BackgroundTransparency = 1
     NameImage.Size = UDim2.new(size.X[1], size.X[2], size.Y[1], size.Y[2])
+    NameImage.AnchorPoint = Vector2.new(0.5, 0)
+    NameImage.Position = UDim2.new(0.5, 0, 0, 0)
     NameImage.ZIndex = 10
     NameImage.Image = imageId or "rbxassetid://3570695787"
     NameImage.ImageColor3 = Library.Theme.MainColor
     NameImage.ScaleType = Enum.ScaleType.Fit
-    NameImage.Position = UDim2.new(0.5, -NameImage.Size.X.Offset/2, 0, 0) 
-    
 
     ImageTitle.Name = "ImageTitle"
     ImageTitle.Parent = NameImage
@@ -1926,18 +1938,11 @@ function SectionElements:CreateImage(name, imageId, size)
     ImageTitle.TextSize = 14
     ImageTitle.TextXAlignment = Enum.TextXAlignment.Center
 
-    
     table.insert(Library.LibraryColorTable, NameImage)
     table.insert(Library.LibraryColorTable, ImageTitle)
 
-    
-    if SectionContent and SectionContentLayout then
-        task.defer(function()
-            SectionContent.CanvasSize = UDim2.new(0, 0, 0, SectionContentLayout.AbsoluteContentSize.Y + 15)
-        end)
-    end
+    UpdateCanvasSize()
 
-    
     NameImage.ImageTransparency = 1
     TweenService:Create(NameImage, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
         ImageTransparency = 0
@@ -1949,13 +1954,8 @@ function SectionElements:CreateImage(name, imageId, size)
         end,
         SetSize = function(newSize)
             NameImage.Size = UDim2.new(newSize.X[1], newSize.X[2], newSize.Y[1], newSize.Y[2])
-            NameImage.Position = UDim2.new(0.5, -NameImage.Size.X.Offset/2, 0, 0)
-            
-            if SectionContent and SectionContentLayout then
-                task.defer(function()
-                    SectionContent.CanvasSize = UDim2.new(0, 0, 0, SectionContentLayout.AbsoluteContentSize.Y + 15)
-                end)
-            end
+            NameImage.Position = UDim2.new(0.5, 0, 0, 0)
+            UpdateCanvasSize()
         end,
         SetTitle = function(newTitle)
             ImageTitle.Text = newTitle
