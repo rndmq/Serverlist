@@ -1266,9 +1266,15 @@ end
 
     table.insert(Library.LibraryColorTable, SectionBorder)
 
-    SectionContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        SectionContent.CanvasSize = UDim2.new(0, 0, 0, SectionContentLayout.AbsoluteContentSize.Y + 15)
-    end)
+    local lastSizeY = 0
+
+SectionContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    local newSizeY = SectionContentLayout.AbsoluteContentSize.Y + 15
+    if lastSizeY ~= newSizeY then
+        lastSizeY = newSizeY
+        SectionContent.CanvasSize = UDim2.new(0, 0, 0, newSizeY)
+    end
+end)
 
     task.spawn(function()
         task.wait()
