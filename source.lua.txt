@@ -1905,68 +1905,39 @@ function SectionElements:CreateTextBox(name, characterLimit, placeholderText, ca
             return NameTextBox, InputBox
         end
 function SectionElements:CreateImage(name, imageId, size)
-    local NameImage = Instance.new("ImageLabel")
-    local ImageTitle = Instance.new("TextLabel")
+    local ImageHolder = Instance.new("Frame")
+    ImageHolder.Name = name .. "_ImageHolder"
+    ImageHolder.BackgroundTransparency = 1
+    ImageHolder.Size = UDim2.new(1, 0, 0, (size and size.Y and size.Y[2]) or 100)
+    ImageHolder.Parent = self.Content
 
-    size = size or {X = {1, 0}, Y = {1, 0}}
+    local ImageLabel = Instance.new("ImageLabel")
+    ImageLabel.Name = name .. "_Image"
+    ImageLabel.AnchorPoint = Vector2.new(0.5, 0)
+    ImageLabel.Position = UDim2.new(0.5, 0, 0, 0)
+    ImageLabel.Size = UDim2.new(
+        (size and size.X and size.X[1]) or 0,
+        (size and size.X and size.X[2]) or 100,
+        (size and size.Y and size.Y[1]) or 0,
+        (size and size.Y and size.Y[2]) or 100
+    )
+    ImageLabel.Image = imageId or ""
+    ImageLabel.BackgroundTransparency = 1
+    ImageLabel.ScaleType = Enum.ScaleType.Fit
+    ImageLabel.Parent = ImageHolder
 
-    local updatingCanvas = false
-    local function UpdateCanvasSize()
-        if SectionContent and SectionContentLayout and not updatingCanvas then
-            updatingCanvas = true
-            task.defer(function()
-                SectionContent.CanvasSize = UDim2.new(0, 0, 0, SectionContentLayout.AbsoluteContentSize.Y + 15)
-                updatingCanvas = false
-            end)
-        end
+    local Element = {
+        Type = "Image",
+        Holder = ImageHolder,
+        Image = ImageLabel,
+    }
+
+    function Element:Refresh(newImageId)
+        self.Image.Image = newImageId or self.Image.Image
     end
 
-    NameImage.Name = (name .. "Image")
-    NameImage.Parent = SectionContent
-    NameImage.BackgroundTransparency = 1
-    NameImage.Size = UDim2.new(size.X[1], size.X[2], size.Y[1], size.Y[2])
-    NameImage.AnchorPoint = Vector2.new(0.5, 0)
-    NameImage.Position = UDim2.new(0.5, 0, 0, 0)
-    NameImage.ZIndex = 10
-    NameImage.Image = imageId or "rbxassetid://3570695787"
-    NameImage.ImageColor3 = Library.Theme.MainColor
-    NameImage.ScaleType = Enum.ScaleType.Fit
-
-    ImageTitle.Name = "ImageTitle"
-    ImageTitle.Parent = NameImage
-    ImageTitle.BackgroundTransparency = 1
-    ImageTitle.Position = UDim2.new(0.5, 0, -0.2, 0)
-    ImageTitle.Size = UDim2.new(1, 0, 0, 20)
-    ImageTitle.ZIndex = 11
-    ImageTitle.Font = Library.Theme.TextFont
-    ImageTitle.Text = name
-    ImageTitle.TextColor3 = Library.Theme.TextColor
-    ImageTitle.TextSize = 14
-    ImageTitle.TextXAlignment = Enum.TextXAlignment.Center
-
-    table.insert(Library.LibraryColorTable, NameImage)
-    table.insert(Library.LibraryColorTable, ImageTitle)
-
-    UpdateCanvasSize()
-
-    NameImage.ImageTransparency = 1
-    TweenService:Create(NameImage, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-        ImageTransparency = 0
-    }):Play()
-
-    return {
-        SetImage = function(newImageId)
-            NameImage.Image = newImageId
-        end,
-        SetSize = function(newSize)
-            NameImage.Size = UDim2.new(newSize.X[1], newSize.X[2], newSize.Y[1], newSize.Y[2])
-            NameImage.Position = UDim2.new(0.5, 0, 0, 0)
-            UpdateCanvasSize()
-        end,
-        SetTitle = function(newTitle)
-            ImageTitle.Text = newTitle
-        end
-    }
+    table.insert(self.Elements, Element)
+    return Element
 end
         function SectionElements:CreateColorPicker(name, presetcolor, callback)
             local NameColorPicker = Instance.new("Frame")
