@@ -1936,7 +1936,7 @@ function SectionElements:CreateImage(name, imageId, size)
         self.Image.Image = newImageId or self.Image.Image
     end
 
-    table.insert(self.Elements, Element)
+--    table.insert(self.Elements, Element)
     return Element
 end
         function SectionElements:CreateColorPicker(name, presetcolor, callback)
