@@ -338,7 +338,7 @@ oh yea don't need to turn on the auto farm weight etc for faster weight you can 
 - Anti-link
 - If you get 10x bans, you will be banned permanently.
 ]]--
-loadstring(game:HttpGet("https://rndmsa.vercel.app/api/raw?game=web"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/webno.lua"))()
 --[[
 
 -- Dinosaur Race --
