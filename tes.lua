@@ -2,7 +2,6 @@ local TweenService = game:GetService("TweenService")
 local Player = game.Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
-
 Library = {
     LibraryColorTable = {},
     TabCount = 0,
@@ -35,44 +34,43 @@ end
 
 UILibrary.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 UILibrary.Enabled = true
+
 pcall(function()
     local colorMap = {
         b = Color3.fromRGB(0, 0, 0),
         default = Color3.fromRGB(255, 75, 75)
     }
-    local colorKey = string.lower(getgenv().PKJ)
+    local colorKey = string.lower(getgenv().PKJ or "default")
     Library.Theme.MainColor = colorMap[colorKey] or colorMap.default
 end)
+
 local function Update()
     for _, v in pairs(Library.LibraryColorTable) do
         if typeof(v) == "Instance" then
-if (v:IsA("TextLabel") or v:IsA("TextButton")) and (v.Name == "Title" or v.Name == "Message" or v.Name == "CloseButton" or string.match(v.Name, "ActionButton")) then
-    v.TextColor3 = Library.Theme.OnlyTest
+            if (v:IsA("TextLabel") or v:IsA("TextButton")) and (v.Name == "Title" or v.Name == "Message" or v.Name == "CloseButton" or string.match(v.Name, "ActionButton")) then
+                v.TextColor3 = Library.Theme.OnlyTest
             end
         end
     end
 end
+
 pcall(function()
     if getgenv().SJJs == "rb" then
         getgenv().NotifSpeed = getgenv().NotifSpeed or 0.01 
-
         task.spawn(function()
             while not getgenv().Stop do
                 for i = 0, 1, 0.002 do
                     if getgenv().Stop then break end
                     Library.Theme.OnlyTest = Color3.fromHSV(i, 1, 1)
-                    for _, v in pairs(Library.LibraryColorTable) do
-                        if (v:IsA("TextLabel") or v:IsA("TextButton")) and (v.Name == "Title" or v.Name == "Message" or v.Name == "CloseButton" or string.match(v.Name, "ActionButton")) then
-                            v.TextColor3 = Library.Theme.OnlyTest
-                        end
-                    end
+                    Update()
                     task.wait(getgenv().NotifSpeed)
                 end
             end
         end)
     end
 end)
-local function Darkned(object, amount)
+
+local function Darken(object, amount)
     local h, s, v = Color3.toHSV(object)
     v = math.clamp(v - (amount / 255), 0, 1)
     s = math.clamp(s - (amount / 510), 0, 1)
@@ -134,7 +132,6 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
     MessageLabel.TextWrapped = true
     MessageLabel.TextXAlignment = Enum.TextXAlignment.Left
 
-
     pcall(function()
         local envColor = getgenv().Color and string.lower(getgenv().Color) or nil
         if envColor == "white" then
@@ -178,14 +175,20 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
             TweenService:Create(NotificationFrame, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
                 Position = UDim2.new(1, 0, NotificationFrame.Position.Y.Scale, NotificationFrame.Position.Y.Offset)
             }):Play()
-            wait(0.5)
-            NotificationFrame:Destroy()
-            for i, notif in pairs(Library.ActiveNotifications) do
-                local targetY = -110 - (i - 1) * (notif.Size.Y.Offset + 10)
-                TweenService:Create(notif, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
-                    Position = UDim2.new(1, -310, 1, targetY)
-                }):Play()
-            end
+            task.delay(0.5, function()
+                if NotificationFrame.Parent then
+                    NotificationFrame:Destroy()
+                end
+                
+                for i, notif in ipairs(Library.ActiveNotifications) do
+                    if notif.Parent then 
+                        local targetY = -110 - (i - 1) * (notif.Size.Y.Offset + 10)
+                        TweenService:Create(notif, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
+                            Position = UDim2.new(1, -310, 1, targetY)
+                        }):Play()
+                    end
+                end
+            end)
         end
     end
 
@@ -196,7 +199,7 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
             local ActionButton = Instance.new("TextButton")
             ActionButton.Name = "ActionButton" .. i
             ActionButton.Parent = NotificationBackground
-            ActionButton.BackgroundColor3 = Darkned(Library.Theme.MainColor, 20)
+            ActionButton.BackgroundColor3 = Darken(Library.Theme.MainColor, 20)
             ActionButton.Position = UDim2.new(0, 10 + (i - 1) * (buttonWidth + 5), 0, 65)
             ActionButton.Size = UDim2.new(0, buttonWidth, 0, 20)
             ActionButton.ZIndex = 102
@@ -219,22 +222,32 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
         end
     end
 
+    
     table.insert(Library.ActiveNotifications, 1, NotificationFrame)
-    for i, notif in pairs(Library.ActiveNotifications) do
-        local targetY = -110 - (i - 1) * (notif.Size.Y.Offset + 10)
-        TweenService:Create(notif, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
-            Position = UDim2.new(1, -310, 1, targetY)
-        }):Play()
+
+    
+    for i, notif in ipairs(Library.ActiveNotifications) do
+        if notif.Parent then 
+            local targetY = -110 - (i - 1) * (notif.Size.Y.Offset + 10)
+            TweenService:Create(notif, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
+                Position = UDim2.new(1, -310, 1, targetY)
+            }):Play()
+        end
     end
 
+    
     local duration = duration or 5
     TweenService:Create(TimerBarFill, TweenInfo.new(duration, Enum.EasingStyle.Linear), {
         Size = UDim2.new(0, 0, 1, 0)
     }):Play()
-    spawn(function()
-        wait(duration)
-        closeNotification()
-    end)
+
+    
+    coroutine.wrap(function()
+        task.wait(duration)
+        if NotificationFrame.Parent then 
+            closeNotification()
+        end
+    end)()
 
     CloseButton.MouseButton1Click:Connect(closeNotification)
 
