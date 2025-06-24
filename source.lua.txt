@@ -2872,7 +2872,7 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
     TitleLabel.ZIndex = 101
     TitleLabel.Font = Library.Theme.TextFont
     TitleLabel.Text = title or "Notification"
-    TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255) -- Default putih
+    TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     TitleLabel.TextSize = 16
     TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 
@@ -2888,7 +2888,6 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
     MessageLabel.TextSize = 14
     MessageLabel.TextWrapped = true
     MessageLabel.TextXAlignment = Enum.TextXAlignment.Left
-
 
     pcall(function()
         local envColor = getgenv().Color and string.lower(getgenv().Color) or nil
@@ -2932,14 +2931,20 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
             TweenService:Create(NotificationFrame, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
                 Position = UDim2.new(1, 0, NotificationFrame.Position.Y.Scale, NotificationFrame.Position.Y.Offset)
             }):Play()
-            wait(0.5)
-            NotificationFrame:Destroy()
-            for i, notif in pairs(Library.ActiveNotifications) do
-                local targetY = -110 - (i - 1) * (notif.Size.Y.Offset + 10)
-                TweenService:Create(notif, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
-                    Position = UDim2.new(1, -310, 1, targetY)
-                }):Play()
-            end
+            task.delay(0.5, function()
+                if NotificationFrame.Parent then
+                    NotificationFrame:Destroy()
+                end
+                
+                for i, notif in ipairs(Library.ActiveNotifications) do
+                    if notif.Parent then 
+                        local targetY = -110 - (i - 1) * (notif.Size.Y.Offset + 10)
+                        TweenService:Create(notif, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
+                            Position = UDim2.new(1, -310, 1, targetY)
+                        }):Play()
+                    end
+                end
+            end)
         end
     end
 
@@ -2958,7 +2963,7 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
             ActionButton.Text = buttons[i] or "Button " .. i
             ActionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
             ActionButton.TextSize = 14
-            
+
             local ButtonRounded = Instance.new("UICorner")
             ButtonRounded.CornerRadius = UDim.new(0, 5)
             ButtonRounded.Parent = ActionButton
@@ -2972,22 +2977,32 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
         end
     end
 
+    
     table.insert(Library.ActiveNotifications, 1, NotificationFrame)
-    for i, notif in pairs(Library.ActiveNotifications) do
-        local targetY = -110 - (i - 1) * (notif.Size.Y.Offset + 10)
-        TweenService:Create(notif, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
-            Position = UDim2.new(1, -310, 1, targetY)
-        }):Play()
+
+    
+    for i, notif in ipairs(Library.ActiveNotifications) do
+        if notif.Parent then 
+            local targetY = -110 - (i - 1) * (notif.Size.Y.Offset + 10)
+            TweenService:Create(notif, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
+                Position = UDim2.new(1, -310, 1, targetY)
+            }):Play()
+        end
     end
 
+    
     local duration = duration or 5
     TweenService:Create(TimerBarFill, TweenInfo.new(duration, Enum.EasingStyle.Linear), {
         Size = UDim2.new(0, 0, 1, 0)
     }):Play()
-    spawn(function()
-        wait(duration)
-        closeNotification()
-    end)
+
+    
+    coroutine.wrap(function()
+        task.wait(duration)
+        if NotificationFrame.Parent then 
+            closeNotification()
+        end
+    end)()
 
     CloseButton.MouseButton1Click:Connect(closeNotification)
 
