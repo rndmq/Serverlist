@@ -57,7 +57,7 @@ local HttpService = game:GetService("HttpService")
 local player = Players.LocalPlayer
 local userId = tostring(player.UserId)
 
-local WEBSITE_URL = "https://v0-new-project-ilikvurc72h.vercel.app"
+local WEBSITE_URL = "https://dashboard-userkey.vercel.app"
 
 local request = (http and http.request) or (syn and syn.request) or (fluxus and fluxus.request) or request
 
