@@ -112,7 +112,6 @@ Library = {
     LibraryColorTable = {},
     TabCount = 0,
     FirstTab = nil,
-    sectionCount = 0,
     CurrentlyBinding = false,
     RainbowColorValue = 0,
     HueSelectionPosition = 0,
@@ -337,7 +336,7 @@ local Tabs = Instance.new("Frame")
 local TabButtons = Instance.new("ImageLabel")
 local TabButtonLayout = Instance.new("UIListLayout")
 
-UILibrary.Name = HttpService:GenerateGUID(false)
+UILibrary.Name = "Rndm."
 UILibrary.Parent = CoreGui
 UILibrary.DisplayOrder = 1
 UILibrary.ZIndexBehavior = Enum.ZIndexBehavior.Global
@@ -764,71 +763,14 @@ function Library:CreateTab(name)
     local SectionScrollingFrame = Instance.new("ScrollingFrame")
     SectionScrollingFrame.Name = "SectionScrollingFrame"
     SectionScrollingFrame.Parent = NameTab
-    SectionScrollingFrame.BackgroundTransparency = 1
+    SectionScrollingFrame.BackgroundTransparency = 0
     SectionScrollingFrame.Position = UDim2.new(0, 0, 0, 0)
     SectionScrollingFrame.Size = UDim2.new(1, 0, 1, 0)
     SectionScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
-    SectionScrollingFrame.ScrollBarThickness = 0 
+    SectionScrollingFrame.ScrollBarThickness = 10
     SectionScrollingFrame.ScrollingDirection = Enum.ScrollingDirection.X
     SectionScrollingFrame.AutomaticCanvasSize = Enum.AutomaticSize.X
     SectionScrollingFrame.ClipsDescendants = true
-
-    local ScrollIndicator = Instance.new("Frame")
-    ScrollIndicator.Name = "ScrollIndicator"
-    ScrollIndicator.Parent = SectionScrollingFrame
-    ScrollIndicator.BackgroundColor3 = Library.Theme.MainColor
-    ScrollIndicator.BackgroundTransparency = 0.7
-    ScrollIndicator.BorderSizePixel = 0
-    ScrollIndicator.Size = UDim2.new(0, 4, 0.5, 0)
-    ScrollIndicator.Position = UDim2.new(1, -6, 0, 0)
-    ScrollIndicator.AnchorPoint = Vector2.new(1, 0)
-    ScrollIndicator.ZIndex = 100
-    ScrollIndicator.Visible = false
-
-    local UICorner = Instance.new("UICorner")
-    UICorner.CornerRadius = UDim.new(1, 0)
-    UICorner.Parent = ScrollIndicator
-    local sectionCount = 0
-    local function updateScrollVisibility()
-        ScrollIndicator.Visible = sectionCount > 2 and 
-            (SectionScrollingFrame.AbsoluteCanvasSize.X > SectionScrollingFrame.AbsoluteWindowSize.X)
-    end
-local function updateScrollIndicator()
-    if sectionCount <= 2 then return end
-    
-    local visibleRatio = SectionScrollingFrame.AbsoluteWindowSize.X / SectionScrollingFrame.AbsoluteCanvasSize.X
-    local scrollRatio = SectionScrollingFrame.CanvasPosition.X / (SectionScrollingFrame.AbsoluteCanvasSize.X - SectionScrollingFrame.AbsoluteWindowSize.X)
-    
-    ScrollIndicator.Size = UDim2.new(0, 4, visibleRatio, 0)
-    ScrollIndicator.Position = UDim2.new(
-        1, 
-        -6, 
-        scrollRatio * (1 - visibleRatio),
-        0
-    )
-    
-    ScrollIndicator.Visible = visibleRatio < 1
-end
-
-    SectionScrollingFrame:GetPropertyChangedSignal("CanvasPosition"):Connect(updateScrollIndicator)
-    SectionScrollingFrame:GetPropertyChangedSignal("AbsoluteCanvasSize"):Connect(updateScrollIndicator)
-    SectionScrollingFrame:GetPropertyChangedSignal("AbsoluteWindowSize"):Connect(updateScrollIndicator)
-
-    SectionScrollingFrame.MouseEnter:Connect(function()
-    if sectionCount > 2 then
-        TweenService:Create(ScrollIndicator, TweenInfo.new(0.2), {
-            BackgroundTransparency = 0.4
-        }):Play()
-    end
-end)
-
-SectionScrollingFrame.MouseLeave:Connect(function()
-    if sectionCount > 2 then
-        TweenService:Create(ScrollIndicator, TweenInfo.new(0.2), {
-            BackgroundTransparency = 0.7
-        }):Play()
-    end
-end)
     SectionLayout.Name = "SectionLayout"
     SectionLayout.Parent = SectionScrollingFrame
     SectionLayout.FillDirection = Enum.FillDirection.Horizontal
@@ -1323,22 +1265,18 @@ end
     SectionContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
     table.insert(Library.LibraryColorTable, SectionBorder)
-self.sectionCount = self.sectionCount + 1
-    if self.updateScrollVisibility then
-        self.updateScrollVisibility()
-    end
 
-    NameSection.AncestryChanged:Connect(function()
-        if not NameSection:IsDescendantOf(game) then
-            self.sectionCount = math.max(0, self.sectionCount - 1)
-            if self.updateScrollVisibility then
-                self.updateScrollVisibility()
-            end
-        end
-    end)
-    SectionContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        SectionContent.CanvasSize = UDim2.new(0, 0, 0, SectionContentLayout.AbsoluteContentSize.Y + 15)
-    end)
+local updating = false
+
+SectionContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    if not updating then
+        updating = true
+        task.defer(function()
+            SectionContent.CanvasSize = UDim2.new(0, 0, 0, SectionContentLayout.AbsoluteContentSize.Y + 15)
+            updating = false
+        end)
+    end
+end)
 
     task.spawn(function()
         task.wait()
@@ -1347,6 +1285,8 @@ self.sectionCount = self.sectionCount + 1
             ImageColor3 = Library.Theme.BackgroundColor
         }):Play()
     end)
+
+
 function SectionElements:CreateLabel(name, text, callback, options)
     local NameLabel = Instance.new("TextLabel")
     local LabelButton = nil
@@ -1725,21 +1665,46 @@ function SectionElements:CreateToggle(name, ...)
         end
     end)
 
-    return {
-        SetState = function(state)
-            Toggled = state
-            UIReferences.Toggles[name].EnabledDuringLoad = true
-            TweenService:Create(Title, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {TextColor3 = Toggled and (Library and Library.Theme and Library.Theme.TextColor or Color3.fromRGB(255, 255, 255)) or Color3.fromRGB(185, 185, 185)}):Play()
-            TweenService:Create(TickCover, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Position = Toggled and UDim2.new(0.5, 0, 0.5, 0) or UDim2.new(0.5, -7, 0.5, -7), Size = Toggled and UDim2.new(0, 0, 0, 0) or UDim2.new(0, 14, 0, 14)}):Play()
-            TweenService:Create(CheckboxOutline, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {ImageColor3 = Toggled and (Library and Library.Theme and Library.Theme.MainColor or Color3.fromRGB(255, 75, 75)) or Color3.fromRGB(65, 65, 65)}):Play()
-            TweenService:Create(CheckboxTicked, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {ImageColor3 = Toggled and (Library and Library.Theme and Library.Theme.MainColor or Color3.fromRGB(255, 75, 75)) or Color3.fromRGB(65, 65, 65)}):Play()
-            Settings[gameId][name] = state
-            SaveSettings()
-            safeCallback(state)
-            task.wait()
+return {
+    SetState = function(state)
+        Toggled = state
+        UIReferences.Toggles[name].EnabledDuringLoad = true
+        TweenService:Create(Title, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+            TextColor3 = Toggled and (Library and Library.Theme and Library.Theme.TextColor or Color3.fromRGB(255, 255, 255)) or Color3.fromRGB(185, 185, 185)
+        }):Play()
+        TweenService:Create(TickCover, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+            Position = Toggled and UDim2.new(0.5, 0, 0.5, 0) or UDim2.new(0.5, -7, 0.5, -7),
+            Size = Toggled and UDim2.new(0, 0, 0, 0) or UDim2.new(0, 14, 0, 14)
+        }):Play()
+        TweenService:Create(CheckboxOutline, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+            ImageColor3 = Toggled and (Library and Library.Theme and Library.Theme.MainColor or Color3.fromRGB(255, 75, 75)) or Color3.fromRGB(65, 65, 65)
+        }):Play()
+        TweenService:Create(CheckboxTicked, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+            ImageColor3 = Toggled and (Library and Library.Theme and Library.Theme.MainColor or Color3.fromRGB(255, 75, 75)) or Color3.fromRGB(65, 65, 65)
+        }):Play()
+        Settings[gameId][name] = state
+        SaveSettings()
+        safeCallback(state)
+        task.wait()
+    end,
+
+    Visible = function(bool)
+        if bool then
+            NameToggle.Visible = true
+            NameToggle.Size = UDim2.new(0, 197, 0, 0)
+            TweenService:Create(NameToggle, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                Size = UDim2.new(0, 197, 0, 35)
+            }):Play()
+        else
+            TweenService:Create(NameToggle, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                Size = UDim2.new(0, 197, 0, 0)
+            }):Play()
+            task.delay(0.25, function()
+                NameToggle.Visible = false
+            end)
         end
-    }
-end
+    end
+}
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 
@@ -1964,6 +1929,43 @@ function SectionElements:CreateTextBox(name, characterLimit, placeholderText, ca
 
             return NameTextBox, InputBox
         end
+function SectionElements:CreateImage(name, imageId, size)
+    local ImageHolder = Instance.new("Frame")
+    ImageHolder.Name = name .. "_ImageHolder"
+    ImageHolder.BackgroundTransparency = 1
+    ImageHolder.Size = UDim2.new(1, 0, 0, (size and size.Y and size.Y[2]) or 100)
+    ImageHolder.Parent = SectionContent
+ImageHolder.ZIndex = 999
+    local ImageLabel = Instance.new("ImageLabel")
+    ImageLabel.Name = name .. "_Image"
+    ImageLabel.AnchorPoint = Vector2.new(0.5, 0)
+    ImageLabel.Position = UDim2.new(0.5, 0, 0, 0)
+    ImageLabel.Size = UDim2.new(
+        size and size.X and size.X[1] or 0,
+        size and size.X and size.X[2] or 100,
+        size and size.Y and size.Y[1] or 0,
+        size and size.Y and size.Y[2] or 100
+    )
+    ImageLabel.Image = imageId or ""
+    ImageLabel.BackgroundTransparency = 1
+    ImageLabel.ScaleType = Enum.ScaleType.Fit
+    ImageLabel.Parent = ImageHolder
+    ImageLabel.ZIndex = 999
+
+
+
+
+    local Element = {
+        Type = "Image",
+        Holder = ImageHolder,
+        Image = ImageLabel,
+        Refresh = function(self, newImage)
+            self.Image.Image = newImage
+        end
+    }
+
+    return Element
+end
         function SectionElements:CreateColorPicker(name, presetcolor, callback)
             local NameColorPicker = Instance.new("Frame")
             local Title = Instance.new("TextLabel")
@@ -2432,6 +2434,58 @@ function Library:CreateWindow(text)
 
     return WindowTitle
 end
+function Library:CreateText(texts, duration, colorHex)
+    local textContainer = Instance.new("Frame")
+    local textLabel = Instance.new("TextLabel")
+    local currentIndex = 1
+
+    if not texts or #texts < 1 or #texts > 5 then
+        warn("Texts must be an array with 1 to 5 entries")
+        return
+    end
+    duration = duration or 2
+    local color = colorHex and Color3.fromHex(colorHex) or Library.Theme.TextColor
+
+    textContainer.Name = "TextContainer"
+    textContainer.Parent = game:GetService("CoreGui")["Rndm."].Main
+    textContainer.BackgroundTransparency = 1
+    textContainer.Position = UDim2.new(0, 10, 0, 232)
+    textContainer.Size = UDim2.new(0, 425, 0, 20)
+    textContainer.ZIndex = 100
+
+    textLabel.Name = "TextLabel"
+    textLabel.Parent = textContainer
+    textLabel.BackgroundTransparency = 1
+    textLabel.Size = UDim2.new(1, 0, 1, 0)
+    textLabel.ZIndex = 101
+    textLabel.Font = Library.Theme.TextFont
+    textLabel.Text = texts[1]
+    textLabel.TextColor3 = color
+    textLabel.TextTransparency = 0
+    textLabel.TextSize = 14 
+    textLabel.TextWrapped = true
+    textLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+    local function transitionText()
+        while true do
+            local nextIndex = currentIndex % #texts + 1
+            TweenService:Create(textLabel, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                TextTransparency = 1
+            }):Play()
+            wait(0.5)
+            textLabel.Text = texts[nextIndex]
+            TweenService:Create(textLabel, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                TextTransparency = 0.5
+            }):Play()
+            currentIndex = nextIndex
+            wait(duration)
+        end
+    end
+
+    spawn(transitionText)
+
+    return textContainer
+end
 
 function SectionElements:CreateDropdown(name, options, presetoption, callback)
     local NameDropdown = Instance.new("Frame")
@@ -2843,7 +2897,7 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
     TitleLabel.ZIndex = 101
     TitleLabel.Font = Library.Theme.TextFont
     TitleLabel.Text = title or "Notification"
-    TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255) -- Default putih
+    TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     TitleLabel.TextSize = 16
     TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 
@@ -2859,7 +2913,6 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
     MessageLabel.TextSize = 14
     MessageLabel.TextWrapped = true
     MessageLabel.TextXAlignment = Enum.TextXAlignment.Left
-
 
     pcall(function()
         local envColor = getgenv().Color and string.lower(getgenv().Color) or nil
@@ -2903,14 +2956,20 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
             TweenService:Create(NotificationFrame, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
                 Position = UDim2.new(1, 0, NotificationFrame.Position.Y.Scale, NotificationFrame.Position.Y.Offset)
             }):Play()
-            wait(0.5)
-            NotificationFrame:Destroy()
-            for i, notif in pairs(Library.ActiveNotifications) do
-                local targetY = -110 - (i - 1) * (notif.Size.Y.Offset + 10)
-                TweenService:Create(notif, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
-                    Position = UDim2.new(1, -310, 1, targetY)
-                }):Play()
-            end
+            task.delay(0.5, function()
+                if NotificationFrame.Parent then
+                    NotificationFrame:Destroy()
+                end
+                
+                for i, notif in ipairs(Library.ActiveNotifications) do
+                    if notif.Parent then 
+                        local targetY = -110 - (i - 1) * (notif.Size.Y.Offset + 10)
+                        TweenService:Create(notif, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
+                            Position = UDim2.new(1, -310, 1, targetY)
+                        }):Play()
+                    end
+                end
+            end)
         end
     end
 
@@ -2929,7 +2988,7 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
             ActionButton.Text = buttons[i] or "Button " .. i
             ActionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
             ActionButton.TextSize = 14
-            
+
             local ButtonRounded = Instance.new("UICorner")
             ButtonRounded.CornerRadius = UDim.new(0, 5)
             ButtonRounded.Parent = ActionButton
@@ -2943,22 +3002,32 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
         end
     end
 
+    
     table.insert(Library.ActiveNotifications, 1, NotificationFrame)
-    for i, notif in pairs(Library.ActiveNotifications) do
-        local targetY = -110 - (i - 1) * (notif.Size.Y.Offset + 10)
-        TweenService:Create(notif, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
-            Position = UDim2.new(1, -310, 1, targetY)
-        }):Play()
+
+    
+    for i, notif in ipairs(Library.ActiveNotifications) do
+        if notif.Parent then 
+            local targetY = -110 - (i - 1) * (notif.Size.Y.Offset + 10)
+            TweenService:Create(notif, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
+                Position = UDim2.new(1, -310, 1, targetY)
+            }):Play()
+        end
     end
 
+    
     local duration = duration or 5
     TweenService:Create(TimerBarFill, TweenInfo.new(duration, Enum.EasingStyle.Linear), {
         Size = UDim2.new(0, 0, 1, 0)
     }):Play()
-    spawn(function()
-        wait(duration)
-        closeNotification()
-    end)
+
+    
+    coroutine.wrap(function()
+        task.wait(duration)
+        if NotificationFrame.Parent then 
+            closeNotification()
+        end
+    end)()
 
     CloseButton.MouseButton1Click:Connect(closeNotification)
 
