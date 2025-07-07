@@ -3,7 +3,7 @@ local httpService = cloneref(game:GetService("HttpService"))
 local isfolder, isfile, listfiles = isfolder, isfile, listfiles
 
 if typeof(copyfunction) == "function" then
-    -- Fix is_____ functions for shitsploits, those functions should never error, only return a boolean.
+    
 
     local
         isfolder_copy,
@@ -110,12 +110,12 @@ local SaveManager = {} do
 
     function SaveManager:IgnoreThemeSettings()
         self:SetIgnoreIndexes({
-            "BackgroundColor", "MainColor", "AccentColor", "OutlineColor", "FontColor", "FontFace", -- themes
-            "ThemeManager_ThemeList", "ThemeManager_CustomThemeList", "ThemeManager_CustomThemeName", -- themes
+            "BackgroundColor", "MainColor", "AccentColor", "OutlineColor", "FontColor", "FontFace", 
+            "ThemeManager_ThemeList", "ThemeManager_CustomThemeList", "ThemeManager_CustomThemeName", 
         })
     end
 
-    --// Folders \\--
+    
     function SaveManager:CheckSubFolder(createFolder)
         if typeof(self.SubFolder) ~= "string" or self.SubFolder == "" then return false end
 
@@ -187,7 +187,7 @@ local SaveManager = {} do
         self:BuildFolderTree()
     end
 
-    --// Save, Load, Delete, Refresh \\--
+    
     function SaveManager:Save(name)
         if (not name) then
             return false, "no config file is selected"
@@ -248,7 +248,7 @@ local SaveManager = {} do
             if not option.type then continue end
             if not self.Parser[option.type] then continue end
 
-            task.spawn(self.Parser[option.type].Load, option.idx, option) -- task.spawn() so the config loading wont get stuck.
+            task.spawn(self.Parser[option.type].Load, option.idx, option) 
         end
 
         return true
@@ -289,7 +289,7 @@ local SaveManager = {} do
             for i = 1, #list do
                 local file = list[i]
                 if file:sub(-5) == ".json" then
-                    -- i hate this but it has to be done ...
+                    
 
                     local pos = file:find(".json", 1, true)
                     local start = pos
@@ -322,7 +322,7 @@ local SaveManager = {} do
         return data
     end
 
-    --// Auto Load \\--
+    
     function SaveManager:GetAutoloadConfig()
         SaveManager:CheckFolderTree()
 
@@ -345,27 +345,35 @@ local SaveManager = {} do
     end
 
     function SaveManager:LoadAutoloadConfig()
-        SaveManager:CheckFolderTree()
+    SaveManager:CheckFolderTree()
 
-        local autoLoadPath = self.Folder .. "/settings/autoload.txt"
-        if SaveManager:CheckSubFolder(true) then
-            autoLoadPath = self.Folder .. "/settings/" .. self.SubFolder .. "/autoload.txt"
-        end
-
-        if isfile(autoLoadPath) then
-            local successRead, name = pcall(readfile, autoLoadPath)
-            if not successRead then
-                return self.Library:Notify("Failed to load autoload config: write file error")
-            end
-
-            local success, err = self:Load(name)
-            if not success then
-                return self.Library:Notify("Failed to load autoload config: " .. err)
-            end
-
-            self.Library:Notify(string.format("Auto loaded config %q", name))
-        end
+    local autoLoadPath = self.Folder .. "/settings/autoload.txt"
+    if SaveManager:CheckSubFolder(true) then
+        autoLoadPath = self.Folder .. "/settings/" .. self.SubFolder .. "/autoload.txt"
     end
+
+    print("Checking autoload path:", autoLoadPath) 
+
+    if isfile(autoLoadPath) then
+        local successRead, name = pcall(readfile, autoLoadPath)
+        if not successRead then
+            print("Failed to read autoload file:", name) 
+            return self.Library:Notify("Failed to load autoload config: write file error")
+        end
+
+        print("Autoload config name:", name) 
+        
+        local success, err = self:Load(name)
+        if not success then
+            print("Failed to load config:", err) 
+            return self.Library:Notify("Failed to load autoload config: " .. err)
+        end
+
+        self.Library:Notify(string.format("Auto loaded config %q", name))
+    else
+        print("No autoload file found") 
+    end
+end
 
     function SaveManager:SaveAutoloadConfig(name)
         SaveManager:CheckFolderTree()
@@ -395,7 +403,7 @@ local SaveManager = {} do
         return true, ""
     end
 
-    --// GUI \\--
+    
     function SaveManager:BuildConfigSection(tab)
         assert(self.Library, "Must set SaveManager.Library")
 
