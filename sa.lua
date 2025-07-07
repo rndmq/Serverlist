@@ -344,7 +344,7 @@ local SaveManager = {} do
         return "none"
     end
 
-    function SaveManager:LoadAutoloadConfig()
+function SaveManager:LoadAutoloadConfig()
     SaveManager:CheckFolderTree()
 
     local autoLoadPath = self.Folder .. "/settings/autoload.txt"
@@ -352,26 +352,27 @@ local SaveManager = {} do
         autoLoadPath = self.Folder .. "/settings/" .. self.SubFolder .. "/autoload.txt"
     end
 
-    print("Checking autoload path:", autoLoadPath) 
-
+    print("⏳ Autoload path:", autoLoadPath)
     if isfile(autoLoadPath) then
         local successRead, name = pcall(readfile, autoLoadPath)
+        print("📄 Autoload content:", successRead, name)
+
         if not successRead then
-            print("Failed to read autoload file:", name) 
-            return self.Library:Notify("Failed to load autoload config: write file error")
+            return self.Library:Notify("Failed to load autoload config: read file error")
         end
 
-        print("Autoload config name:", name) 
-        
+        print("📦 Trying to load config:", name)
+
         local success, err = self:Load(name)
+        print("✅ Load result:", success, "error:", err)
+
         if not success then
-            print("Failed to load config:", err) 
             return self.Library:Notify("Failed to load autoload config: " .. err)
         end
 
         self.Library:Notify(string.format("Auto loaded config %q", name))
     else
-        print("No autoload file found") 
+        print("❌ Autoload file not found at path:", autoLoadPath)
     end
 end
 
