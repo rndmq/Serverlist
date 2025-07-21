@@ -125,7 +125,7 @@ Library = {
         TextColor = Color3.fromRGB(255, 255, 255) 
     }
 }
-local selectedColor = Color3.fromRGB(255, 75, 75) -- Default
+local selectedColor = Color3.fromRGB(255, 75, 75) 
 
 pcall(function()
     if getgenv and not getgenv().Color then
@@ -2684,21 +2684,21 @@ function SectionElements:CreateMultiDropdown(name, options, minSelect, maxSelect
     local minSelect = tonumber(minSelect) or 1
     local maxSelect = tonumber(maxSelect) or (#options or 0)
 
-    -- Initialize settings for this game if not already present
+    
     if not Settings[gameId] then
         Settings[gameId] = {}
     end
 
-    -- Load saved selections from Settings, if available
+    
     if Settings[gameId][name] and type(Settings[gameId][name]) == "table" then
         SelectedOptions = Settings[gameId][name]
-        -- Ensure selected options are valid (exist in the current options list)
+        
         for i = #SelectedOptions, 1, -1 do
             if not table.find(options, SelectedOptions[i]) then
                 table.remove(SelectedOptions, i)
             end
         end
-        -- Respect minSelect and maxSelect constraints
+        
         while #SelectedOptions > maxSelect do
             table.remove(SelectedOptions, #SelectedOptions)
         end
@@ -2710,9 +2710,9 @@ function SectionElements:CreateMultiDropdown(name, options, minSelect, maxSelect
             end
         end
     else
-        -- Initialize with preset options or empty table
+        
         Settings[gameId][name] = SelectedOptions
-        SaveSettings() -- Save initial state
+        SaveSettings() 
     end
 
     NameDropdown.Name = (name .. "MultiDropdown")
@@ -2768,8 +2768,8 @@ function SectionElements:CreateMultiDropdown(name, options, minSelect, maxSelect
                     TweenService:Create(v, TweenInfo.new(0.25, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {TextColor3 = Library.Theme.MainColor}):Play()
                 else
                     TweenService:Create(v, TweenInfo.new(0.25, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
-                révélé
-
+                end
+            end
         end
     end
 
@@ -2800,14 +2800,14 @@ function SectionElements:CreateMultiDropdown(name, options, minSelect, maxSelect
             NameButton.TextColor3 = table.find(SelectedOptions, v) and Library.Theme.MainColor or Color3.fromRGB(255, 255, 255)
             NameButton.TextSize = 15.000
 
-            NameButton.Mousebaka:Connect(function()
+            NameButton.MouseButton1Click:Connect(function()
                 local index = table.find(SelectedOptions, v)
                 if index then
                     if #SelectedOptions > minSelect then
                         table.remove(SelectedOptions, index)
                         TweenService:Create(NameButton, TweenInfo.new(0.35, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
                         Settings[gameId][name] = SelectedOptions
-                        SaveSettings() -- Save when an option is deselected
+                        SaveSettings() 
                         UpdateTitle()
                     end
                 else
@@ -2815,7 +2815,7 @@ function SectionElements:CreateMultiDropdown(name, options, minSelect, maxSelect
                         table.insert(SelectedOptions, v)
                         TweenService:Create(NameButton, TweenInfo.new(0.35, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {TextColor3 = Library.Theme.MainColor}):Play()
                         Settings[gameId][name] = SelectedOptions
-                        SaveSettings() -- Save when an option is selected
+                        SaveSettings() 
                         UpdateTitle()
                     end
                 end
@@ -2828,9 +2828,7 @@ function SectionElements:CreateMultiDropdown(name, options, minSelect, maxSelect
             end)
 
             NameButton.InputEnded:Connect(function(input)
-                if input.User-
-
-InputType == Enum.UserInputType.MouseMovement then
+                if input.UserInputType == Enum.UserInputType.MouseMovement then
                     TweenService:Create(NameButton, TweenInfo.new(0.35, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {BackgroundTransparency = 1}):Play()
                 end
             end)
@@ -2857,17 +2855,17 @@ InputType == Enum.UserInputType.MouseMovement then
         minSelect = tonumber(newMinSelect) or minSelect
         maxSelect = tonumber(newMaxSelect) or maxSelect
         SelectedOptions = newPresetOptions or SelectedOptions
-        -- Ensure selected options are valid
+        
         for i = #SelectedOptions, 1, -1 do
             if not table.find(options, SelectedOptions[i]) then
                 table.remove(SelectedOptions, i)
             end
         end
-        -- Respect maxSelect
+        
         while #SelectedOptions > maxSelect do
             table.remove(SelectedOptions, #SelectedOptions)
         end
-        -- Respect minSelect
+        
         if #SelectedOptions < minSelect then
             for i = 1, minSelect - #SelectedOptions do
                 if options[i] and not table.find(SelectedOptions, options[i]) then
@@ -2876,7 +2874,7 @@ InputType == Enum.UserInputType.MouseMovement then
             end
         end
         Settings[gameId][name] = SelectedOptions
-        SaveSettings() -- Save after refreshing
+        SaveSettings() 
         UpdateTitle()
 
         if DropdownToggled then
