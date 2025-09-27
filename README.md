@@ -1,3 +1,5 @@
+# Hey! none all of these were open sourced. Feel free to DM me at discord if you want to..
+
 # For github Moderation:
 This repository contains a list of servers used for UI-related purposes in a Roblox game. 
 The files included here do not contain any malicious content, exploits, cheats, or any code that violates Roblox’s Terms of Service.
