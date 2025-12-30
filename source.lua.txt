@@ -2980,28 +2980,38 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
     TimerBarFill.Size = UDim2.new(1, 0, 1, 0)
     TimerBarFill.ZIndex = 102
 
+    local isClosing = false 
+
     local function closeNotification()
+        if isClosing then return end 
+        isClosing = true
+
+        -- Hapus dari tabel library dulu
         local index = table.find(Library.ActiveNotifications, NotificationFrame)
         if index then
             table.remove(Library.ActiveNotifications, index)
+        end
+
+        pcall(function()
             TweenService:Create(NotificationFrame, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
                 Position = UDim2.new(1, 0, NotificationFrame.Position.Y.Scale, NotificationFrame.Position.Y.Offset)
             }):Play()
-            task.delay(0.5, function()
-                if NotificationFrame.Parent then
-                    NotificationFrame:Destroy()
-                end
-                
-                for i, notif in ipairs(Library.ActiveNotifications) do
-                    if notif.Parent then 
-                        local targetY = -110 - (i - 1) * (notif.Size.Y.Offset + 10)
-                        TweenService:Create(notif, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
-                            Position = UDim2.new(1, -310, 1, targetY)
-                        }):Play()
-                    end
-                end
-            end)
+        end)
+        
+        for i, notif in ipairs(Library.ActiveNotifications) do
+            if notif.Parent then 
+                local targetY = -110 - (i - 1) * (notif.Size.Y.Offset + 10)
+                TweenService:Create(notif, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
+                    Position = UDim2.new(1, -310, 1, targetY)
+                }):Play()
+            end
         end
+
+        task.delay(0.5, function()
+            if NotificationFrame then
+                NotificationFrame:Destroy()
+            end
+        end)
     end
 
     if hasButtons then
@@ -3026,17 +3036,15 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
 
             ActionButton.MouseButton1Click:Connect(function()
                 if buttonCallbacks and buttonCallbacks[i] then
-                    buttonCallbacks[i]()
+                    task.spawn(buttonCallbacks[i]) -- Pakai spawn biar error di callback ga ngerusak notif
                 end
                 closeNotification()
             end)
         end
     end
 
-    
     table.insert(Library.ActiveNotifications, 1, NotificationFrame)
 
-    
     for i, notif in ipairs(Library.ActiveNotifications) do
         if notif.Parent then 
             local targetY = -110 - (i - 1) * (notif.Size.Y.Offset + 10)
@@ -3046,19 +3054,15 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
         end
     end
 
-    
     local duration = duration or 5
     TweenService:Create(TimerBarFill, TweenInfo.new(duration, Enum.EasingStyle.Linear), {
         Size = UDim2.new(0, 0, 1, 0)
     }):Play()
-
-    
-    coroutine.wrap(function()
-        task.wait(duration)
-        if NotificationFrame.Parent then 
+    task.delay(duration, function()
+        if not isClosing then
             closeNotification()
         end
-    end)()
+    end)
 
     CloseButton.MouseButton1Click:Connect(closeNotification)
 
