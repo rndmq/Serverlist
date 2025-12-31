@@ -1,0 +1,1018 @@
+--[[
+███╗   ███╗ █████╗ ██████╗ ███████╗    ██████╗    ██╗   ██╗         
+████╗ ████║██╔══██╗██╔══██╗██╔════╝  ██╔══██╗╚██╗ ██╔╝
+██╔████╔██║███████║██║  ██║█████╗     ██████╔╝ ╚████╔╝ 
+██║╚██╔╝██║██╔══██║██║  ██║██╔══╝     ██╔══██╗   ╚██╔╝  
+██║ ╚═╝ ██║██║  ██║██████╔╝███████╗   ██████╔╝    ██║   
+╚═╝     ╚═╝╚═╝  ╚═╝╚═════╝ ╚══════╝     ╚═════╝      ╚═╝   
+ ██████╗  ███╗   ██╗ ██████╗  ███╗   ███╗
+██╔══██╗ ████╗  ██║ ██╔══██╗ ████╗ ████║
+██████╔╝ ██╔██╗ ██║ ██║  ██║ ██╔████╔██║
+██╔══██╗ ██║╚██╗██║ ██║  ██║ ██║╚██╔╝██║
+██║  ██║ ██║ ╚████║ ██████╔╝ ██║ ╚═╝ ██║
+╚═╝  ╚═╝ ╚═╝  ╚═══╝ ╚═════╝  ╚═╝     ╚═╝ ]]
+
+getgenv().Lib = loadstring(game:HttpGet("https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/source.lua.txt"))()
+local rndm = getgenv().Lib
+--[[ info lokasi biar gampang.
+7 - 9 itu tab / section
+14 - 16 itu varuable
+21 - 57 itu untuk main tab
+
+au ah males lanjutin
+]]
+-- it's not that i'm stupid, i just forgot how to do it with optimize 🤣
+-- Tab
+local MainT = rndm:CreateTab("Main")
+local MainS = MainT:CreateSection("Grass")
+local MainP = MainT:CreateSection("Pop")
+local Ttab = rndm:CreateTab("Third Island")
+local Supg = Ttab:CreateSection("Upgrade")
+local SSupg = Ttab:CreateSection("Upgrade Board")
+local Fifth = rndm:CreateTab("Fifth Island")
+local island = Fifth:CreateSection("Upgrade")
+-- /Tab
+
+-- Variable
+local ThirdUpg = false
+local FifTree = false
+local Seed = false
+local AllUpgrade = false
+local AutoAllStat = false
+local Silver = false
+local FOtree = false
+local ATree = false
+local A = false
+local Reset = false
+local Grass = false
+local Tree = false
+local tier = false
+local rebirth = false
+local pop = false
+local upgGM = false
+local upgGV = false
+local upgSP = false
+local RupgGV = false
+local RupgBR = false
+local RupgSP = false
+local upgRV = false
+local upgAC = false
+local upgGVP = false
+local Speed = false
+local upgGC = false
+local upgCV = false
+local upgRC = false
+-- data breaker
+local ThhasRun = false
+local ThOpUpg = false
+local OpUpg = false
+local hasRun = false
+local OpupgGM = false
+local OpupgGV = false
+local OpupgSP = false
+local OppupgGV = false
+local OppupgRV = false
+local OppupgAC = false
+local OpRupgGV = false
+local OpRupgBR = false
+local OpRupgSP = false
+-- /Variable
+
+-- Main Section 
+MainS:CreateToggle("Add Grass", function(state)
+Grass = state
+if state then
+task.spawn(function()
+while Grass do
+local args = {
+	{
+		normal = 0,
+		ruby = 0,
+		silver = 0,
+		golden = 0,
+		diamond = 999
+	}
+}
+game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("GrassCollect"):FireServer(unpack(args))
+task.wait(0.1) 
+end 
+end)
+end
+end)
+
+MainS:CreateToggle("Auto upg Tier", function(state)
+tier = state
+if state then
+task.spawn(function()
+while tier do
+game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("TierUpgrade"):FireServer()
+task.wait(1)
+end 
+end)
+end
+end)
+
+MainS:CreateToggle("Upgrade Tree", function(state)
+Tree = state
+if state then
+task.spawn(function()
+while Tree do
+for i = 1, 20 do
+local args = {
+	{
+		treeType = 1,
+		treeNumber = i
+	}
+}
+game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("UpgradeTree"):FireServer(unpack(args))
+task.wait(0.2) 
+end
+task.wait(0.1)
+end
+end)
+end
+end)
+
+MainS:CreateLabel("Info", "Bro, you need to be\nstanding on the field")
+
+MainS:CreateToggle("Auto rebirth", function(state)
+rebirth = state
+if state then
+task.spawn(function()
+while rebirth do
+game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Rebirth"):FireServer()
+task.wait(0.1)
+end
+end)
+end
+end)
+MainS:CreateLabel("Sperate", "======= Upgrade =======")
+MainS:CreateButton("I want to be Op", function()
+Library:CreateNotification("Are you sure?", "This thing can broke your data bro", 10, {"Yes, Very sure", "Nvm"}, 
+{ function() OpUpg = true
+-- i think i need to fix these bro like fr. it keeps getting stuck bruh
+Library:CreateNotification("Alright bro", "GoodLuck", 2)
+end,
+function()
+Library:CreateNotification("Glad you take back your action", "That's a reasonable approach. xD", 3)
+end})
+end)
+MainS:CreateToggle("Upgrade Grass amount", function(state)
+upgGM = state
+if state then
+task.spawn(function()
+while upgGM do
+local args = {
+	{
+		{
+			currencyName = "Grass",
+			autoBuy = false,
+			amount = 49,
+			max = 49,
+			upgradeValue = "GrassAmount",
+			cost = 1
+		}
+	}
+}
+game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Upgrade"):FireServer(unpack(args))
+task.wait(1)
+end
+end)
+end
+end)
+
+MainS:CreateToggle("Upgrade Grass Value", function(state)
+upgGV = state
+if state then
+task.spawn(function()
+while upgGV do
+local args = {
+	{
+		{
+			currencyName = "Grass",
+			autoBuy = false,
+			amount = 99,
+			max = 99,
+			upgradeValue = "GrassValue",
+			cost = 1
+		}
+	}
+}
+game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Upgrade"):FireServer(unpack(args))
+task.wait(1)
+end
+end)
+end
+end)
+
+MainS:CreateToggle("Upgrade Grass Spawn", function(state)
+upgSP = state
+if state then
+task.spawn(function()
+while upgSP do
+local args = {
+	{
+		{
+			currencyName = "Grass",
+			autoBuy = false,
+			amount = 7,
+			max = 7,
+			upgradeValue = "SpawnRate1",
+			cost = 1
+		}
+	}
+}
+game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Upgrade"):FireServer(unpack(args))
+task.wait(1)
+end
+end)
+end
+end)
+MainS:CreateLabel("Sperate", "===== Rebirth Upgrade =====")
+MainS:CreateToggle("Rebirth Upgrade Grass Value", function(state)
+RupgGV = state
+if state then
+task.spawn(function()
+while RupgGV do
+local args = {
+	{
+		{
+			currencyName = "Rebirth",
+			autoBuy = false,
+			amount = 6,
+			max = 6,
+			upgradeValue = "GrassValue2",
+			cost = 1
+		}
+	}
+}
+game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Upgrade"):FireServer(unpack(args))
+task.wait(1)
+end
+end)
+end
+end)
+
+MainS:CreateToggle("Rebirth Upgrade Blade Radius", function(state)
+RupgBR = state
+if state then
+task.spawn(function()
+while RupgBR do
+local args = {
+	{
+		{
+			currencyName = "Rebirth",
+			autoBuy = false,
+			amount = 5,
+			max = 5,
+			upgradeValue = "BladeRadius",
+			cost = 1
+		}
+	}
+}
+game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Upgrade"):FireServer(unpack(args))
+
+task.wait(1)
+end
+end)
+end
+end)
+
+MainS:CreateToggle("Rebirth Upgrade Grass Spawn Rate", function(state)
+RupgSP = state
+if state then
+task.spawn(function()
+while RupgSP do
+local args = {
+	{
+		{
+			currencyName = "Rebirth",
+			autoBuy = false,
+			amount = 8,
+			max = 8,
+			upgradeValue = "SpawnRate2",
+			cost = 1
+		}
+	}
+}
+game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Upgrade"):FireServer(unpack(args))
+
+task.wait(1)
+end
+end)
+end
+end)
+MainP:CreateToggle("Click Pop", function(state)
+pop = state
+if state then
+task.spawn(function()
+while pop do
+local args = {
+	false
+}
+game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("IncreasePop"):FireServer(unpack(args))
+task.wait(0.1)
+end
+end)
+end
+end)
+MainP:CreateToggle("Upgrade Grass Value", function(state)
+upgGVP = state
+if state then
+task.spawn(function()
+while upgGVP do
+local args = {
+	{
+		{
+			currencyName = "Pop",
+			autoBuy = false,
+			amount = 10,
+			max = 10,
+			upgradeValue = "GrassValue4",
+			cost = 1
+		}
+	}
+}
+game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Upgrade"):FireServer(unpack(args))
+
+task.wait(1)
+end
+end)
+end
+end)
+MainP:CreateToggle("Upgrade Rebirth Value", function(state)
+upgRV = state
+if state then
+task.spawn(function()
+while upgRV do
+local args = {
+	{
+		{
+			currencyName = "Pop",
+			autoBuy = false,
+			amount = 10,
+			max = 10,
+			upgradeValue = "RebirthValue2",
+			cost = 1
+		}
+	}
+}
+game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Upgrade"):FireServer(unpack(args))
+
+task.wait(1)
+end
+end)
+end
+end)
+MainP:CreateToggle("Upgrade Auto Click", function(state)
+upgAC = state
+if state then
+task.spawn(function()
+while upgAC do
+local args = {
+	{
+		{
+			currencyName = "Pop",
+			autoBuy = false,
+			amount = 10,
+			max = 10,
+			upgradeValue = "AutoClick",
+			cost = 1
+		}
+	}
+}
+game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Upgrade"):FireServer(unpack(args))
+
+task.wait(1)
+end
+end)
+end
+end)
+MainP:CreateLabel("Sperate", "======= Programing =======")
+MainP:CreateToggle("Upgrade Speed", function(state)
+Speed = state
+if state then
+task.spawn(function()
+while Speed do
+local args = {
+	{
+		{
+			currencyName = "Pop",
+			autoBuy = false,
+			amount = 1e+42,
+			max = 1e+42,
+			upgradeValue = "Programmers",
+			cost = 1
+		}
+	}
+}
+game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Upgrade"):FireServer(unpack(args))
+task.wait(2)
+end
+end)
+end
+end)
+MainP:CreateToggle("Upgrade Grass Code", function(state)
+upgGC = state
+if state then
+task.spawn(function()
+while upgGC do
+local args = {
+	{
+		{
+			currencyName = "Code",
+			autoBuy = false,
+			amount = 999999999999999,
+			max = 999999999999999,
+			upgradeValue = "GrassCode",
+			cost = 0
+		}
+	}
+}
+game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Upgrade"):FireServer(unpack(args))
+
+
+task.wait(2)
+end
+end)
+end
+end)
+MainP:CreateToggle("Upgrade Rebirth Code", function(state)
+upgRC = state
+if state then
+task.spawn(function()
+while upgRC do
+local args = {
+	{
+		{
+			currencyName = "Code",
+			autoBuy = false,
+			amount = 999999999999999,
+			max = 999999999999999,
+			upgradeValue = "RebirthCode",
+			cost = 0
+		}
+	}
+}
+game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Upgrade"):FireServer(unpack(args))
+
+task.wait(2)
+end
+end)
+end
+end)
+MainP:CreateToggle("Upgrade Code Value", function(state)
+upgCV = state
+if state then
+task.spawn(function()
+while upgCV do
+local args = {
+	{
+		{
+			currencyName = "Code",
+			autoBuy = false,
+			amount = 999999999999999,
+			max = 999999999999999,
+			upgradeValue = "CodeValue",
+			cost = 0
+		}
+	}
+}
+game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Upgrade"):FireServer(unpack(args))
+
+task.wait(2)
+end
+end)
+end
+end)
+
+SSupg:CreateButton("Unlock This Section", function()
+Library:CreateNotification("Are you sure?", "This thing can broke your data bro", 10, {"Yes, Very sure", "Nvm"}, 
+{ function() ThOpUpg = true
+-- i think i need to fix these bro like fr. it keeps getting stuck bruh
+Library:CreateNotification("Alright bro", "GoodLuck", 2)
+end,
+function()
+Library:CreateNotification("Glad you take back your action", "That's a reasonable approach. xD", 3)
+end})
+end)
+local function Thop()
+SSupg:CreateToggle("Auto Upgrade All Stat", function(state)
+    AutoAllStat = state
+    if state then
+        task.spawn(function()
+            local Remote = game:GetService("ReplicatedStorage")
+                :WaitForChild("Remotes")
+                :WaitForChild("Upgrade")
+
+            local statList = {
+                "Stat1",
+                "Stat2",
+                "Stat3",
+                "Stat4",
+                "Stat5",
+                "BronzeValue"
+            }
+
+            while AutoAllStat do
+                for _, stat in ipairs(statList) do
+                    if not AutoAllStat then break end
+                    local amount = 999
+                    local max = 999
+                    if stat == "Stat1" then
+                        amount = 50
+                        max = 50
+                    end
+
+                    Remote:FireServer({
+                        {
+                            currencyName = "StatPoint",
+                            autoBuy = false,
+                            amount = amount,
+                            max = max,
+                            upgradeValue = stat,
+                            cost = 0
+                        }
+                    })
+
+                    task.wait(0.2)
+                end
+
+                task.wait(1)
+            end
+        end)
+    end
+end)
+end
+
+
+-- END OF MAIN SECTION
+
+Supg:CreateToggle("Auto Reset Progress", function(state)
+Reset = state
+if state then
+task.spawn(function()
+while Reset do
+local args = {
+	{
+		treeType = 2,
+		treeNumber = 1
+	}
+}
+game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("UpgradeTree"):FireServer(unpack(args))
+task.wait(0.5)
+end
+end)
+end
+end)
+Supg:CreateToggle("Auto Upgrade Tree", function(state)
+ThirdUpg = state
+if state then
+task.spawn(function()
+while ThirdUpg do
+for i = 2, 20 do
+local args = {
+	{
+		treeType = 2,
+		treeNumber = i
+	}
+}
+game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("UpgradeTree"):FireServer(unpack(args))
+task.wait(0.5)
+end
+task.wait(0.1)
+end
+end)
+end
+end)
+Supg:CreateLabel("Sperate", "====== Fourth Island ======")
+Supg:CreateToggle("Cut down tree", function(state)
+ATree = state
+if state then
+task.spawn(function()
+while ATree do
+game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("IncreaseTree"):FireServer()
+task.wait()
+end
+end)
+end
+end)
+Supg:CreateToggle("Get Silver", function(state)
+Silver = state
+if state then
+task.spawn(function()
+while Silver do
+local args = {
+	1e4
+}
+game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("IncreaseSilver"):FireServer(unpack(args))
+task.wait()
+end
+end)
+end
+end)
+Supg:CreateToggle("Auto Upgrade Board", function(state)
+A = state
+if state then
+task.spawn(function()
+while A do 
+local args = {
+	{
+		{
+			currencyName = "Wood",
+			autoBuy = false,
+			amount = 999,
+			max = 999,
+			upgradeValue = "SilverValue",
+			cost = 1
+		}
+	}
+}
+game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Upgrade"):FireServer(unpack(args))
+task.wait(0.2)
+local args = {
+	{
+		{
+			currencyName = "Wood",
+			autoBuy = false,
+			amount = 999,
+			max = 999,
+			upgradeValue = "WoodValue",
+			cost = 1
+		}
+	}
+}
+game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Upgrade"):FireServer(unpack(args))
+task.wait(0.2)
+local args = {
+	{
+		{
+			currencyName = "Wood",
+			autoBuy = false,
+			amount = 10,
+			max = 10,
+			upgradeValue = "GrassValue5",
+			cost = 1
+		}
+	}
+}
+game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Upgrade"):FireServer(unpack(args))
+end
+task.wait(0.5)
+end)
+end
+end)
+Supg:CreateToggle("Auto Upgrade Tree", function(state)
+FOtree = state
+if state then
+task.spawn(function()
+while FOtree do
+for i = 1, 20 do
+local args = {
+	{
+		treeType = 3,
+		treeNumber = i
+	}
+}
+game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("UpgradeTree"):FireServer(unpack(args))
+task.wait(0.1)
+end
+task.wait(0.2)
+end
+end)
+end
+end)
+island:CreateToggle("Get Seed", function(state)
+Seed = state
+if state then
+task.spawn(function()
+while Seed do
+local args = {
+	{
+		amount = 1e5
+	}
+}
+game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("SeedCollect"):FireServer(unpack(args))
+task.wait(0.4)
+end
+end)
+end
+end)
+island:CreateToggle("Auto Upgrade Tree", function(state)
+FifTree = state
+if state then
+task.spawn(function()
+while FifTree do
+for i = 1, 20 do
+local args = {
+	{
+		treeType = 4,
+		treeNumber = i
+	}
+}
+game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("UpgradeTree"):FireServer(unpack(args))
+task.wait(0.2)
+end
+task.wait(0.1)
+end
+end)
+end
+end)
+local function op()
+local O = rndm:CreateTab("Op Upgrade")
+local Op = O:CreateSection("Grass")
+local Opp = O:CreateSection("Pop")
+Op:CreateToggle("OP ALL UPGRADE (QUEUE)", function(state)
+    AllUpgrade = state
+    if state then
+        task.spawn(function()
+            while AllUpgrade do
+                local Remote = game:GetService("ReplicatedStorage")
+                    :WaitForChild("Remotes")
+                    :WaitForChild("Upgrade")
+
+                local upgradeQueue = {
+                    -- Grass
+                    {currencyName="Grass", amount=999, max=999, upgradeValue="GrassAmount"},
+                    {currencyName="Grass", amount=100, max=100, upgradeValue="GrassValue"},
+                    {currencyName="Grass", amount=999, max=999, upgradeValue="SpawnRate1"},
+
+                    -- Rebirth
+                    {currencyName="Rebirth", amount=100, max=100, upgradeValue="GrassValue2"},
+                    {currencyName="Rebirth", amount=999, max=999, upgradeValue="BladeRadius"},
+                    {currencyName="Rebirth", amount=999, max=999, upgradeValue="SpawnRate2"},
+
+                    -- Pop
+                    {currencyName="Pop", amount=100, max=100, upgradeValue="GrassValue4"},
+                    {currencyName="Pop", amount=999, max=999, upgradeValue="RebirthValue2"},
+                    {currencyName="Pop", amount=999, max=999, upgradeValue="AutoClick"},
+                }
+
+                for _, upg in ipairs(upgradeQueue) do
+                    if not AllUpgrade then break end
+
+                    Remote:FireServer({
+                        {
+                            currencyName = upg.currencyName,
+                            autoBuy = false,
+                            amount = upg.amount,
+                            max = upg.max,
+                            upgradeValue = upg.upgradeValue,
+                            cost = 1
+                        }
+                    })
+
+                    task.wait(0.2)
+                end
+
+                task.wait(1)
+            end
+        end)
+    end
+end)
+Op:CreateToggle("Op Upgrade Grass amount", function(state)
+OpupgGM = state
+-- PLEASE READ: ANYTHING ABOVE 999 WILL RESULTING A NAN VALUE.
+if state then
+task.spawn(function()
+while OpupgGM do
+local args = {
+	{
+		{
+			currencyName = "Grass",
+			autoBuy = false,
+			amount = 999,
+			max = 999,
+			upgradeValue = "GrassAmount",
+			cost = 1
+		}
+	}
+}
+game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Upgrade"):FireServer(unpack(args))
+task.wait(1)
+end
+end)
+end
+end)
+
+Op:CreateToggle("Op Upgrade Grass Value", function(state)
+    OpupgGV = state
+    if state then
+        task.spawn(function()
+            while OpupgGV do
+                local args = {
+                    {
+                        {
+                            currencyName = "Grass",
+                            autoBuy = false,
+                            amount = 100,
+                            max = 100,
+                            upgradeValue = "GrassValue",
+                            cost = 1
+                        }
+                    }
+                }
+                game:GetService("ReplicatedStorage")
+                    :WaitForChild("Remotes")
+                    :WaitForChild("Upgrade")
+                    :FireServer(unpack(args))
+                task.wait(1)
+            end
+        end)
+    end
+end)
+
+Op:CreateToggle("Op Upgrade Grass Spawn", function(state)
+OpupgSP = state
+if state then
+task.spawn(function()
+while OpupgSP do
+local args = {
+	{
+		{
+			currencyName = "Grass",
+			autoBuy = false,
+			amount = 999,
+			max = 999,
+			upgradeValue = "SpawnRate1",
+			cost = 1
+		}
+	}
+}
+game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Upgrade"):FireServer(unpack(args))
+task.wait(1)
+end
+end)
+end
+end)
+Op:CreateLabel("Sperate", "===== Rebirth Upgrade =====")
+Op:CreateToggle("Rebirth Upgrade Grass Value", function(state)
+OpRupgGV = state
+if state then
+task.spawn(function()
+while OpRupgGV do
+local args = {
+	{
+		{
+			currencyName = "Rebirth",
+			autoBuy = false,
+			amount = 100,
+			max = 100,
+			upgradeValue = "GrassValue2",
+			cost = 1
+		}
+	}
+}
+game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Upgrade"):FireServer(unpack(args))
+task.wait(1)
+end
+end)
+end
+end)
+
+Op:CreateToggle("Rebirth Upgrade Blade Radius", function(state)
+OpRupgBR = state
+if state then
+task.spawn(function()
+while OpRupgBR do
+local args = {
+	{
+		{
+			currencyName = "Rebirth",
+			autoBuy = false,
+			amount = 999,
+			max = 999,
+			upgradeValue = "BladeRadius",
+			cost = 1
+		}
+	}
+}
+game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Upgrade"):FireServer(unpack(args))
+
+task.wait(1)
+end
+end)
+end
+end)
+
+Op:CreateToggle("Rebirth Upgrade Grass Spawn Rate", function(state)
+OpRupgSP = state
+if state then
+task.spawn(function()
+while OpRupgSP do
+local args = {
+	{
+		{
+			currencyName = "Rebirth",
+			autoBuy = false,
+			amount = 999,
+			max = 999,
+			upgradeValue = "SpawnRate2",
+			cost = 1
+		}
+	}
+}
+game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Upgrade"):FireServer(unpack(args))
+
+task.wait(1)
+end
+end)
+end
+end)
+Opp:CreateLabel("info", "dont forget to unlock the area first bro")
+Opp:CreateToggle("Op Upgrade Grass Value", function(state)
+OppupgGV = state
+if state then
+task.spawn(function()
+while OppupgGV do
+local args = {
+	{
+		{
+			currencyName = "Pop",
+			autoBuy = false,
+			amount = 100,
+			max = 100,
+			upgradeValue = "GrassValue4",
+			cost = 1
+		}
+	}
+}
+game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Upgrade"):FireServer(unpack(args))
+
+task.wait(1)
+end
+end)
+end
+end)
+Opp:CreateToggle("Op Upgrade Rebirth Value", function(state)
+OppupgRV = state
+if state then
+task.spawn(function()
+while OppupgRV do
+local args = {
+	{
+		{
+			currencyName = "Pop",
+			autoBuy = false,
+			amount = 999,
+			max = 999,
+			upgradeValue = "RebirthValue2",
+			cost = 1
+		}
+	}
+}
+game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Upgrade"):FireServer(unpack(args))
+
+task.wait(1)
+end
+end)
+end
+end)
+Opp:CreateToggle("Op Upgrade Auto Click", function(state)
+OppupgAC = state
+if state then
+task.spawn(function()
+while OppupgAC do
+local args = {
+	{
+		{
+			currencyName = "Pop",
+			autoBuy = false,
+			amount = 999,
+			max = 999,
+			upgradeValue = "AutoClick",
+			cost = 1
+		}
+	}
+}
+game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Upgrade"):FireServer(unpack(args))
+
+task.wait(1)
+end
+end)
+end
+end)
+end
+
+
+task.spawn(function()
+while true do
+if OpUpg and not hasRun then
+hasRun = true
+op()
+break
+end
+task.wait(0.5)
+end
+end)
+
+task.spawn(function()
+while true do
+if ThOpUpg and not ThhasRun then
+RhhasRun = true
+Thop()
+break
+end
+task.wait(0.5)
+end
+end)
