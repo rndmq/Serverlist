@@ -1,265 +1,4 @@
--- ============================================================
--- ESP / CHARMS — Team-colored character outlines
--- Outline warna ikut team, auto-update jika team berubah
--- ============================================================
-local Players    = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local localPlayer = Players.LocalPlayer
 
--- ============================================================
--- CONFIG
--- ============================================================
-local ESP_ENABLED       = true
-local OUTLINE_THICKNESS = 2        -- ketebalan outline (1-5)
-local OUTLINE_TRANSPARENCY = 0     -- 0 = solid, 1 = invisible
-local DEFAULT_COLOR     = Color3.fromRGB(255, 255, 255) -- warna jika tidak ada team
-local ENEMY_COLOR       = nil      -- nil = pakai warna team, set Color3 untuk override musuh
-local SELF_OUTLINE      = false    -- tampilkan outline di karakter sendiri
-
--- ============================================================
--- STATE
--- ============================================================
--- esp[player] = { highlight = Highlight, teamConn = RBXScriptConnection }
-local esp = {}
-
--- ============================================================
--- UTILS
--- ============================================================
-local function getTeamColor(player)
-    if player.Team then
-        return player.TeamColor.Color
-    end
-    return DEFAULT_COLOR
-end
-
-local function isSameTeam(player)
-    if not localPlayer.Team or not player.Team then return false end
-    return localPlayer.Team == player.Team
-end
-
--- ============================================================
--- HIGHLIGHT MANAGEMENT
--- ============================================================
-local function createHighlight(parent, fillColor, outlineColor)
-    local hl = Instance.new("SelectionBox")
-    hl.LineThickness    = OUTLINE_THICKNESS
-    hl.SurfaceColor3    = fillColor
-    hl.SurfaceTransparency = 1          -- fill transparan, cuma outline
-    hl.Color3           = outlineColor
-    hl.Parent           = parent
-    return hl
-end
-
--- Roblox Highlight object (lebih proper, nempel di karakter)
-local function createCharHighlight(char, color)
-    -- Hapus highlight lama jika ada
-    local old = char:FindFirstChildOfClass("Highlight")
-    if old then old:Destroy() end
-
-    local hl = Instance.new("Highlight")
-    hl.FillTransparency    = 1           -- tidak ada fill, cuma outline
-    hl.OutlineTransparency = OUTLINE_TRANSPARENCY
-    hl.OutlineColor        = color
-    hl.Adornee             = char
-    hl.DepthMode           = Enum.HighlightDepthMode.AlwaysOnTop -- tembus tembok
-    hl.Parent              = char
-    return hl
-end
-
--- ============================================================
--- ATTACH ESP KE SATU PLAYER
--- ============================================================
-local function attachESP(player)
-    if player == localPlayer and not SELF_OUTLINE then return end
-    if esp[player] then return end -- sudah ada
-
-    esp[player] = {
-        charConn  = nil,
-        teamConn  = nil,
-        highlight = nil,
-    }
-
-    local function applyToChar(char)
-        -- Hapus highlight lama
-        if esp[player] and esp[player].highlight then
-            pcall(function() esp[player].highlight:Destroy() end)
-            esp[player].highlight = nil
-        end
-
-        if not char then return end
-        if not ESP_ENABLED then return end
-
-        local color = getTeamColor(player)
-        local hl = createCharHighlight(char, color)
-        if esp[player] then
-            esp[player].highlight = hl
-        end
-    end
-
-    -- Apply ke karakter yang sudah ada
-    if player.Character then
-        task.spawn(applyToChar, player.Character)
-    end
-
-    -- Apply saat respawn
-    esp[player].charConn = player.CharacterAdded:Connect(function(char)
-        task.wait(0.1) -- tunggu karakter load
-        applyToChar(char)
-    end)
-
-    -- Update warna jika team berubah
-    esp[player].teamConn = player:GetPropertyChangedSignal("Team"):Connect(function()
-        task.wait(0.05)
-        local char = player.Character
-        if char then
-            applyToChar(char)
-        end
-    end)
-
-    -- Update jika TeamColor berubah (bisa beda dari Team)
-    esp[player].teamColorConn = player:GetPropertyChangedSignal("TeamColor"):Connect(function()
-        local char = player.Character
-        if char then
-            applyToChar(char)
-        end
-    end)
-end
-
--- ============================================================
--- LEPAS ESP DARI PLAYER
--- ============================================================
-local function detachESP(player)
-    local data = esp[player]
-    if not data then return end
-
-    if data.charConn      then data.charConn:Disconnect()      end
-    if data.teamConn      then data.teamConn:Disconnect()      end
-    if data.teamColorConn then data.teamColorConn:Disconnect() end
-
-    -- Hapus highlight dari karakter
-    pcall(function()
-        if player.Character then
-            local hl = player.Character:FindFirstChildOfClass("Highlight")
-            if hl then hl:Destroy() end
-        end
-    end)
-    pcall(function()
-        if data.highlight then data.highlight:Destroy() end
-    end)
-
-    esp[player] = nil
-end
-
--- ============================================================
--- INIT: Pasang ke semua player yang sudah ada
--- ============================================================
-for _, player in ipairs(Players:GetPlayers()) do
-    if player ~= localPlayer or SELF_OUTLINE then
-        task.spawn(attachESP, player)
-    end
-end
-
-Players.PlayerAdded:Connect(function(player)
-    attachESP(player)
-end)
-
-Players.PlayerRemoving:Connect(function(player)
-    detachESP(player)
-end)
-
--- ============================================================
--- UPDATE LOOP: Sinkronisasi warna jika highlight hilang
--- (game kadang hapus Highlight saat karakter diload ulang)
--- Throttled — tidak tiap frame
--- ============================================================
-local syncThrottle = 0
-local SYNC_INTERVAL = 1.0 -- cek tiap 1 detik
-
-RunService.Heartbeat:Connect(function(dt)
-    syncThrottle = syncThrottle + dt
-    if syncThrottle < SYNC_INTERVAL then return end
-    syncThrottle = 0
-
-    if not ESP_ENABLED then return end
-
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= localPlayer or SELF_OUTLINE then
-            local char = player.Character
-            if char then
-                local hl = char:FindFirstChildOfClass("Highlight")
-                -- Jika highlight hilang atau warnanya beda dari team sekarang, refresh
-                local expectedColor = getTeamColor(player)
-                if not hl or hl.OutlineColor ~= expectedColor then
-                    pcall(function()
-                        local data = esp[player]
-                        if not data then
-                            attachESP(player)
-                            return
-                        end
-                        local newHl = createCharHighlight(char, expectedColor)
-                        data.highlight = newHl
-                    end)
-                end
-            end
-        end
-    end
-end)
-
--- ============================================================
--- TOGGLE (panggil dari script lain jika perlu)
--- ESP:Toggle() atau langsung set ESP_ENABLED
--- ============================================================
-local ESP = {}
-
-function ESP:Toggle(state)
-    ESP_ENABLED = (state == nil) and (not ESP_ENABLED) or state
-
-    if not ESP_ENABLED then
-        -- Hapus semua highlight
-        for _, player in ipairs(Players:GetPlayers()) do
-            pcall(function()
-                if player.Character then
-                    local hl = player.Character:FindFirstChildOfClass("Highlight")
-                    if hl then hl:Destroy() end
-                end
-            end)
-        end
-    else
-        -- Pasang ulang semua
-        for _, player in ipairs(Players:GetPlayers()) do
-            if player ~= localPlayer or SELF_OUTLINE then
-                local char = player.Character
-                if char then
-                    local color = getTeamColor(player)
-                    pcall(createCharHighlight, char, color)
-                end
-            end
-        end
-    end
-
-    return ESP_ENABLED
-end
-
-function ESP:SetThickness(n)
-    OUTLINE_THICKNESS = n
-    -- Apply ke semua highlight yang ada
-    for _, player in ipairs(Players:GetPlayers()) do
-        pcall(function()
-            if player.Character then
-                local hl = player.Character:FindFirstChildOfClass("Highlight")
-                -- Highlight tidak punya LineThickness, re-create untuk apply ulang
-                if hl then
-                    local color = hl.OutlineColor
-                    hl:Destroy()
-                    createCharHighlight(player.Character, color)
-                end
-            end
-        end)
-    end
-end
-
-print("[ESP] Charms active — team-colored outlines ON")
-return ESP
 -- ============================================================
 -- SERVICES
 -- ============================================================
@@ -602,3 +341,265 @@ localPlayer.CharacterAdded:Connect(function(char)
 end)
 
 print("[CORE] Speed | SkillCheck | VaultSpeed (" .. VAULT_SPEED .. ") | Generator Indexer — Active")
+-- ============================================================
+-- ESP / CHARMS — Team-colored character outlines
+-- Outline warna ikut team, auto-update jika team berubah
+-- ============================================================
+local Players    = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local localPlayer = Players.LocalPlayer
+
+-- ============================================================
+-- CONFIG
+-- ============================================================
+local ESP_ENABLED       = true
+local OUTLINE_THICKNESS = 2        -- ketebalan outline (1-5)
+local OUTLINE_TRANSPARENCY = 0     -- 0 = solid, 1 = invisible
+local DEFAULT_COLOR     = Color3.fromRGB(255, 255, 255) -- warna jika tidak ada team
+local ENEMY_COLOR       = nil      -- nil = pakai warna team, set Color3 untuk override musuh
+local SELF_OUTLINE      = false    -- tampilkan outline di karakter sendiri
+
+-- ============================================================
+-- STATE
+-- ============================================================
+-- esp[player] = { highlight = Highlight, teamConn = RBXScriptConnection }
+local esp = {}
+
+-- ============================================================
+-- UTILS
+-- ============================================================
+local function getTeamColor(player)
+    if player.Team then
+        return player.TeamColor.Color
+    end
+    return DEFAULT_COLOR
+end
+
+local function isSameTeam(player)
+    if not localPlayer.Team or not player.Team then return false end
+    return localPlayer.Team == player.Team
+end
+
+-- ============================================================
+-- HIGHLIGHT MANAGEMENT
+-- ============================================================
+local function createHighlight(parent, fillColor, outlineColor)
+    local hl = Instance.new("SelectionBox")
+    hl.LineThickness    = OUTLINE_THICKNESS
+    hl.SurfaceColor3    = fillColor
+    hl.SurfaceTransparency = 1          -- fill transparan, cuma outline
+    hl.Color3           = outlineColor
+    hl.Parent           = parent
+    return hl
+end
+
+-- Roblox Highlight object (lebih proper, nempel di karakter)
+local function createCharHighlight(char, color)
+    -- Hapus highlight lama jika ada
+    local old = char:FindFirstChildOfClass("Highlight")
+    if old then old:Destroy() end
+
+    local hl = Instance.new("Highlight")
+    hl.FillTransparency    = 1           -- tidak ada fill, cuma outline
+    hl.OutlineTransparency = OUTLINE_TRANSPARENCY
+    hl.OutlineColor        = color
+    hl.Adornee             = char
+    hl.DepthMode           = Enum.HighlightDepthMode.AlwaysOnTop -- tembus tembok
+    hl.Parent              = char
+    return hl
+end
+
+-- ============================================================
+-- ATTACH ESP KE SATU PLAYER
+-- ============================================================
+local function attachESP(player)
+    if player == localPlayer and not SELF_OUTLINE then return end
+    if esp[player] then return end -- sudah ada
+
+    esp[player] = {
+        charConn  = nil,
+        teamConn  = nil,
+        highlight = nil,
+    }
+
+    local function applyToChar(char)
+        -- Hapus highlight lama
+        if esp[player] and esp[player].highlight then
+            pcall(function() esp[player].highlight:Destroy() end)
+            esp[player].highlight = nil
+        end
+
+        if not char then return end
+        if not ESP_ENABLED then return end
+
+        local color = getTeamColor(player)
+        local hl = createCharHighlight(char, color)
+        if esp[player] then
+            esp[player].highlight = hl
+        end
+    end
+
+    -- Apply ke karakter yang sudah ada
+    if player.Character then
+        task.spawn(applyToChar, player.Character)
+    end
+
+    -- Apply saat respawn
+    esp[player].charConn = player.CharacterAdded:Connect(function(char)
+        task.wait(0.1) -- tunggu karakter load
+        applyToChar(char)
+    end)
+
+    -- Update warna jika team berubah
+    esp[player].teamConn = player:GetPropertyChangedSignal("Team"):Connect(function()
+        task.wait(0.05)
+        local char = player.Character
+        if char then
+            applyToChar(char)
+        end
+    end)
+
+    -- Update jika TeamColor berubah (bisa beda dari Team)
+    esp[player].teamColorConn = player:GetPropertyChangedSignal("TeamColor"):Connect(function()
+        local char = player.Character
+        if char then
+            applyToChar(char)
+        end
+    end)
+end
+
+-- ============================================================
+-- LEPAS ESP DARI PLAYER
+-- ============================================================
+local function detachESP(player)
+    local data = esp[player]
+    if not data then return end
+
+    if data.charConn      then data.charConn:Disconnect()      end
+    if data.teamConn      then data.teamConn:Disconnect()      end
+    if data.teamColorConn then data.teamColorConn:Disconnect() end
+
+    -- Hapus highlight dari karakter
+    pcall(function()
+        if player.Character then
+            local hl = player.Character:FindFirstChildOfClass("Highlight")
+            if hl then hl:Destroy() end
+        end
+    end)
+    pcall(function()
+        if data.highlight then data.highlight:Destroy() end
+    end)
+
+    esp[player] = nil
+end
+
+-- ============================================================
+-- INIT: Pasang ke semua player yang sudah ada
+-- ============================================================
+for _, player in ipairs(Players:GetPlayers()) do
+    if player ~= localPlayer or SELF_OUTLINE then
+        task.spawn(attachESP, player)
+    end
+end
+
+Players.PlayerAdded:Connect(function(player)
+    attachESP(player)
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+    detachESP(player)
+end)
+
+-- ============================================================
+-- UPDATE LOOP: Sinkronisasi warna jika highlight hilang
+-- (game kadang hapus Highlight saat karakter diload ulang)
+-- Throttled — tidak tiap frame
+-- ============================================================
+local syncThrottle = 0
+local SYNC_INTERVAL = 1.0 -- cek tiap 1 detik
+
+RunService.Heartbeat:Connect(function(dt)
+    syncThrottle = syncThrottle + dt
+    if syncThrottle < SYNC_INTERVAL then return end
+    syncThrottle = 0
+
+    if not ESP_ENABLED then return end
+
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= localPlayer or SELF_OUTLINE then
+            local char = player.Character
+            if char then
+                local hl = char:FindFirstChildOfClass("Highlight")
+                -- Jika highlight hilang atau warnanya beda dari team sekarang, refresh
+                local expectedColor = getTeamColor(player)
+                if not hl or hl.OutlineColor ~= expectedColor then
+                    pcall(function()
+                        local data = esp[player]
+                        if not data then
+                            attachESP(player)
+                            return
+                        end
+                        local newHl = createCharHighlight(char, expectedColor)
+                        data.highlight = newHl
+                    end)
+                end
+            end
+        end
+    end
+end)
+
+-- ============================================================
+-- TOGGLE (panggil dari script lain jika perlu)
+-- ESP:Toggle() atau langsung set ESP_ENABLED
+-- ============================================================
+local ESP = {}
+
+function ESP:Toggle(state)
+    ESP_ENABLED = (state == nil) and (not ESP_ENABLED) or state
+
+    if not ESP_ENABLED then
+        -- Hapus semua highlight
+        for _, player in ipairs(Players:GetPlayers()) do
+            pcall(function()
+                if player.Character then
+                    local hl = player.Character:FindFirstChildOfClass("Highlight")
+                    if hl then hl:Destroy() end
+                end
+            end)
+        end
+    else
+        -- Pasang ulang semua
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= localPlayer or SELF_OUTLINE then
+                local char = player.Character
+                if char then
+                    local color = getTeamColor(player)
+                    pcall(createCharHighlight, char, color)
+                end
+            end
+        end
+    end
+
+    return ESP_ENABLED
+end
+
+function ESP:SetThickness(n)
+    OUTLINE_THICKNESS = n
+    -- Apply ke semua highlight yang ada
+    for _, player in ipairs(Players:GetPlayers()) do
+        pcall(function()
+            if player.Character then
+                local hl = player.Character:FindFirstChildOfClass("Highlight")
+                -- Highlight tidak punya LineThickness, re-create untuk apply ulang
+                if hl then
+                    local color = hl.OutlineColor
+                    hl:Destroy()
+                    createCharHighlight(player.Character, color)
+                end
+            end
+        end)
+    end
+end
+
+print("[ESP] Charms active — team-colored outlines ON")
+return ESP
