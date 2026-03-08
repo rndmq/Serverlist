@@ -326,7 +326,7 @@ end
 -- Hook attribute changed agar langsung counter override
 local function hookVault(char)
     setVaultSpeed(char)
-    char:GetAttributeChangedSignal("VaultSpeed"):Connect(function()
+    char:GetAttributeChangedSignal("vaultspeed"):Connect(function()
         setVaultSpeed(char)
     end)
 end
