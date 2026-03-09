@@ -162,25 +162,41 @@ end)
 
 -- ============================================================
 -- BAGIAN 2: GENERATOR RENAME & INDEXING
--- FIX: Gunakan workspace DescendantAdded agar tetap nemu
--- meski nama folder (Rooftop, dll) berubah-ubah
+-- PERF FIX: Gunakan cache table agar tidak scan seluruh workspace
+-- berulang-ulang setiap ada perubahan kecil
 -- ============================================================
+
+-- Cache: list generator yang sudah ditemukan { instance = obj, ... }
+local generatorCache = {}
 local renameCooldown = false
+
+-- Bangun ulang cache dari scratch (hanya dipanggil saat load & map baru)
+local function rebuildGeneratorCache()
+    generatorCache = {}
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if (obj.Name == "Generator" or obj.Name:match("^Generator%d+$"))
+            and not obj.Name:match("^GeneratorPoint") then
+            table.insert(generatorCache, obj)
+        end
+    end
+end
 
 local function refreshGeneratorNames()
     if renameCooldown then return end
     renameCooldown = true
 
-    local index = 1
-    -- Cari di seluruh workspace, tidak peduli nama parent
-    for _, obj in ipairs(workspace:GetDescendants()) do
-        if obj.Name == "Generator" or obj.Name:match("^Generator%d+$") then
-            -- Pastikan bukan GeneratorPoint
-            if not obj.Name:match("^GeneratorPoint") then
-                obj.Name = "Generator" .. index
-                index    = index + 1
-            end
+    -- Bersihkan cache dari instance yang sudah tidak valid
+    local valid = {}
+    for _, obj in ipairs(generatorCache) do
+        if obj and obj.Parent then
+            table.insert(valid, obj)
         end
+    end
+    generatorCache = valid
+
+    -- Rename dari cache, tidak perlu scan seluruh workspace lagi
+    for i, obj in ipairs(generatorCache) do
+        obj.Name = "Generator" .. i
     end
 
     task.delay(0.3, function()
@@ -189,22 +205,41 @@ local function refreshGeneratorNames()
 end
 
 -- Jalankan sekali saat load
-task.spawn(refreshGeneratorNames)
+task.spawn(function()
+    rebuildGeneratorCache()
+    refreshGeneratorNames()
+end)
 
 -- Monitor jika ada instance baru masuk workspace
+-- PERF FIX: hanya rebuild cache jika yang masuk Map (bukan setiap Generator)
 workspace.DescendantAdded:Connect(function(desc)
-    -- Hanya trigger jika yang masuk adalah generator atau map baru
-    if desc.Name == "Generator" or desc.Name:match("^Generator%d+$") or desc.Name == "Map" then
+    if desc.Name == "Map" then
+        -- Map baru = rebuild penuh
         task.wait(0.5)
+        rebuildGeneratorCache()
         refreshGeneratorNames()
+    elseif desc.Name == "Generator" and not desc.Name:match("^GeneratorPoint") then
+        -- Generator baru: masukkan ke cache saja, lalu rename
+        task.wait(0.2)
+        if desc and desc.Parent then
+            table.insert(generatorCache, desc)
+            refreshGeneratorNames()
+        end
     end
 end)
 
 -- Re-index jika ada yang dihapus (generator selesai direpair)
+-- PERF FIX: hapus dari cache, tidak perlu scan ulang
 workspace.DescendantRemoving:Connect(function(desc)
     if desc.Name:match("^Generator%d+$") and not desc.Name:match("^GeneratorPoint") then
-        task.wait(0.3)
-        refreshGeneratorNames()
+        -- Buang dari cache
+        for i, obj in ipairs(generatorCache) do
+            if obj == desc then
+                table.remove(generatorCache, i)
+                break
+            end
+        end
+        task.delay(0.1, refreshGeneratorNames)
     end
 end)
 
@@ -229,10 +264,9 @@ local function getClosestGeneratorAndPoint()
     local closestPoint = nil
     local minGenDist   = 5 -- stud
 
-    -- Cari semua Generator di workspace (nama sudah di-rename oleh Bagian 2)
-    for _, obj in ipairs(workspace:GetDescendants()) do
-        if obj.Name:match("^Generator%d+$") and not obj.Name:match("^GeneratorPoint") then
-            -- Ambil posisi: jika Model pakai PrimaryPart, jika BasePart langsung
+    -- PERF FIX: loop cache saja (jumlah kecil), bukan seluruh workspace:GetDescendants()
+    for _, obj in ipairs(generatorCache) do
+        if obj and obj.Parent then
             local part
             if obj:IsA("Model") then
                 part = obj.PrimaryPart or obj:FindFirstChildWhichIsA("BasePart")
@@ -314,7 +348,7 @@ end)
 -- ============================================================
 -- BAGIAN 4: VAULT SPEED
 -- ============================================================
-local VAULT_SPEED = 1.5
+local VAULT_SPEED = 1.20
 
 local function setVaultSpeed(char)
     if not char then return end
@@ -345,9 +379,7 @@ print("[CORE] Speed | SkillCheck | VaultSpeed (" .. VAULT_SPEED .. ") | Generato
 -- ESP / CHARMS — Team-colored character outlines
 -- Outline warna ikut team, auto-update jika team berubah
 -- ============================================================
-local Players    = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local localPlayer = Players.LocalPlayer
+-- (Players, RunService, localPlayer sudah dideklarasikan di atas)
 
 -- ============================================================
 -- CONFIG
@@ -383,15 +415,7 @@ end
 -- ============================================================
 -- HIGHLIGHT MANAGEMENT
 -- ============================================================
-local function createHighlight(parent, fillColor, outlineColor)
-    local hl = Instance.new("SelectionBox")
-    hl.LineThickness    = OUTLINE_THICKNESS
-    hl.SurfaceColor3    = fillColor
-    hl.SurfaceTransparency = 1          -- fill transparan, cuma outline
-    hl.Color3           = outlineColor
-    hl.Parent           = parent
-    return hl
-end
+-- (createHighlight/SelectionBox dihapus — tidak dipakai dan lebih berat dari Highlight)
 
 -- Roblox Highlight object (lebih proper, nempel di karakter)
 local function createCharHighlight(char, color)
