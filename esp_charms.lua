@@ -348,7 +348,7 @@ end)
 -- ============================================================
 -- BAGIAN 4: VAULT SPEED
 -- ============================================================
-local VAULT_SPEED = 1.20
+local VAULT_SPEED = 1.4
 
 local function setVaultSpeed(char)
     if not char then return end
