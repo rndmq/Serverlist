@@ -1538,49 +1538,63 @@ local function SetupTempTracking()
 	end
 end
 
--- Handprints: pakai DescendantAdded di folder Handprints
+-- Handprints: scan folder sekali untuk state awal, lalu listener untuk update
 local function SetupHandprintTracking()
-	local hpFolder = workspace:FindFirstChild("Handprints")
-	if not hpFolder then
-		task.spawn(function()
-			hpFolder = workspace:WaitForChild("Handprints", 30)
-			if hpFolder then
-				hpFolder.DescendantAdded:Connect(function(obj)
-					if obj:IsA("BasePart") then
-						ev_HandprintsFound = true
-						Handprints.Text = "Handprints: Yes"
-						Handprints.TextColor3 = Color3.fromRGB(0, 255, 0)
-					end
-				end)
+	task.spawn(function()
+		local hpFolder = workspace:FindFirstChild("Handprints") or workspace:WaitForChild("Handprints", 30)
+		if not hpFolder then return end
+
+		-- Cek apakah sudah ada handprint dari sebelumnya
+		for _, obj in ipairs(hpFolder:GetDescendants()) do
+			if obj:IsA("BasePart") then
+				ev_HandprintsFound = true
+				Handprints.Text = "Handprints: Yes"
+				Handprints.TextColor3 = Color3.fromRGB(0, 255, 0)
+				break
+			end
+		end
+
+		-- Listener untuk handprint baru
+		hpFolder.DescendantAdded:Connect(function(obj)
+			if obj:IsA("BasePart") then
+				ev_HandprintsFound = true
+				Handprints.Text = "Handprints: Yes"
+				Handprints.TextColor3 = Color3.fromRGB(0, 255, 0)
 			end
 		end)
-		return
-	end
-	hpFolder.DescendantAdded:Connect(function(obj)
-		if obj:IsA("BasePart") then
-			ev_HandprintsFound = true
-			Handprints.Text = "Handprints: Yes"
-			Handprints.TextColor3 = Color3.fromRGB(0, 255, 0)
-		end
 	end)
 end
 
--- Ghost Orb: pakai DescendantAdded di workspace
-workspace.DescendantAdded:Connect(function(obj)
-	if obj:IsA("BasePart") and obj.Name == "GhostOrb" then
-		ev_GhostOrbFound = true
-		GhostOrb.Text = "GhostOrb: Yes"
-		GhostOrb.TextColor3 = Color3.fromRGB(0, 255, 0)
+-- Ghost Orb: scan Items sekali, lalu listener
+local function SetupGhostOrbTracking()
+	-- Cek yang sudah ada
+	local itemFolder = workspace:FindFirstChild("Items")
+	if itemFolder then
+		for _, obj in ipairs(itemFolder:GetDescendants()) do
+			if obj:IsA("BasePart") and obj.Name == "GhostOrb" then
+				ev_GhostOrbFound = true
+				GhostOrb.Text = "GhostOrb: Yes"
+				GhostOrb.TextColor3 = Color3.fromRGB(0, 255, 0)
+				break
+			end
+		end
+		-- Listener untuk orb baru
+		itemFolder.DescendantAdded:Connect(function(obj)
+			if obj:IsA("BasePart") and obj.Name == "GhostOrb" then
+				ev_GhostOrbFound = true
+				GhostOrb.Text = "GhostOrb: Yes"
+				GhostOrb.TextColor3 = Color3.fromRGB(0, 255, 0)
+			end
+		end)
 	end
-end)
+end
 
--- EMF: pakai DescendantAdded, cari Indicators folder
-workspace.DescendantAdded:Connect(function(obj)
-	if obj:IsA("BasePart") and obj.Material == Enum.Material.Neon then
-		local num = tonumber(obj.Name)
-		if num and num > ev_HighestEMF then
-			local parent = obj.Parent
-			if parent and parent.Name == "Indicators" then
+-- EMF: scan Indicators yang sudah ada, lalu listener untuk level baru
+local function SetupEMFTracking()
+	local function processEMFPart(obj)
+		if obj:IsA("BasePart") and obj.Material == Enum.Material.Neon then
+			local num = tonumber(obj.Name)
+			if num and num > ev_HighestEMF and obj.Parent and obj.Parent.Name == "Indicators" then
 				ev_HighestEMF = num
 				if num == 5 then
 					EMF.Text = "EMF level: 5"
@@ -1591,7 +1605,19 @@ workspace.DescendantAdded:Connect(function(obj)
 			end
 		end
 	end
-end)
+
+	-- Cek yang sudah ada
+	for _, obj in ipairs(workspace:GetDescendants()) do
+		if obj:IsA("Folder") and obj.Name == "Indicators" then
+			for _, v in ipairs(obj:GetChildren()) do
+				processEMFPart(v)
+			end
+		end
+	end
+
+	-- Listener untuk perubahan EMF baru
+	workspace.DescendantAdded:Connect(processEMFPart)
+end
 
 -- Wither: pakai AttributeChanged/Changed pada Petals di Items
 local function SetupWitherTracking()
@@ -1659,6 +1685,8 @@ end
 -- Setup semua tracker sekali saja
 SetupTempTracking()
 SetupHandprintTracking()
+SetupGhostOrbTracking()
+SetupEMFTracking()
 SetupWitherTracking()
 SetupGhostWritingTracking()
 SetupSpiritBoxTracking()
