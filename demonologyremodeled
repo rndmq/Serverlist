@@ -1589,34 +1589,48 @@ local function SetupGhostOrbTracking()
 	end
 end
 
--- EMF: scan Indicators yang sudah ada, lalu listener untuk level baru
+-- EMF: baca dari Attribute model "6" di workspace.Items
+local function getEMFColor(level)
+	if level <= 1 then
+		return Color3.fromRGB(0, 255, 0)        -- hijau
+	elseif level == 2 then
+		return Color3.fromRGB(128, 255, 0)      -- hijau kekuningan
+	elseif level == 3 then
+		return Color3.fromRGB(255, 200, 0)      -- kuning ke merahan
+	elseif level == 4 then
+		return Color3.fromRGB(255, 80, 0)       -- agak merah
+	else
+		return Color3.fromRGB(255, 0, 0)        -- merah total (5)
+	end
+end
+
 local function SetupEMFTracking()
-	local function processEMFPart(obj)
-		if obj:IsA("BasePart") and obj.Material == Enum.Material.Neon then
-			local num = tonumber(obj.Name)
-			if num and num > ev_HighestEMF and obj.Parent and obj.Parent.Name == "Indicators" then
-				ev_HighestEMF = num
-				if num == 5 then
-					EMF.Text = "EMF level: 5"
-					EMF.TextColor3 = Color3.fromRGB(0, 255, 0)
-				else
-					EMF.Text = "EMF level: " .. tostring(num)
-				end
-			end
-		end
-	end
+	task.spawn(function()
+		local itemFolder = workspace:FindFirstChild("Items") or workspace:WaitForChild("Items", 30)
+		if not itemFolder then return end
 
-	-- Cek yang sudah ada
-	for _, obj in ipairs(workspace:GetDescendants()) do
-		if obj:IsA("Folder") and obj.Name == "Indicators" then
-			for _, v in ipairs(obj:GetChildren()) do
-				processEMFPart(v)
-			end
-		end
-	end
+		local emfModel = itemFolder:FindFirstChild("6") or itemFolder:WaitForChild("6", 30)
+		if not emfModel then return end
 
-	-- Listener untuk perubahan EMF baru
-	workspace.DescendantAdded:Connect(processEMFPart)
+		local function updateEMF()
+			local level = emfModel:GetAttribute("ReadingSkill") or emfModel:GetAttribute("Level") or emfModel:GetAttribute("EMF")
+			if not level then return end
+			level = math.floor(level)
+			if level > ev_HighestEMF then
+				ev_HighestEMF = level
+			end
+			EMF.Text = "EMF level: " .. tostring(ev_HighestEMF)
+			EMF.TextColor3 = getEMFColor(ev_HighestEMF)
+		end
+
+		-- Cek nilai awal
+		updateEMF()
+
+		-- Listener tiap attribute berubah
+		emfModel.AttributeChanged:Connect(function()
+			updateEMF()
+		end)
+	end)
 end
 
 -- Wither: pakai AttributeChanged/Changed pada Petals di Items
