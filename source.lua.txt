@@ -3276,4 +3276,591 @@ end
     return TabElements
 end
 
+-- =====================================================================
+-- KEY SYSTEM  (Library:CreateKeySystem)
+-- =====================================================================
+-- config = {
+--   title   = "Key System",         -- judul header (opsional)
+--   tabs    = {                      -- 1 atau 2 tab, lebih dari 2 diabaikan
+--     { name = "Verify",   setup = function(tab) ... end },
+--     { name = "Info",     setup = function(tab) ... end },  -- opsional
+--   }
+-- }
+--
+-- Tab API yang dikirim ke setup(tab):
+--   tab:AddLabel(text)
+--   tab:AddTextBox(placeholder, callback)   -- callback(text) saat Enter
+--   tab:AddButton(name, callback)
+--   tab:AddToggle(name, default, callback)
+--
+-- Return:
+--   { Overlay, ShowTab(idx), Destroy() }
+-- =====================================================================
+function Library:CreateKeySystem(config)
+    config = config or {}
+    local ksTabs = config.tabs or {}
+    local tabCount = math.max(1, math.min(#ksTabs, 2))  -- paksa 1–2
+
+    -- Ambil posisi / ukuran Main saat ini supaya overlay pas di atasnya
+    local ksW = Main.AbsoluteSize.X ~= 0 and Main.AbsoluteSize.X or 450
+    local ksH = Main.AbsoluteSize.Y ~= 0 and Main.AbsoluteSize.Y or 250
+
+    -- ---- Overlay frame ----
+    local KSOverlay = Instance.new("ImageLabel")
+    KSOverlay.Name        = "KeySystemOverlay"
+    KSOverlay.Parent      = UILibrary
+    KSOverlay.BackgroundColor3    = Library.Theme.BackgroundColor
+    KSOverlay.BackgroundTransparency = 1          -- di-tween masuk
+    KSOverlay.Position    = Main.Position
+    KSOverlay.Size        = UDim2.new(0, ksW, 0, ksH)
+    KSOverlay.ZIndex      = 70
+    KSOverlay.Image       = "rbxassetid://3570695787"
+    KSOverlay.ImageColor3 = Library.Theme.BackgroundColor
+    KSOverlay.ScaleType   = Enum.ScaleType.Slice
+    KSOverlay.SliceCenter = Rect.new(100, 100, 100, 100)
+    KSOverlay.SliceScale  = 0.050
+
+    -- Border warna aksen
+    local KSBorder = Instance.new("ImageLabel")
+    KSBorder.Name     = "KSBorder"
+    KSBorder.Parent   = KSOverlay
+    KSBorder.BackgroundTransparency = 1
+    KSBorder.Position = UDim2.new(0, -1, 0, -1)
+    KSBorder.Size     = UDim2.new(1, 2, 1, 2)
+    KSBorder.ZIndex   = 71
+    KSBorder.Image    = "rbxassetid://3570695787"
+    KSBorder.ImageColor3 = Library.Theme.MainColor
+    KSBorder.ScaleType   = Enum.ScaleType.Slice
+    KSBorder.SliceCenter = Rect.new(95, 95, 95, 95)
+    KSBorder.SliceScale  = 0.050
+    table.insert(Library.LibraryColorTable, KSBorder)
+
+    -- Header / judul (opsional)
+    if config.title then
+        local KSTitle = Instance.new("TextLabel")
+        KSTitle.Name   = "KSTitle"
+        KSTitle.Parent = KSOverlay
+        KSTitle.BackgroundTransparency = 1
+        KSTitle.Position = UDim2.new(0, 0, 0, 0)
+        KSTitle.Size     = UDim2.new(1, 0, 0, 14)
+        KSTitle.ZIndex   = 72
+        KSTitle.Font     = Library.Theme.TextFont
+        KSTitle.Text     = config.title
+        KSTitle.TextColor3 = Library.Theme.TextColor
+        KSTitle.TextSize   = 13
+        table.insert(Library.LibraryColorTable, KSTitle)
+    end
+
+    -- ---- Tab button bar ----
+    local KSTabBar = Instance.new("ImageLabel")
+    KSTabBar.Name     = "KSTabBar"
+    KSTabBar.Parent   = KSOverlay
+    KSTabBar.BackgroundTransparency = 1
+    KSTabBar.Position = UDim2.new(0, 14, 0, 16)
+    KSTabBar.Size     = UDim2.new(1, -28, 0, 25)
+    KSTabBar.ZIndex   = 72
+    KSTabBar.Image    = "rbxassetid://3570695787"
+    KSTabBar.ImageColor3 = Library.Theme.MainColor
+    KSTabBar.ScaleType   = Enum.ScaleType.Slice
+    KSTabBar.SliceCenter = Rect.new(100, 100, 100, 100)
+    KSTabBar.SliceScale  = 0.050
+    KSTabBar.ClipsDescendants = true
+    table.insert(Library.LibraryColorTable, KSTabBar)
+
+    -- ---- Content area ----
+    local KSContentArea = Instance.new("Frame")
+    KSContentArea.Name   = "KSContentArea"
+    KSContentArea.Parent = KSOverlay
+    KSContentArea.BackgroundTransparency = 1
+    KSContentArea.Position = UDim2.new(0, 8, 0, 46)
+    KSContentArea.Size     = UDim2.new(1, -16, 1, -54)
+    KSContentArea.ZIndex   = 72
+    KSContentArea.ClipsDescendants = true
+
+    -- ---- State ----
+    local KSTabObjects = {}
+    local KSActiveTab  = 0
+
+    local function KSShowTab(idx)
+        for i, obj in ipairs(KSTabObjects) do
+            obj.content.Visible = (i == idx)
+            local targetColor = (i == idx)
+                and DarkenObjectColor(Library.Theme.MainColor, 20)
+                or  Library.Theme.MainColor
+            TweenService:Create(obj.button,
+                TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out),
+                { ImageColor3 = targetColor }):Play()
+        end
+        KSActiveTab = idx
+    end
+
+    -- 1 tab → tombol 100% lebar; 2 tab → masing-masing 50%
+    local btnWidthScale = (tabCount == 1) and 1.0 or 0.5
+
+    for i = 1, tabCount do
+        local tabDef = ksTabs[i] or { name = "Tab " .. i }
+
+        -- Tombol tab
+        local KSBtn = Instance.new("ImageButton")
+        KSBtn.Name   = "KSTabBtn_" .. i
+        KSBtn.Parent = KSTabBar
+        KSBtn.BackgroundTransparency = 1
+        KSBtn.Position = UDim2.new((i - 1) * btnWidthScale, 0, 0, 0)
+        KSBtn.Size     = UDim2.new(btnWidthScale, 0, 1, 0)
+        KSBtn.ZIndex   = 73
+        KSBtn.Image    = "rbxassetid://3570695787"
+        KSBtn.ImageColor3 = Library.Theme.MainColor
+        KSBtn.ScaleType   = Enum.ScaleType.Slice
+        KSBtn.SliceCenter = Rect.new(100, 100, 100, 100)
+        KSBtn.SliceScale  = 0.050
+        table.insert(Library.LibraryColorTable, KSBtn)
+
+        local KSBtnLabel = Instance.new("TextLabel")
+        KSBtnLabel.Parent = KSBtn
+        KSBtnLabel.BackgroundTransparency = 1
+        KSBtnLabel.Size    = UDim2.new(1, 0, 1, 0)
+        KSBtnLabel.ZIndex  = 74
+        KSBtnLabel.Font    = Library.Theme.TextFont
+        KSBtnLabel.Text    = tabDef.name or ("Tab " .. i)
+        KSBtnLabel.TextColor3 = Library.Theme.TextColor
+        KSBtnLabel.TextSize   = 15
+        table.insert(Library.LibraryColorTable, KSBtnLabel)
+
+        -- Konten tab (ScrollingFrame — full width, no section split)
+        local KSContent = Instance.new("ScrollingFrame")
+        KSContent.Name    = "KSContent_" .. i
+        KSContent.Parent  = KSContentArea
+        KSContent.BackgroundTransparency = 1
+        KSContent.Size    = UDim2.new(1, 0, 1, 0)
+        KSContent.ZIndex  = 73
+        KSContent.ScrollBarThickness = 4
+        KSContent.ScrollBarImageColor3 = Color3.fromRGB(85, 85, 85)
+        KSContent.CanvasSize = UDim2.new(0, 0, 0, 0)
+        KSContent.AutomaticCanvasSize = Enum.AutomaticSize.Y
+        KSContent.Visible = false
+
+        local KSLayout = Instance.new("UIListLayout")
+        KSLayout.Parent     = KSContent
+        KSLayout.SortOrder  = Enum.SortOrder.LayoutOrder
+        KSLayout.Padding    = UDim.new(0, 6)
+
+        local KSPadding = Instance.new("UIPadding")
+        KSPadding.Parent       = KSContent
+        KSPadding.PaddingTop   = UDim.new(0, 8)
+        KSPadding.PaddingLeft  = UDim.new(0, 8)
+        KSPadding.PaddingRight = UDim.new(0, 8)
+
+        local tabIdx = i
+        KSBtn.MouseButton1Click:Connect(function()
+            KSShowTab(tabIdx)
+        end)
+
+        -- ---- Tab element API ----
+        local TabAPI = {}
+
+        function TabAPI:AddLabel(text)
+            local lbl = Instance.new("TextLabel")
+            lbl.Name   = "KSLabel"
+            lbl.Parent = KSContent
+            lbl.BackgroundTransparency = 1
+            lbl.Size   = UDim2.new(1, 0, 0, 24)
+            lbl.ZIndex = 74
+            lbl.Font   = Library.Theme.TextFont
+            lbl.Text   = text or ""
+            lbl.TextColor3 = Library.Theme.TextColor
+            lbl.TextSize   = 15
+            lbl.TextXAlignment = Enum.TextXAlignment.Center
+            lbl.TextWrapped    = true
+            table.insert(Library.LibraryColorTable, lbl)
+            return lbl
+        end
+
+        function TabAPI:AddTextBox(placeholder, callback)
+            local ctr = Instance.new("Frame")
+            ctr.Name   = "KSTBContainer"
+            ctr.Parent = KSContent
+            ctr.BackgroundTransparency = 1
+            ctr.Size   = UDim2.new(1, 0, 0, 32)
+            ctr.ZIndex = 74
+
+            local box = Instance.new("TextBox")
+            box.Name   = "KSInputBox"
+            box.Parent = ctr
+            box.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            box.BackgroundTransparency = 0
+            box.BorderSizePixel = 0
+            box.AnchorPoint = Vector2.new(0.5, 0.5)
+            box.Position   = UDim2.new(0.5, 0, 0.5, 0)
+            box.Size       = UDim2.new(1, 0, 0, 26)
+            box.ZIndex     = 75
+            box.Font       = Library.Theme.TextFont
+            box.PlaceholderText  = placeholder or "Enter key..."
+            box.PlaceholderColor3 = Color3.fromRGB(130, 130, 130)
+            box.Text       = ""
+            box.TextColor3 = Color3.fromRGB(255, 255, 255)
+            box.TextSize   = 14
+            box.ClearTextOnFocus = true
+
+            local c = Instance.new("UICorner")
+            c.CornerRadius = UDim.new(0, 6)
+            c.Parent = box
+
+            if callback then
+                box.FocusLost:Connect(function(enter)
+                    if enter then callback(box.Text) end
+                end)
+            end
+            return box
+        end
+
+        function TabAPI:AddButton(name, callback)
+            local fr = Instance.new("Frame")
+            fr.Name   = "KSBtnFrame"
+            fr.Parent = KSContent
+            fr.BackgroundTransparency = 1
+            fr.Size   = UDim2.new(1, 0, 0, 35)
+            fr.ZIndex = 74
+
+            local btn = Instance.new("TextButton")
+            btn.Name   = "KSBtn"
+            btn.Parent = fr
+            btn.BackgroundTransparency = 1
+            btn.BorderSizePixel = 0
+            btn.AnchorPoint = Vector2.new(0.5, 0.5)
+            btn.Position = UDim2.new(0.5, 0, 0.5, 0)
+            btn.Size     = UDim2.new(0, 168, 0, 25)
+            btn.ZIndex   = 75
+            btn.Font     = Library.Theme.TextFont
+            btn.Text     = name or "Button"
+            btn.TextColor3 = Library.Theme.TextColor
+            btn.TextSize   = 15
+            btn.ClipsDescendants = true
+            table.insert(Library.LibraryColorTable, btn)
+
+            local rnd = Instance.new("ImageLabel")
+            rnd.Parent = btn
+            rnd.AnchorPoint = Vector2.new(0.5, 0.5)
+            rnd.BackgroundTransparency = 1
+            rnd.Position = UDim2.new(0.5, 0, 0.5, 0)
+            rnd.Size     = UDim2.new(1, 0, 1, 0)
+            rnd.ZIndex   = 73
+            rnd.Image    = "rbxassetid://3570695787"
+            rnd.ImageColor3 = Library.Theme.MainColor
+            rnd.ScaleType   = Enum.ScaleType.Slice
+            rnd.SliceCenter = Rect.new(100, 100, 100, 100)
+            rnd.SliceScale  = 0.050
+            table.insert(Library.LibraryColorTable, rnd)
+
+            btn.MouseButton1Down:Connect(function()
+                TweenService:Create(rnd, TweenInfo.new(0.25, Library.Theme.EasingStyle, Enum.EasingDirection.Out),
+                    { ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 20) }):Play()
+                RippleEffect(btn)
+                if callback then pcall(callback) end
+            end)
+            btn.MouseButton1Up:Connect(function()
+                TweenService:Create(rnd, TweenInfo.new(0.25, Library.Theme.EasingStyle, Enum.EasingDirection.Out),
+                    { ImageColor3 = Library.Theme.MainColor }):Play()
+            end)
+            return btn
+        end
+
+        function TabAPI:AddToggle(name, default, callback)
+            local fr = Instance.new("Frame")
+            fr.Name   = "KSToggleFrame"
+            fr.Parent = KSContent
+            fr.BackgroundTransparency = 1
+            fr.Size   = UDim2.new(1, 0, 0, 35)
+            fr.ZIndex = 74
+
+            local Toggled = default or false
+
+            local lbl = Instance.new("TextLabel")
+            lbl.Parent = fr
+            lbl.BackgroundTransparency = 1
+            lbl.Position = UDim2.new(0, 5, 0, 0)
+            lbl.Size     = UDim2.new(0, 149, 0, 35)
+            lbl.ZIndex   = 75
+            lbl.Font     = Library.Theme.TextFont
+            lbl.Text     = name or ""
+            lbl.TextColor3 = Toggled and Library.Theme.TextColor or Color3.fromRGB(185, 185, 185)
+            lbl.TextSize   = 15
+            lbl.TextXAlignment = Enum.TextXAlignment.Left
+            table.insert(Library.LibraryColorTable, lbl)
+
+            local togBtn = Instance.new("TextButton")
+            togBtn.Parent = fr
+            togBtn.BackgroundTransparency = 1
+            togBtn.Position = UDim2.new(1, -40, 0, 7)
+            togBtn.Size     = UDim2.new(0, 20, 0, 20)
+            togBtn.ZIndex   = 75
+            togBtn.Text     = ""
+            togBtn.AutoButtonColor = false
+
+            local outline = Instance.new("ImageLabel")
+            outline.Name   = "CheckboxOutline"
+            outline.Parent = togBtn
+            outline.BackgroundTransparency = 1
+            outline.Position = UDim2.new(0.5, -12, 0.5, -12)
+            outline.Size     = UDim2.new(0, 24, 0, 24)
+            outline.ZIndex   = 75
+            outline.Image    = "rbxassetid://5416796047"
+            outline.ImageColor3 = Toggled and Library.Theme.MainColor or Color3.fromRGB(65, 65, 65)
+            table.insert(Library.LibraryColorTable, outline)
+
+            local ticked = Instance.new("ImageLabel")
+            ticked.Name   = "CheckboxTicked"
+            ticked.Parent = togBtn
+            ticked.BackgroundTransparency = 1
+            ticked.Position = UDim2.new(0.5, -12, 0.5, -12)
+            ticked.Size     = UDim2.new(0, 24, 0, 24)
+            ticked.ZIndex   = 76
+            ticked.Image    = "rbxassetid://5416796675"
+            ticked.ImageColor3 = Toggled and Library.Theme.MainColor or Color3.fromRGB(65, 65, 65)
+            table.insert(Library.LibraryColorTable, ticked)
+
+            local cover = Instance.new("Frame")
+            cover.Name   = "TickCover"
+            cover.Parent = togBtn
+            cover.BackgroundColor3 = Library.Theme.BackgroundColor
+            cover.BorderSizePixel  = 0
+            cover.Position = Toggled and UDim2.new(0.5, 0, 0.5, 0) or UDim2.new(0.5, -7, 0.5, -7)
+            cover.Size     = Toggled and UDim2.new(0, 0, 0, 0)   or UDim2.new(0, 14, 0, 14)
+            cover.ZIndex   = 77
+
+            local function applyToggle(state)
+                TweenService:Create(lbl,    TweenInfo.new(0.12, Enum.EasingStyle.Quad),
+                    { TextColor3  = state and Library.Theme.TextColor or Color3.fromRGB(185,185,185) }):Play()
+                TweenService:Create(cover,  TweenInfo.new(0.12, Enum.EasingStyle.Quad),
+                    { Position = state and UDim2.new(0.5,0,0.5,0) or UDim2.new(0.5,-7,0.5,-7),
+                      Size     = state and UDim2.new(0,0,0,0) or UDim2.new(0,14,0,14) }):Play()
+                TweenService:Create(outline, TweenInfo.new(0.12, Enum.EasingStyle.Quad),
+                    { ImageColor3 = state and Library.Theme.MainColor or Color3.fromRGB(65,65,65) }):Play()
+                TweenService:Create(ticked,  TweenInfo.new(0.12, Enum.EasingStyle.Quad),
+                    { ImageColor3 = state and Library.Theme.MainColor or Color3.fromRGB(65,65,65) }):Play()
+                if callback then pcall(callback, state) end
+            end
+
+            togBtn.MouseButton1Down:Connect(function()
+                Toggled = not Toggled
+                applyToggle(Toggled)
+            end)
+
+            return {
+                SetState = function(state)
+                    Toggled = state
+                    applyToggle(state)
+                end
+            }
+        end
+
+        table.insert(KSTabObjects, { button = KSBtn, content = KSContent, api = TabAPI })
+
+        -- Panggil setup jika ada
+        if tabDef.setup and type(tabDef.setup) == "function" then
+            tabDef.setup(TabAPI)
+        end
+    end
+
+    -- Tampilkan tab pertama + tween masuk
+    KSShowTab(1)
+    TweenService:Create(KSOverlay, TweenInfo.new(0.4, Library.Theme.EasingStyle, Enum.EasingDirection.Out),
+        { BackgroundTransparency = 0 }):Play()
+
+    return {
+        Overlay  = KSOverlay,
+        Tabs     = KSTabObjects,
+        ShowTab  = KSShowTab,
+        Destroy  = function()
+            TweenService:Create(KSOverlay, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out),
+                { BackgroundTransparency = 1 }):Play()
+            task.delay(0.3, function() KSOverlay:Destroy() end)
+        end
+    }
+end
+
+-- =====================================================================
+-- BOTTOM BAR  (Library:CreateBottomBar)
+-- =====================================================================
+-- Membuat bar di bagian bawah UI dengan:
+--   • Satu TextBox di tengah ("section Tengah")
+--   • Maksimal 2 tombol (kiri / kanan)
+--
+-- Return  BottomBarElements:
+--   BottomBarElements.InputBox            -- referensi TextBox
+--   BottomBarElements:SetPlaceholder(text)
+--   BottomBarElements:OnInputChanged(cb)  -- cb(text) setiap karakter
+--   BottomBarElements:OnSubmit(cb)        -- cb(text) saat Enter
+--   BottomBarElements:AddButton(name, cb) -- maks 2; lebih diabaikan
+-- =====================================================================
+function Library:CreateBottomBar()
+    local BAR_H = 48   -- tinggi bottom bar (px)
+
+    -- Perpanjang Main ke bawah
+    local curSz = Main.Size
+    TweenService:Create(Main,
+        TweenInfo.new(0.35, Library.Theme.EasingStyle, Enum.EasingDirection.Out),
+        { Size = UDim2.new(curSz.X.Scale, curSz.X.Offset,
+                           curSz.Y.Scale, curSz.Y.Offset + BAR_H) }):Play()
+
+    -- Garis pemisah
+    local Divider = Instance.new("Frame")
+    Divider.Name   = "BottomBarDivider"
+    Divider.Parent = Main
+    Divider.BackgroundColor3 = Library.Theme.MainColor
+    Divider.BorderSizePixel  = 0
+    Divider.Position = UDim2.new(0, 14, 1, -BAR_H)
+    Divider.Size     = UDim2.new(1, -28, 0, 1)
+    Divider.ZIndex   = 4
+    table.insert(Library.LibraryColorTable, Divider)
+
+    -- Container bar
+    local BottomBar = Instance.new("Frame")
+    BottomBar.Name   = "BottomBar"
+    BottomBar.Parent = Main
+    BottomBar.BackgroundTransparency = 1
+    BottomBar.Position = UDim2.new(0, 0, 1, -BAR_H + 1)
+    BottomBar.Size     = UDim2.new(1, 0, 0, BAR_H - 1)
+    BottomBar.ZIndex   = 4
+
+    -- ---- TextBox tengah (section Tengah) ----
+    local CenterBox = Instance.new("TextBox")
+    CenterBox.Name   = "BottomCenterInput"
+    CenterBox.Parent = BottomBar
+    CenterBox.BackgroundColor3    = Color3.fromRGB(50, 50, 50)
+    CenterBox.BackgroundTransparency = 0.15
+    CenterBox.BorderSizePixel     = 0
+    CenterBox.AnchorPoint         = Vector2.new(0.5, 0.5)
+    CenterBox.Position            = UDim2.new(0.5, 0, 0.5, 0)
+    CenterBox.Size                = UDim2.new(0, 200, 0, 27)
+    CenterBox.ZIndex              = 5
+    CenterBox.Font                = Library.Theme.TextFont
+    CenterBox.PlaceholderText     = "Enter text..."
+    CenterBox.PlaceholderColor3   = Color3.fromRGB(140, 140, 140)
+    CenterBox.Text                = ""
+    CenterBox.TextColor3          = Color3.fromRGB(255, 255, 255)
+    CenterBox.TextSize            = 14
+    CenterBox.ClearTextOnFocus    = false
+    CenterBox.TextXAlignment      = Enum.TextXAlignment.Center
+
+    local CBCorner = Instance.new("UICorner")
+    CBCorner.CornerRadius = UDim.new(0, 6)
+    CBCorner.Parent = CenterBox
+
+    -- ---- State ----
+    local buttonCount = 0
+    local btnRefs     = {}   -- { btn, sideLeft=bool }
+
+    -- Fungsi relayout tombol + ukuran CenterBox
+    local function relayoutButtons()
+        local PAD = 10
+        local BTN_W = 58
+        local BTN_H = 27
+
+        if buttonCount == 0 then
+            CenterBox.Size     = UDim2.new(0, 200, 0, 27)
+            CenterBox.Position = UDim2.new(0.5, 0, 0.5, 0)
+        elseif buttonCount == 1 then
+            -- 1 tombol → kiri, box geser sedikit ke kanan
+            CenterBox.Size     = UDim2.new(0, 165, 0, 27)
+            CenterBox.Position = UDim2.new(0.5, (BTN_W + PAD) / 2, 0.5, 0)
+            btnRefs[1].AnchorPoint = Vector2.new(0, 0.5)
+            btnRefs[1].Position    = UDim2.new(0, PAD, 0.5, 0)
+            btnRefs[1].Size        = UDim2.new(0, BTN_W, 0, BTN_H)
+        elseif buttonCount == 2 then
+            -- 2 tombol → kiri & kanan, box di tengah agak sempit
+            CenterBox.Size     = UDim2.new(0, 130, 0, 27)
+            CenterBox.Position = UDim2.new(0.5, 0, 0.5, 0)
+            -- kiri
+            btnRefs[1].AnchorPoint = Vector2.new(0, 0.5)
+            btnRefs[1].Position    = UDim2.new(0, PAD, 0.5, 0)
+            btnRefs[1].Size        = UDim2.new(0, BTN_W, 0, BTN_H)
+            -- kanan
+            btnRefs[2].AnchorPoint = Vector2.new(1, 0.5)
+            btnRefs[2].Position    = UDim2.new(1, -PAD, 0.5, 0)
+            btnRefs[2].Size        = UDim2.new(0, BTN_W, 0, BTN_H)
+        end
+    end
+
+    -- ---- API ----
+    local BottomBarElements = {
+        InputBox = CenterBox,
+        Frame    = BottomBar
+    }
+
+    function BottomBarElements:SetPlaceholder(text)
+        CenterBox.PlaceholderText = text or ""
+    end
+
+    function BottomBarElements:OnInputChanged(callback)
+        CenterBox:GetPropertyChangedSignal("Text"):Connect(function()
+            if callback then pcall(callback, CenterBox.Text) end
+        end)
+    end
+
+    function BottomBarElements:OnSubmit(callback)
+        CenterBox.FocusLost:Connect(function(enterPressed)
+            if enterPressed and callback then pcall(callback, CenterBox.Text) end
+        end)
+    end
+
+    function BottomBarElements:AddButton(name, callback)
+        if buttonCount >= 2 then
+            warn("[Rndm UI] BottomBar: maksimal 2 tombol. '" .. tostring(name) .. "' diabaikan.")
+            return
+        end
+        buttonCount = buttonCount + 1
+
+        local Btn = Instance.new("TextButton")
+        Btn.Name   = "BottomBtn_" .. buttonCount
+        Btn.Parent = BottomBar
+        Btn.BackgroundTransparency = 1
+        Btn.BorderSizePixel = 0
+        Btn.ZIndex = 5
+        Btn.Font   = Library.Theme.TextFont
+        Btn.Text   = name or "Btn"
+        Btn.TextColor3 = Library.Theme.TextColor
+        Btn.TextSize   = 14
+        Btn.ClipsDescendants = true
+        Btn.AutoButtonColor = false
+        table.insert(Library.LibraryColorTable, Btn)
+
+        local BtnRound = Instance.new("ImageLabel")
+        BtnRound.Parent = Btn
+        BtnRound.AnchorPoint = Vector2.new(0.5, 0.5)
+        BtnRound.BackgroundTransparency = 1
+        BtnRound.Position = UDim2.new(0.5, 0, 0.5, 0)
+        BtnRound.Size     = UDim2.new(1, 0, 1, 0)
+        BtnRound.ZIndex   = 4
+        BtnRound.Image    = "rbxassetid://3570695787"
+        BtnRound.ImageColor3 = Library.Theme.MainColor
+        BtnRound.ScaleType   = Enum.ScaleType.Slice
+        BtnRound.SliceCenter = Rect.new(100, 100, 100, 100)
+        BtnRound.SliceScale  = 0.050
+        table.insert(Library.LibraryColorTable, BtnRound)
+
+        Btn.MouseButton1Down:Connect(function()
+            TweenService:Create(BtnRound,
+                TweenInfo.new(0.25, Library.Theme.EasingStyle, Enum.EasingDirection.Out),
+                { ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 20) }):Play()
+            RippleEffect(Btn)
+            if callback then pcall(callback) end
+        end)
+        Btn.MouseButton1Up:Connect(function()
+            TweenService:Create(BtnRound,
+                TweenInfo.new(0.25, Library.Theme.EasingStyle, Enum.EasingDirection.Out),
+                { ImageColor3 = Library.Theme.MainColor }):Play()
+        end)
+
+        table.insert(btnRefs, Btn)
+        relayoutButtons()
+
+        return Btn
+    end
+
+    -- Layout awal (tanpa tombol)
+    relayoutButtons()
+
+    return BottomBarElements
+end
+
 return Library
