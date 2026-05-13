@@ -3291,19 +3291,16 @@ function Library:CreateKeySystem(config)
     local ksTabs = config.tabs or {}
     local tabCount = math.clamp(#ksTabs, 1, 2)
 
-    -- Overlay full di atas Main
-    local KSOverlay = Instance.new("ImageLabel")
+    -- Overlay: solid dark frame so it doesn't blend with MainColor
+    local KSOverlay = Instance.new("Frame")
     KSOverlay.Name = "KeySystemOverlay"
-    KSOverlay.Parent = Main  -- Penting: Parent ke Main agar nyatu
-    KSOverlay.BackgroundTransparency = 1
+    KSOverlay.Parent = Main
+    KSOverlay.BackgroundColor3 = Library.Theme.BackgroundColor
+    KSOverlay.BackgroundTransparency = 0
     KSOverlay.Position = UDim2.new(0, 0, 0, 0)
     KSOverlay.Size = UDim2.new(1, 0, 1, 0)
     KSOverlay.ZIndex = 200
-    KSOverlay.Image = "rbxassetid://3570695787"
-    KSOverlay.ImageColor3 = Library.Theme.BackgroundColor
-    KSOverlay.ScaleType = Enum.ScaleType.Slice
-    KSOverlay.SliceCenter = Rect.new(100, 100, 100, 100)
-    KSOverlay.SliceScale = 0.050
+    KSOverlay.ClipsDescendants = true
 
     local KSBorder = Instance.new("ImageLabel")
     KSBorder.Name = "Border"
@@ -3319,13 +3316,28 @@ function Library:CreateKeySystem(config)
     KSBorder.SliceScale = 0.050
     table.insert(Library.LibraryColorTable, KSBorder)
 
+    -- Top accent strip (mimics topbar of MainUI)
+    local TopBar = Instance.new("ImageLabel")
+    TopBar.Name = "KSTopBar"
+    TopBar.Parent = KSOverlay
+    TopBar.BackgroundTransparency = 1
+    TopBar.Position = UDim2.new(0, 0, 0, 0)
+    TopBar.Size = UDim2.new(1, 0, 0, 45)
+    TopBar.ZIndex = 201
+    TopBar.Image = "rbxassetid://3570695787"
+    TopBar.ImageColor3 = Library.Theme.MainColor
+    TopBar.ScaleType = Enum.ScaleType.Slice
+    TopBar.SliceCenter = Rect.new(100, 100, 100, 100)
+    TopBar.SliceScale = 0.05
+    table.insert(Library.LibraryColorTable, TopBar)
+
     -- Title
     local titleLabel = Instance.new("TextLabel")
     titleLabel.Name = "Title"
     titleLabel.Parent = KSOverlay
     titleLabel.BackgroundTransparency = 1
-    titleLabel.Position = UDim2.new(0, 0, 0, 10)
-    titleLabel.Size = UDim2.new(1, 0, 0, 40)
+    titleLabel.Position = UDim2.new(0, 0, 0, 0)
+    titleLabel.Size = UDim2.new(1, 0, 0, 45)
     titleLabel.ZIndex = 202
     titleLabel.Font = Library.Theme.TextFont
     titleLabel.Text = config.title or "Authentication"
@@ -3333,28 +3345,24 @@ function Library:CreateKeySystem(config)
     titleLabel.TextSize = 18
     titleLabel.TextStrokeTransparency = 0.7
 
-    -- Tab Bar
-    local TabBar = Instance.new("ImageLabel")
+    -- Tab Bar (sits below topbar accent)
+    local TabBar = Instance.new("Frame")
     TabBar.Name = "TabBar"
     TabBar.Parent = KSOverlay
-    TabBar.BackgroundTransparency = 1
-    TabBar.Position = UDim2.new(0, 14, 0, 55)
-    TabBar.Size = UDim2.new(1, -28, 0, 32)
+    TabBar.BackgroundColor3 = DarkenObjectColor(Library.Theme.MainColor, 40)
+    TabBar.BackgroundTransparency = 0
+    TabBar.Position = UDim2.new(0, 0, 0, 45)
+    TabBar.Size = UDim2.new(1, 0, 0, 30)
     TabBar.ZIndex = 202
-    TabBar.Image = "rbxassetid://3570695787"
-    TabBar.ImageColor3 = Library.Theme.MainColor
-    TabBar.ScaleType = Enum.ScaleType.Slice
-    TabBar.SliceCenter = Rect.new(100, 100, 100, 100)
-    TabBar.SliceScale = 0.05
-    table.insert(Library.LibraryColorTable, TabBar)
+    TabBar.BorderSizePixel = 0
 
-    -- Content Area
+    -- Content Area (below tab bar)
     local ContentArea = Instance.new("Frame")
     ContentArea.Name = "ContentArea"
     ContentArea.Parent = KSOverlay
     ContentArea.BackgroundTransparency = 1
-    ContentArea.Position = UDim2.new(0, 14, 0, 95)
-    ContentArea.Size = UDim2.new(1, -28, 1, -110)
+    ContentArea.Position = UDim2.new(0, 14, 0, 83)
+    ContentArea.Size = UDim2.new(1, -28, 1, -138)
     ContentArea.ZIndex = 202
     ContentArea.ClipsDescendants = true
 
@@ -3367,38 +3375,41 @@ function Library:CreateKeySystem(config)
     local function ShowTab(index)
         for i, tab in ipairs(tabObjects) do
             tab.content.Visible = (i == index)
-            local targetColor = (i == index) and DarkenObjectColor(Library.Theme.MainColor, 30) or Library.Theme.MainColor
-            TweenService:Create(tab.button, TweenInfo.new(0.25), {ImageColor3 = targetColor}):Play()
+            local isActive = (i == index)
+            -- Highlight active button
+            tab.button.BackgroundTransparency = isActive and 0.7 or 1
+            tab.button.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            local line = tab.button:FindFirstChild("ActiveLine")
+            if line then line.Visible = isActive end
         end
     end
 
     for i = 1, tabCount do
         local tabData = ksTabs[i] or {name = "Tab "..i}
 
-        -- Tab Button
-        local btn = Instance.new("ImageButton")
+        -- Tab Button (text button, no image behind text trick)
+        local btn = Instance.new("TextButton")
         btn.Name = "TabBtn"..i
         btn.Parent = TabBar
         btn.BackgroundTransparency = 1
         btn.Size = UDim2.new(1/tabCount, 0, 1, 0)
         btn.Position = UDim2.new((i-1)/tabCount, 0, 0, 0)
         btn.ZIndex = 203
-        btn.Image = "rbxassetid://3570695787"
-        btn.ImageColor3 = Library.Theme.MainColor
-        btn.ScaleType = Enum.ScaleType.Slice
-        btn.SliceCenter = Rect.new(100,100,100,100)
-        btn.SliceScale = 0.05
-        table.insert(Library.LibraryColorTable, btn)
-
-        local btnText = Instance.new("TextLabel")
-        btnText.Parent = btn
-        btnText.BackgroundTransparency = 1
-        btnText.Size = UDim2.new(1,0,1,0)
-        btnText.ZIndex = 204
-        btnText.Font = Library.Theme.TextFont
-        btnText.Text = tabData.name
-        btnText.TextColor3 = Library.Theme.TextColor
-        btnText.TextSize = 15
+        btn.Font = Library.Theme.TextFont
+        btn.Text = tabData.name
+        btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        btn.TextSize = 14
+        btn.BorderSizePixel = 0
+        -- Active indicator line at bottom
+        local activeLine = Instance.new("Frame")
+        activeLine.Name = "ActiveLine"
+        activeLine.Parent = btn
+        activeLine.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        activeLine.BorderSizePixel = 0
+        activeLine.Position = UDim2.new(0.1, 0, 1, -2)
+        activeLine.Size = UDim2.new(0.8, 0, 0, 2)
+        activeLine.ZIndex = 204
+        activeLine.Visible = false
 
         -- Content Scrolling
         local content = Instance.new("ScrollingFrame")
@@ -3434,10 +3445,10 @@ function Library:CreateKeySystem(config)
                 lbl.Font = Library.Theme.TextFont
                 lbl.Text = text or ""
                 lbl.TextColor3 = Library.Theme.TextColor
-                lbl.TextSize = 15
+                lbl.TextSize = 14
                 lbl.TextWrapped = true
                 lbl.TextXAlignment = Enum.TextXAlignment.Left
-                table.insert(Library.LibraryColorTable, lbl)
+                lbl.ZIndex = 204
                 return lbl
             end,
 
@@ -3448,19 +3459,21 @@ function Library:CreateKeySystem(config)
                 box.Size = UDim2.new(1,0,0,38)
                 box.Font = Library.Theme.TextFont
                 box.PlaceholderText = placeholder or ""
+                box.PlaceholderColor3 = Color3.fromRGB(120,120,120)
                 box.Text = ""
                 box.TextColor3 = Color3.fromRGB(255,255,255)
                 box.TextSize = 14
                 box.ClearTextOnFocus = false
+                box.ZIndex = 204
 
                 local corner = Instance.new("UICorner")
                 corner.CornerRadius = UDim.new(0,6)
                 corner.Parent = box
 
-                local pad = Instance.new("UIPadding")
-                pad.PaddingLeft = UDim.new(0,8)
-                pad.PaddingRight = UDim.new(0,8)
-                pad.Parent = box
+                local pad2 = Instance.new("UIPadding")
+                pad2.PaddingLeft = UDim.new(0,8)
+                pad2.PaddingRight = UDim.new(0,8)
+                pad2.Parent = box
 
                 if callback then
                     box:GetPropertyChangedSignal("Text"):Connect(function()
@@ -3477,12 +3490,12 @@ function Library:CreateKeySystem(config)
                 local btnFrame = Instance.new("TextButton")
                 btnFrame.Parent = content
                 btnFrame.BackgroundTransparency = 1
-                btnFrame.Size = UDim2.new(1,0,0,42)
-                btnFrame.Text = name or "Button"
+                btnFrame.Size = UDim2.new(1,0,0,36)
+                btnFrame.Text = ""
                 btnFrame.Font = Library.Theme.TextFont
-                btnFrame.TextColor3 = Library.Theme.TextColor
                 btnFrame.TextSize = 15
                 btnFrame.ZIndex = 204
+                btnFrame.BorderSizePixel = 0
 
                 local img = Instance.new("ImageLabel")
                 img.Parent = btnFrame
@@ -3493,7 +3506,18 @@ function Library:CreateKeySystem(config)
                 img.ScaleType = Enum.ScaleType.Slice
                 img.SliceCenter = Rect.new(100,100,100,100)
                 img.SliceScale = 0.05
+                img.ZIndex = 204
                 table.insert(Library.LibraryColorTable, img)
+
+                local lbl = Instance.new("TextLabel")
+                lbl.Parent = btnFrame
+                lbl.BackgroundTransparency = 1
+                lbl.Size = UDim2.new(1,0,1,0)
+                lbl.Font = Library.Theme.TextFont
+                lbl.Text = name or "Button"
+                lbl.TextColor3 = Color3.fromRGB(255,255,255)
+                lbl.TextSize = 15
+                lbl.ZIndex = 205
 
                 btnFrame.MouseButton1Click:Connect(function()
                     RippleEffect(btnFrame)
@@ -3537,6 +3561,9 @@ function Library:CreateKeySystem(config)
         end
     }
 end
+-- Expose Library globally so user scripts can call Library:CreateNotification etc.
+pcall(function() getgenv().Library = Library end)
+
 -- =====================================================================
 -- BOTTOM BAR (Library:CreateBottomBar)
 -- =====================================================================
