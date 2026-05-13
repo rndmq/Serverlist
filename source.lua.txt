@@ -3277,21 +3277,14 @@ end
 end
 
 -- =====================================================================
--- KEY SYSTEM  (Library:CreateKeySystem)
--- =====================================================================
-
--- =====================================================================
--- KEY SYSTEM (Diperbaiki & Dioptimalkan)
--- =====================================================================
--- =====================================================================
--- KEY SYSTEM (FIXED - Nyatu dengan Main UI)
+-- KEY SYSTEM UI (FULLY FIXED & IMPROVED)
 -- =====================================================================
 function Library:CreateKeySystem(config)
     config = config or {}
     local ksTabs = config.tabs or {}
     local tabCount = math.clamp(#ksTabs, 1, 2)
 
-    -- Overlay: solid dark frame so it doesn't blend with MainColor
+    -- Main Overlay
     local KSOverlay = Instance.new("Frame")
     KSOverlay.Name = "KeySystemOverlay"
     KSOverlay.Parent = Main
@@ -3302,6 +3295,12 @@ function Library:CreateKeySystem(config)
     KSOverlay.ZIndex = 200
     KSOverlay.ClipsDescendants = true
 
+    -- Corner utama (biar tidak tajam)
+    local MainCorner = Instance.new("UICorner")
+    MainCorner.CornerRadius = UDim.new(0, 14)
+    MainCorner.Parent = KSOverlay
+
+    -- Border Accent
     local KSBorder = Instance.new("ImageLabel")
     KSBorder.Name = "Border"
     KSBorder.Parent = KSOverlay
@@ -3316,14 +3315,14 @@ function Library:CreateKeySystem(config)
     KSBorder.SliceScale = 0.050
     table.insert(Library.LibraryColorTable, KSBorder)
 
-    -- Top accent strip (mimics topbar of MainUI)
+    -- Top Accent Bar
     local TopBar = Instance.new("ImageLabel")
     TopBar.Name = "KSTopBar"
     TopBar.Parent = KSOverlay
     TopBar.BackgroundTransparency = 1
     TopBar.Position = UDim2.new(0, 0, 0, 0)
-    TopBar.Size = UDim2.new(1, 0, 0, 45)
-    TopBar.ZIndex = 201
+    TopBar.Size = UDim2.new(1, 0, 0, 50)
+    TopBar.ZIndex = 202
     TopBar.Image = "rbxassetid://3570695787"
     TopBar.ImageColor3 = Library.Theme.MainColor
     TopBar.ScaleType = Enum.ScaleType.Slice
@@ -3331,42 +3330,44 @@ function Library:CreateKeySystem(config)
     TopBar.SliceScale = 0.05
     table.insert(Library.LibraryColorTable, TopBar)
 
+    local TopCorner = Instance.new("UICorner")
+    TopCorner.CornerRadius = UDim.new(0, 14)
+    TopCorner.Parent = TopBar
+
     -- Title
     local titleLabel = Instance.new("TextLabel")
     titleLabel.Name = "Title"
     titleLabel.Parent = KSOverlay
     titleLabel.BackgroundTransparency = 1
     titleLabel.Position = UDim2.new(0, 0, 0, 0)
-    titleLabel.Size = UDim2.new(1, 0, 0, 45)
-    titleLabel.ZIndex = 202
+    titleLabel.Size = UDim2.new(1, 0, 0, 50)
+    titleLabel.ZIndex = 203
     titleLabel.Font = Library.Theme.TextFont
     titleLabel.Text = config.title or "Authentication"
     titleLabel.TextColor3 = Library.Theme.TextColor
-    titleLabel.TextSize = 18
-    titleLabel.TextStrokeTransparency = 0.7
+    titleLabel.TextSize = 20
+    titleLabel.TextStrokeTransparency = 0.8
 
-    -- Tab Bar (sits below topbar accent)
+    -- Tab Bar
     local TabBar = Instance.new("Frame")
     TabBar.Name = "TabBar"
     TabBar.Parent = KSOverlay
-    TabBar.BackgroundColor3 = DarkenObjectColor(Library.Theme.MainColor, 40)
-    TabBar.BackgroundTransparency = 0
-    TabBar.Position = UDim2.new(0, 0, 0, 45)
-    TabBar.Size = UDim2.new(1, 0, 0, 30)
+    TabBar.BackgroundColor3 = Library.Theme.BackgroundColor
+    TabBar.BackgroundTransparency = 0.05
+    TabBar.Position = UDim2.new(0, 0, 0, 50)
+    TabBar.Size = UDim2.new(1, 0, 0, 35)
     TabBar.ZIndex = 202
-    TabBar.BorderSizePixel = 0
 
-    -- Content Area (below tab bar)
+    -- Content Area
     local ContentArea = Instance.new("Frame")
     ContentArea.Name = "ContentArea"
     ContentArea.Parent = KSOverlay
     ContentArea.BackgroundTransparency = 1
-    ContentArea.Position = UDim2.new(0, 14, 0, 83)
-    ContentArea.Size = UDim2.new(1, -28, 1, -138)
-    ContentArea.ZIndex = 202
+    ContentArea.Position = UDim2.new(0, 16, 0, 93)
+    ContentArea.Size = UDim2.new(1, -32, 1, -150)
+    ContentArea.ZIndex = 203
     ContentArea.ClipsDescendants = true
 
-    -- Store refs for CreateBottomBar
     Library._lastKSOverlay = KSOverlay
     Library._lastKSContentArea = ContentArea
 
@@ -3376,64 +3377,53 @@ function Library:CreateKeySystem(config)
         for i, tab in ipairs(tabObjects) do
             tab.content.Visible = (i == index)
             local isActive = (i == index)
-            -- Highlight active button
-            tab.button.BackgroundTransparency = isActive and 0.7 or 1
-            tab.button.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-            local line = tab.button:FindFirstChild("ActiveLine")
-            if line then line.Visible = isActive end
+            tab.button.BackgroundTransparency = isActive and 0 or 1
+            tab.button.BackgroundColor3 = isActive and Library.Theme.MainColor or Color3.fromRGB(60, 60, 60)
         end
     end
 
     for i = 1, tabCount do
         local tabData = ksTabs[i] or {name = "Tab "..i}
 
-        -- Tab Button (text button, no image behind text trick)
+        -- Tab Button
         local btn = Instance.new("TextButton")
         btn.Name = "TabBtn"..i
         btn.Parent = TabBar
         btn.BackgroundTransparency = 1
         btn.Size = UDim2.new(1/tabCount, 0, 1, 0)
         btn.Position = UDim2.new((i-1)/tabCount, 0, 0, 0)
-        btn.ZIndex = 203
+        btn.ZIndex = 204
         btn.Font = Library.Theme.TextFont
         btn.Text = tabData.name
-        btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-        btn.TextSize = 14
+        btn.TextColor3 = Library.Theme.TextColor
+        btn.TextSize = 15
         btn.BorderSizePixel = 0
-        -- Active indicator line at bottom
-        local activeLine = Instance.new("Frame")
-        activeLine.Name = "ActiveLine"
-        activeLine.Parent = btn
-        activeLine.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        activeLine.BorderSizePixel = 0
-        activeLine.Position = UDim2.new(0.1, 0, 1, -2)
-        activeLine.Size = UDim2.new(0.8, 0, 0, 2)
-        activeLine.ZIndex = 204
-        activeLine.Visible = false
 
-        -- Content Scrolling
+        -- Content
         local content = Instance.new("ScrollingFrame")
         content.Name = "Content"..i
         content.Parent = ContentArea
         content.BackgroundTransparency = 1
         content.Size = UDim2.new(1,0,1,0)
-        content.ScrollBarThickness = 5
+        content.ScrollBarThickness = 6
         content.AutomaticCanvasSize = Enum.AutomaticSize.Y
         content.Visible = false
-        content.ZIndex = 203
+        content.ZIndex = 205
 
         local layout = Instance.new("UIListLayout")
         layout.Parent = content
         layout.SortOrder = Enum.SortOrder.LayoutOrder
-        layout.Padding = UDim.new(0, 10)
+        layout.Padding = UDim.new(0, 12)
 
         local pad = Instance.new("UIPadding")
         pad.Parent = content
-        pad.PaddingLeft = UDim.new(0,8)
-        pad.PaddingRight = UDim.new(0,8)
-        pad.PaddingTop = UDim.new(0,8)
+        pad.PaddingLeft = UDim.new(0, 8)
+        pad.PaddingRight = UDim.new(0, 8)
+        pad.PaddingTop = UDim.new(0, 8)
 
-        btn.MouseButton1Click:Connect(function() ShowTab(i) end)
+        btn.MouseButton1Click:Connect(function()
+            ShowTab(i)
+        end)
 
         local TabAPI = {
             AddLabel = function(self, text)
@@ -3445,42 +3435,42 @@ function Library:CreateKeySystem(config)
                 lbl.Font = Library.Theme.TextFont
                 lbl.Text = text or ""
                 lbl.TextColor3 = Library.Theme.TextColor
-                lbl.TextSize = 14
+                lbl.TextSize = 15
                 lbl.TextWrapped = true
                 lbl.TextXAlignment = Enum.TextXAlignment.Left
-                lbl.ZIndex = 204
+                lbl.ZIndex = 206
                 return lbl
             end,
 
             AddTextBox = function(self, placeholder, callback)
                 local box = Instance.new("TextBox")
                 box.Parent = content
-                box.BackgroundColor3 = Color3.fromRGB(45,45,45)
-                box.Size = UDim2.new(1,0,0,38)
+                box.BackgroundColor3 = Color3.fromRGB(45, 45, 50)
+                box.Size = UDim2.new(1,0,0,40)
                 box.Font = Library.Theme.TextFont
                 box.PlaceholderText = placeholder or ""
-                box.PlaceholderColor3 = Color3.fromRGB(120,120,120)
+                box.PlaceholderColor3 = Color3.fromRGB(140,140,140)
                 box.Text = ""
                 box.TextColor3 = Color3.fromRGB(255,255,255)
-                box.TextSize = 14
+                box.TextSize = 15
                 box.ClearTextOnFocus = false
-                box.ZIndex = 204
+                box.ZIndex = 206
 
                 local corner = Instance.new("UICorner")
-                corner.CornerRadius = UDim.new(0,6)
+                corner.CornerRadius = UDim.new(0, 8)
                 corner.Parent = box
 
                 local pad2 = Instance.new("UIPadding")
-                pad2.PaddingLeft = UDim.new(0,8)
-                pad2.PaddingRight = UDim.new(0,8)
+                pad2.PaddingLeft = UDim.new(0,12)
+                pad2.PaddingRight = UDim.new(0,12)
                 pad2.Parent = box
 
                 if callback then
+                    box.FocusLost:Connect(function(enter)
+                        if enter then callback(box.Text) end
+                    end)
                     box:GetPropertyChangedSignal("Text"):Connect(function()
                         callback(box.Text)
-                    end)
-                    box.FocusLost:Connect(function(enterPressed)
-                        if enterPressed then callback(box.Text) end
                     end)
                 end
                 return box
@@ -3490,12 +3480,9 @@ function Library:CreateKeySystem(config)
                 local btnFrame = Instance.new("TextButton")
                 btnFrame.Parent = content
                 btnFrame.BackgroundTransparency = 1
-                btnFrame.Size = UDim2.new(1,0,0,36)
+                btnFrame.Size = UDim2.new(1,0,0,42)
                 btnFrame.Text = ""
-                btnFrame.Font = Library.Theme.TextFont
-                btnFrame.TextSize = 15
-                btnFrame.ZIndex = 204
-                btnFrame.BorderSizePixel = 0
+                btnFrame.ZIndex = 206
 
                 local img = Instance.new("ImageLabel")
                 img.Parent = btnFrame
@@ -3506,7 +3493,6 @@ function Library:CreateKeySystem(config)
                 img.ScaleType = Enum.ScaleType.Slice
                 img.SliceCenter = Rect.new(100,100,100,100)
                 img.SliceScale = 0.05
-                img.ZIndex = 204
                 table.insert(Library.LibraryColorTable, img)
 
                 local lbl = Instance.new("TextLabel")
@@ -3516,8 +3502,12 @@ function Library:CreateKeySystem(config)
                 lbl.Font = Library.Theme.TextFont
                 lbl.Text = name or "Button"
                 lbl.TextColor3 = Color3.fromRGB(255,255,255)
-                lbl.TextSize = 15
-                lbl.ZIndex = 205
+                lbl.TextSize = 16
+                lbl.ZIndex = 207
+
+                local corner = Instance.new("UICorner")
+                corner.CornerRadius = UDim.new(0, 8)
+                corner.Parent = img
 
                 btnFrame.MouseButton1Click:Connect(function()
                     RippleEffect(btnFrame)
@@ -3525,19 +3515,6 @@ function Library:CreateKeySystem(config)
                 end)
                 return btnFrame
             end,
-
-            AddToggle = function(self, name, default, callback)
-                -- Implementasi toggle (bisa ditambah nanti)
-                local tog = Instance.new("TextButton")
-                tog.Parent = content
-                tog.Size = UDim2.new(1,0,0,35)
-                tog.BackgroundTransparency = 1
-                tog.Text = name
-                tog.TextColor3 = Library.Theme.TextColor
-                tog.TextXAlignment = Enum.TextXAlignment.Left
-                -- ... (toggle logic)
-                return {SetState = function() end}
-            end
         }
 
         table.insert(tabObjects, {button = btn, content = content, api = TabAPI})
@@ -3549,152 +3526,21 @@ function Library:CreateKeySystem(config)
 
     ShowTab(1)
 
-    TweenService:Create(KSOverlay, TweenInfo.new(0.4, Library.Theme.EasingStyle), {BackgroundTransparency = 0}):Play()
+    -- Fix global Library
+    pcall(function() getgenv().Library = Library end)
 
     return {
         Overlay = KSOverlay,
         Destroy = function()
-            TweenService:Create(KSOverlay, TweenInfo.new(0.35), {BackgroundTransparency = 1}):Play()
-            task.delay(0.4, function()
-                if KSOverlay then KSOverlay:Destroy() end
-            end)
+            if KSOverlay then
+                TweenService:Create(KSOverlay, TweenInfo.new(0.35, Enum.EasingStyle.Quad), {BackgroundTransparency = 1}):Play()
+                task.delay(0.4, function()
+                    if KSOverlay and KSOverlay.Parent then
+                        KSOverlay:Destroy()
+                    end
+                end)
+            end
         end
     }
 end
--- Expose Library globally so user scripts can call Library:CreateNotification etc.
-pcall(function() getgenv().Library = Library end)
-
--- =====================================================================
--- BOTTOM BAR (Library:CreateBottomBar)
--- =====================================================================
-function Library:CreateBottomBar()
-    local overlay = Library._lastKSOverlay
-    local contentArea = Library._lastKSContentArea
-
-    if not overlay or not overlay.Parent then
-        warn("CreateBottomBar: No active KeySystem overlay found.")
-        local dummy = {}
-        dummy.SetPlaceholder = function() end
-        dummy.OnSubmit = function() end
-        dummy.AddButton = function() end
-        return dummy
-    end
-
-    -- Shrink ContentArea to leave room for the bottom bar
-    if contentArea then
-        contentArea.Size = UDim2.new(1, -28, 1, -160)
-    end
-
-    -- Separator line
-    local Sep = Instance.new("Frame")
-    Sep.Name = "BottomBarSep"
-    Sep.Parent = overlay
-    Sep.BackgroundColor3 = Library.Theme.MainColor
-    Sep.BorderSizePixel = 0
-    Sep.Position = UDim2.new(0, 14, 1, -52)
-    Sep.Size = UDim2.new(1, -28, 0, 1)
-    Sep.ZIndex = 202
-    table.insert(Library.LibraryColorTable, Sep)
-
-    -- Bottom bar container
-    local BottomBar = Instance.new("Frame")
-    BottomBar.Name = "BottomBar"
-    BottomBar.Parent = overlay
-    BottomBar.BackgroundTransparency = 1
-    BottomBar.Position = UDim2.new(0, 14, 1, -48)
-    BottomBar.Size = UDim2.new(1, -28, 0, 44)
-    BottomBar.ZIndex = 202
-    BottomBar.ClipsDescendants = false
-
-    -- Central TextBox (sized dynamically after buttons are added)
-    local InputBox = Instance.new("TextBox")
-    InputBox.Name = "BottomInput"
-    InputBox.Parent = BottomBar
-    InputBox.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-    InputBox.Position = UDim2.new(0, 88, 0, 6)
-    InputBox.Size = UDim2.new(1, -180, 0, 32)
-    InputBox.Font = Library.Theme.TextFont
-    InputBox.PlaceholderText = ""
-    InputBox.PlaceholderColor3 = Color3.fromRGB(120, 120, 120)
-    InputBox.Text = ""
-    InputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-    InputBox.TextSize = 13
-    InputBox.ClearTextOnFocus = false
-    InputBox.ZIndex = 203
-
-    local InputCorner = Instance.new("UICorner")
-    InputCorner.CornerRadius = UDim.new(0, 6)
-    InputCorner.Parent = InputBox
-
-    local InputPad = Instance.new("UIPadding")
-    InputPad.PaddingLeft = UDim.new(0, 8)
-    InputPad.PaddingRight = UDim.new(0, 8)
-    InputPad.Parent = InputBox
-
-    local submitCallback = nil
-    local buttonList = {}
-
-    InputBox.FocusLost:Connect(function(enterPressed)
-        if enterPressed and submitCallback then
-            pcall(submitCallback, InputBox.Text)
-        end
-    end)
-
-    local BarAPI = {}
-
-    function BarAPI:SetPlaceholder(text)
-        InputBox.PlaceholderText = text or ""
-    end
-
-    function BarAPI:OnSubmit(callback)
-        submitCallback = callback
-    end
-
-    function BarAPI:AddButton(name, callback)
-        local count = #buttonList
-        if count >= 2 then return end
-
-        local btnW = 82
-        local pad = 0
-
-        local btn = Instance.new("ImageButton")
-        btn.Parent = BottomBar
-        btn.BackgroundTransparency = 1
-        btn.Size = UDim2.new(0, btnW, 0, 32)
-        btn.ZIndex = 203
-        btn.Image = "rbxassetid://3570695787"
-        btn.ImageColor3 = Library.Theme.MainColor
-        btn.ScaleType = Enum.ScaleType.Slice
-        btn.SliceCenter = Rect.new(100, 100, 100, 100)
-        btn.SliceScale = 0.05
-        table.insert(Library.LibraryColorTable, btn)
-
-        if count == 0 then
-            btn.Position = UDim2.new(0, pad, 0, 6)
-        else
-            btn.Position = UDim2.new(1, -(btnW + pad), 0, 6)
-        end
-
-        local btnLabel = Instance.new("TextLabel")
-        btnLabel.Parent = btn
-        btnLabel.BackgroundTransparency = 1
-        btnLabel.Size = UDim2.new(1, 0, 1, 0)
-        btnLabel.Font = Library.Theme.TextFont
-        btnLabel.Text = name or "Button"
-        btnLabel.TextColor3 = Library.Theme.TextColor
-        btnLabel.TextSize = 13
-        btnLabel.ZIndex = 204
-        table.insert(Library.LibraryColorTable, btnLabel)
-
-        btn.MouseButton1Click:Connect(function()
-            RippleEffect(btn)
-            if callback then pcall(callback) end
-        end)
-
-        table.insert(buttonList, btn)
-    end
-
-    return BarAPI
-end
-
 return Library
