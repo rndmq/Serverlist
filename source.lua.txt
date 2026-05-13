@@ -3293,17 +3293,23 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
 end
 
 -- =====================================================================
--- KEY SYSTEM UI (FIXED + BottomBar Working)
+-- KEY SYSTEM UI
 -- =====================================================================
 function Library:CreateKeySystem(config)
     config = config or {}
     local ksTabs = config.tabs or {}
     local tabCount = math.clamp(#ksTabs, 1, 2)
 
+    -- DARK hardcoded background — tidak pakai Library.Theme.BackgroundColor
+    -- karena bisa ter-override oleh LibraryColorTable saat runtime
+    local KS_BG      = Color3.fromRGB(22, 22, 26)
+    local KS_SURFACE = Color3.fromRGB(30, 30, 36)
+    local KS_BORDER  = Color3.fromRGB(48, 48, 58)
+
     local KSOverlay = Instance.new("Frame")
     KSOverlay.Name = "KeySystemOverlay"
     KSOverlay.Parent = Main
-    KSOverlay.BackgroundColor3 = Library.Theme.BackgroundColor
+    KSOverlay.BackgroundColor3 = KS_BG
     KSOverlay.BackgroundTransparency = 0
     KSOverlay.Position = UDim2.new(0, 0, 0, 0)
     KSOverlay.Size = UDim2.new(1, 0, 1, 0)
@@ -3311,68 +3317,78 @@ function Library:CreateKeySystem(config)
     KSOverlay.ClipsDescendants = true
 
     local MainCorner = Instance.new("UICorner")
-    MainCorner.CornerRadius = UDim.new(0, 14)
+    MainCorner.CornerRadius = UDim.new(0, 10)
     MainCorner.Parent = KSOverlay
 
-    local KSBorder = Instance.new("ImageLabel")
-    KSBorder.Name = "Border"
-    KSBorder.Parent = KSOverlay
-    KSBorder.BackgroundTransparency = 1
-    KSBorder.Position = UDim2.new(0, -1, 0, -1)
-    KSBorder.Size = UDim2.new(1, 2, 1, 2)
-    KSBorder.ZIndex = 201
-    KSBorder.Image = "rbxassetid://3570695787"
-    KSBorder.ImageColor3 = Library.Theme.MainColor
-    KSBorder.ScaleType = Enum.ScaleType.Slice
-    KSBorder.SliceCenter = Rect.new(95, 95, 95, 95)
-    KSBorder.SliceScale = 0.050
-    table.insert(Library.LibraryColorTable, KSBorder)
+    -- Thin accent line di paling atas
+    local TopAccent = Instance.new("Frame")
+    TopAccent.Name = "TopAccent"
+    TopAccent.Parent = KSOverlay
+    TopAccent.BackgroundColor3 = Library.Theme.MainColor
+    TopAccent.BorderSizePixel = 0
+    TopAccent.Position = UDim2.new(0, 0, 0, 0)
+    TopAccent.Size = UDim2.new(1, 0, 0, 3)
+    TopAccent.ZIndex = 202
+    table.insert(Library.LibraryColorTable, TopAccent)
+    local TopAccentCorner = Instance.new("UICorner")
+    TopAccentCorner.CornerRadius = UDim.new(0, 10)
+    TopAccentCorner.Parent = TopAccent
 
-    local TopBar = Instance.new("ImageLabel")
-    TopBar.Name = "KSTopBar"
-    TopBar.Parent = KSOverlay
-    TopBar.BackgroundTransparency = 1
-    TopBar.Position = UDim2.new(0, 0, 0, 0)
-    TopBar.Size = UDim2.new(1, 0, 0, 50)
-    TopBar.ZIndex = 202
-    TopBar.Image = "rbxassetid://3570695787"
-    TopBar.ImageColor3 = Library.Theme.MainColor
-    TopBar.ScaleType = Enum.ScaleType.Slice
-    TopBar.SliceCenter = Rect.new(100, 100, 100, 100)
-    TopBar.SliceScale = 0.05
-    table.insert(Library.LibraryColorTable, TopBar)
-
-    local TopCorner = Instance.new("UICorner")
-    TopCorner.CornerRadius = UDim.new(0, 14)
-    TopCorner.Parent = TopBar
+    -- Header bar (dark surface)
+    local HeaderBar = Instance.new("Frame")
+    HeaderBar.Name = "KSHeader"
+    HeaderBar.Parent = KSOverlay
+    HeaderBar.BackgroundColor3 = KS_SURFACE
+    HeaderBar.BorderSizePixel = 0
+    HeaderBar.Position = UDim2.new(0, 0, 0, 3)
+    HeaderBar.Size = UDim2.new(1, 0, 0, 42)
+    HeaderBar.ZIndex = 201
 
     local titleLabel = Instance.new("TextLabel")
-    titleLabel.Name = "Title"
-    titleLabel.Parent = KSOverlay
+    titleLabel.Name = "KSTitle"
+    titleLabel.Parent = HeaderBar
     titleLabel.BackgroundTransparency = 1
-    titleLabel.Position = UDim2.new(0, 0, 0, 0)
-    titleLabel.Size = UDim2.new(1, 0, 0, 50)
+    titleLabel.Size = UDim2.new(1, 0, 1, 0)
     titleLabel.ZIndex = 203
     titleLabel.Font = Library.Theme.TextFont
     titleLabel.Text = config.title or "Authentication"
     titleLabel.TextColor3 = Library.Theme.TextColor
-    titleLabel.TextSize = 20
+    titleLabel.TextSize = 17
 
+    -- Separator bawah header
+    local HeaderSep = Instance.new("Frame")
+    HeaderSep.Parent = KSOverlay
+    HeaderSep.BackgroundColor3 = KS_BORDER
+    HeaderSep.BorderSizePixel = 0
+    HeaderSep.Position = UDim2.new(0, 0, 0, 45)
+    HeaderSep.Size = UDim2.new(1, 0, 0, 1)
+    HeaderSep.ZIndex = 202
+
+    -- Tab bar (gelap, pakai underline indicator bukan background merah)
     local TabBar = Instance.new("Frame")
     TabBar.Name = "TabBar"
     TabBar.Parent = KSOverlay
-    TabBar.BackgroundColor3 = Library.Theme.BackgroundColor
-    TabBar.BackgroundTransparency = 0.05
-    TabBar.Position = UDim2.new(0, 0, 0, 50)
-    TabBar.Size = UDim2.new(1, 0, 0, 35)
+    TabBar.BackgroundColor3 = KS_SURFACE
+    TabBar.BorderSizePixel = 0
+    TabBar.Position = UDim2.new(0, 0, 0, 46)
+    TabBar.Size = UDim2.new(1, 0, 0, 34)
     TabBar.ZIndex = 202
 
+    local TabSep = Instance.new("Frame")
+    TabSep.Parent = KSOverlay
+    TabSep.BackgroundColor3 = KS_BORDER
+    TabSep.BorderSizePixel = 0
+    TabSep.Position = UDim2.new(0, 0, 0, 80)
+    TabSep.Size = UDim2.new(1, 0, 0, 1)
+    TabSep.ZIndex = 202
+
+    -- Content area
     local ContentArea = Instance.new("Frame")
     ContentArea.Name = "ContentArea"
     ContentArea.Parent = KSOverlay
     ContentArea.BackgroundTransparency = 1
-    ContentArea.Position = UDim2.new(0, 16, 0, 93)
-    ContentArea.Size = UDim2.new(1, -32, 1, -150)
+    ContentArea.Position = UDim2.new(0, 12, 0, 84)
+    ContentArea.Size = UDim2.new(1, -24, 1, -148)
     ContentArea.ZIndex = 203
     ContentArea.ClipsDescendants = true
 
@@ -3383,10 +3399,15 @@ function Library:CreateKeySystem(config)
 
     local function ShowTab(index)
         for i, tab in ipairs(tabObjects) do
-            tab.content.Visible = (i == index)
             local isActive = (i == index)
-            tab.button.BackgroundTransparency = isActive and 0 or 1
-            tab.button.BackgroundColor3 = isActive and Library.Theme.MainColor or Color3.fromRGB(60, 60, 60)
+            tab.content.Visible = isActive
+            -- Underline indicator: visible saat active
+            TweenService:Create(tab.indicator, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                BackgroundTransparency = isActive and 0 or 1
+            }):Play()
+            TweenService:Create(tab.button, TweenInfo.new(0.2), {
+                TextColor3 = isActive and Library.Theme.MainColor or Color3.fromRGB(150, 150, 160)
+            }):Play()
         end
     end
 
@@ -3394,151 +3415,176 @@ function Library:CreateKeySystem(config)
         local tabData = ksTabs[i] or {name = "Tab "..i}
 
         local btn = Instance.new("TextButton")
-        btn.Name = "TabBtn"..i
+        btn.Name = "KSTabBtn"..i
         btn.Parent = TabBar
         btn.BackgroundTransparency = 1
+        btn.AutoButtonColor = false
         btn.Size = UDim2.new(1/tabCount, 0, 1, 0)
         btn.Position = UDim2.new((i-1)/tabCount, 0, 0, 0)
         btn.ZIndex = 204
         btn.Font = Library.Theme.TextFont
         btn.Text = tabData.name
-        btn.TextColor3 = Library.Theme.TextColor
-        btn.TextSize = 15
+        btn.TextColor3 = Color3.fromRGB(150, 150, 160)
+        btn.TextSize = 14
 
+        -- Underline indicator (accent color, bawah tab button)
+        local indicator = Instance.new("Frame")
+        indicator.Name = "TabIndicator"
+        indicator.Parent = btn
+        indicator.AnchorPoint = Vector2.new(0, 1)
+        indicator.BackgroundColor3 = Library.Theme.MainColor
+        indicator.BorderSizePixel = 0
+        indicator.Position = UDim2.new(0.15, 0, 1, 0)
+        indicator.Size = UDim2.new(0.7, 0, 0, 2)
+        indicator.BackgroundTransparency = 1
+        indicator.ZIndex = 205
+        table.insert(Library.LibraryColorTable, indicator)
+        local indicatorCorner = Instance.new("UICorner")
+        indicatorCorner.CornerRadius = UDim.new(1, 0)
+        indicatorCorner.Parent = indicator
+
+        -- ScrollingFrame content
         local content = Instance.new("ScrollingFrame")
-        content.Name = "Content"..i
+        content.Name = "KSContent"..i
         content.Parent = ContentArea
         content.BackgroundTransparency = 1
-        content.Size = UDim2.new(1,0,1,0)
-        content.ScrollBarThickness = 6
+        content.Size = UDim2.new(1, 0, 1, 0)
+        content.ScrollBarThickness = 3
+        content.ScrollBarImageColor3 = Color3.fromRGB(80, 80, 90)
         content.AutomaticCanvasSize = Enum.AutomaticSize.Y
+        content.CanvasSize = UDim2.new(0, 0, 0, 0)
         content.Visible = false
         content.ZIndex = 205
+        content.ClipsDescendants = true
 
         local layout = Instance.new("UIListLayout")
         layout.Parent = content
         layout.SortOrder = Enum.SortOrder.LayoutOrder
-        layout.Padding = UDim.new(0, 12)
+        layout.Padding = UDim.new(0, 8)
 
         local pad = Instance.new("UIPadding")
         pad.Parent = content
-        pad.PaddingLeft = UDim.new(0, 8)
-        pad.PaddingRight = UDim.new(0, 8)
-        pad.PaddingTop = UDim.new(0, 8)
+        pad.PaddingTop = UDim.new(0, 6)
+        pad.PaddingBottom = UDim.new(0, 6)
+        pad.PaddingLeft = UDim.new(0, 2)
+        pad.PaddingRight = UDim.new(0, 6)
 
         btn.MouseButton1Click:Connect(function() ShowTab(i) end)
 
         local TabAPI = {
+            -- AddLabel: fixed height 20px (tidak pakai AutomaticSize biar tidak collapse)
             AddLabel = function(self, text)
+                local t = text or ""
+                -- Jika kosong/spasi → spacer kecil
+                local h = (t == "" or t == " ") and 6 or 20
                 local lbl = Instance.new("TextLabel")
                 lbl.Parent = content
                 lbl.BackgroundTransparency = 1
-                lbl.Size = UDim2.new(1,0,0,0)
-                lbl.AutomaticSize = Enum.AutomaticSize.Y
+                lbl.Size = UDim2.new(1, 0, 0, h)
                 lbl.Font = Library.Theme.TextFont
-                lbl.Text = text or ""
-                lbl.TextColor3 = Library.Theme.TextColor
-                lbl.TextSize = 15
+                lbl.Text = t
+                lbl.TextColor3 = Color3.fromRGB(185, 185, 195)
+                lbl.TextSize = 13
                 lbl.TextWrapped = true
                 lbl.TextXAlignment = Enum.TextXAlignment.Left
+                lbl.ZIndex = 206
                 return lbl
             end,
 
             AddTextBox = function(self, placeholder, callback)
+                local wrapper = Instance.new("Frame")
+                wrapper.Parent = content
+                wrapper.BackgroundTransparency = 1
+                wrapper.Size = UDim2.new(1, 0, 0, 38)
+                wrapper.ZIndex = 206
+
                 local box = Instance.new("TextBox")
-                box.Parent = content
-                box.BackgroundColor3 = Color3.fromRGB(45, 45, 50)
-                box.Size = UDim2.new(1,0,0,40)
+                box.Parent = wrapper
+                box.BackgroundColor3 = Color3.fromRGB(32, 32, 40)
+                box.Size = UDim2.new(1, 0, 1, 0)
                 box.Font = Library.Theme.TextFont
                 box.PlaceholderText = placeholder or ""
-                box.PlaceholderColor3 = Color3.fromRGB(140,140,140)
+                box.PlaceholderColor3 = Color3.fromRGB(95, 95, 110)
                 box.Text = ""
-                box.TextColor3 = Color3.fromRGB(255,255,255)
-                box.TextSize = 15
+                box.TextColor3 = Color3.fromRGB(235, 235, 240)
+                box.TextSize = 14
                 box.ClearTextOnFocus = false
-                box.ZIndex = 206
+                box.ZIndex = 207
 
-                local corner = Instance.new("UICorner")
-                corner.CornerRadius = UDim.new(0, 8)
-                corner.Parent = box
+                local bCorner = Instance.new("UICorner")
+                bCorner.CornerRadius = UDim.new(0, 6)
+                bCorner.Parent = box
 
-                local pad2 = Instance.new("UIPadding")
-                pad2.PaddingLeft = UDim.new(0,12)
-                pad2.PaddingRight = UDim.new(0,12)
-                pad2.Parent = box
+                local bStroke = Instance.new("UIStroke")
+                bStroke.Color = KS_BORDER
+                bStroke.Thickness = 1
+                bStroke.Parent = box
 
+                local bPad = Instance.new("UIPadding")
+                bPad.PaddingLeft = UDim.new(0, 10)
+                bPad.PaddingRight = UDim.new(0, 10)
+                bPad.Parent = box
+
+                box.Focused:Connect(function()
+                    TweenService:Create(bStroke, TweenInfo.new(0.18), {Color = Library.Theme.MainColor}):Play()
+                end)
+                box.FocusLost:Connect(function(enter)
+                    TweenService:Create(bStroke, TweenInfo.new(0.18), {Color = KS_BORDER}):Play()
+                    if enter and callback then callback(box.Text) end
+                end)
                 if callback then
-                    box.FocusLost:Connect(function(enter) if enter then callback(box.Text) end end)
                     box:GetPropertyChangedSignal("Text"):Connect(function() callback(box.Text) end)
                 end
                 return box
             end,
 
+            -- AddButton: solid BackgroundColor3 (bukan ImageLabel) supaya selalu visible
             AddButton = function(self, name, callback)
-                local btnFrame = Instance.new("TextButton")
-                btnFrame.Parent = content
-                btnFrame.BackgroundTransparency = 1
-                btnFrame.Size = UDim2.new(1,0,0,42)
-                btnFrame.Text = ""
-                btnFrame.ZIndex = 206
-                btnFrame.ClipsDescendants = true
+                local btn2 = Instance.new("TextButton")
+                btn2.Parent = content
+                btn2.BackgroundColor3 = Library.Theme.MainColor
+                btn2.AutoButtonColor = false
+                btn2.ClipsDescendants = true
+                btn2.Size = UDim2.new(1, 0, 0, 36)
+                btn2.Font = Library.Theme.TextFont
+                btn2.Text = name or "Button"
+                btn2.TextColor3 = Color3.fromRGB(255, 255, 255)
+                btn2.TextSize = 14
+                btn2.ZIndex = 206
+                table.insert(Library.LibraryColorTable, btn2)
 
-                local img = Instance.new("ImageLabel")
-                img.Parent = btnFrame
-                img.AnchorPoint = Vector2.new(0.5, 0.5)
-                img.Position = UDim2.new(0.5, 0, 0.5, 0)
-                img.Size = UDim2.new(1,0,1,0)
-                img.BackgroundTransparency = 1
-                img.Image = "rbxassetid://3570695787"
-                img.ImageColor3 = Library.Theme.MainColor
-                img.ScaleType = Enum.ScaleType.Slice
-                img.SliceCenter = Rect.new(100,100,100,100)
-                img.SliceScale = 0.05
-                img.ZIndex = 206
-                table.insert(Library.LibraryColorTable, img)
+                local bCorner = Instance.new("UICorner")
+                bCorner.CornerRadius = UDim.new(0, 6)
+                bCorner.Parent = btn2
 
-                local corner = Instance.new("UICorner")
-                corner.CornerRadius = UDim.new(0, 8)
-                corner.Parent = img
-
-                local lbl = Instance.new("TextLabel")
-                lbl.Parent = btnFrame
-                lbl.BackgroundTransparency = 1
-                lbl.Size = UDim2.new(1,0,1,0)
-                lbl.Font = Library.Theme.TextFont
-                lbl.Text = name or "Button"
-                lbl.TextColor3 = Color3.fromRGB(255,255,255)
-                lbl.TextSize = 16
-                lbl.ZIndex = 207
-
-                -- Micro-interaction: scale + darken on press
-                btnFrame.MouseButton1Down:Connect(function()
-                    TweenService:Create(img, TweenInfo.new(0.08, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                        Size = UDim2.new(0.94, 0, 0.85, 0),
-                        ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 35)
+                -- Micro-interaction: press down = scale kecil + gelap
+                btn2.MouseButton1Down:Connect(function()
+                    TweenService:Create(btn2, TweenInfo.new(0.08, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                        Size = UDim2.new(0.96, 0, 0, 32),
+                        BackgroundColor3 = DarkenObjectColor(Library.Theme.MainColor, 40)
                     }):Play()
                 end)
-                btnFrame.MouseButton1Up:Connect(function()
-                    TweenService:Create(img, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-                        Size = UDim2.new(1, 0, 1, 0),
-                        ImageColor3 = Library.Theme.MainColor
+                btn2.MouseButton1Up:Connect(function()
+                    TweenService:Create(btn2, TweenInfo.new(0.22, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                        Size = UDim2.new(1, 0, 0, 36),
+                        BackgroundColor3 = Library.Theme.MainColor
                     }):Play()
                 end)
-                btnFrame.MouseLeave:Connect(function()
-                    TweenService:Create(img, TweenInfo.new(0.15), {
-                        Size = UDim2.new(1, 0, 1, 0),
-                        ImageColor3 = Library.Theme.MainColor
+                btn2.MouseLeave:Connect(function()
+                    TweenService:Create(btn2, TweenInfo.new(0.15), {
+                        Size = UDim2.new(1, 0, 0, 36),
+                        BackgroundColor3 = Library.Theme.MainColor
                     }):Play()
                 end)
-                btnFrame.MouseButton1Click:Connect(function()
-                    RippleEffect(btnFrame)
+                btn2.MouseButton1Click:Connect(function()
+                    RippleEffect(btn2)
                     if callback then pcall(callback) end
                 end)
-                return btnFrame
+                return btn2
             end,
         }
 
-        table.insert(tabObjects, {button = btn, content = content, api = TabAPI})
+        table.insert(tabObjects, {button = btn, content = content, api = TabAPI, indicator = indicator})
 
         if tabData.setup then
             tabData.setup(TabAPI)
@@ -3552,8 +3598,8 @@ function Library:CreateKeySystem(config)
         Overlay = KSOverlay,
         Destroy = function()
             if KSOverlay then
-                TweenService:Create(KSOverlay, TweenInfo.new(0.35), {BackgroundTransparency = 1}):Play()
-                task.delay(0.4, function()
+                TweenService:Create(KSOverlay, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 1}):Play()
+                task.delay(0.35, function()
                     if KSOverlay and KSOverlay.Parent then KSOverlay:Destroy() end
                 end)
             end
@@ -3562,73 +3608,88 @@ function Library:CreateKeySystem(config)
 end
 
 -- =====================================================================
--- BOTTOM BAR (FIXED)
+-- BOTTOM BAR
 -- =====================================================================
 function Library:CreateBottomBar()
-    local overlay = Library._lastKSOverlay
+    local overlay   = Library._lastKSOverlay
     local contentArea = Library._lastKSContentArea
 
     if not overlay or not overlay.Parent then
         warn("CreateBottomBar: No KeySystem overlay found!")
-        local dummy = {SetPlaceholder=function()end, OnSubmit=function()end, AddButton=function()end}
-        return dummy
+        return {SetPlaceholder=function()end, OnSubmit=function()end, AddButton=function()end}
     end
 
+    -- Kurangi tinggi ContentArea supaya ada ruang untuk bottom bar
     if contentArea then
-        contentArea.Size = UDim2.new(1, -32, 1, -195)  -- beri ruang untuk bottom bar
+        contentArea.Size = UDim2.new(1, -24, 1, -158)
     end
 
+    local KS_BG      = Color3.fromRGB(22, 22, 26)
+    local KS_SURFACE = Color3.fromRGB(30, 30, 36)
+    local KS_BORDER  = Color3.fromRGB(48, 48, 58)
+
+    -- Separator garis di atas bottom bar
     local Sep = Instance.new("Frame")
     Sep.Name = "BottomBarSep"
     Sep.Parent = overlay
-    Sep.BackgroundColor3 = Library.Theme.MainColor
+    Sep.BackgroundColor3 = KS_BORDER
     Sep.BorderSizePixel = 0
-    Sep.Position = UDim2.new(0, 16, 1, -58)
-    Sep.Size = UDim2.new(1, -32, 0, 1)
+    Sep.Position = UDim2.new(0, 0, 1, -62)
+    Sep.Size = UDim2.new(1, 0, 0, 1)
     Sep.ZIndex = 202
-    table.insert(Library.LibraryColorTable, Sep)
 
     local BottomBar = Instance.new("Frame")
     BottomBar.Name = "BottomBar"
     BottomBar.Parent = overlay
-    BottomBar.BackgroundTransparency = 1
-    BottomBar.Position = UDim2.new(0, 16, 1, -54)
-    BottomBar.Size = UDim2.new(1, -32, 0, 48)
+    BottomBar.BackgroundColor3 = KS_SURFACE
+    BottomBar.BorderSizePixel = 0
+    BottomBar.Position = UDim2.new(0, 0, 1, -61)
+    BottomBar.Size = UDim2.new(1, 0, 0, 61)
     BottomBar.ZIndex = 203
 
     local InputBox = Instance.new("TextBox")
     InputBox.Name = "BottomInput"
     InputBox.Parent = BottomBar
-    InputBox.BackgroundColor3 = Color3.fromRGB(45, 45, 50)
-    InputBox.Position = UDim2.new(0, 90, 0, 8)
-    InputBox.Size = UDim2.new(1, -190, 0, 32)
+    InputBox.BackgroundColor3 = Color3.fromRGB(32, 32, 40)
+    InputBox.Position = UDim2.new(0, 92, 0, 14)
+    InputBox.Size = UDim2.new(1, -196, 0, 33)
     InputBox.Font = Library.Theme.TextFont
     InputBox.PlaceholderText = ""
-    InputBox.PlaceholderColor3 = Color3.fromRGB(140,140,140)
+    InputBox.PlaceholderColor3 = Color3.fromRGB(95, 95, 110)
     InputBox.Text = ""
-    InputBox.TextColor3 = Color3.fromRGB(255,255,255)
-    InputBox.TextSize = 14
+    InputBox.TextColor3 = Color3.fromRGB(235, 235, 240)
+    InputBox.TextSize = 13
     InputBox.ClearTextOnFocus = false
     InputBox.ZIndex = 204
 
     local InputCorner = Instance.new("UICorner")
-    InputCorner.CornerRadius = UDim.new(0, 8)
+    InputCorner.CornerRadius = UDim.new(0, 6)
     InputCorner.Parent = InputBox
 
+    local InputStroke = Instance.new("UIStroke")
+    InputStroke.Color = KS_BORDER
+    InputStroke.Thickness = 1
+    InputStroke.Parent = InputBox
+
+    InputBox.Focused:Connect(function()
+        TweenService:Create(InputStroke, TweenInfo.new(0.18), {Color = Library.Theme.MainColor}):Play()
+    end)
+    InputBox.FocusLost:Connect(function()
+        TweenService:Create(InputStroke, TweenInfo.new(0.18), {Color = KS_BORDER}):Play()
+    end)
+
     local InputPad = Instance.new("UIPadding")
-    InputPad.PaddingLeft = UDim.new(0, 12)
-    InputPad.PaddingRight = UDim.new(0, 12)
+    InputPad.PaddingLeft = UDim.new(0, 10)
+    InputPad.PaddingRight = UDim.new(0, 10)
     InputPad.Parent = InputBox
 
     local submitCallback = nil
-
     InputBox.FocusLost:Connect(function(enterPressed)
-        if enterPressed and submitCallback then
-            pcall(submitCallback, InputBox.Text)
-        end
+        if enterPressed and submitCallback then pcall(submitCallback, InputBox.Text) end
     end)
 
     local BarAPI = {}
+    local btnCount = 0
 
     function BarAPI:SetPlaceholder(text)
         InputBox.PlaceholderText = text or ""
@@ -3639,53 +3700,48 @@ function Library:CreateBottomBar()
     end
 
     function BarAPI:AddButton(name, callback)
-        local count = #BottomBar:GetChildren() - 1
-        if count >= 2 then return end
+        if btnCount >= 2 then return end
+        btnCount = btnCount + 1
 
-        local btn = Instance.new("ImageButton")
+        local btn = Instance.new("TextButton")
         btn.Parent = BottomBar
-        btn.BackgroundTransparency = 1
-        btn.Size = UDim2.new(0, 82, 0, 32)
+        btn.BackgroundColor3 = Library.Theme.MainColor
+        btn.AutoButtonColor = false
+        btn.ClipsDescendants = true
+        btn.Size = UDim2.new(0, 84, 0, 33)
+        btn.Font = Library.Theme.TextFont
+        btn.Text = name or "Button"
+        btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        btn.TextSize = 13
         btn.ZIndex = 204
-        btn.Image = "rbxassetid://3570695787"
-        btn.ImageColor3 = Library.Theme.MainColor
-        btn.ScaleType = Enum.ScaleType.Slice
-        btn.SliceCenter = Rect.new(100,100,100,100)
-        btn.SliceScale = 0.05
         table.insert(Library.LibraryColorTable, btn)
 
-        if count == 0 then
-            btn.Position = UDim2.new(0, 0, 0, 8)
-        else
-            btn.Position = UDim2.new(1, -88, 0, 8)
-        end
+        local bCorner = Instance.new("UICorner")
+        bCorner.CornerRadius = UDim.new(0, 6)
+        bCorner.Parent = btn
 
-        local lbl = Instance.new("TextLabel")
-        lbl.Parent = btn
-        lbl.BackgroundTransparency = 1
-        lbl.Size = UDim2.new(1,0,1,0)
-        lbl.Font = Library.Theme.TextFont
-        lbl.Text = name or "Button"
-        lbl.TextColor3 = Color3.fromRGB(255,255,255)
-        lbl.TextSize = 14
-        lbl.ZIndex = 205
+        if btnCount == 1 then
+            btn.Position = UDim2.new(0, 4, 0, 14)
+        else
+            btn.Position = UDim2.new(1, -88, 0, 14)
+        end
 
         btn.MouseButton1Down:Connect(function()
             TweenService:Create(btn, TweenInfo.new(0.08, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                Size = UDim2.new(0, 76, 0, 28),
-                ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 35)
+                Size = UDim2.new(0, 78, 0, 29),
+                BackgroundColor3 = DarkenObjectColor(Library.Theme.MainColor, 40)
             }):Play()
         end)
         btn.MouseButton1Up:Connect(function()
-            TweenService:Create(btn, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-                Size = UDim2.new(0, 82, 0, 32),
-                ImageColor3 = Library.Theme.MainColor
+            TweenService:Create(btn, TweenInfo.new(0.22, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                Size = UDim2.new(0, 84, 0, 33),
+                BackgroundColor3 = Library.Theme.MainColor
             }):Play()
         end)
         btn.MouseLeave:Connect(function()
             TweenService:Create(btn, TweenInfo.new(0.15), {
-                Size = UDim2.new(0, 82, 0, 32),
-                ImageColor3 = Library.Theme.MainColor
+                Size = UDim2.new(0, 84, 0, 33),
+                BackgroundColor3 = Library.Theme.MainColor
             }):Play()
         end)
         btn.MouseButton1Click:Connect(function()
