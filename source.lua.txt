@@ -3358,6 +3358,10 @@ function Library:CreateKeySystem(config)
     ContentArea.ZIndex = 202
     ContentArea.ClipsDescendants = true
 
+    -- Store refs for CreateBottomBar
+    Library._lastKSOverlay = KSOverlay
+    Library._lastKSContentArea = ContentArea
+
     local tabObjects = {}
 
     local function ShowTab(index)
@@ -3421,7 +3425,7 @@ function Library:CreateKeySystem(config)
         btn.MouseButton1Click:Connect(function() ShowTab(i) end)
 
         local TabAPI = {
-            AddLabel = function(text)
+            AddLabel = function(self, text)
                 local lbl = Instance.new("TextLabel")
                 lbl.Parent = content
                 lbl.BackgroundTransparency = 1
@@ -3437,7 +3441,7 @@ function Library:CreateKeySystem(config)
                 return lbl
             end,
 
-            AddTextBox = function(placeholder, callback)
+            AddTextBox = function(self, placeholder, callback)
                 local box = Instance.new("TextBox")
                 box.Parent = content
                 box.BackgroundColor3 = Color3.fromRGB(45,45,45)
@@ -3447,23 +3451,29 @@ function Library:CreateKeySystem(config)
                 box.Text = ""
                 box.TextColor3 = Color3.fromRGB(255,255,255)
                 box.TextSize = 14
-                box.ClearTextOnFocus = true
+                box.ClearTextOnFocus = false
 
                 local corner = Instance.new("UICorner")
                 corner.CornerRadius = UDim.new(0,6)
                 corner.Parent = box
 
+                local pad = Instance.new("UIPadding")
+                pad.PaddingLeft = UDim.new(0,8)
+                pad.PaddingRight = UDim.new(0,8)
+                pad.Parent = box
+
                 if callback then
+                    box:GetPropertyChangedSignal("Text"):Connect(function()
+                        callback(box.Text)
+                    end)
                     box.FocusLost:Connect(function(enterPressed)
-                        if enterPressed and callback then
-                            callback(box.Text)
-                        end
+                        if enterPressed then callback(box.Text) end
                     end)
                 end
                 return box
             end,
 
-            AddButton = function(name, callback)
+            AddButton = function(self, name, callback)
                 local btnFrame = Instance.new("TextButton")
                 btnFrame.Parent = content
                 btnFrame.BackgroundTransparency = 1
@@ -3492,7 +3502,7 @@ function Library:CreateKeySystem(config)
                 return btnFrame
             end,
 
-            AddToggle = function(name, default, callback)
+            AddToggle = function(self, name, default, callback)
                 -- Implementasi toggle (bisa ditambah nanti)
                 local tog = Instance.new("TextButton")
                 tog.Parent = content
@@ -3527,4 +3537,137 @@ function Library:CreateKeySystem(config)
         end
     }
 end
+-- =====================================================================
+-- BOTTOM BAR (Library:CreateBottomBar)
+-- =====================================================================
+function Library:CreateBottomBar()
+    local overlay = Library._lastKSOverlay
+    local contentArea = Library._lastKSContentArea
+
+    if not overlay or not overlay.Parent then
+        warn("CreateBottomBar: No active KeySystem overlay found.")
+        local dummy = {}
+        dummy.SetPlaceholder = function() end
+        dummy.OnSubmit = function() end
+        dummy.AddButton = function() end
+        return dummy
+    end
+
+    -- Shrink ContentArea to leave room for the bottom bar
+    if contentArea then
+        contentArea.Size = UDim2.new(1, -28, 1, -160)
+    end
+
+    -- Separator line
+    local Sep = Instance.new("Frame")
+    Sep.Name = "BottomBarSep"
+    Sep.Parent = overlay
+    Sep.BackgroundColor3 = Library.Theme.MainColor
+    Sep.BorderSizePixel = 0
+    Sep.Position = UDim2.new(0, 14, 1, -52)
+    Sep.Size = UDim2.new(1, -28, 0, 1)
+    Sep.ZIndex = 202
+    table.insert(Library.LibraryColorTable, Sep)
+
+    -- Bottom bar container
+    local BottomBar = Instance.new("Frame")
+    BottomBar.Name = "BottomBar"
+    BottomBar.Parent = overlay
+    BottomBar.BackgroundTransparency = 1
+    BottomBar.Position = UDim2.new(0, 14, 1, -48)
+    BottomBar.Size = UDim2.new(1, -28, 0, 44)
+    BottomBar.ZIndex = 202
+    BottomBar.ClipsDescendants = false
+
+    -- Central TextBox (sized dynamically after buttons are added)
+    local InputBox = Instance.new("TextBox")
+    InputBox.Name = "BottomInput"
+    InputBox.Parent = BottomBar
+    InputBox.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    InputBox.Position = UDim2.new(0, 88, 0, 6)
+    InputBox.Size = UDim2.new(1, -180, 0, 32)
+    InputBox.Font = Library.Theme.TextFont
+    InputBox.PlaceholderText = ""
+    InputBox.PlaceholderColor3 = Color3.fromRGB(120, 120, 120)
+    InputBox.Text = ""
+    InputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+    InputBox.TextSize = 13
+    InputBox.ClearTextOnFocus = false
+    InputBox.ZIndex = 203
+
+    local InputCorner = Instance.new("UICorner")
+    InputCorner.CornerRadius = UDim.new(0, 6)
+    InputCorner.Parent = InputBox
+
+    local InputPad = Instance.new("UIPadding")
+    InputPad.PaddingLeft = UDim.new(0, 8)
+    InputPad.PaddingRight = UDim.new(0, 8)
+    InputPad.Parent = InputBox
+
+    local submitCallback = nil
+    local buttonList = {}
+
+    InputBox.FocusLost:Connect(function(enterPressed)
+        if enterPressed and submitCallback then
+            pcall(submitCallback, InputBox.Text)
+        end
+    end)
+
+    local BarAPI = {}
+
+    function BarAPI:SetPlaceholder(text)
+        InputBox.PlaceholderText = text or ""
+    end
+
+    function BarAPI:OnSubmit(callback)
+        submitCallback = callback
+    end
+
+    function BarAPI:AddButton(name, callback)
+        local count = #buttonList
+        if count >= 2 then return end
+
+        local btnW = 82
+        local pad = 0
+
+        local btn = Instance.new("ImageButton")
+        btn.Parent = BottomBar
+        btn.BackgroundTransparency = 1
+        btn.Size = UDim2.new(0, btnW, 0, 32)
+        btn.ZIndex = 203
+        btn.Image = "rbxassetid://3570695787"
+        btn.ImageColor3 = Library.Theme.MainColor
+        btn.ScaleType = Enum.ScaleType.Slice
+        btn.SliceCenter = Rect.new(100, 100, 100, 100)
+        btn.SliceScale = 0.05
+        table.insert(Library.LibraryColorTable, btn)
+
+        if count == 0 then
+            btn.Position = UDim2.new(0, pad, 0, 6)
+        else
+            btn.Position = UDim2.new(1, -(btnW + pad), 0, 6)
+        end
+
+        local btnLabel = Instance.new("TextLabel")
+        btnLabel.Parent = btn
+        btnLabel.BackgroundTransparency = 1
+        btnLabel.Size = UDim2.new(1, 0, 1, 0)
+        btnLabel.Font = Library.Theme.TextFont
+        btnLabel.Text = name or "Button"
+        btnLabel.TextColor3 = Library.Theme.TextColor
+        btnLabel.TextSize = 13
+        btnLabel.ZIndex = 204
+        table.insert(Library.LibraryColorTable, btnLabel)
+
+        btn.MouseButton1Click:Connect(function()
+            RippleEffect(btn)
+            if callback then pcall(callback) end
+        end)
+
+        table.insert(buttonList, btn)
+    end
+
+    return BarAPI
+end
+
 return Library
