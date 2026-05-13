@@ -278,7 +278,7 @@ local function RippleEffect(object)
         Ripple.ImageTransparency = 0.800
         Ripple.ScaleType = Enum.ScaleType.Fit
 
-        Ripple.Position = UDim2.new((Mouse.X - Ripple.AbsolutePosition.X) / object.AbsoluteSize.X, 0, (Mouse.Y - Ripple.AbsolutePosition.Y) / object.AbsoluteSize.Y, 0)
+        Ripple.Position = UDim2.new((Mouse.X - object.AbsolutePosition.X) / object.AbsoluteSize.X, 0, (Mouse.Y - object.AbsolutePosition.Y) / object.AbsoluteSize.Y, 0)
         TweenService:Create(Ripple, TweenInfo.new(1, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Position = UDim2.new(-5.5, 0, -5.5, 0), Size = UDim2.new(12, 0, 12, 0)}):Play()
 
         wait(0.5)
@@ -2890,184 +2890,7 @@ function SectionElements:CreateMultiDropdown(name, options, minSelect, maxSelect
         GetSelected = function() return SelectedOptions end
     }
 end
-Library.ActiveNotifications = {}
 
-function Library:CreateNotification(title, message, duration, buttons, buttonCallbacks)
-    local NotificationFrame = Instance.new("Frame")
-    local NotificationBackground = Instance.new("Frame")
-    local UICorner = Instance.new("UICorner")
-    local TitleLabel = Instance.new("TextLabel")
-    local MessageLabel = Instance.new("TextLabel")
-    local CloseButton = Instance.new("TextButton")
-    local TimerBar = Instance.new("Frame")
-    local TimerBarFill = Instance.new("Frame")
-
-    local hasButtons = buttons and #buttons > 0
-    local notifHeight = hasButtons and 100 or 70
-
-    NotificationFrame.Name = "Notification"
-    NotificationFrame.Parent = UILibrary
-    NotificationFrame.BackgroundTransparency = 1
-    NotificationFrame.Position = UDim2.new(1, 0, 1, -110)
-    NotificationFrame.Size = UDim2.new(0, 300, 0, notifHeight)
-    NotificationFrame.ZIndex = 100
-
-    NotificationBackground.Name = "Background"
-    NotificationBackground.Parent = NotificationFrame
-    NotificationBackground.BackgroundColor3 = Library.Theme.MainColor
-    NotificationBackground.Size = UDim2.new(1, 0, 1, 0)
-    NotificationBackground.ZIndex = 100
-    UICorner.CornerRadius = UDim.new(0, 10)
-    UICorner.Parent = NotificationBackground
-
-    TitleLabel.Name = "Title"
-    TitleLabel.Parent = NotificationBackground
-    TitleLabel.BackgroundTransparency = 1
-    TitleLabel.Position = UDim2.new(0, 10, 0, 5)
-    TitleLabel.Size = UDim2.new(0, 260, 0, 20)
-    TitleLabel.ZIndex = 101
-    TitleLabel.Font = Library.Theme.TextFont
-    TitleLabel.Text = title or "Notification"
-    TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    TitleLabel.TextSize = 16
-    TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
-
-    MessageLabel.Name = "Message"
-    MessageLabel.Parent = NotificationBackground
-    MessageLabel.BackgroundTransparency = 1
-    MessageLabel.Position = UDim2.new(0, 10, 0, 25)
-    MessageLabel.Size = UDim2.new(0, 260, 0, hasButtons and 40 or 30)
-    MessageLabel.ZIndex = 101
-    MessageLabel.Font = Library.Theme.TextFont
-    MessageLabel.Text = message or ""
-    MessageLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
-    MessageLabel.TextSize = 14
-    MessageLabel.TextWrapped = true
-    MessageLabel.TextXAlignment = Enum.TextXAlignment.Left
-
-    pcall(function()
-        local envColor = getgenv().Color and string.lower(getgenv().Color) or nil
-        if envColor == "white" then
-            TitleLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
-        elseif envColor == "black" then
-            MessageLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-        end
-    end)
-
-    CloseButton.Name = "CloseButton"
-    CloseButton.Parent = NotificationBackground
-    CloseButton.BackgroundTransparency = 1
-    CloseButton.Position = UDim2.new(1, -25, 0, 5)
-    CloseButton.Size = UDim2.new(0, 20, 0, 20)
-    CloseButton.ZIndex = 102
-    CloseButton.Font = Library.Theme.TextFont
-    CloseButton.Text = "X"
-    CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    CloseButton.TextSize = 16
-
-    TimerBar.Name = "TimerBar"
-    TimerBar.Parent = NotificationBackground
-    TimerBar.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    TimerBar.BorderSizePixel = 0
-    TimerBar.Position = UDim2.new(0, 10, 1, -15)
-    TimerBar.Size = UDim2.new(0, 280, 0, 5)
-    TimerBar.ZIndex = 101
-
-    TimerBarFill.Name = "TimerBarFill"
-    TimerBarFill.Parent = TimerBar
-    TimerBarFill.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    TimerBarFill.BorderSizePixel = 0
-    TimerBarFill.Size = UDim2.new(1, 0, 1, 0)
-    TimerBarFill.ZIndex = 102
-
-    local isClosing = false 
-
-    local function closeNotification()
-        if isClosing then return end 
-        isClosing = true
-
-        -- Hapus dari tabel library dulu
-        local index = table.find(Library.ActiveNotifications, NotificationFrame)
-        if index then
-            table.remove(Library.ActiveNotifications, index)
-        end
-
-        pcall(function()
-            TweenService:Create(NotificationFrame, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-                Position = UDim2.new(1, 0, NotificationFrame.Position.Y.Scale, NotificationFrame.Position.Y.Offset)
-            }):Play()
-        end)
-        
-        for i, notif in ipairs(Library.ActiveNotifications) do
-            if notif.Parent then 
-                local targetY = -110 - (i - 1) * (notif.Size.Y.Offset + 10)
-                TweenService:Create(notif, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
-                    Position = UDim2.new(1, -310, 1, targetY)
-                }):Play()
-            end
-        end
-
-        task.delay(0.5, function()
-            if NotificationFrame then
-                NotificationFrame:Destroy()
-            end
-        end)
-    end
-
-    if hasButtons then
-        local buttonCount = math.clamp(#buttons, 1, 5)
-        local buttonWidth = 280 / buttonCount - 5
-        for i = 1, buttonCount do
-            local ActionButton = Instance.new("TextButton")
-            ActionButton.Name = "ActionButton" .. i
-            ActionButton.Parent = NotificationBackground
-            ActionButton.BackgroundColor3 = DarkenObjectColor(Library.Theme.MainColor, 20)
-            ActionButton.Position = UDim2.new(0, 10 + (i - 1) * (buttonWidth + 5), 0, 65)
-            ActionButton.Size = UDim2.new(0, buttonWidth, 0, 20)
-            ActionButton.ZIndex = 102
-            ActionButton.Font = Library.Theme.TextFont
-            ActionButton.Text = buttons[i] or "Button " .. i
-            ActionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-            ActionButton.TextSize = 14
-
-            local ButtonRounded = Instance.new("UICorner")
-            ButtonRounded.CornerRadius = UDim.new(0, 5)
-            ButtonRounded.Parent = ActionButton
-
-            ActionButton.MouseButton1Click:Connect(function()
-                if buttonCallbacks and buttonCallbacks[i] then
-                    task.spawn(buttonCallbacks[i]) -- Pakai spawn biar error di callback ga ngerusak notif
-                end
-                closeNotification()
-            end)
-        end
-    end
-
-    table.insert(Library.ActiveNotifications, 1, NotificationFrame)
-
-    for i, notif in ipairs(Library.ActiveNotifications) do
-        if notif.Parent then 
-            local targetY = -110 - (i - 1) * (notif.Size.Y.Offset + 10)
-            TweenService:Create(notif, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
-                Position = UDim2.new(1, -310, 1, targetY)
-            }):Play()
-        end
-    end
-
-    local duration = duration or 5
-    TweenService:Create(TimerBarFill, TweenInfo.new(duration, Enum.EasingStyle.Linear), {
-        Size = UDim2.new(0, 0, 1, 0)
-    }):Play()
-    task.delay(duration, function()
-        if not isClosing then
-            closeNotification()
-        end
-    end)
-
-    CloseButton.MouseButton1Click:Connect(closeNotification)
-
-    return NotificationFrame
-end
         function SectionElements:CreateKeybind(name, presetbind, keyboardonly, holdmode, callback)
             local NameKeybind = Instance.new("Frame")
             local Title = Instance.new("TextLabel")
@@ -3277,6 +3100,199 @@ end
 end
 
 -- =====================================================================
+-- NOTIFICATION SYSTEM (module-level, bisa dipanggil kapan saja)
+-- =====================================================================
+Library.ActiveNotifications = {}
+
+function Library:CreateNotification(title, message, duration, buttons, buttonCallbacks)
+    local NotificationFrame = Instance.new("Frame")
+    local NotificationBackground = Instance.new("Frame")
+    local TopAccent = Instance.new("Frame")
+    local UICorner = Instance.new("UICorner")
+    local TopCorner = Instance.new("UICorner")
+    local TitleLabel = Instance.new("TextLabel")
+    local MessageLabel = Instance.new("TextLabel")
+    local CloseButton = Instance.new("TextButton")
+    local TimerBar = Instance.new("Frame")
+    local TimerBarFill = Instance.new("Frame")
+    local TimerCorner = Instance.new("UICorner")
+
+    local hasButtons = buttons and #buttons > 0
+    local notifHeight = hasButtons and 110 or 80
+
+    NotificationFrame.Name = "Notification"
+    NotificationFrame.Parent = UILibrary
+    NotificationFrame.BackgroundTransparency = 1
+    NotificationFrame.Position = UDim2.new(1, 0, 1, -110)
+    NotificationFrame.Size = UDim2.new(0, 300, 0, notifHeight)
+    NotificationFrame.ZIndex = 100
+
+    -- Background gelap, bukan MainColor
+    NotificationBackground.Name = "Background"
+    NotificationBackground.Parent = NotificationFrame
+    NotificationBackground.BackgroundColor3 = Color3.fromRGB(28, 28, 32)
+    NotificationBackground.Size = UDim2.new(1, 0, 1, 0)
+    NotificationBackground.ZIndex = 100
+    UICorner.CornerRadius = UDim.new(0, 10)
+    UICorner.Parent = NotificationBackground
+
+    -- Top accent strip pakai MainColor
+    TopAccent.Name = "TopAccent"
+    TopAccent.Parent = NotificationBackground
+    TopAccent.BackgroundColor3 = Library.Theme.MainColor
+    TopAccent.BorderSizePixel = 0
+    TopAccent.Position = UDim2.new(0, 0, 0, 0)
+    TopAccent.Size = UDim2.new(1, 0, 0, 3)
+    TopAccent.ZIndex = 101
+    TopCorner.CornerRadius = UDim.new(0, 10)
+    TopCorner.Parent = TopAccent
+
+    TitleLabel.Name = "Title"
+    TitleLabel.Parent = NotificationBackground
+    TitleLabel.BackgroundTransparency = 1
+    TitleLabel.Position = UDim2.new(0, 12, 0, 8)
+    TitleLabel.Size = UDim2.new(0, 250, 0, 22)
+    TitleLabel.ZIndex = 101
+    TitleLabel.Font = Library.Theme.TextFont
+    TitleLabel.Text = title or "Notification"
+    TitleLabel.TextColor3 = Library.Theme.MainColor
+    TitleLabel.TextSize = 16
+    TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+    MessageLabel.Name = "Message"
+    MessageLabel.Parent = NotificationBackground
+    MessageLabel.BackgroundTransparency = 1
+    MessageLabel.Position = UDim2.new(0, 12, 0, 32)
+    MessageLabel.Size = UDim2.new(0, 256, 0, hasButtons and 38 or 30)
+    MessageLabel.ZIndex = 101
+    MessageLabel.Font = Library.Theme.TextFont
+    MessageLabel.Text = message or ""
+    MessageLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+    MessageLabel.TextSize = 14
+    MessageLabel.TextWrapped = true
+    MessageLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+    CloseButton.Name = "CloseButton"
+    CloseButton.Parent = NotificationBackground
+    CloseButton.BackgroundTransparency = 1
+    CloseButton.Position = UDim2.new(1, -26, 0, 6)
+    CloseButton.Size = UDim2.new(0, 20, 0, 20)
+    CloseButton.ZIndex = 102
+    CloseButton.Font = Library.Theme.TextFont
+    CloseButton.Text = "✕"
+    CloseButton.TextColor3 = Color3.fromRGB(160, 160, 160)
+    CloseButton.TextSize = 14
+
+    CloseButton.MouseEnter:Connect(function()
+        TweenService:Create(CloseButton, TweenInfo.new(0.15), {TextColor3 = Color3.fromRGB(255,255,255)}):Play()
+    end)
+    CloseButton.MouseLeave:Connect(function()
+        TweenService:Create(CloseButton, TweenInfo.new(0.15), {TextColor3 = Color3.fromRGB(160,160,160)}):Play()
+    end)
+
+    -- Timer bar bawah
+    TimerBar.Name = "TimerBar"
+    TimerBar.Parent = NotificationBackground
+    TimerBar.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
+    TimerBar.BorderSizePixel = 0
+    TimerBar.Position = UDim2.new(0, 12, 1, -12)
+    TimerBar.Size = UDim2.new(1, -24, 0, 4)
+    TimerBar.ZIndex = 101
+    TimerCorner.CornerRadius = UDim.new(1, 0)
+    TimerCorner.Parent = TimerBar
+
+    TimerBarFill.Name = "TimerBarFill"
+    TimerBarFill.Parent = TimerBar
+    TimerBarFill.BackgroundColor3 = Library.Theme.MainColor
+    TimerBarFill.BorderSizePixel = 0
+    TimerBarFill.Size = UDim2.new(1, 0, 1, 0)
+    TimerBarFill.ZIndex = 102
+    local FillCorner = Instance.new("UICorner")
+    FillCorner.CornerRadius = UDim.new(1, 0)
+    FillCorner.Parent = TimerBarFill
+
+    local isClosing = false
+
+    local function closeNotification()
+        if isClosing then return end
+        isClosing = true
+        local idx = table.find(Library.ActiveNotifications, NotificationFrame)
+        if idx then table.remove(Library.ActiveNotifications, idx) end
+        pcall(function()
+            TweenService:Create(NotificationFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
+                Position = UDim2.new(1, 20, NotificationFrame.Position.Y.Scale, NotificationFrame.Position.Y.Offset)
+            }):Play()
+        end)
+        for i, notif in ipairs(Library.ActiveNotifications) do
+            if notif.Parent then
+                local targetY = -110 - (i - 1) * (notif.Size.Y.Offset + 10)
+                TweenService:Create(notif, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
+                    Position = UDim2.new(1, -310, 1, targetY)
+                }):Play()
+            end
+        end
+        task.delay(0.45, function()
+            if NotificationFrame and NotificationFrame.Parent then NotificationFrame:Destroy() end
+        end)
+    end
+
+    if hasButtons then
+        local buttonCount = math.clamp(#buttons, 1, 5)
+        local btnW = (276 - (buttonCount - 1) * 6) / buttonCount
+        for i = 1, buttonCount do
+            local ActionButton = Instance.new("TextButton")
+            ActionButton.Parent = NotificationBackground
+            ActionButton.BackgroundColor3 = Library.Theme.MainColor
+            ActionButton.Position = UDim2.new(0, 12 + (i-1)*(btnW+6), 0, notifHeight - 34)
+            ActionButton.Size = UDim2.new(0, btnW, 0, 22)
+            ActionButton.ZIndex = 102
+            ActionButton.Font = Library.Theme.TextFont
+            ActionButton.Text = buttons[i] or "Button "..i
+            ActionButton.TextColor3 = Color3.fromRGB(255,255,255)
+            ActionButton.TextSize = 13
+            ActionButton.AutoButtonColor = false
+            local ar = Instance.new("UICorner"); ar.CornerRadius = UDim.new(0,5); ar.Parent = ActionButton
+            ActionButton.MouseButton1Down:Connect(function()
+                TweenService:Create(ActionButton, TweenInfo.new(0.08), {BackgroundColor3 = DarkenObjectColor(Library.Theme.MainColor, 35)}):Play()
+            end)
+            ActionButton.MouseButton1Up:Connect(function()
+                TweenService:Create(ActionButton, TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {BackgroundColor3 = Library.Theme.MainColor}):Play()
+            end)
+            ActionButton.MouseButton1Click:Connect(function()
+                if buttonCallbacks and buttonCallbacks[i] then task.spawn(buttonCallbacks[i]) end
+                closeNotification()
+            end)
+        end
+    end
+
+    table.insert(Library.ActiveNotifications, 1, NotificationFrame)
+    for i, notif in ipairs(Library.ActiveNotifications) do
+        if notif.Parent then
+            local targetY = -110 - (i-1) * (notif.Size.Y.Offset + 10)
+            TweenService:Create(notif, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
+                Position = UDim2.new(1, -310, 1, targetY)
+            }):Play()
+        end
+    end
+
+    local dur = duration or 5
+    TweenService:Create(TimerBarFill, TweenInfo.new(dur, Enum.EasingStyle.Linear), {Size = UDim2.new(0, 0, 1, 0)}):Play()
+    task.delay(dur, function()
+        if not isClosing then closeNotification() end
+    end)
+
+    CloseButton.MouseButton1Click:Connect(closeNotification)
+
+    -- Slide-in dari kanan
+    NotificationFrame.Position = UDim2.new(1, 20, 1, -110)
+    TweenService:Create(NotificationFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+        Position = UDim2.new(1, -310, 1, -110)
+    }):Play()
+
+    return NotificationFrame
+end
+
+-- =====================================================================
 -- KEY SYSTEM UI (FIXED + BottomBar Working)
 -- =====================================================================
 function Library:CreateKeySystem(config)
@@ -3465,9 +3481,12 @@ function Library:CreateKeySystem(config)
                 btnFrame.Size = UDim2.new(1,0,0,42)
                 btnFrame.Text = ""
                 btnFrame.ZIndex = 206
+                btnFrame.ClipsDescendants = true
 
                 local img = Instance.new("ImageLabel")
                 img.Parent = btnFrame
+                img.AnchorPoint = Vector2.new(0.5, 0.5)
+                img.Position = UDim2.new(0.5, 0, 0.5, 0)
                 img.Size = UDim2.new(1,0,1,0)
                 img.BackgroundTransparency = 1
                 img.Image = "rbxassetid://3570695787"
@@ -3475,7 +3494,12 @@ function Library:CreateKeySystem(config)
                 img.ScaleType = Enum.ScaleType.Slice
                 img.SliceCenter = Rect.new(100,100,100,100)
                 img.SliceScale = 0.05
+                img.ZIndex = 206
                 table.insert(Library.LibraryColorTable, img)
+
+                local corner = Instance.new("UICorner")
+                corner.CornerRadius = UDim.new(0, 8)
+                corner.Parent = img
 
                 local lbl = Instance.new("TextLabel")
                 lbl.Parent = btnFrame
@@ -3487,10 +3511,25 @@ function Library:CreateKeySystem(config)
                 lbl.TextSize = 16
                 lbl.ZIndex = 207
 
-                local corner = Instance.new("UICorner")
-                corner.CornerRadius = UDim.new(0, 8)
-                corner.Parent = img
-
+                -- Micro-interaction: scale + darken on press
+                btnFrame.MouseButton1Down:Connect(function()
+                    TweenService:Create(img, TweenInfo.new(0.08, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                        Size = UDim2.new(0.94, 0, 0.85, 0),
+                        ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 35)
+                    }):Play()
+                end)
+                btnFrame.MouseButton1Up:Connect(function()
+                    TweenService:Create(img, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                        Size = UDim2.new(1, 0, 1, 0),
+                        ImageColor3 = Library.Theme.MainColor
+                    }):Play()
+                end)
+                btnFrame.MouseLeave:Connect(function()
+                    TweenService:Create(img, TweenInfo.new(0.15), {
+                        Size = UDim2.new(1, 0, 1, 0),
+                        ImageColor3 = Library.Theme.MainColor
+                    }):Play()
+                end)
                 btnFrame.MouseButton1Click:Connect(function()
                     RippleEffect(btnFrame)
                     if callback then pcall(callback) end
@@ -3631,6 +3670,24 @@ function Library:CreateBottomBar()
         lbl.TextSize = 14
         lbl.ZIndex = 205
 
+        btn.MouseButton1Down:Connect(function()
+            TweenService:Create(btn, TweenInfo.new(0.08, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                Size = UDim2.new(0, 76, 0, 28),
+                ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 35)
+            }):Play()
+        end)
+        btn.MouseButton1Up:Connect(function()
+            TweenService:Create(btn, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                Size = UDim2.new(0, 82, 0, 32),
+                ImageColor3 = Library.Theme.MainColor
+            }):Play()
+        end)
+        btn.MouseLeave:Connect(function()
+            TweenService:Create(btn, TweenInfo.new(0.15), {
+                Size = UDim2.new(0, 82, 0, 32),
+                ImageColor3 = Library.Theme.MainColor
+            }):Play()
+        end)
         btn.MouseButton1Click:Connect(function()
             RippleEffect(btn)
             if callback then pcall(callback) end
