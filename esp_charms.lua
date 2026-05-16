@@ -287,7 +287,7 @@ local function getClosestGeneratorAndPoint()
     if not closestGen then return nil, nil end
 
     -- Cari GeneratorPoint terdekat di dalam generator tersebut
-    local minPointDist = 1 -- stud
+    local minPointDist = 5 -- stud
     for i = 1, 4 do
         local pointName = "GeneratorPoint" .. i
         -- pcall karena path bisa saja tidak ada
@@ -348,7 +348,7 @@ end)
 -- ============================================================
 -- BAGIAN 4: VAULT SPEED
 -- ============================================================
-local VAULT_SPEED = 1.4
+local VAULT_SPEED = 1.3
 
 local function setVaultSpeed(char)
     if not char then return end
