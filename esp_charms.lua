@@ -35,9 +35,6 @@ setreadonly(mt, true)
 warn("[Hook] SkillCheck fail blocker active")
 ]]
 
--- ============================================================
--- BAGIAN 1: SPEED GUI & LOCK
--- ============================================================
 local targetSpeed = 18
 local storedSpeed = 16
 local isLocked    = false
@@ -124,40 +121,103 @@ plusBtn.MouseButton1Click:Connect(function()
     speedLabel.Text = tostring(targetSpeed)
 end)
 
-lockBtn.MouseButton1Click:Connect(function()
-    isLocked = not isLocked
-    local hum = localPlayer.Character and localPlayer.Character:FindFirstChildOfClass("Humanoid")
-    if isLocked then
-        storedSpeed              = hum and hum.WalkSpeed or storedSpeed
-        lockBtn.Text             = "ON"
-        lockBtn.BackgroundColor3 = Color3.fromRGB(35, 120, 35)
-    else
-        lockBtn.Text             = "OFF"
-        lockBtn.BackgroundColor3 = Color3.fromRGB(120, 35, 35)
-        if hum then hum.WalkSpeed = storedSpeed end
-    end
-end)
-
-local walkSpeedConn = nil
-local function hookHumanoid(char)
-    if walkSpeedConn then walkSpeedConn:Disconnect(); walkSpeedConn = nil end
-    local hum = char:WaitForChild("Humanoid")
-    if isLocked then hum.WalkSpeed = targetSpeed end
-    walkSpeedConn = hum:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
-        if isLocked and hum.WalkSpeed ~= targetSpeed then
-            hum.WalkSpeed = targetSpeed
+-- Cek apakah speedboost karakter saat ini = 1
+local function isSpeedBoostNormal()
+    local char = localPlayer.Character
+    if not char then return false end
+    local val = char:GetAttribute("speedboost")
+    -- Jika attribute tidak ada, anggap normal (1)
+    if val == nil then return true end
+    return val == 1
+end
+local function lockSkillCheckSpeed(char)
+    char:SetAttribute("skillcheckspeed", 1.8)
+    char:GetAttributeChangedSignal("skillcheckspeed"):Connect(function()
+        if char:GetAttribute("skillcheckspeed") ~= 1.8 then
+            char:SetAttribute("skillcheckspeed", 1.8)
         end
     end)
 end
 
+if localPlayer.Character then task.spawn(lockSkillCheckSpeed, localPlayer.Character) end
+localPlayer.CharacterAdded:Connect(lockSkillCheckSpeed)
+local walkSpeedConn  = nil
+local boostAttrConn  = nil
+
+local function applySpeedIfAllowed(hum)
+    if not isLocked then return end
+    if isSpeedBoostNormal() then
+        -- speedboost = 1, aman di-override
+        if hum and hum.WalkSpeed ~= targetSpeed then
+            hum.WalkSpeed = targetSpeed
+        end
+    end
+    -- speedboost != 1 → biarkan game kontrol, jangan sentuh WalkSpeed
+end
+
+local function hookHumanoid(char)
+    if walkSpeedConn then walkSpeedConn:Disconnect(); walkSpeedConn = nil end
+    if boostAttrConn then boostAttrConn:Disconnect(); boostAttrConn = nil end
+
+    local hum = char:WaitForChild("Humanoid")
+
+    -- Apply awal
+    applySpeedIfAllowed(hum)
+
+    -- Counter game kalau coba ubah WalkSpeed — tapi hanya kalau speedboost = 1
+    walkSpeedConn = hum:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
+        if isLocked and isSpeedBoostNormal() and hum.WalkSpeed ~= targetSpeed then
+            hum.WalkSpeed = targetSpeed
+        end
+        -- speedboost != 1 → WalkSpeed berubah bebas, tidak di-counter
+    end)
+
+    -- Pantau perubahan attribute speedboost
+    boostAttrConn = char:GetAttributeChangedSignal("speedboost"):Connect(function()
+        if not isLocked then return end
+        if isSpeedBoostNormal() then
+            -- Baru balik ke 1 → langsung override lagi
+            if hum and hum.Health > 0 then
+                hum.WalkSpeed = targetSpeed
+            end
+        end
+        -- Kalau berubah jadi bukan 1 → lepas, biarkan game handle sendiri
+    end)
+end
+
+lockBtn.MouseButton1Click:Connect(function()
+    isLocked = not isLocked
+    local char = localPlayer.Character
+    local hum  = char and char:FindFirstChildOfClass("Humanoid")
+
+    if isLocked then
+        storedSpeed              = hum and hum.WalkSpeed or storedSpeed
+        lockBtn.Text             = "ON"
+        lockBtn.BackgroundColor3 = Color3.fromRGB(35, 120, 35)
+        -- Langsung apply kalau speedboost memang 1
+        applySpeedIfAllowed(hum)
+    else
+        lockBtn.Text             = "OFF"
+        lockBtn.BackgroundColor3 = Color3.fromRGB(120, 35, 35)
+        -- Kembalikan speed asli hanya kalau sedang di state normal
+        if hum and isSpeedBoostNormal() then
+            hum.WalkSpeed = storedSpeed
+        end
+    end
+end)
+
 if localPlayer.Character then task.spawn(hookHumanoid, localPlayer.Character) end
 localPlayer.CharacterAdded:Connect(hookHumanoid)
 
+-- Heartbeat sebagai safety net
 RunService.Heartbeat:Connect(function(dt)
     speedThrottle = speedThrottle + dt
     if speedThrottle < SPEED_INTERVAL then return end
     speedThrottle = 0
+
     if not isLocked then return end
+    if not isSpeedBoostNormal() then return end  -- speedboost != 1, skip
+
     local char = localPlayer.Character
     if not char then return end
     local hum = char:FindFirstChildOfClass("Humanoid")
@@ -165,6 +225,7 @@ RunService.Heartbeat:Connect(function(dt)
         hum.WalkSpeed = targetSpeed
     end
 end)
+
 
 --[[
 
