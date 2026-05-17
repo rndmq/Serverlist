@@ -401,73 +401,118 @@ RunService.Heartbeat:Connect(function()
     end)
 end),]]
 -- ============================================================
--- SCOURGE HOOK HIGHLIGHT
+-- SCOURGE HOOK ESP
+-- - Hanya aktif kalau localPlayer team = "Killer"
+-- - Cari model "Hook" di workspace.Map dengan attribute ScourgeHook
+-- - Highlight putih, override & block highlight bawaan game
+-- - Auto remove kalau model dihapus
+-- - Auto scan kalau ada Hook baru
 -- ============================================================
 
-local HOOK_HIGHLIGHT_COLOR = Color3.fromRGB(255, 255, 255)
-local hookHighlights = {} -- [model] = Highlight
+local Players    = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local localPlayer = Players.LocalPlayer
 
-local function createHookHighlight(model)
-    -- Hapus highlight bawaan game dulu
-    for _, hl in ipairs(model:GetDescendants()) do
+local HOOK_COLOR = Color3.fromRGB(255, 255, 255)
+
+-- tracking: model → { highlight, conns }
+local hookData = {}
+
+-- ── Cek apakah localPlayer team Killer ──────────────────────
+local function isKiller()
+    local team = localPlayer.Team
+    if not team then return false end
+    return team.Name == "Killer"
+end
+
+-- ── Pasang Highlight, destroy punya game dulu ───────────────
+local function applyHighlight(model)
+    -- Hapus highlight yang langsung di model Hook saja, bukan descendants
+    for _, hl in ipairs(model:GetChildren()) do
         if hl:IsA("Highlight") and hl.Name ~= "ScourgeHookESP" then
-            hl:Destroy()
+            pcall(function() hl:Destroy() end)
         end
     end
+
+    if model:FindFirstChild("ScourgeHookESP") then return end
+
     local hl = Instance.new("Highlight")
     hl.Name                = "ScourgeHookESP"
     hl.FillTransparency    = 1
     hl.OutlineTransparency = 0
-    hl.OutlineColor        = HOOK_HIGHLIGHT_COLOR
+    hl.OutlineColor        = HOOK_COLOR
     hl.Adornee             = model
     hl.DepthMode           = Enum.HighlightDepthMode.AlwaysOnTop
     hl.Parent              = model
     return hl
 end
-
+-- ── Cek attribute ScourgeHook ────────────────────────────────
 local function hasScourgeHookAttr(model)
     local ok, attrs = pcall(function() return model:GetAttributes() end)
     if not ok then return false end
-    for attrName in pairs(attrs) do
-        if attrName:find("ScourgeHook") then
-            return true
-        end
+    for k in pairs(attrs) do
+        if k:find("ScourgeHook") then return true end
     end
     return false
 end
 
+-- ── Lepas ESP dari satu model ────────────────────────────────
+local function detachHook(model)
+    local data = hookData[model]
+    if not data then return end
+    for _, c in ipairs(data.conns) do pcall(function() c:Disconnect() end) end
+    pcall(function()
+        local hl = model:FindFirstChild("ScourgeHookESP")
+        if hl then hl:Destroy() end
+    end)
+    hookData[model] = nil
+end
+
+-- ── Proses satu model Hook ───────────────────────────────────
 local function processHookModel(model)
-    if hookHighlights[model] then return end
-    if not hasScourgeHookAttr(model) then return end
+    if hookData[model] then return end           -- sudah diproses
+    if not isKiller() then return end            -- bukan Killer, skip
+    if not hasScourgeHookAttr(model) then return end  -- bukan ScourgeHook
 
-    warn("[ScourgeHook] Ditemukan:", model:GetFullName())
+    warn("[ScourgeHook] Found:", model:GetFullName())
 
-    local hl = createHookHighlight(model)
-    hookHighlights[model] = hl
+    local hl = applyHighlight(model)
+    local conns = {}
 
-    -- Kalau game pasang highlight baru di model ini, langsung hapus
-    model.DescendantAdded:Connect(function(desc)
+    -- Block highlight baru dari game (persistent)
+    table.insert(conns, model.DescendantAdded:Connect(function(desc)
         if desc:IsA("Highlight") and desc.Name ~= "ScourgeHookESP" then
             task.defer(function()
                 pcall(function() desc:Destroy() end)
+                -- Pastiin punya kita masih ada
+                if not model:FindFirstChild("ScourgeHookESP") then
+                    applyHighlight(model)
+                end
             end)
         end
-    end)
+    end))
 
-    -- Auto remove saat model dihapus (map reload)
-    model.AncestryChanged:Connect(function()
+    -- Auto remove kalau model dihapus
+    table.insert(conns, model.AncestryChanged:Connect(function()
         if not model.Parent then
-            pcall(function()
-                if hl and hl.Parent then hl:Destroy() end
-            end)
-            hookHighlights[model] = nil
+            detachHook(model)
             warn("[ScourgeHook] Removed:", model.Name)
         end
-    end)
+    end))
+
+    hookData[model] = { hl = hl, conns = conns }
 end
 
--- Scan semua Hook yang sudah ada di Map sekarang
-local function scanExistingHooks()
+-- ── Lepas semua ESP (kalau bukan Killer lagi) ───────────────
+local function detachAll()
+    for model in pairs(hookData) do
+        detachHook(model)
+    end
+end
+
+-- ── Scan seluruh Map ─────────────────────────────────────────
+local function scanMap()
+    if not isKiller() then return end
     local map = workspace:FindFirstChild("Map")
     if not map then return end
     for _, obj in ipairs(map:GetDescendants()) do
@@ -477,30 +522,63 @@ local function scanExistingHooks()
     end
 end
 
--- Scan saat load
+-- ── Init ─────────────────────────────────────────────────────
 task.spawn(function()
     workspace:WaitForChild("Map", 30)
-    scanExistingHooks()
+    scanMap()
 end)
 
--- Auto detect kalau ada Hook baru masuk (mid-game atau map baru)
+-- Hook baru masuk workspace
 workspace.DescendantAdded:Connect(function(desc)
+    -- Map baru → scan ulang
+    if desc.Name == "Map" then
+        task.delay(1, scanMap)
+        return
+    end
+    -- Hook baru masuk
     if desc.Name == "Hook" and (desc:IsA("Model") or desc:IsA("BasePart")) then
-        -- Tunggu sebentar biar attributes sudah ke-load
-        task.delay(0.3, function()
+        -- Tunggu attribute keload (lebih panjang biar aman)
+        task.delay(0.5, function()
             if desc and desc.Parent then
                 processHookModel(desc)
             end
         end)
     end
+end)
 
-    -- Kalau Map baru masuk, scan ulang semuanya
-    if desc.Name == "Map" then
-        task.delay(1, scanExistingHooks)
+-- ── Pantau perubahan team localPlayer ────────────────────────
+-- Kalau team berubah jadi Killer → scan
+-- Kalau team berubah jadi bukan Killer → lepas semua
+localPlayer:GetPropertyChangedSignal("Team"):Connect(function()
+    task.wait(0.1)
+    if isKiller() then
+        scanMap()
+    else
+        detachAll()
     end
 end)
 
-warn("[ScourgeHook] Listener active")
+-- ── Sync loop: pastiin highlight tidak hilang ────────────────
+-- Cek tiap 2 detik, kalau ScourgeHookESP hilang → pasang ulang
+local syncThrottle = 0
+RunService.Heartbeat:Connect(function(dt)
+    syncThrottle = syncThrottle + dt
+    if syncThrottle < 2 then return end
+    syncThrottle = 0
+
+    if not isKiller() then return end
+
+    for model in pairs(hookData) do
+        if model and model.Parent then
+            if not model:FindFirstChild("ScourgeHookESP") then
+                applyHighlight(model)
+            end
+        end
+    end
+end)
+
+warn("[ScourgeHook] ESP active — waiting for Killer team")
+
 
 
 -- ============================================================
