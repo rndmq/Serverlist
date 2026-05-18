@@ -39,9 +39,7 @@ local storedSpeed = 16
 local isLocked    = false
 
 local speedThrottle  = 0
-local SPEED_INTERVAL = 0.15  -- lebih lambat dari sebelumnya, biar ga trip anti-cheat
-
-local reapplyDebounce = false  -- biar ga langsung counter tiap frame
+local SPEED_INTERVAL = 0.05
 
 local gui = Instance.new("ScreenGui")
 gui.Name         = "SpeedSystem_Core"
@@ -109,33 +107,27 @@ local function createBtn(text, pos, sizeX, color)
     return btn
 end
 
--- Minus dibikin disabled (abu-abu, ga bisa diklik)
-local minusBtn = createBtn("-",   UDim2.new(0,    0, 0, 0), 0.25, Color3.fromRGB(50, 50, 50))
+local minusBtn = createBtn("-",   UDim2.new(0,    0, 0, 0), 0.25)
 local lockBtn  = createBtn("OFF", UDim2.new(0.25, 3, 0, 0), 0.5, Color3.fromRGB(120, 35, 35))
 local plusBtn  = createBtn("+",   UDim2.new(0.75, 3, 0, 0), 0.25)
 
-minusBtn.TextColor3 = Color3.fromRGB(80, 80, 80)  -- teks redup, keliatan disabled
--- minus tidak connect ke apapun → gabisa turun
-
+minusBtn.MouseButton1Click:Connect(function()
+    targetSpeed = math.max(0, targetSpeed - 1)
+    speedLabel.Text = tostring(targetSpeed)
+end)
 plusBtn.MouseButton1Click:Connect(function()
     targetSpeed = targetSpeed + 1
     speedLabel.Text = tostring(targetSpeed)
-    -- Kalau lagi locked, langsung apply naiknya
-    if isLocked then
-        local char = localPlayer.Character
-        local hum  = char and char:FindFirstChildOfClass("Humanoid")
-        if hum and isSpeedBoostNormal() then
-            hum.WalkSpeed = targetSpeed
-        end
-    end
 end)
 
+-- <= 1 = normal/debuff → override
+-- >  1 = speedboost aktif → biarkan game handle
 local function isSpeedBoostNormal()
     local char = localPlayer.Character
     if not char then return false end
     local val = char:GetAttribute("speedboost")
     if val == nil then return true end
-    return val == 1
+    return val <= 1
 end
 
 local function lockSkillCheckSpeed(char)
@@ -150,7 +142,6 @@ end
 if localPlayer.Character then task.spawn(lockSkillCheckSpeed, localPlayer.Character) end
 localPlayer.CharacterAdded:Connect(lockSkillCheckSpeed)
 
-local walkSpeedConn = nil
 local boostAttrConn = nil
 
 local function applySpeedIfAllowed(hum)
@@ -163,48 +154,27 @@ local function applySpeedIfAllowed(hum)
 end
 
 local function hookHumanoid(char)
-    if walkSpeedConn then walkSpeedConn:Disconnect(); walkSpeedConn = nil end
     if boostAttrConn then boostAttrConn:Disconnect(); boostAttrConn = nil end
 
     local hum = char:WaitForChild("Humanoid")
+
     applySpeedIfAllowed(hum)
 
-    walkSpeedConn = hum:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
-        if not isLocked then return end
-        if not isSpeedBoostNormal() then return end  -- lagi boost, skip
-
-        local newSpeed = hum.WalkSpeed
-        if newSpeed < targetSpeed and not reapplyDebounce then
-            reapplyDebounce = true
-            task.delay(0.2, function()
-                if isLocked and isSpeedBoostNormal() then
-                    local h = localPlayer.Character and localPlayer.Character:FindFirstChildOfClass("Humanoid")
-                    if h and h.Health > 0 then h.WalkSpeed = targetSpeed end
-                end
-                reapplyDebounce = false
-            end)
-        end
-        -- speed naik? biarkan aja, ga sync targetSpeed
-    end)
-
-    -- Key change: pantau speedboost attribute
+    -- Pantau perubahan speedboost attribute saja
+    -- WalkSpeed TIDAK di-revert instan (mencegah kick karena spam perubahan)
+    -- Heartbeat yang handle enforcement dengan throttle
     boostAttrConn = char:GetAttributeChangedSignal("speedboost"):Connect(function()
         if not isLocked then return end
-
-        if not isSpeedBoostNormal() then
-            -- Game lagi kasih boost → disable sementara, kembalikan speed normal dulu
-            reapplyDebounce = true  -- block heartbeat juga
-            local h = char:FindFirstChildOfClass("Humanoid")
-            if h then h.WalkSpeed = storedSpeed end  -- lepas ke speed asli biar ga conflict
-        else
-            -- Game udah balikin → re-enable dan apply target lagi
-            task.wait(0.15)  -- tunggu game settle dulu
-            reapplyDebounce = false
-            local h = char:FindFirstChildOfClass("Humanoid")
-            if h and h.Health > 0 then h.WalkSpeed = targetSpeed end
+        if isSpeedBoostNormal() then
+            -- Boost habis / balik ke normal → override lagi
+            if hum and hum.Health > 0 then
+                hum.WalkSpeed = targetSpeed
+            end
         end
+        -- Boost aktif (> 1) → lepas, biarkan game handle sendiri
     end)
 end
+
 lockBtn.MouseButton1Click:Connect(function()
     isLocked = not isLocked
     local char = localPlayer.Character
@@ -227,7 +197,8 @@ end)
 if localPlayer.Character then task.spawn(hookHumanoid, localPlayer.Character) end
 localPlayer.CharacterAdded:Connect(hookHumanoid)
 
--- Heartbeat safety net — interval lebih jarang, biar ga spam property changes
+-- Heartbeat sebagai satu-satunya enforcement WalkSpeed
+-- Max revert sekali per 0.05s → tidak spam → aman dari kick
 RunService.Heartbeat:Connect(function(dt)
     speedThrottle = speedThrottle + dt
     if speedThrottle < SPEED_INTERVAL then return end
@@ -235,17 +206,14 @@ RunService.Heartbeat:Connect(function(dt)
 
     if not isLocked then return end
     if not isSpeedBoostNormal() then return end
-    if reapplyDebounce then return end  -- lagi nunggu delay, skip
 
     local char = localPlayer.Character
     if not char then return end
     local hum = char:FindFirstChildOfClass("Humanoid")
-    if hum and hum.Health > 0 and hum.WalkSpeed < targetSpeed then
-        -- hanya counter kalau speed TURUN di bawah target
+    if hum and hum.Health > 0 and hum.WalkSpeed ~= targetSpeed then
         hum.WalkSpeed = targetSpeed
     end
 end)
-
 
 --[[
 
@@ -426,12 +394,12 @@ local Players    = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local localPlayer = Players.LocalPlayer
 
-local hookData = {}
+local hookData     = {}
+local killerActive = false
 
-local function isKiller()
+local function updateKillerCache()
     local team = localPlayer.Team
-    if not team then return false end
-    return team.Name == "Killer"
+    killerActive = team ~= nil and team.Name == "Killer"
 end
 
 local function applyLabel(model)
@@ -484,7 +452,7 @@ end
 
 local function processHookModel(model)
     if hookData[model] then return end
-    if not isKiller() then return end
+    if not killerActive then return end
     if not hasScourgeHookAttr(model) then return end
 
     warn("[ScourgeHook] Found:", model:GetFullName())
@@ -508,27 +476,24 @@ local function detachAll()
     end
 end
 
-local function scanMap()
-    if not isKiller() then return end
-    local map = workspace:FindFirstChild("Map")
-    if not map then return end
-    for _, obj in ipairs(map:GetDescendants()) do
+local function scanWorkspace()
+    if not killerActive then return end
+    for _, obj in ipairs(workspace:GetDescendants()) do
         if obj.Name == "Hook" and (obj:IsA("Model") or obj:IsA("BasePart")) then
             task.spawn(processHookModel, obj)
         end
     end
 end
 
+-- Init
+updateKillerCache()
+
 task.spawn(function()
-    workspace:WaitForChild("Map", 30)
-    scanMap()
+    task.wait(3)
+    scanWorkspace()
 end)
 
 workspace.DescendantAdded:Connect(function(desc)
-    if desc.Name == "Map" then
-        task.delay(1, scanMap)
-        return
-    end
     if desc.Name == "Hook" and (desc:IsA("Model") or desc:IsA("BasePart")) then
         task.delay(0.5, function()
             if desc and desc.Parent then
@@ -540,8 +505,9 @@ end)
 
 localPlayer:GetPropertyChangedSignal("Team"):Connect(function()
     task.wait(0.1)
-    if isKiller() then
-        scanMap()
+    updateKillerCache()
+    if killerActive then
+        scanWorkspace()
     else
         detachAll()
     end
@@ -553,7 +519,7 @@ RunService.Heartbeat:Connect(function(dt)
     if syncThrottle < 2 then return end
     syncThrottle = 0
 
-    if not isKiller() then return end
+    if not killerActive then return end
 
     for model in pairs(hookData) do
         if model and model.Parent then
