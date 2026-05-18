@@ -34,13 +34,14 @@ setreadonly(mt, true)
 
 warn("[Hook] SkillCheck fail blocker active")
 ]]
-
 local targetSpeed = 18
 local storedSpeed = 16
 local isLocked    = false
 
 local speedThrottle  = 0
-local SPEED_INTERVAL = 0.05
+local SPEED_INTERVAL = 0.15  -- lebih lambat dari sebelumnya, biar ga trip anti-cheat
+
+local reapplyDebounce = false  -- biar ga langsung counter tiap frame
 
 local gui = Instance.new("ScreenGui")
 gui.Name         = "SpeedSystem_Core"
@@ -108,28 +109,35 @@ local function createBtn(text, pos, sizeX, color)
     return btn
 end
 
-local minusBtn = createBtn("-",   UDim2.new(0,    0, 0, 0), 0.25)
+-- Minus dibikin disabled (abu-abu, ga bisa diklik)
+local minusBtn = createBtn("-",   UDim2.new(0,    0, 0, 0), 0.25, Color3.fromRGB(50, 50, 50))
 local lockBtn  = createBtn("OFF", UDim2.new(0.25, 3, 0, 0), 0.5, Color3.fromRGB(120, 35, 35))
 local plusBtn  = createBtn("+",   UDim2.new(0.75, 3, 0, 0), 0.25)
 
-minusBtn.MouseButton1Click:Connect(function()
-    targetSpeed = math.max(0, targetSpeed - 1)
-    speedLabel.Text = tostring(targetSpeed)
-end)
+minusBtn.TextColor3 = Color3.fromRGB(80, 80, 80)  -- teks redup, keliatan disabled
+-- minus tidak connect ke apapun → gabisa turun
+
 plusBtn.MouseButton1Click:Connect(function()
     targetSpeed = targetSpeed + 1
     speedLabel.Text = tostring(targetSpeed)
+    -- Kalau lagi locked, langsung apply naiknya
+    if isLocked then
+        local char = localPlayer.Character
+        local hum  = char and char:FindFirstChildOfClass("Humanoid")
+        if hum and isSpeedBoostNormal() then
+            hum.WalkSpeed = targetSpeed
+        end
+    end
 end)
 
--- Cek apakah speedboost karakter saat ini = 1
 local function isSpeedBoostNormal()
     local char = localPlayer.Character
     if not char then return false end
     local val = char:GetAttribute("speedboost")
-    -- Jika attribute tidak ada, anggap normal (1)
     if val == nil then return true end
     return val == 1
 end
+
 local function lockSkillCheckSpeed(char)
     char:SetAttribute("skillcheckspeed", 1.8)
     char:GetAttributeChangedSignal("skillcheckspeed"):Connect(function()
@@ -141,18 +149,17 @@ end
 
 if localPlayer.Character then task.spawn(lockSkillCheckSpeed, localPlayer.Character) end
 localPlayer.CharacterAdded:Connect(lockSkillCheckSpeed)
-local walkSpeedConn  = nil
-local boostAttrConn  = nil
+
+local walkSpeedConn = nil
+local boostAttrConn = nil
 
 local function applySpeedIfAllowed(hum)
     if not isLocked then return end
     if isSpeedBoostNormal() then
-        -- speedboost = 1, aman di-override
         if hum and hum.WalkSpeed ~= targetSpeed then
             hum.WalkSpeed = targetSpeed
         end
     end
-    -- speedboost != 1 → biarkan game kontrol, jangan sentuh WalkSpeed
 end
 
 local function hookHumanoid(char)
@@ -160,31 +167,44 @@ local function hookHumanoid(char)
     if boostAttrConn then boostAttrConn:Disconnect(); boostAttrConn = nil end
 
     local hum = char:WaitForChild("Humanoid")
-
-    -- Apply awal
     applySpeedIfAllowed(hum)
 
-    -- Counter game kalau coba ubah WalkSpeed — tapi hanya kalau speedboost = 1
     walkSpeedConn = hum:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
-        if isLocked and isSpeedBoostNormal() and hum.WalkSpeed ~= targetSpeed then
-            hum.WalkSpeed = targetSpeed
+        if not isLocked then return end
+        if not isSpeedBoostNormal() then return end  -- lagi boost, skip
+
+        local newSpeed = hum.WalkSpeed
+        if newSpeed < targetSpeed and not reapplyDebounce then
+            reapplyDebounce = true
+            task.delay(0.2, function()
+                if isLocked and isSpeedBoostNormal() then
+                    local h = localPlayer.Character and localPlayer.Character:FindFirstChildOfClass("Humanoid")
+                    if h and h.Health > 0 then h.WalkSpeed = targetSpeed end
+                end
+                reapplyDebounce = false
+            end)
         end
-        -- speedboost != 1 → WalkSpeed berubah bebas, tidak di-counter
+        -- speed naik? biarkan aja, ga sync targetSpeed
     end)
 
-    -- Pantau perubahan attribute speedboost
+    -- Key change: pantau speedboost attribute
     boostAttrConn = char:GetAttributeChangedSignal("speedboost"):Connect(function()
         if not isLocked then return end
-        if isSpeedBoostNormal() then
-            -- Baru balik ke 1 → langsung override lagi
-            if hum and hum.Health > 0 then
-                hum.WalkSpeed = targetSpeed
-            end
+
+        if not isSpeedBoostNormal() then
+            -- Game lagi kasih boost → disable sementara, kembalikan speed normal dulu
+            reapplyDebounce = true  -- block heartbeat juga
+            local h = char:FindFirstChildOfClass("Humanoid")
+            if h then h.WalkSpeed = storedSpeed end  -- lepas ke speed asli biar ga conflict
+        else
+            -- Game udah balikin → re-enable dan apply target lagi
+            task.wait(0.15)  -- tunggu game settle dulu
+            reapplyDebounce = false
+            local h = char:FindFirstChildOfClass("Humanoid")
+            if h and h.Health > 0 then h.WalkSpeed = targetSpeed end
         end
-        -- Kalau berubah jadi bukan 1 → lepas, biarkan game handle sendiri
     end)
 end
-
 lockBtn.MouseButton1Click:Connect(function()
     isLocked = not isLocked
     local char = localPlayer.Character
@@ -194,12 +214,10 @@ lockBtn.MouseButton1Click:Connect(function()
         storedSpeed              = hum and hum.WalkSpeed or storedSpeed
         lockBtn.Text             = "ON"
         lockBtn.BackgroundColor3 = Color3.fromRGB(35, 120, 35)
-        -- Langsung apply kalau speedboost memang 1
         applySpeedIfAllowed(hum)
     else
         lockBtn.Text             = "OFF"
         lockBtn.BackgroundColor3 = Color3.fromRGB(120, 35, 35)
-        -- Kembalikan speed asli hanya kalau sedang di state normal
         if hum and isSpeedBoostNormal() then
             hum.WalkSpeed = storedSpeed
         end
@@ -209,19 +227,21 @@ end)
 if localPlayer.Character then task.spawn(hookHumanoid, localPlayer.Character) end
 localPlayer.CharacterAdded:Connect(hookHumanoid)
 
--- Heartbeat sebagai safety net
+-- Heartbeat safety net — interval lebih jarang, biar ga spam property changes
 RunService.Heartbeat:Connect(function(dt)
     speedThrottle = speedThrottle + dt
     if speedThrottle < SPEED_INTERVAL then return end
     speedThrottle = 0
 
     if not isLocked then return end
-    if not isSpeedBoostNormal() then return end  -- speedboost != 1, skip
+    if not isSpeedBoostNormal() then return end
+    if reapplyDebounce then return end  -- lagi nunggu delay, skip
 
     local char = localPlayer.Character
     if not char then return end
     local hum = char:FindFirstChildOfClass("Humanoid")
-    if hum and hum.Health > 0 and hum.WalkSpeed ~= targetSpeed then
+    if hum and hum.Health > 0 and hum.WalkSpeed < targetSpeed then
+        -- hanya counter kalau speed TURUN di bawah target
         hum.WalkSpeed = targetSpeed
     end
 end)
@@ -400,53 +420,48 @@ RunService.Heartbeat:Connect(function()
         task.delay(SKILL_INTERVAL, function() skillCooldown = false end)
     end)
 end),]]
--- ============================================================
--- SCOURGE HOOK ESP
--- - Hanya aktif kalau localPlayer team = "Killer"
--- - Cari model "Hook" di workspace.Map dengan attribute ScourgeHook
--- - Highlight putih, override & block highlight bawaan game
--- - Auto remove kalau model dihapus
--- - Auto scan kalau ada Hook baru
--- ============================================================
+
 
 local Players    = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local localPlayer = Players.LocalPlayer
 
-local HOOK_COLOR = Color3.fromRGB(255, 255, 255)
-
--- tracking: model → { highlight, conns }
 local hookData = {}
 
--- ── Cek apakah localPlayer team Killer ──────────────────────
 local function isKiller()
     local team = localPlayer.Team
     if not team then return false end
     return team.Name == "Killer"
 end
 
--- ── Pasang Highlight, destroy punya game dulu ───────────────
-local function applyHighlight(model)
-    -- Hapus highlight yang langsung di model Hook saja, bukan descendants
-    for _, hl in ipairs(model:GetChildren()) do
-        if hl:IsA("Highlight") and hl.Name ~= "ScourgeHookESP" then
-            pcall(function() hl:Destroy() end)
-        end
-    end
-
+local function applyLabel(model)
     if model:FindFirstChild("ScourgeHookESP") then return end
 
-    local hl = Instance.new("Highlight")
-    hl.Name                = "ScourgeHookESP"
-    hl.FillTransparency    = 1
-    hl.OutlineTransparency = 0
-    hl.OutlineColor        = HOOK_COLOR
-    hl.Adornee             = model
-    hl.DepthMode           = Enum.HighlightDepthMode.AlwaysOnTop
-    hl.Parent              = model
-    return hl
+    local part = model:FindFirstChildWhichIsA("BasePart")
+    if not part then return end
+
+    local bb = Instance.new("BillboardGui")
+    bb.Name             = "ScourgeHookESP"
+    bb.Size             = UDim2.new(0, 60, 0, 20)
+    bb.StudsOffset      = Vector3.new(0, 2.5, 0)
+    bb.AlwaysOnTop      = true
+    bb.LightInfluence   = 0
+    bb.Adornee          = part
+    bb.Parent           = model
+
+    local lbl = Instance.new("TextLabel", bb)
+    lbl.Size                   = UDim2.new(1, 0, 1, 0)
+    lbl.BackgroundTransparency = 1
+    lbl.Text                   = "cursed"
+    lbl.TextColor3             = Color3.fromRGB(255, 80, 80)
+    lbl.TextSize               = 11
+    lbl.Font                   = Enum.Font.GothamBold
+    lbl.TextStrokeTransparency = 0.4
+    lbl.TextStrokeColor3       = Color3.fromRGB(0, 0, 0)
+
+    return bb
 end
--- ── Cek attribute ScourgeHook ────────────────────────────────
+
 local function hasScourgeHookAttr(model)
     local ok, attrs = pcall(function() return model:GetAttributes() end)
     if not ok then return false end
@@ -456,43 +471,27 @@ local function hasScourgeHookAttr(model)
     return false
 end
 
--- ── Lepas ESP dari satu model ────────────────────────────────
 local function detachHook(model)
     local data = hookData[model]
     if not data then return end
     for _, c in ipairs(data.conns) do pcall(function() c:Disconnect() end) end
     pcall(function()
-        local hl = model:FindFirstChild("ScourgeHookESP")
-        if hl then hl:Destroy() end
+        local bb = model:FindFirstChild("ScourgeHookESP")
+        if bb then bb:Destroy() end
     end)
     hookData[model] = nil
 end
 
--- ── Proses satu model Hook ───────────────────────────────────
 local function processHookModel(model)
-    if hookData[model] then return end           -- sudah diproses
-    if not isKiller() then return end            -- bukan Killer, skip
-    if not hasScourgeHookAttr(model) then return end  -- bukan ScourgeHook
+    if hookData[model] then return end
+    if not isKiller() then return end
+    if not hasScourgeHookAttr(model) then return end
 
     warn("[ScourgeHook] Found:", model:GetFullName())
 
-    local hl = applyHighlight(model)
+    local bb = applyLabel(model)
     local conns = {}
 
-    -- Block highlight baru dari game (persistent)
-    table.insert(conns, model.DescendantAdded:Connect(function(desc)
-        if desc:IsA("Highlight") and desc.Name ~= "ScourgeHookESP" then
-            task.defer(function()
-                pcall(function() desc:Destroy() end)
-                -- Pastiin punya kita masih ada
-                if not model:FindFirstChild("ScourgeHookESP") then
-                    applyHighlight(model)
-                end
-            end)
-        end
-    end))
-
-    -- Auto remove kalau model dihapus
     table.insert(conns, model.AncestryChanged:Connect(function()
         if not model.Parent then
             detachHook(model)
@@ -500,17 +499,15 @@ local function processHookModel(model)
         end
     end))
 
-    hookData[model] = { hl = hl, conns = conns }
+    hookData[model] = { bb = bb, conns = conns }
 end
 
--- ── Lepas semua ESP (kalau bukan Killer lagi) ───────────────
 local function detachAll()
     for model in pairs(hookData) do
         detachHook(model)
     end
 end
 
--- ── Scan seluruh Map ─────────────────────────────────────────
 local function scanMap()
     if not isKiller() then return end
     local map = workspace:FindFirstChild("Map")
@@ -522,22 +519,17 @@ local function scanMap()
     end
 end
 
--- ── Init ─────────────────────────────────────────────────────
 task.spawn(function()
     workspace:WaitForChild("Map", 30)
     scanMap()
 end)
 
--- Hook baru masuk workspace
 workspace.DescendantAdded:Connect(function(desc)
-    -- Map baru → scan ulang
     if desc.Name == "Map" then
         task.delay(1, scanMap)
         return
     end
-    -- Hook baru masuk
     if desc.Name == "Hook" and (desc:IsA("Model") or desc:IsA("BasePart")) then
-        -- Tunggu attribute keload (lebih panjang biar aman)
         task.delay(0.5, function()
             if desc and desc.Parent then
                 processHookModel(desc)
@@ -546,9 +538,6 @@ workspace.DescendantAdded:Connect(function(desc)
     end
 end)
 
--- ── Pantau perubahan team localPlayer ────────────────────────
--- Kalau team berubah jadi Killer → scan
--- Kalau team berubah jadi bukan Killer → lepas semua
 localPlayer:GetPropertyChangedSignal("Team"):Connect(function()
     task.wait(0.1)
     if isKiller() then
@@ -558,8 +547,6 @@ localPlayer:GetPropertyChangedSignal("Team"):Connect(function()
     end
 end)
 
--- ── Sync loop: pastiin highlight tidak hilang ────────────────
--- Cek tiap 2 detik, kalau ScourgeHookESP hilang → pasang ulang
 local syncThrottle = 0
 RunService.Heartbeat:Connect(function(dt)
     syncThrottle = syncThrottle + dt
@@ -571,15 +558,13 @@ RunService.Heartbeat:Connect(function(dt)
     for model in pairs(hookData) do
         if model and model.Parent then
             if not model:FindFirstChild("ScourgeHookESP") then
-                applyHighlight(model)
+                applyLabel(model)
             end
         end
     end
 end)
 
 warn("[ScourgeHook] ESP active — waiting for Killer team")
-
-
 
 -- ============================================================
 -- BAGIAN 4: VAULT SPEED
