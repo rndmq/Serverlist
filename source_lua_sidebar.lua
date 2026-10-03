@@ -225,7 +225,7 @@ pcall(function()
     end
 end)
 pcall(function()
-    if getgenv().font then
+    if getgenv().Font or getgenv().font then
         local fontMap = {
             bold = Enum.Font.SourceSansBold,
             regular = Enum.Font.SourceSans,
@@ -238,7 +238,7 @@ pcall(function()
             cartosil = Enum.Font.Cartosil,
             specialelite = Enum.Font.SpecialElite
         }
-        local fontKey = string.lower(getgenv().Font)
+        local fontKey = string.lower(tostring(getgenv().Font or getgenv().font))
         Library.Theme.TextFont = fontMap[fontKey] or Enum.Font.SourceSansBold
     end
 end)
@@ -1481,7 +1481,7 @@ table.insert(Library.LibraryColorTable, Button)
             Button.Font = Library.Theme.TextFont
             Button.Text = name
             Button.TextColor3 = Library.Theme.TextColor
-            Button.TextSize = 17.000
+            Button.TextSize = 14.000
             Button.ClipsDescendants = true
 
             ButtonRounded.Name = "ButtonRounded"
@@ -1505,7 +1505,15 @@ table.insert(Library.LibraryColorTable, Button)
                 TweenService:Create(ButtonRounded, TweenInfo.new(0.25, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 20)}):Play()
 
                 RippleEffect(Button)
-                callback(Button)
+            end)
+
+            -- callback dijalankan saat klik selesai (lepas di atas tombol), bukan saat baru disentuh,
+            -- supaya nggak kepicu waktu scroll / geser jari
+            Button.MouseButton1Click:Connect(function()
+                if type(callback) == "function" then
+                    local ok, err = pcall(callback, Button)
+                    if not ok then warn(err) end
+                end
             end)
 
             Button.MouseButton1Up:Connect(function()
@@ -1675,7 +1683,7 @@ function SectionElements:CreateToggle(name, ...)
         end
     end
 
-    Toggle.MouseButton1Down:Connect(function()
+    Toggle.MouseButton1Click:Connect(function()
         Toggled = not Toggled
         UIReferences.Toggles[name].EnabledDuringLoad = true
         TweenService:Create(Title, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {TextColor3 = Toggled and (Library and Library.Theme and Library.Theme.TextColor or Color3.fromRGB(255, 255, 255)) or Color3.fromRGB(185, 185, 185)}):Play()
