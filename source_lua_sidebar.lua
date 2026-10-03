@@ -357,7 +357,7 @@ Main.ImageColor3 = Library.Theme.BackgroundColor
 Main.ScaleType = Enum.ScaleType.Slice
 Main.SliceCenter = Rect.new(100, 100, 100, 100)
 Main.SliceScale = 0.050
-Main.ImageTransparency = 0.15   -- jendela semi transparan (0 = solid, 1 = hilang)
+Main.ImageTransparency = 0.25   -- jendela semi transparan (0 = solid, 1 = hilang)
 local UICorner = Instance.new("UICorner")
 UICorner.CornerRadius = UDim.new(0, 10)
 UICorner.Parent = Main
@@ -534,7 +534,9 @@ table.insert(Library.LibraryColorTable, FloatingIcon)
 
 Minimized = false
 local isDragging = false
-local lastValidPosition = UDim2.new(0, 100, 0, 100)
+local iconPosition = UDim2.new(0, 100, 0, 100)   -- posisi ikon melayang (bisa digeser user)
+local iconMoved = false
+local windowPosition = nil                        -- posisi window sebelum di-minimize
 local originalMainSize
 
 local function MaximizeUI()
@@ -550,7 +552,7 @@ local function MaximizeUI()
         
         local mainTween = TweenService:Create(Main, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
             Size = originalMainSize or UDim2.new(0.5, 0, 0.5, 0),
-            Position = lastValidPosition,
+            Position = windowPosition or Main.Position,
             Transparency = 0
         })
         mainTween:Play()
@@ -578,7 +580,11 @@ end
 
 local function MinimizeUI()
     if Main and Main.AbsolutePosition then
-        lastValidPosition = UDim2.new(0, Main.AbsolutePosition.X, 0, Main.AbsolutePosition.Y)
+        windowPosition = Main.Position
+        if not iconMoved then
+            local inset = game:GetService("GuiService"):GetGuiInset()
+            iconPosition = UDim2.new(0, Main.AbsolutePosition.X, 0, Main.AbsolutePosition.Y - inset.Y)
+        end
         
         if not originalMainSize then
             originalMainSize = Main.Size
@@ -588,7 +594,6 @@ local function MinimizeUI()
     if Main then 
         local mainTween = TweenService:Create(Main, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
             Size = UDim2.new(0, 50, 0, 50),
-            Position = lastValidPosition,
             Transparency = 1
         })
         mainTween:Play()
@@ -606,7 +611,7 @@ local function MinimizeUI()
         Border.Visible = false 
     end
     
-    FloatingIcon.Position = lastValidPosition
+    FloatingIcon.Position = iconPosition
     local floatingIconTween = TweenService:Create(FloatingIcon, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
         Size = UDim2.new(0, 40, 0, 40)
     })
@@ -645,7 +650,8 @@ local function MakeDraggableWithTracking(gui)
             startPos.Y.Offset + delta.Y
         )
         gui.Position = newPosition
-        lastValidPosition = newPosition
+        iconPosition = newPosition
+        iconMoved = true
     end
 
     gui.InputBegan:Connect(function(input)
