@@ -116,20 +116,20 @@ Library = {
     RainbowColorValue = 0,
     HueSelectionPosition = 0,
     Theme = {
-        MainColor = Color3.fromRGB(255, 75, 75),
+        MainColor = Color3.fromRGB(150, 150, 160),
         BackgroundColor = Color3.fromRGB(35, 35, 35),
         UIToggleKey = Enum.KeyCode.RightControl,
         TextFont = Enum.Font.SourceSansBold,
         EasingStyle = Enum.EasingStyle.Quart,
-        Color = Color3.fromRGB(255, 75, 75),      
+        Color = Color3.fromRGB(150, 150, 160),      
         TextColor = Color3.fromRGB(255, 255, 255) 
     }
 }
-local selectedColor = Color3.fromRGB(255, 75, 75) 
+local selectedColor = Color3.fromRGB(150, 150, 160)
 
 pcall(function()
     if getgenv and not getgenv().Color then
-    Library.Theme.Color = Color3.fromRGB(255, 75, 75)
+    Library.Theme.Color = Color3.fromRGB(150, 150, 160)
     elseif getgenv().Color == "rgb" then
         coroutine.wrap(function()
             while true do
@@ -154,7 +154,9 @@ pcall(function()
             yellow = Color3.fromRGB(255, 255, 0),
             purple = Color3.fromRGB(128, 0, 128),
             pink = Color3.fromRGB(255, 105, 180),
-            default = Color3.fromRGB(255, 75, 75),
+            default = Color3.fromRGB(150, 150, 160),
+            gray = Color3.fromRGB(150, 150, 160),
+            grey = Color3.fromRGB(150, 150, 160),
             cyan = Color3.fromRGB(0, 255, 255),
             brown = Color3.fromRGB(139, 69, 19),
             orange = Color3.fromRGB(255, 165, 0),
@@ -355,6 +357,7 @@ Main.ImageColor3 = Library.Theme.BackgroundColor
 Main.ScaleType = Enum.ScaleType.Slice
 Main.SliceCenter = Rect.new(100, 100, 100, 100)
 Main.SliceScale = 0.050
+Main.ImageTransparency = 0.25   -- jendela semi transparan (0 = solid, 1 = hilang)
 local UICorner = Instance.new("UICorner")
 UICorner.CornerRadius = UDim.new(0, 10)
 UICorner.Parent = Main
@@ -364,12 +367,19 @@ Border.BackgroundColor3 = Library.Theme.MainColor
 Border.BackgroundTransparency = 1.000
 Border.Position = UDim2.new(0, -1, 0, -1)
 Border.Size = UDim2.new(1, 2, 1, 2)
-Border.Image = "rbxassetid://3570695787"
+Border.Image = ""
 Border.ImageColor3 = Library.Theme.MainColor
-Border.ScaleType = Enum.ScaleType.Slice
-Border.SliceCenter = Rect.new(95, 95, 95, 95)
-Border.SliceScale = 0.050
-Border.ImageTransparency = 0
+Border.ImageTransparency = 1
+do
+    local bc = Instance.new("UICorner")
+    bc.CornerRadius = UDim.new(0, 11)
+    bc.Parent = Border
+    local bs = Instance.new("UIStroke")
+    bs.Color = Color3.fromRGB(120, 120, 130)
+    bs.Transparency = 0.55
+    bs.Thickness = 1
+    bs.Parent = Border
+end
 
 Topbar.Name = "Topbar"
 Topbar.Parent = Main
@@ -402,7 +412,8 @@ TabButtons.Position = UDim2.new(0, 8, 0, Layout.Top + 4)
 TabButtons.Size = UDim2.new(0, Layout.Side - 4, 1, -(Layout.Top + 4 + 8))
 TabButtons.ZIndex = 2
 TabButtons.Image = "rbxassetid://3570695787"
-TabButtons.ImageColor3 = Color3.fromRGB(26, 26, 30)
+TabButtons.ImageColor3 = Color3.fromRGB(20, 20, 24)
+TabButtons.ImageTransparency = 0.4
 TabButtons.ScaleType = Enum.ScaleType.Slice
 TabButtons.SliceCenter = Rect.new(100, 100, 100, 100)
 TabButtons.SliceScale = 0.050
@@ -668,15 +679,30 @@ local function CloseAllTabs()
     end
 end
 
+local TabNormalSize = UDim2.new(1, -16, 0, 28)   -- ukuran tab biasa
+local TabBigSize    = UDim2.new(1, -2, 0, 38)    -- ukuran tab yang sedang dibuka (membesar)
+
 local function SetTabVisual(btn, selected, extra)
-    local info = TweenInfo.new(0.25, Library.Theme.EasingStyle, Enum.EasingDirection.Out)
-    local props = { ImageTransparency = selected and 0 or 1, ImageColor3 = Color3.fromRGB(52, 52, 58) }
-    if extra then for k, v in pairs(extra) do props[k] = v end end
-    TweenService:Create(btn, info, props):Play()
+    local info = TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out)   -- efek "pop"
+    local soft = TweenInfo.new(0.25, Library.Theme.EasingStyle, Enum.EasingDirection.Out)
+    TweenService:Create(btn, info, {
+        Size = selected and TabBigSize or TabNormalSize,
+        ImageTransparency = selected and 0.35 or 1,
+        ImageColor3 = Color3.fromRGB(90, 90, 100)
+    }):Play()
     local title = btn:FindFirstChild("Title")
-    if title then TweenService:Create(title, info, { TextTransparency = selected and 0 or 0.45 }):Play() end
+    if title then
+        TweenService:Create(title, info, { TextSize = selected and 18 or 15 }):Play()
+        TweenService:Create(title, soft, { TextTransparency = selected and 0 or 0.45 }):Play()
+    end
     local accent = btn:FindFirstChild("Accent")
-    if accent then TweenService:Create(accent, info, { BackgroundTransparency = selected and 0 or 1 }):Play() end
+    if accent then
+        TweenService:Create(accent, info, {
+            BackgroundTransparency = selected and 0 or 1,
+            Size = selected and UDim2.new(0, 3, 0, 22) or UDim2.new(0, 3, 0, 12),
+            Position = selected and UDim2.new(0, 5, 0.5, -11) or UDim2.new(0, 5, 0.5, -6)
+        }):Play()
+    end
 end
 
 local function ResetAllTabButtons()
@@ -763,10 +789,10 @@ function Library:CreateTab(name)
     NameTabButton.Parent = TabScrollingFrame
     NameTabButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     NameTabButton.BackgroundTransparency = 1.000
-    NameTabButton.Size = UDim2.new(1, -8, 0, 28)
+    NameTabButton.Size = TabNormalSize
     NameTabButton.ZIndex = 2
     NameTabButton.Image = "rbxassetid://3570695787"
-    NameTabButton.ImageColor3 = Color3.fromRGB(52, 52, 58)
+    NameTabButton.ImageColor3 = Color3.fromRGB(90, 90, 100)
     NameTabButton.ImageTransparency = 1
     NameTabButton.ScaleType = Enum.ScaleType.Slice
     NameTabButton.SliceCenter = Rect.new(100, 100, 100, 100)
@@ -852,7 +878,7 @@ function Library:CreateTab(name)
 
 
     local originalSize = NameTabButton.Size
-    local smallSize = UDim2.new(1, -8, 0, 28)
+    local smallSize = TabBigSize
 
 NameTabButton.MouseButton1Down:Connect(function()
     if CloseAllTabs and type(CloseAllTabs) == "function" then 
@@ -997,8 +1023,8 @@ function TabElements:CreateSection(name)
     SectionContent.ChildAdded:Connect(function(child)
         task.defer(function()
             if child:IsA("Frame") and not child.Name:match("_ImageHolder$") and not child.Name:match("Button$") then
-                child.BackgroundColor3 = Color3.fromRGB(46, 46, 50)
-                child.BackgroundTransparency = 0
+                child.BackgroundColor3 = Color3.fromRGB(70, 70, 78)
+                child.BackgroundTransparency = 0.55
                 local corner = Instance.new("UICorner")
                 corner.CornerRadius = UDim.new(0, 6)
                 corner.Parent = child
@@ -1176,6 +1202,7 @@ table.insert(Library.LibraryColorTable, Button)
             ButtonRounded.ZIndex = 5
             ButtonRounded.Image = "rbxassetid://3570695787"
             ButtonRounded.ImageColor3 = Library.Theme.MainColor
+            ButtonRounded.ImageTransparency = 0.2
             ButtonRounded.ScaleType = Enum.ScaleType.Slice
             ButtonRounded.SliceCenter = Rect.new(100, 100, 100, 100)
             ButtonRounded.SliceScale = 0.050
@@ -1441,7 +1468,7 @@ table.insert(Library.LibraryColorTable, Title)
 
     SliderBackground.Name = "SliderBackground"
     SliderBackground.Parent = NameSlider
-    SliderBackground.BackgroundColor3 = Color3.fromRGB(62, 62, 68)
+    SliderBackground.BackgroundColor3 = Color3.fromRGB(95, 95, 105)
     SliderBackground.BackgroundTransparency = 0
     SliderBackground.BorderSizePixel = 0
     SliderBackground.Position = UDim2.new(0, 12, 0, 38)
