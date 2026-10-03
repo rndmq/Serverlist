@@ -1,12 +1,78 @@
+-- ===== Log di layar (Delta menyembunyikan error di console, jadi kita tampilkan sendiri) =====
+local DX_Lines = {}
+local DX_Gui = nil
+local DX_Label = nil
+
+pcall(function()
+    local parent = nil
+
+    if gethui then
+        local ok, h = pcall(gethui)
+
+        if ok and h then
+            parent = h
+        end
+    end
+    if not parent then
+        local ok, cg = pcall(function()
+            return game:GetService('CoreGui')
+        end)
+        local test = Instance.new('Folder')
+
+        if ok and cg and pcall(function() test.Parent = cg end) then
+            test:Destroy()
+
+            parent = cg
+        end
+    end
+    if not parent then
+        parent = game:GetService('Players').LocalPlayer:WaitForChild('PlayerGui')
+    end
+
+    DX_Gui = Instance.new('ScreenGui')
+    DX_Gui.Name = 'DarkXDebug'
+    DX_Gui.ResetOnSpawn = false
+    DX_Gui.DisplayOrder = 999999
+
+    DX_Label = Instance.new('TextLabel')
+    DX_Label.Position = UDim2.new(0, 10, 0, 60)
+    DX_Label.Size = UDim2.new(0, 340, 0, 0)
+    DX_Label.AutomaticSize = Enum.AutomaticSize.Y
+    DX_Label.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    DX_Label.BackgroundTransparency = 0.3
+    DX_Label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    DX_Label.TextSize = 14
+    DX_Label.Font = Enum.Font.Code
+    DX_Label.TextXAlignment = Enum.TextXAlignment.Left
+    DX_Label.TextYAlignment = Enum.TextYAlignment.Top
+    DX_Label.TextWrapped = true
+    DX_Label.Text = ''
+    DX_Label.Parent = DX_Gui
+    DX_Gui.Parent = parent
+end)
+
 local function DX_Step(msg)
+    msg = tostring(msg)
+
     print('[DarkX]', msg)
+    table.insert(DX_Lines, msg:sub(1, 600))
+
+    while #DX_Lines > 14 do
+        table.remove(DX_Lines, 1)
+    end
+
     pcall(function()
-        game:GetService('StarterGui'):SetCore('SendNotification', {
-            Title = 'DarkX',
-            Text = tostring(msg):sub(1, 150),
-            Duration = 4,
-        })
+        DX_Label.Text = table.concat(DX_Lines, '\n')
     end)
+
+    -- kalau sudah selesai semua, log hilang sendiri setelah 10 detik
+    if msg == 'all tabs built' then
+        task.delay(10, function()
+            pcall(function()
+                DX_Gui:Destroy()
+            end)
+        end)
+    end
 end
 
 _G.DX_Step = DX_Step
