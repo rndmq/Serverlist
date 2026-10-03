@@ -539,94 +539,121 @@ local iconMoved = false
 local windowPosition = nil                        -- posisi window sebelum di-minimize
 local originalMainSize
 
-local function MaximizeUI()
-    local floatingIconTween = TweenService:Create(FloatingIcon, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-        Size = UDim2.new(0, 0, 0, 0)
-    })
-    floatingIconTween:Play()
-    
-    if Main then 
-        Main.Visible = true
-        Main.Size = UDim2.new(0, 50, 0, 50)
-        Main.Transparency = 1
-        
-        local mainTween = TweenService:Create(Main, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-            Size = originalMainSize or UDim2.new(0.5, 0, 0.5, 0),
-            Position = windowPosition or Main.Position,
-            Transparency = 0
-        })
-        mainTween:Play()
-        
-        
-        if not Main:FindFirstChildOfClass("UICorner") then
-            local corner = Instance.new("UICorner")
-            corner.CornerRadius = UDim.new(0.1, 0)  
-            corner.Parent = Main
+-- ===== Animasi minimize / maximize =====
+-- Window mengecil ke posisi ikon sambil memudar (semua isi ikut memudar),
+-- dan sebaliknya saat dibuka lagi.
+local fadeCache = {}
+local mainImageTransparency = Main.ImageTransparency
+local animBusy = false
+
+local function CacheFade()
+    table.clear(fadeCache)
+    for _, d in ipairs(Main:GetDescendants()) do
+        local props
+        if d:IsA("TextLabel") or d:IsA("TextButton") or d:IsA("TextBox") then
+            props = { TextTransparency = d.TextTransparency, BackgroundTransparency = d.BackgroundTransparency }
+        elseif d:IsA("ImageLabel") or d:IsA("ImageButton") then
+            props = { ImageTransparency = d.ImageTransparency, BackgroundTransparency = d.BackgroundTransparency }
+        elseif d:IsA("ScrollingFrame") then
+            props = { BackgroundTransparency = d.BackgroundTransparency, ScrollBarImageTransparency = d.ScrollBarImageTransparency }
+        elseif d:IsA("GuiObject") then
+            props = { BackgroundTransparency = d.BackgroundTransparency }
+        elseif d:IsA("UIStroke") then
+            props = { Transparency = d.Transparency }
+        end
+        if props then fadeCache[d] = props end
+    end
+end
+
+local function RunFade(out, duration)
+    local info = TweenInfo.new(duration, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    for d, props in pairs(fadeCache) do
+        if d.Parent then
+            local goal = {}
+            for k, v in pairs(props) do goal[k] = out and 1 or v end
+            TweenService:Create(d, info, goal):Play()
         end
     end
-    
-    
-    if Border then 
-        Border.Visible = false
+end
+
+local function MaximizeUI()
+    if animBusy then return end
+    animBusy = true
+    Minimized = false
+
+    local t = 0.45
+    Main.Visible = true
+    Main.ClipsDescendants = true
+    Main.Position = iconPosition
+    Main.Size = UDim2.new(0, 40, 0, 40)
+    Main.ImageTransparency = 1
+    for d, props in pairs(fadeCache) do
+        if d.Parent then
+            for k in pairs(props) do d[k] = 1 end
+        end
     end
-    
-    task.delay(0.3, function()
+
+    TweenService:Create(Main, TweenInfo.new(t, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+        Size = originalMainSize or UDim2.new(0, Layout.W, 0, Layout.H),
+        Position = windowPosition or Main.Position,
+        ImageTransparency = mainImageTransparency
+    }):Play()
+    task.delay(t * 0.25, function() RunFade(false, t * 0.75) end)
+
+    TweenService:Create(FloatingIcon, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        Size = UDim2.new(0, 0, 0, 0)
+    }):Play()
+
+    task.delay(0.2, function()
         FloatingIcon.Visible = false
         FloatingIcon.Size = UDim2.new(0, 40, 0, 40)
     end)
-    
-    Minimized = false
+    task.delay(t, function()
+        Main.ClipsDescendants = false
+        animBusy = false
+    end)
 end
 
 local function MinimizeUI()
-    if Main and Main.AbsolutePosition then
-        windowPosition = Main.Position
-        if not iconMoved then
-            local inset = game:GetService("GuiService"):GetGuiInset()
-            iconPosition = UDim2.new(0, Main.AbsolutePosition.X, 0, Main.AbsolutePosition.Y - inset.Y)
-        end
-        
-        if not originalMainSize then
-            originalMainSize = Main.Size
-        end
-    end
-    
-    if Main then 
-        local mainTween = TweenService:Create(Main, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-            Size = UDim2.new(0, 50, 0, 50),
-            Transparency = 1
-        })
-        mainTween:Play()
-        
-        
-        if not Main:FindFirstChildOfClass("UICorner") then
-            local corner = Instance.new("UICorner")
-            corner.CornerRadius = UDim.new(0.1, 0)  
-            corner.Parent = Main
-        end
-    end
-    
-    
-    if Border then 
-        Border.Visible = false 
-    end
-    
-    FloatingIcon.Position = iconPosition
-    local floatingIconTween = TweenService:Create(FloatingIcon, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-        Size = UDim2.new(0, 40, 0, 40)
-    })
-    floatingIconTween:Play()
-    
-    task.delay(0.3, function()
-        if Main then Main.Visible = false end
-        FloatingIcon.Visible = true
-    end)
-    
+    if animBusy or Minimized then return end
+    animBusy = true
     Minimized = true
+
+    windowPosition = Main.Position
+    if not iconMoved then
+        local inset = game:GetService("GuiService"):GetGuiInset()
+        iconPosition = UDim2.new(0, Main.AbsolutePosition.X, 0, Main.AbsolutePosition.Y - inset.Y)
+    end
+    if not originalMainSize then
+        originalMainSize = Main.Size
+    end
+    mainImageTransparency = Main.ImageTransparency
+    CacheFade()
+
+    local t = 0.4
+    Main.ClipsDescendants = true
+    TweenService:Create(Main, TweenInfo.new(t, Enum.EasingStyle.Quint, Enum.EasingDirection.InOut), {
+        Size = UDim2.new(0, 40, 0, 40),
+        Position = iconPosition,
+        ImageTransparency = 1
+    }):Play()
+    RunFade(true, t * 0.7)
+
+    -- ikon muncul tepat saat window hampir sampai di posisinya
+    task.delay(t * 0.6, function()
+        FloatingIcon.Position = iconPosition
+        FloatingIcon.Size = UDim2.new(0, 0, 0, 0)
+        FloatingIcon.Visible = true
+        TweenService:Create(FloatingIcon, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+            Size = UDim2.new(0, 40, 0, 40)
+        }):Play()
+    end)
+    task.delay(t, function()
+        Main.Visible = false
+        Main.ClipsDescendants = false
+        animBusy = false
+    end)
 end
-
-
-
 
 MinimizeBtn.MouseButton1Click:Connect(function()
     if not Minimized then
