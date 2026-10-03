@@ -116,20 +116,20 @@ Library = {
     RainbowColorValue = 0,
     HueSelectionPosition = 0,
     Theme = {
-        MainColor = Color3.fromRGB(150, 150, 160),
+        MainColor = Color3.fromRGB(100, 100, 110),
         BackgroundColor = Color3.fromRGB(35, 35, 35),
         UIToggleKey = Enum.KeyCode.RightControl,
         TextFont = Enum.Font.SourceSansBold,
         EasingStyle = Enum.EasingStyle.Quart,
-        Color = Color3.fromRGB(150, 150, 160),      
+        Color = Color3.fromRGB(100, 100, 110),      
         TextColor = Color3.fromRGB(255, 255, 255) 
     }
 }
-local selectedColor = Color3.fromRGB(150, 150, 160)
+local selectedColor = Color3.fromRGB(100, 100, 110)
 
 pcall(function()
     if getgenv and not getgenv().Color then
-    Library.Theme.Color = Color3.fromRGB(150, 150, 160)
+    Library.Theme.Color = Color3.fromRGB(100, 100, 110)
     elseif getgenv().Color == "rgb" then
         coroutine.wrap(function()
             while true do
@@ -154,9 +154,9 @@ pcall(function()
             yellow = Color3.fromRGB(255, 255, 0),
             purple = Color3.fromRGB(128, 0, 128),
             pink = Color3.fromRGB(255, 105, 180),
-            default = Color3.fromRGB(150, 150, 160),
-            gray = Color3.fromRGB(150, 150, 160),
-            grey = Color3.fromRGB(150, 150, 160),
+            default = Color3.fromRGB(100, 100, 110),
+            gray = Color3.fromRGB(100, 100, 110),
+            grey = Color3.fromRGB(100, 100, 110),
             cyan = Color3.fromRGB(0, 255, 255),
             brown = Color3.fromRGB(139, 69, 19),
             orange = Color3.fromRGB(255, 165, 0),
@@ -357,7 +357,7 @@ Main.ImageColor3 = Library.Theme.BackgroundColor
 Main.ScaleType = Enum.ScaleType.Slice
 Main.SliceCenter = Rect.new(100, 100, 100, 100)
 Main.SliceScale = 0.050
-Main.ImageTransparency = 0.25   -- jendela semi transparan (0 = solid, 1 = hilang)
+Main.ImageTransparency = 0.15   -- jendela semi transparan (0 = solid, 1 = hilang)
 local UICorner = Instance.new("UICorner")
 UICorner.CornerRadius = UDim.new(0, 10)
 UICorner.Parent = Main
@@ -375,7 +375,7 @@ do
     bc.CornerRadius = UDim.new(0, 11)
     bc.Parent = Border
     local bs = Instance.new("UIStroke")
-    bs.Color = Color3.fromRGB(120, 120, 130)
+    bs.Color = Color3.fromRGB(80, 80, 90)
     bs.Transparency = 0.55
     bs.Thickness = 1
     bs.Parent = Border
@@ -413,7 +413,7 @@ TabButtons.Size = UDim2.new(0, Layout.Side - 4, 1, -(Layout.Top + 4 + 8))
 TabButtons.ZIndex = 2
 TabButtons.Image = "rbxassetid://3570695787"
 TabButtons.ImageColor3 = Color3.fromRGB(20, 20, 24)
-TabButtons.ImageTransparency = 0.4
+TabButtons.ImageTransparency = 0.3
 TabButtons.ScaleType = Enum.ScaleType.Slice
 TabButtons.SliceCenter = Rect.new(100, 100, 100, 100)
 TabButtons.SliceScale = 0.050
@@ -449,6 +449,17 @@ TweenService:Create(Border, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.E
 
 table.insert(Library.LibraryColorTable, Border)
 MakeDraggable(Topbar, Main)
+
+local Minimized = false
+
+
+-- gradasi tipis supaya terasa seperti kaca
+do
+    local g = Instance.new("UIGradient")
+    g.Color = ColorSequence.new(Color3.fromRGB(255, 255, 255), Color3.fromRGB(200, 200, 212))
+    g.Rotation = 90
+    g.Parent = Main
+end
 
 
 local TweenService = game:GetService("TweenService")
@@ -520,7 +531,7 @@ end
 table.insert(Library.LibraryColorTable, MinimizeBtn)
 table.insert(Library.LibraryColorTable, FloatingIcon)
 
-local Minimized = false
+Minimized = false
 local isDragging = false
 local lastValidPosition = UDim2.new(0, 100, 0, 100)
 local originalMainSize
@@ -687,8 +698,8 @@ local function SetTabVisual(btn, selected, extra)
     local soft = TweenInfo.new(0.25, Library.Theme.EasingStyle, Enum.EasingDirection.Out)
     TweenService:Create(btn, info, {
         Size = selected and TabBigSize or TabNormalSize,
-        ImageTransparency = selected and 0.35 or 1,
-        ImageColor3 = Color3.fromRGB(90, 90, 100)
+        ImageTransparency = selected and 0.25 or 1,
+        ImageColor3 = Color3.fromRGB(58, 58, 66)
     }):Play()
     local title = btn:FindFirstChild("Title")
     if title then
@@ -792,7 +803,7 @@ function Library:CreateTab(name)
     NameTabButton.Size = TabNormalSize
     NameTabButton.ZIndex = 2
     NameTabButton.Image = "rbxassetid://3570695787"
-    NameTabButton.ImageColor3 = Color3.fromRGB(90, 90, 100)
+    NameTabButton.ImageColor3 = Color3.fromRGB(58, 58, 66)
     NameTabButton.ImageTransparency = 1
     NameTabButton.ScaleType = Enum.ScaleType.Slice
     NameTabButton.SliceCenter = Rect.new(100, 100, 100, 100)
@@ -849,7 +860,7 @@ function Library:CreateTab(name)
     SectionLayout.Parent = SectionScrollingFrame
     SectionLayout.FillDirection = Enum.FillDirection.Vertical
     SectionLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    SectionLayout.Padding = UDim.new(0, 4)
+    SectionLayout.Padding = UDim.new(0, 12)
 
     SectionPadding.Name = "SectionPadding"
     SectionPadding.Parent = SectionScrollingFrame
@@ -982,19 +993,19 @@ function TabElements:CreateSection(name)
     NameSection.Parent = SectionScrollingFrame
     NameSection.BackgroundTransparency = 1
     NameSection.LayoutOrder = sectionOrder
-    NameSection.Size = UDim2.new(1, 0, 0, 26)
+    NameSection.Size = UDim2.new(1, 0, 0, 34)
     NameSection.ZIndex = 4
 
     SectionTitle.Name = "SectionTitle"
     SectionTitle.Parent = NameSection
     SectionTitle.BackgroundTransparency = 1
-    SectionTitle.Position = UDim2.new(0, 2, 0, 0)
-    SectionTitle.Size = UDim2.new(1, -4, 0, 20)
+    SectionTitle.Position = UDim2.new(0, 11, 0, 0)
+    SectionTitle.Size = UDim2.new(1, -11, 0, 22)
     SectionTitle.ZIndex = 4
     SectionTitle.Font = Library.Theme.TextFont
     SectionTitle.Text = name
     SectionTitle.TextColor3 = Library.Theme.TextColor
-    SectionTitle.TextSize = 18
+    SectionTitle.TextSize = 20
     SectionTitle.TextXAlignment = Enum.TextXAlignment.Left
     table.insert(Library.LibraryColorTable, SectionTitle)
 
@@ -1002,7 +1013,27 @@ function TabElements:CreateSection(name)
     SectionContent.Parent = NameSection
     SectionContent.BackgroundTransparency = 1
     SectionContent.BorderSizePixel = 0
-    SectionContent.Position = UDim2.new(0, 0, 0, 22)
+    SectionContent.Position = UDim2.new(0, 0, 0, 30)
+
+    local HeaderBar = Instance.new("Frame")
+    HeaderBar.Name = "HeaderBar"
+    HeaderBar.Parent = NameSection
+    HeaderBar.BackgroundColor3 = Library.Theme.MainColor
+    HeaderBar.BorderSizePixel = 0
+    HeaderBar.Position = UDim2.new(0, 1, 0, 4)
+    HeaderBar.Size = UDim2.new(0, 4, 0, 15)
+    HeaderBar.ZIndex = 4
+    Instance.new("UICorner", HeaderBar).CornerRadius = UDim.new(1, 0)
+
+    local HeaderLine = Instance.new("Frame")
+    HeaderLine.Name = "HeaderLine"
+    HeaderLine.Parent = NameSection
+    HeaderLine.BackgroundColor3 = Color3.fromRGB(120, 120, 130)
+    HeaderLine.BackgroundTransparency = 0.7
+    HeaderLine.BorderSizePixel = 0
+    HeaderLine.Position = UDim2.new(0, 0, 0, 25)
+    HeaderLine.Size = UDim2.new(1, 0, 0, 1)
+    HeaderLine.ZIndex = 4
     SectionContent.Size = UDim2.new(1, 0, 0, 0)
     SectionContent.ZIndex = 4
 
@@ -1015,7 +1046,7 @@ function TabElements:CreateSection(name)
     local function ResizeSection()
         local h = SectionContentLayout.AbsoluteContentSize.Y
         SectionContent.Size = UDim2.new(1, 0, 0, h)
-        NameSection.Size = UDim2.new(1, 0, 0, h + 26)
+        NameSection.Size = UDim2.new(1, 0, 0, h + 34)
     end
     SectionContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(ResizeSection)
 
@@ -1023,8 +1054,8 @@ function TabElements:CreateSection(name)
     SectionContent.ChildAdded:Connect(function(child)
         task.defer(function()
             if child:IsA("Frame") and not child.Name:match("_ImageHolder$") and not child.Name:match("Button$") then
-                child.BackgroundColor3 = Color3.fromRGB(70, 70, 78)
-                child.BackgroundTransparency = 0.55
+                child.BackgroundColor3 = Color3.fromRGB(46, 46, 52)
+                child.BackgroundTransparency = 0.45
                 local corner = Instance.new("UICorner")
                 corner.CornerRadius = UDim.new(0, 6)
                 corner.Parent = child
@@ -1043,16 +1074,16 @@ function SectionElements:CreateLabel(name, text, callback, options)
     NameLabel.Parent = SectionContent
     NameLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     NameLabel.BackgroundTransparency = 1.000
-    NameLabel.TextSize = 18
+    NameLabel.TextSize = 16
     NameLabel.TextWrapped = true
     NameLabel.TextXAlignment = Enum.TextXAlignment.Left
     NameLabel.Text = text or ""
     NameLabel.Size = UDim2.new(1, 0, 0, math.max(24, NameLabel.TextBounds.Y))
     NameLabel.ZIndex = 5
-    NameLabel.Font = Library.Theme.TextFont
-    NameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    NameLabel.Font = Enum.Font.SourceSansSemibold
+    NameLabel.TextColor3 = Color3.fromRGB(190, 190, 198)
     table.insert(Library.LibraryColorTable, NameLabel)
-    NameLabel.TextSize = 18.000
+    NameLabel.TextSize = 16.000
 
     local isColorHeld = false
 
@@ -1067,7 +1098,7 @@ function SectionElements:CreateLabel(name, text, callback, options)
         LabelButton.Font = Library.Theme.TextFont
         LabelButton.Text = ""
         LabelButton.TextColor3 = Color3.fromRGB(0, 0, 0)
-        LabelButton.TextSize = 18.000
+        LabelButton.TextSize = 16.000
 
         LabelButton.MouseButton1Click:Connect(function()
             callback()
@@ -1077,7 +1108,7 @@ function SectionElements:CreateLabel(name, text, callback, options)
                         TweenService:Create(
                             child,
                             TweenInfo.new(0.2, Enum.EasingStyle.Quad),
-                            {TextColor3 = Color3.fromRGB(255, 255, 255)}
+                            {TextColor3 = Color3.fromRGB(190, 190, 198)}
                         ):Play()
                     end
                 end
@@ -1113,7 +1144,7 @@ function SectionElements:CreateLabel(name, text, callback, options)
                 TweenService:Create(
                     NameLabel,
                     TweenInfo.new(0.2, Enum.EasingStyle.Quad),
-                    {TextColor3 = Color3.fromRGB(255, 255, 255)}
+                    {TextColor3 = Color3.fromRGB(190, 190, 198)}
                 ):Play()
             end)
         end
@@ -1468,7 +1499,7 @@ table.insert(Library.LibraryColorTable, Title)
 
     SliderBackground.Name = "SliderBackground"
     SliderBackground.Parent = NameSlider
-    SliderBackground.BackgroundColor3 = Color3.fromRGB(95, 95, 105)
+    SliderBackground.BackgroundColor3 = Color3.fromRGB(62, 62, 70)
     SliderBackground.BackgroundTransparency = 0
     SliderBackground.BorderSizePixel = 0
     SliderBackground.Position = UDim2.new(0, 12, 0, 38)
@@ -1513,7 +1544,7 @@ table.insert(Library.LibraryColorTable, Title)
 
     SliderValue.Name = "SliderValue"
     SliderValue.Parent = NameSlider
-    SliderValue.BackgroundColor3 = Color3.fromRGB(62, 62, 68)
+    SliderValue.BackgroundColor3 = Color3.fromRGB(42, 42, 47)
     SliderValue.BackgroundTransparency = 0
     SliderValue.BorderSizePixel = 0
     SliderValue.Position = UDim2.new(1, -58, 0, 8)
@@ -3288,7 +3319,7 @@ function Library:CreateKeySystem(config)
                 BackgroundTransparency = isActive and 0 or 1
             }):Play()
             TweenService:Create(tab.button, TweenInfo.new(0.2), {
-                TextColor3 = isActive and Library.Theme.MainColor or Color3.fromRGB(150, 150, 160)
+                TextColor3 = isActive and Library.Theme.MainColor or Color3.fromRGB(100, 100, 110)
             }):Play()
         end
     end
@@ -3306,7 +3337,7 @@ function Library:CreateKeySystem(config)
         btn.ZIndex = 204
         btn.Font = Library.Theme.TextFont
         btn.Text = tabData.name
-        btn.TextColor3 = Color3.fromRGB(150, 150, 160)
+        btn.TextColor3 = Color3.fromRGB(100, 100, 110)
         btn.TextSize = 14
 
         -- Underline indicator (accent color, bawah tab button)
