@@ -1,3 +1,19 @@
+local function DX_Step(msg)
+    print('[DarkX]', msg)
+    pcall(function()
+        game:GetService('StarterGui'):SetCore('SendNotification', {
+            Title = 'DarkX',
+            Text = tostring(msg):sub(1, 150),
+            Duration = 4,
+        })
+    end)
+end
+
+_G.DX_Step = DX_Step
+
+DX_Step('script started')
+
+local DX_ok, DX_err = xpcall(function()
 print('loading')
 
 repeat
@@ -33,6 +49,8 @@ repeat
     wait()
 until v ~= nil
 
+DX_Step('pastebin: ' .. tostring(v))
+
 _G.Lava = nil
 
 pcall(function()
@@ -54,6 +72,7 @@ end)
 
 if v == 'welcome to use dark x' then
     wait(0.2)
+    DX_Step('key ok')
     spawn(function()
         local v5 = next
         local v6, v7 = _G.LocalPlayer.PlayerGui:GetChildren()
@@ -83,6 +102,7 @@ if v == 'welcome to use dark x' then
         end
     end)
     game:GetService('ReplicatedStorage'):WaitForChild('LoadSaveRequests'):WaitForChild('GetMetaData'):InvokeServer(_G.LocalPlayer)
+    DX_Step('meta ok')
     game:GetService('Players').LocalPlayer:GetMouse()
 
     _G.Menu = {
@@ -194,31 +214,10 @@ if v == 'welcome to use dark x' then
     end
 
     _G.DX_GuiParent = DX_GuiParent
-    print('[DarkX] GUI parent:', DX_GuiParent():GetFullName())
 
-    local FluentSource = game:HttpGet('https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua')
-    local patched = 0
+    local Fluent = loadstring(game:HttpGet('https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua'))()
 
-    for _, pat in ipairs({
-        'game:GetService%("CoreGui"%)',
-        "game:GetService%('CoreGui'%)",
-        'game%.CoreGui',
-    }) do
-        local n
-        FluentSource, n = FluentSource:gsub(pat, '_G.DX_GuiParent()')
-        patched = patched + n
-    end
-
-    print('[DarkX] Fluent: referensi CoreGui yang diganti =', patched)
-
-    local FluentFn, FluentErr = loadstring(FluentSource)
-
-    if not FluentFn then
-        warn('[DarkX] Fluent gagal dikompilasi:', FluentErr)
-        error(FluentErr)
-    end
-
-    local Fluent = FluentFn()
+    DX_Step('Fluent loaded')
     local Window = nil
     local uid = 0
     local function NextId(prefix)
@@ -419,6 +418,7 @@ if v == 'welcome to use dark x' then
             warn('[DarkX] Fluent:CreateWindow gagal:', errWin)
             error(errWin)
         end
+        DX_Step('window created')
         local win = {}
         function win:CreateTab(name, _icon)
             local tab = Window:AddTab({Title = name, Icon = ''})
@@ -5969,6 +5969,7 @@ if v == 'welcome to use dark x' then
     _Credits:KeyBind('Toggle UI', 'RightShift', function(_)
         u47:ToggleUI()
     end)
+    DX_Step('all tabs built')
     _G.Notify('Dark X load success')
     wait(2)
     _G.Notify('our discord: https://discord.gg/6aP9akd5rX')
@@ -6001,4 +6002,13 @@ if v == 'welcome to use dark x' then
     return
 else
     return _G.LocalPlayer:Kick('you are using old dark x')
+end
+
+end, function(e)
+    return debug.traceback(tostring(e), 2)
+end)
+
+if not DX_ok then
+    warn('[DarkX] ERROR:', DX_err)
+    DX_Step('ERROR: ' .. tostring(DX_err))
 end
