@@ -327,7 +327,7 @@ local function MakeDraggable(topbarobject, object)
     end)
 end
 
-local Layout = { W = 520, H = 300, Side = 120, Top = 24 }
+local Layout = { W = 520, H = 300, Side = 124, Top = 30 }
 
 local UILibrary = Instance.new("ScreenGui")
 local Main = Instance.new("ImageLabel")
@@ -402,7 +402,7 @@ TabButtons.Position = UDim2.new(0, 8, 0, Layout.Top + 4)
 TabButtons.Size = UDim2.new(0, Layout.Side - 4, 1, -(Layout.Top + 4 + 8))
 TabButtons.ZIndex = 2
 TabButtons.Image = "rbxassetid://3570695787"
-TabButtons.ImageColor3 = Library.Theme.MainColor
+TabButtons.ImageColor3 = Color3.fromRGB(26, 26, 30)
 TabButtons.ScaleType = Enum.ScaleType.Slice
 TabButtons.SliceCenter = Rect.new(100, 100, 100, 100)
 TabButtons.SliceScale = 0.050
@@ -427,13 +427,16 @@ TabScrollingFrame.ScrollBarImageTransparency = 0.5
 TabScrollingFrame.ScrollingDirection = Enum.ScrollingDirection.Y
 TabScrollingFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
 TabScrollingFrame.ClipsDescendants = true
+local TabListPadding = Instance.new("UIPadding")
+TabListPadding.PaddingTop = UDim.new(0, 8)
+TabListPadding.PaddingLeft = UDim.new(0, 2)
+TabListPadding.Parent = TabScrollingFrame
 TabButtonLayout.Parent = TabScrollingFrame
 
 TweenService:Create(Main, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, Layout.W, 0, Layout.H)}):Play()
 TweenService:Create(Border, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageTransparency = 0}):Play()
 
 table.insert(Library.LibraryColorTable, Border)
-table.insert(Library.LibraryColorTable, TabButtons)
 MakeDraggable(Topbar, Main)
 
 
@@ -443,7 +446,7 @@ local MinimizeBtn = Instance.new("ImageButton")
 MinimizeBtn.Name = "MinimizeBtn"
 MinimizeBtn.Parent = Topbar
 MinimizeBtn.BackgroundTransparency = 1
-MinimizeBtn.Position = UDim2.new(1, -24, 0, 4)
+MinimizeBtn.Position = UDim2.new(1, -24, 0, 7)
 MinimizeBtn.Size = UDim2.new(0, 15, 0, 15)
 MinimizeBtn.ZIndex = 10
 MinimizeBtn.Image = "rbxassetid://3570695787"
@@ -665,10 +668,21 @@ local function CloseAllTabs()
     end
 end
 
+local function SetTabVisual(btn, selected, extra)
+    local info = TweenInfo.new(0.25, Library.Theme.EasingStyle, Enum.EasingDirection.Out)
+    local props = { ImageTransparency = selected and 0 or 1, ImageColor3 = Color3.fromRGB(52, 52, 58) }
+    if extra then for k, v in pairs(extra) do props[k] = v end end
+    TweenService:Create(btn, info, props):Play()
+    local title = btn:FindFirstChild("Title")
+    if title then TweenService:Create(title, info, { TextTransparency = selected and 0 or 0.45 }):Play() end
+    local accent = btn:FindFirstChild("Accent")
+    if accent then TweenService:Create(accent, info, { BackgroundTransparency = selected and 0 or 1 }):Play() end
+end
+
 local function ResetAllTabButtons()
     for i, v in pairs(TabScrollingFrame:GetChildren()) do
         if v:IsA("ImageButton") then
-            TweenService:Create(v, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageColor3 = Library.Theme.MainColor}):Play()
+            SetTabVisual(v, false)
         end
     end
 end
@@ -686,9 +700,9 @@ local function KeepFirstTabOpen()
         for i, v in pairs(TabScrollingFrame:GetChildren()) do
             if v:IsA("ImageButton") then
                 if v.Name:find(Library.FirstTab .. "TabButton") then
-                    TweenService:Create(v, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 15)}):Play()
+                    SetTabVisual(v, true)
                 else
-                    TweenService:Create(v, TweenInfo.new(0.3, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageColor3 = Library.Theme.MainColor}):Play()
+                    SetTabVisual(v, false)
                 end
             end
         end
@@ -752,7 +766,8 @@ function Library:CreateTab(name)
     NameTabButton.Size = UDim2.new(1, -8, 0, 28)
     NameTabButton.ZIndex = 2
     NameTabButton.Image = "rbxassetid://3570695787"
-    NameTabButton.ImageColor3 = Library.Theme.MainColor
+    NameTabButton.ImageColor3 = Color3.fromRGB(52, 52, 58)
+    NameTabButton.ImageTransparency = 1
     NameTabButton.ScaleType = Enum.ScaleType.Slice
     NameTabButton.SliceCenter = Rect.new(100, 100, 100, 100)
     NameTabButton.SliceScale = 0.050
@@ -761,8 +776,9 @@ function Library:CreateTab(name)
     Title.Parent = NameTabButton
     Title.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     Title.BackgroundTransparency = 1.000
-    Title.Position = UDim2.new(0, 10, 0, 0)
-    Title.Size = UDim2.new(1, -12, 1, 0)
+    Title.Position = UDim2.new(0, 16, 0, 0)
+    Title.Size = UDim2.new(1, -20, 1, 0)
+    Title.TextTransparency = 0.45
     Title.TextXAlignment = Enum.TextXAlignment.Left
     Title.TextTruncate = Enum.TextTruncate.AtEnd
     Title.ZIndex = 2
@@ -771,6 +787,24 @@ function Library:CreateTab(name)
     Title.TextColor3 = Library.Theme.TextColor
     table.insert(Library.LibraryColorTable, Title) 
     Title.TextSize = 15.000
+
+    local TabCorner = Instance.new("UICorner")
+    TabCorner.CornerRadius = UDim.new(0, 6)
+    TabCorner.Parent = NameTabButton
+
+    local Accent = Instance.new("Frame")
+    Accent.Name = "Accent"
+    Accent.Parent = NameTabButton
+    Accent.BackgroundColor3 = Library.Theme.MainColor
+    Accent.BackgroundTransparency = 1
+    Accent.BorderSizePixel = 0
+    Accent.Position = UDim2.new(0, 5, 0.5, -8)
+    Accent.Size = UDim2.new(0, 3, 0, 16)
+    Accent.ZIndex = 3
+    local AccentCorner = Instance.new("UICorner")
+    AccentCorner.CornerRadius = UDim.new(1, 0)
+    AccentCorner.Parent = Accent
+
     local SectionScrollingFrame = Instance.new("ScrollingFrame")
     SectionScrollingFrame.Name = "SectionScrollingFrame"
     SectionScrollingFrame.Parent = NameTab
@@ -816,10 +850,9 @@ function Library:CreateTab(name)
 
     NameTab.Visible = false
 
-    table.insert(Library.LibraryColorTable, NameTabButton)
 
     local originalSize = NameTabButton.Size
-    local smallSize = UDim2.new(1, -16, 0, 28)
+    local smallSize = UDim2.new(1, -8, 0, 28)
 
 NameTabButton.MouseButton1Down:Connect(function()
     if CloseAllTabs and type(CloseAllTabs) == "function" then 
@@ -838,9 +871,7 @@ NameTabButton.MouseButton1Down:Connect(function()
     else
         for _, v in pairs(TabButtons:GetChildren()) do
             if v:IsA("ImageButton") then
-                TweenService:Create(v, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-                    ImageColor3 = Library.Theme.MainColor
-                }):Play()
+                SetTabVisual(v, false)
             end
         end
     end
@@ -860,11 +891,7 @@ NameTabButton.MouseButton1Down:Connect(function()
         end
     end
     
-    TweenService:Create(NameTabButton, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-        ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 20),
-        Size = smallSize
-    }):Play()
-    table.insert(Library.LibraryColorTable, NameTabButton)
+    SetTabVisual(NameTabButton, true, { Size = smallSize })
     TweenService:Create(NameTab, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
         Position = UDim2.new(0, 0, 0, 0)
     }):Play()
@@ -873,10 +900,7 @@ end)
     ResetAllTabButtons = function()
     for _, v in pairs(TabScrollingFrame:GetChildren()) do
         if v:IsA("ImageButton") then
-            TweenService:Create(v, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-                ImageColor3 = Library.Theme.MainColor,
-                Size = originalSize
-            }):Play()
+            SetTabVisual(v, false, { Size = originalSize })
         end
     end
 end
@@ -884,10 +908,7 @@ end
 local function ShowFirstTab()
     if NameTab.Name == (Library.FirstTab .. "Tab") then
         NameTab.Visible = true
-        TweenService:Create(NameTabButton, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-            ImageColor3 = DarkenObjectColor(Library.Theme.MainColor, 20),
-            Size = smallSize
-        }):Play()
+        SetTabVisual(NameTabButton, true, { Size = smallSize })
         
         TweenService:Create(NameTab, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
             Position = UDim2.new(0, 0, 0, 0)
@@ -1420,12 +1441,14 @@ table.insert(Library.LibraryColorTable, Title)
 
     SliderBackground.Name = "SliderBackground"
     SliderBackground.Parent = NameSlider
-    SliderBackground.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
-    SliderBackground.BackgroundTransparency = 1.000
-    SliderBackground.Position = UDim2.new(0, 12, 0.699999988, 0)
-    SliderBackground.Size = UDim2.new(1, -24, 0, 4)
+    SliderBackground.BackgroundColor3 = Color3.fromRGB(62, 62, 68)
+    SliderBackground.BackgroundTransparency = 0
+    SliderBackground.BorderSizePixel = 0
+    SliderBackground.Position = UDim2.new(0, 12, 0, 38)
+    SliderBackground.Size = UDim2.new(1, -24, 0, 6)
     SliderBackground.ZIndex = 5
-    SliderBackground.Image = "rbxassetid://3570695787"
+    SliderBackground.Image = ""
+    Instance.new("UICorner", SliderBackground).CornerRadius = UDim.new(1, 0)
     SliderBackground.ImageColor3 = Color3.fromRGB(55, 55, 55)
     SliderBackground.ScaleType = Enum.ScaleType.Slice
     SliderBackground.SliceCenter = Rect.new(100, 100, 100, 100)
@@ -1433,11 +1456,13 @@ table.insert(Library.LibraryColorTable, Title)
 
     SliderIndicator.Name = "SliderIndicator"
     SliderIndicator.Parent = SliderBackground
-    SliderIndicator.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
-    SliderIndicator.BackgroundTransparency = 1.000
+    SliderIndicator.BackgroundColor3 = Library.Theme.MainColor
+    SliderIndicator.BackgroundTransparency = 0
+    SliderIndicator.BorderSizePixel = 0
+    Instance.new("UICorner", SliderIndicator).CornerRadius = UDim.new(1, 0)
     SliderIndicator.Size = UDim2.new(((StartingValue or minimumvalue) - minimumvalue) / (maximumvalue - minimumvalue), 0, 1, 0)
     SliderIndicator.ZIndex = 5
-    SliderIndicator.Image = "rbxassetid://3570695787"
+    SliderIndicator.Image = ""
     SliderIndicator.ImageColor3 = Library.Theme.MainColor
     SliderIndicator.ScaleType = Enum.ScaleType.Slice
     SliderIndicator.SliceCenter = Rect.new(100, 100, 100, 100)
@@ -1446,20 +1471,29 @@ table.insert(Library.LibraryColorTable, Title)
     CircleSelector.Name = "CircleSelector"
     CircleSelector.Parent = SliderIndicator
     CircleSelector.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    CircleSelector.BackgroundTransparency = 1.000
-    CircleSelector.Position = UDim2.new(0.986565471, -7, 0.75, -7)
-    CircleSelector.Size = UDim2.new(0, 12, 0, 12)
-    CircleSelector.ZIndex = 5
-    CircleSelector.Image = "rbxassetid://3570695787"
+    CircleSelector.BackgroundTransparency = 0
+    CircleSelector.BorderSizePixel = 0
+    CircleSelector.AnchorPoint = Vector2.new(0.5, 0.5)
+    CircleSelector.Position = UDim2.new(1, 0, 0.5, 0)
+    CircleSelector.Size = UDim2.new(0, 14, 0, 14)
+    CircleSelector.ZIndex = 6
+    CircleSelector.Image = ""
+    Instance.new("UICorner", CircleSelector).CornerRadius = UDim.new(1, 0)
+    local CircleStroke = Instance.new("UIStroke")
+    CircleStroke.Thickness = 2
+    CircleStroke.Color = Library.Theme.MainColor
+    CircleStroke.Parent = CircleSelector
 
     SliderValue.Name = "SliderValue"
     SliderValue.Parent = NameSlider
-    SliderValue.BackgroundColor3 = Color3.fromRGB(65, 65, 65)
-    SliderValue.BackgroundTransparency = 1.000
-    SliderValue.Position = UDim2.new(1, -58, 0.400000006, -12)
-    SliderValue.Size = UDim2.new(0, 42, 0, 19)
+    SliderValue.BackgroundColor3 = Color3.fromRGB(62, 62, 68)
+    SliderValue.BackgroundTransparency = 0
+    SliderValue.BorderSizePixel = 0
+    SliderValue.Position = UDim2.new(1, -58, 0, 8)
+    SliderValue.Size = UDim2.new(0, 46, 0, 22)
     SliderValue.ZIndex = 5
-    SliderValue.Image = "rbxassetid://3570695787"
+    SliderValue.Image = ""
+    Instance.new("UICorner", SliderValue).CornerRadius = UDim.new(0, 8)
     SliderValue.ImageColor3 = Color3.fromRGB(65, 65, 65)
     SliderValue.ScaleType = Enum.ScaleType.Slice
     SliderValue.SliceCenter = Rect.new(100, 100, 100, 100)
@@ -1478,12 +1512,12 @@ table.insert(Library.LibraryColorTable, Title)
 
     
     local function enlargeCircle()
-        TweenService:Create(CircleSelector, TweenInfo.new(0.1), {Size = UDim2.new(0, 18, 0, 18)}):Play()
+        TweenService:Create(CircleSelector, TweenInfo.new(0.1), {Size = UDim2.new(0, 20, 0, 20)}):Play()
     end
 
     
     local function shrinkCircle()
-        TweenService:Create(CircleSelector, TweenInfo.new(0.1), {Size = UDim2.new(0, 12, 0, 12)}):Play()
+        TweenService:Create(CircleSelector, TweenInfo.new(0.1), {Size = UDim2.new(0, 14, 0, 14)}):Play()
     end
 
 
@@ -1491,7 +1525,7 @@ table.insert(Library.LibraryColorTable, Title)
         local SliderPosition
         if input.UserInputType == Enum.UserInputType.Touch then
             SliderPosition = UDim2.new(math.clamp((input.Position.X - SliderBackground.AbsolutePosition.X) / SliderBackground.AbsoluteSize.X, 0, 1), 0, 1, 0)
-        elseif input.UserInputType == Enum.UserInputType.MouseMovement then
+        elseif input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.MouseButton1 then
             SliderPosition = UDim2.new(math.clamp((input.Position.X - SliderBackground.AbsolutePosition.X) / SliderBackground.AbsoluteSize.X, 0, 1), 0, 1, 0)
         end
 
@@ -1526,6 +1560,30 @@ table.insert(Library.LibraryColorTable, Title)
     end)
 
     
+    local HitArea = Instance.new("Frame")
+    HitArea.Name = "HitArea"
+    HitArea.Parent = SliderBackground
+    HitArea.BackgroundTransparency = 1
+    HitArea.AnchorPoint = Vector2.new(0, 0.5)
+    HitArea.Position = UDim2.new(0, 0, 0.5, 0)
+    HitArea.Size = UDim2.new(1, 0, 0, 28)
+    HitArea.ZIndex = 6
+    HitArea.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            SliderDragging = true
+            SectionScrollingFrame.ScrollingEnabled = false
+            enlargeCircle()
+            Sliding(input)
+        end
+    end)
+    HitArea.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            SliderDragging = false
+            SectionScrollingFrame.ScrollingEnabled = true
+            shrinkCircle()
+        end
+    end)
+
     UserInputService.InputChanged:Connect(function(input)
         if SliderDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
             
@@ -2065,106 +2123,6 @@ end
             table.insert(Library.LibraryColorTable, CheckboxOutline)
             table.insert(Library.LibraryColorTable, CheckboxTicked)
         end
-function Library:CreateWindow(text)
-    local WindowTitle = Instance.new("TextLabel")
-    WindowTitle.Name = "WindowTitle"
-    WindowTitle.Parent = Topbar
-    WindowTitle.BackgroundTransparency = 1
-    WindowTitle.AnchorPoint = Vector2.new(0.5, 0)
-    WindowTitle.Position = UDim2.new(0.5, 0, 0, 0)
-    WindowTitle.Size = UDim2.new(1, -70, 1, 0)
-    WindowTitle.ZIndex = 3
-    WindowTitle.Font = Library.Theme.TextFont
-    WindowTitle.Text = text or "Window Title"
-    WindowTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-    WindowTitle.TextSize = 14
-    WindowTitle.TextXAlignment = Enum.TextXAlignment.Center
-
-    table.insert(Library.LibraryColorTable, WindowTitle)
-
-    local function ColorTransition()
-        while true do
-            for i = 0, 1, 0.01 do
-                local r = 255
-                local g = 255 - (i * (255 - 75))
-                local b = 255 - (i * (255 - 75))
-                WindowTitle.TextColor3 = Color3.fromRGB(r, g, b)
-                task.wait(0.02)
-            end
-            for i = 0, 1, 0.01 do
-                local r = 255 - (i * 255)
-                local g = 75 - (i * 75)
-                local b = 75 + (i * (255 - 75))
-                WindowTitle.TextColor3 = Color3.fromRGB(r, g, b)
-                task.wait(0.02)
-            end
-            for i = 0, 1, 0.01 do
-                local r = 0 + (i * 255)
-                local g = 0 + (i * 255)
-                local b = 255 - (i * (255 - 255))
-                WindowTitle.TextColor3 = Color3.fromRGB(r, g, b)
-                task.wait(0.02)
-            end
-        end
-    end
-
-    coroutine.wrap(ColorTransition)()
-
-    return WindowTitle
-end
-function Library:CreateText(texts, duration, colorHex)
-    local textContainer = Instance.new("Frame")
-    local textLabel = Instance.new("TextLabel")
-    local currentIndex = 1
-
-    if not texts or #texts < 1 or #texts > 5 then
-        warn("Texts must be an array with 1 to 5 entries")
-        return
-    end
-    duration = duration or 2
-    local color = colorHex and Color3.fromHex(colorHex) or Library.Theme.TextColor
-
-    textContainer.Name = "TextContainer"
-    textContainer.Parent = game:GetService("CoreGui")["Rndm."].Main
-    textContainer.BackgroundTransparency = 1
-    textContainer.Position = UDim2.new(0, Layout.Side + 12, 1, -22)
-    textContainer.Size = UDim2.new(1, -(Layout.Side + 24), 0, 20)
-    textContainer.ZIndex = 100
-
-    textLabel.Name = "TextLabel"
-    textLabel.Parent = textContainer
-    textLabel.BackgroundTransparency = 1
-    textLabel.Size = UDim2.new(1, 0, 1, 0)
-    textLabel.ZIndex = 101
-    textLabel.Font = Library.Theme.TextFont
-    textLabel.Text = texts[1]
-    textLabel.TextColor3 = color
-    textLabel.TextTransparency = 0
-    textLabel.TextSize = 14 
-    textLabel.TextWrapped = true
-    textLabel.TextXAlignment = Enum.TextXAlignment.Left
-
-    local function transitionText()
-        while true do
-            local nextIndex = currentIndex % #texts + 1
-            TweenService:Create(textLabel, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-                TextTransparency = 1
-            }):Play()
-            wait(0.5)
-            textLabel.Text = texts[nextIndex]
-            TweenService:Create(textLabel, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
-                TextTransparency = 0.5
-            }):Play()
-            currentIndex = nextIndex
-            wait(duration)
-        end
-    end
-
-    spawn(transitionText)
-
-    return textContainer
-end
-
 function SectionElements:CreateDropdown(name, options, presetoption, callback)
     local NameDropdown = Instance.new("Frame")
     local TitleToggle = Instance.new("TextButton")
@@ -2801,6 +2759,200 @@ end
 
     return TabElements
 end
+
+-- Library:SetLogo("rbxassetid://123")        -> gambar saja
+-- Library:SetLogo("123456")                  -> gambar saja (angka = asset id)
+-- Library:SetLogo("DX")                      -> huruf saja
+-- Library:SetLogo("rbxassetid://123", "DX")  -> gambar + huruf
+-- Library:SetLogo({ Image = "...", Text = "DX" })
+function Library:SetLogo(a, b)
+    local image, text
+    if type(a) == "table" then
+        image, text = a.Image or a.image, a.Text or a.text
+    elseif type(a) == "number" then
+        image, text = "rbxassetid://" .. a, b
+    elseif type(a) == "string" then
+        if a:match("^rbxassetid://") or a:match("^rbxasset://") or a:match("^https?://") or a:match("^%d+$") then
+            image, text = a, b
+        else
+            text = a
+        end
+    end
+    if type(image) == "number" then image = "rbxassetid://" .. image end
+    if type(image) == "string" and image:match("^%d+$") then image = "rbxassetid://" .. image end
+
+    local old = Topbar:FindFirstChild("Logo")
+    if old then old:Destroy() end
+    local oldFloat = FloatingIcon:FindFirstChild("LogoImage")
+    if oldFloat then oldFloat:Destroy() end
+    FloatingText.Visible = true
+    if not image and not text then return end
+
+    local Logo = Instance.new("Frame")
+    Logo.Name = "Logo"
+    Logo.Parent = Topbar
+    Logo.BackgroundTransparency = 1
+    Logo.Position = UDim2.new(0, 8, 0, 4)
+    Logo.Size = UDim2.new(0, 0, 0, 22)
+    Logo.AutomaticSize = Enum.AutomaticSize.X
+    Logo.ZIndex = 6
+
+    local LogoLayout = Instance.new("UIListLayout")
+    LogoLayout.FillDirection = Enum.FillDirection.Horizontal
+    LogoLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+    LogoLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    LogoLayout.Padding = UDim.new(0, 6)
+    LogoLayout.Parent = Logo
+
+    if image then
+        local Img = Instance.new("ImageLabel")
+        Img.Name = "LogoImage"
+        Img.Parent = Logo
+        Img.LayoutOrder = 1
+        Img.BackgroundTransparency = 1
+        Img.Size = UDim2.new(0, 22, 0, 22)
+        Img.Image = image
+        Img.ScaleType = Enum.ScaleType.Crop
+        Img.ZIndex = 6
+        local c = Instance.new("UICorner")
+        c.CornerRadius = UDim.new(0, 6)
+        c.Parent = Img
+
+        -- ikon melayang saat window di-minimize ikut pakai gambar yang sama
+        local Fi = Instance.new("ImageLabel")
+        Fi.Name = "LogoImage"
+        Fi.Parent = FloatingIcon
+        Fi.BackgroundTransparency = 1
+        Fi.AnchorPoint = Vector2.new(0.5, 0.5)
+        Fi.Position = UDim2.new(0.5, 0, 0.5, 0)
+        Fi.Size = UDim2.new(1, -6, 1, -6)
+        Fi.Image = image
+        Fi.ScaleType = Enum.ScaleType.Crop
+        Fi.ZIndex = 52
+        local fc = Instance.new("UICorner")
+        fc.CornerRadius = UDim.new(0, 8)
+        fc.Parent = Fi
+        FloatingText.Visible = false
+    end
+
+    if text then
+        local Txt = Instance.new("TextLabel")
+        Txt.Name = "LogoText"
+        Txt.Parent = Logo
+        Txt.LayoutOrder = 2
+        Txt.BackgroundTransparency = 1
+        Txt.AutomaticSize = Enum.AutomaticSize.X
+        Txt.Size = UDim2.new(0, 0, 0, 22)
+        Txt.Font = Library.Theme.TextFont
+        Txt.Text = text
+        Txt.TextSize = 17
+        Txt.TextColor3 = Library.Theme.MainColor
+        Txt.ZIndex = 6
+        if not image then FloatingText.Text = string.sub(text, 1, 2) end
+    end
+end
+
+function Library:CreateWindow(text, logo)
+    if logo ~= nil then Library:SetLogo(logo) end
+    local WindowTitle = Instance.new("TextLabel")
+    WindowTitle.Name = "WindowTitle"
+    WindowTitle.Parent = Topbar
+    WindowTitle.BackgroundTransparency = 1
+    WindowTitle.AnchorPoint = Vector2.new(0.5, 0)
+    WindowTitle.Position = UDim2.new(0.5, 0, 0, 0)
+    WindowTitle.Size = UDim2.new(1, -70, 1, 0)
+    WindowTitle.ZIndex = 3
+    WindowTitle.Font = Library.Theme.TextFont
+    WindowTitle.Text = text or "Window Title"
+    WindowTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    WindowTitle.TextSize = 14
+    WindowTitle.TextXAlignment = Enum.TextXAlignment.Center
+
+    table.insert(Library.LibraryColorTable, WindowTitle)
+
+    local function ColorTransition()
+        while true do
+            for i = 0, 1, 0.01 do
+                local r = 255
+                local g = 255 - (i * (255 - 75))
+                local b = 255 - (i * (255 - 75))
+                WindowTitle.TextColor3 = Color3.fromRGB(r, g, b)
+                task.wait(0.02)
+            end
+            for i = 0, 1, 0.01 do
+                local r = 255 - (i * 255)
+                local g = 75 - (i * 75)
+                local b = 75 + (i * (255 - 75))
+                WindowTitle.TextColor3 = Color3.fromRGB(r, g, b)
+                task.wait(0.02)
+            end
+            for i = 0, 1, 0.01 do
+                local r = 0 + (i * 255)
+                local g = 0 + (i * 255)
+                local b = 255 - (i * (255 - 255))
+                WindowTitle.TextColor3 = Color3.fromRGB(r, g, b)
+                task.wait(0.02)
+            end
+        end
+    end
+
+    coroutine.wrap(ColorTransition)()
+
+    return WindowTitle
+end
+function Library:CreateText(texts, duration, colorHex)
+    local textContainer = Instance.new("Frame")
+    local textLabel = Instance.new("TextLabel")
+    local currentIndex = 1
+
+    if not texts or #texts < 1 or #texts > 5 then
+        warn("Texts must be an array with 1 to 5 entries")
+        return
+    end
+    duration = duration or 2
+    local color = colorHex and Color3.fromHex(colorHex) or Library.Theme.TextColor
+
+    textContainer.Name = "TextContainer"
+    textContainer.Parent = game:GetService("CoreGui")["Rndm."].Main
+    textContainer.BackgroundTransparency = 1
+    textContainer.Position = UDim2.new(0, Layout.Side + 12, 1, -22)
+    textContainer.Size = UDim2.new(1, -(Layout.Side + 24), 0, 20)
+    textContainer.ZIndex = 100
+
+    textLabel.Name = "TextLabel"
+    textLabel.Parent = textContainer
+    textLabel.BackgroundTransparency = 1
+    textLabel.Size = UDim2.new(1, 0, 1, 0)
+    textLabel.ZIndex = 101
+    textLabel.Font = Library.Theme.TextFont
+    textLabel.Text = texts[1]
+    textLabel.TextColor3 = color
+    textLabel.TextTransparency = 0
+    textLabel.TextSize = 14 
+    textLabel.TextWrapped = true
+    textLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+    local function transitionText()
+        while true do
+            local nextIndex = currentIndex % #texts + 1
+            TweenService:Create(textLabel, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                TextTransparency = 1
+            }):Play()
+            wait(0.5)
+            textLabel.Text = texts[nextIndex]
+            TweenService:Create(textLabel, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
+                TextTransparency = 0.5
+            }):Play()
+            currentIndex = nextIndex
+            wait(duration)
+        end
+    end
+
+    spawn(transitionText)
+
+    return textContainer
+end
+
 
 -- =====================================================================
 -- NOTIFICATION SYSTEM (module-level, bisa dipanggil kapan saja)
