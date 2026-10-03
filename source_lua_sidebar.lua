@@ -432,6 +432,7 @@ TabScrollingFrame.Position = UDim2.new(0, 0, 0, 0)
 TabScrollingFrame.Size = UDim2.new(1, 0, 1, 0)
 TabScrollingFrame.BackgroundTransparency = 1
 TabScrollingFrame.ScrollBarThickness = 3
+TabScrollingFrame.ElasticBehavior = Enum.ElasticBehavior.Always
 TabScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
 TabScrollingFrame.ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255)
 TabScrollingFrame.ScrollBarImageTransparency = 0.5
@@ -694,7 +695,7 @@ local TabNormalSize = UDim2.new(1, -16, 0, 28)   -- ukuran tab biasa
 local TabBigSize    = UDim2.new(1, -2, 0, 38)    -- ukuran tab yang sedang dibuka (membesar)
 
 local function SetTabVisual(btn, selected, extra)
-    local info = TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out)   -- efek "pop"
+    local info = TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)   -- transisi halus
     local soft = TweenInfo.new(0.25, Library.Theme.EasingStyle, Enum.EasingDirection.Out)
     TweenService:Create(btn, info, {
         Size = selected and TabBigSize or TabNormalSize,
@@ -1116,6 +1117,7 @@ function Library:CreateTab(name, icon)
     SectionScrollingFrame.Size = UDim2.new(1, 0, 1, 0)
     SectionScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
     SectionScrollingFrame.ScrollBarThickness = 4
+    SectionScrollingFrame.ElasticBehavior = Enum.ElasticBehavior.Always
     SectionScrollingFrame.ScrollingDirection = Enum.ScrollingDirection.Y
     SectionScrollingFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
     SectionScrollingFrame.ClipsDescendants = true
@@ -1428,7 +1430,7 @@ function SectionElements:CreateLabel(name, text, callback, options)
         NameLabel.Text = newtext
         TweenService:Create(
             NameLabel,
-            TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+            TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
             {TextTransparency = 0}
         ):Play()
     end
@@ -1686,10 +1688,10 @@ function SectionElements:CreateToggle(name, ...)
     Toggle.MouseButton1Click:Connect(function()
         Toggled = not Toggled
         UIReferences.Toggles[name].EnabledDuringLoad = true
-        TweenService:Create(Title, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {TextColor3 = Toggled and (Library and Library.Theme and Library.Theme.TextColor or Color3.fromRGB(255, 255, 255)) or Color3.fromRGB(185, 185, 185)}):Play()
-        TweenService:Create(TickCover, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Position = Toggled and UDim2.new(0.5, 0, 0.5, 0) or UDim2.new(0.5, -7, 0.5, -7), Size = Toggled and UDim2.new(0, 0, 0, 0) or UDim2.new(0, 14, 0, 14)}):Play()
-        TweenService:Create(CheckboxOutline, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {ImageColor3 = Toggled and (Library and Library.Theme and Library.Theme.MainColor or Color3.fromRGB(255, 75, 75)) or Color3.fromRGB(65, 65, 65)}):Play()
-        TweenService:Create(CheckboxTicked, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {ImageColor3 = Toggled and (Library and Library.Theme and Library.Theme.MainColor or Color3.fromRGB(255, 75, 75)) or Color3.fromRGB(65, 65, 65)}):Play()
+        TweenService:Create(Title, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Toggled and (Library and Library.Theme and Library.Theme.TextColor or Color3.fromRGB(255, 255, 255)) or Color3.fromRGB(185, 185, 185)}):Play()
+        TweenService:Create(TickCover, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = Toggled and UDim2.new(0.5, 0, 0.5, 0) or UDim2.new(0.5, -7, 0.5, -7), Size = Toggled and UDim2.new(0, 0, 0, 0) or UDim2.new(0, 14, 0, 14)}):Play()
+        TweenService:Create(CheckboxOutline, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {ImageColor3 = Toggled and (Library and Library.Theme and Library.Theme.MainColor or Color3.fromRGB(255, 75, 75)) or Color3.fromRGB(65, 65, 65)}):Play()
+        TweenService:Create(CheckboxTicked, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {ImageColor3 = Toggled and (Library and Library.Theme and Library.Theme.MainColor or Color3.fromRGB(255, 75, 75)) or Color3.fromRGB(65, 65, 65)}):Play()
         Settings[gameId][name] = Toggled
         SaveSettings()
         safeCallback(Toggled)
@@ -1720,10 +1722,10 @@ function SectionElements:CreateToggle(name, ...)
         SetState = function(state)
             Toggled = state
             UIReferences.Toggles[name].EnabledDuringLoad = true
-            TweenService:Create(Title, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {TextColor3 = Toggled and (Library and Library.Theme and Library.Theme.TextColor or Color3.fromRGB(255, 255, 255)) or Color3.fromRGB(185, 185, 185)}):Play()
-            TweenService:Create(TickCover, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Position = Toggled and UDim2.new(0.5, 0, 0.5, 0) or UDim2.new(0.5, -7, 0.5, -7), Size = Toggled and UDim2.new(0, 0, 0, 0) or UDim2.new(0, 14, 0, 14)}):Play()
-            TweenService:Create(CheckboxOutline, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {ImageColor3 = Toggled and (Library and Library.Theme and Library.Theme.MainColor or Color3.fromRGB(255, 75, 75)) or Color3.fromRGB(65, 65, 65)}):Play()
-            TweenService:Create(CheckboxTicked, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {ImageColor3 = Toggled and (Library and Library.Theme and Library.Theme.MainColor or Color3.fromRGB(255, 75, 75)) or Color3.fromRGB(65, 65, 65)}):Play()
+            TweenService:Create(Title, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Toggled and (Library and Library.Theme and Library.Theme.TextColor or Color3.fromRGB(255, 255, 255)) or Color3.fromRGB(185, 185, 185)}):Play()
+            TweenService:Create(TickCover, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = Toggled and UDim2.new(0.5, 0, 0.5, 0) or UDim2.new(0.5, -7, 0.5, -7), Size = Toggled and UDim2.new(0, 0, 0, 0) or UDim2.new(0, 14, 0, 14)}):Play()
+            TweenService:Create(CheckboxOutline, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {ImageColor3 = Toggled and (Library and Library.Theme and Library.Theme.MainColor or Color3.fromRGB(255, 75, 75)) or Color3.fromRGB(65, 65, 65)}):Play()
+            TweenService:Create(CheckboxTicked, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {ImageColor3 = Toggled and (Library and Library.Theme and Library.Theme.MainColor or Color3.fromRGB(255, 75, 75)) or Color3.fromRGB(65, 65, 65)}):Play()
             Settings[gameId][name] = state
             SaveSettings()
             safeCallback(state)
@@ -2399,10 +2401,10 @@ end
                 end
     
                 if RainbowColorPicker then              
-                    TweenService:Create(RainbowToggleTitle, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
-                    TweenService:Create(TickCover, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Position = UDim2.new(0.5, 0, 0.5, 0), Size = UDim2.new(0, 0, 0, 0)}):Play()
-                    TweenService:Create(CheckboxOutline, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {ImageColor3 = Library.Theme.MainColor}):Play()
-                    TweenService:Create(CheckboxTicked, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {ImageColor3 = Library.Theme.MainColor}):Play()
+                    TweenService:Create(RainbowToggleTitle, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+                    TweenService:Create(TickCover, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = UDim2.new(0.5, 0, 0.5, 0), Size = UDim2.new(0, 0, 0, 0)}):Play()
+                    TweenService:Create(CheckboxOutline, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {ImageColor3 = Library.Theme.MainColor}):Play()
+                    TweenService:Create(CheckboxTicked, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {ImageColor3 = Library.Theme.MainColor}):Play()
     
                     OldToggleColor = ColorPickerToggle.ImageColor3
                     OldColor = Color.BackgroundColor3
@@ -2430,10 +2432,10 @@ end
                     SetRGBValues()
                     callback(ColorPickerToggle.ImageColor3)
 
-                    TweenService:Create(RainbowToggleTitle, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {TextColor3 = Color3.fromRGB(185, 185, 185)}):Play()
-                    TweenService:Create(TickCover, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Position = UDim2.new(0.5, -7, 0.5, -7), Size = UDim2.new(0, 14, 0, 14)}):Play()
-                    TweenService:Create(CheckboxOutline, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {ImageColor3 = Color3.fromRGB(65, 65, 65)}):Play()
-                    TweenService:Create(CheckboxTicked, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {ImageColor3 = Color3.fromRGB(65, 65, 65)}):Play()
+                    TweenService:Create(RainbowToggleTitle, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(185, 185, 185)}):Play()
+                    TweenService:Create(TickCover, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = UDim2.new(0.5, -7, 0.5, -7), Size = UDim2.new(0, 14, 0, 14)}):Play()
+                    TweenService:Create(CheckboxOutline, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {ImageColor3 = Color3.fromRGB(65, 65, 65)}):Play()
+                    TweenService:Create(CheckboxTicked, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {ImageColor3 = Color3.fromRGB(65, 65, 65)}):Play()
                 end
             end)
 
@@ -3403,7 +3405,7 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
         local idx = table.find(Library.ActiveNotifications, NotificationFrame)
         if idx then table.remove(Library.ActiveNotifications, idx) end
         pcall(function()
-            TweenService:Create(NotificationFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
+            TweenService:Create(NotificationFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
                 Position = UDim2.new(1, 20, NotificationFrame.Position.Y.Scale, NotificationFrame.Position.Y.Offset)
             }):Play()
         end)
@@ -3634,6 +3636,7 @@ function Library:CreateKeySystem(config)
         content.BackgroundTransparency = 1
         content.Size = UDim2.new(1, 0, 1, 0)
         content.ScrollBarThickness = 3
+        content.ElasticBehavior = Enum.ElasticBehavior.Always
         content.ScrollBarImageColor3 = Color3.fromRGB(80, 80, 90)
         content.AutomaticCanvasSize = Enum.AutomaticSize.Y
         content.CanvasSize = UDim2.new(0, 0, 0, 0)
