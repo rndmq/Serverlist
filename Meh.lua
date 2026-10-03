@@ -417,9 +417,9 @@ do
                 end
 
                 local obj = {}
-                function obj:SetOptions(newList)
+                function obj:SetOptions(newList, selectIndex)
                     newList = newList or {}
-                    if #newList == #values then
+                    if not selectIndex and #newList == #values then
                         local same = true
                         for i = 1, #newList do
                             if newList[i] ~= values[i] then same = false break end
@@ -428,7 +428,13 @@ do
                     end
                     values = {}
                     for _, v in ipairs(newList) do table.insert(values, v) end
-                    pcall(function() dd.Refresh(withNone(values)) end)
+                    pcall(function()
+                        if selectIndex then
+                            dd.Refresh(withNone(values), selectIndex + 1)
+                        else
+                            dd.Refresh(withNone(values))
+                        end
+                    end)
                 end
                 function obj:AddOption(opt)
                     table.insert(values, opt)
@@ -4885,6 +4891,98 @@ do
 
     local lastStoreChoice = nil
     local storeBusy = false
+    local totalLabel = nil
+
+    local function amountMult()
+        local n = tonumber(_G['菜单']['自动购买的数量'])
+        if not n or n ~= n or n < 1 then
+            return 1
+        end
+        return math.floor(n)
+    end
+
+    local function fmt(n)
+        local str = tostring(math.floor(tonumber(n) or 0))
+        local r = str:reverse():gsub('(%d%d%d)', '%1,'):reverse()
+        return (r:gsub('^,', ''))
+    end
+
+    
+    local function withAmountPrices(list)
+        local mult = amountMult()
+        local out = {}
+        for i, entry in ipairs(list) do
+            local name = string.split(entry, '--')[1]
+            if name == 'Rukiryaxe' or mult == 1 then
+                out[i] = entry
+            else
+                local ok, price = pcall(_G['商品价格'], name, mult)
+                out[i] = (ok and price) and (name .. '--' .. price) or entry
+            end
+        end
+        return out
+    end
+
+    local function updateTotal()
+        if not totalLabel then
+            return
+        end
+        local cur = _G['菜单']['自动购买的物品']
+        local name = cur and string.split(cur, '--')[1]
+        if not name or name == '' then
+            totalLabel.Text = 'Total: pick an item'
+            return
+        end
+
+        local mult = amountMult()
+        local total
+        if name == 'Rukiryaxe' then
+            mult = 1
+            total = tonumber(string.split(cur, '--')[2])
+        else
+            local ok, price = pcall(_G['商品价格'], name, mult)
+            total = ok and price or nil
+        end
+        if not total then
+            totalLabel.Text = 'Total: -'
+            return
+        end
+
+        local money = 0
+        pcall(function() money = _G['自己'].leaderstats.Money.Value end)
+        local txt = string.format('Total: %s x%d = $%s', name, mult, fmt(total))
+        if total > money then
+            txt = txt .. '  (not enough money)'
+        end
+        totalLabel.Text = txt
+    end
+
+    
+    local function refreshItemPrices()
+        local saved = _G['物品'] 
+        local ok, res = pcall(_G['升级选择的物品名字'], _G['菜单']['商店名字'])
+        _G['物品'] = saved
+        if not ok or type(res) ~= 'table' then
+            return nil
+        end
+
+        local list = withAmountPrices(res)
+        local cur = _G['菜单']['自动购买的物品']
+        local curName = cur and string.split(cur, '--')[1]
+        local idx = nil
+        for i, entry in ipairs(list) do
+            if string.split(entry, '--')[1] == curName then
+                idx = i
+                break
+            end
+        end
+
+        _G['物品选择']:SetOptions(list, idx)
+        if idx then
+            _G['菜单']['自动购买的物品'] = list[idx]
+        end
+        return idx
+    end
     _AutoBuy2:DropDown('Select Store', _G['获得所有商店名字'](), false, false, function(option)
         if option == lastStoreChoice or storeBusy then return end
         lastStoreChoice = option
@@ -4894,20 +4992,29 @@ do
         
         task.delay(0.15, function()
             local ok, err = pcall(function()
-                _G['物品选择']:SetOptions(_G['升级选择的物品名字'](option))
+                local idx = refreshItemPrices()
+                if not idx and totalLabel then
+                    totalLabel.Text = 'Total: pick an item'
+                else
+                    updateTotal()
+                end
             end)
             storeBusy = false
             if not ok then warn('[AutoBuy] store refresh failed: ' .. tostring(err)) end
         end)
     end)
 
-    _G['物品选择'] = _AutoBuy2:DropDown('Select Item', _G['升级选择的物品名字'](_G['菜单']['商店名字']), false, false, function(option)
+    _G['物品选择'] = _AutoBuy2:DropDown('Select Item', withAmountPrices(_G['升级选择的物品名字'](_G['菜单']['商店名字'])), false, false, function(option)
         _G['菜单']['自动购买的物品'] = option
+        updateTotal()
     end)
 
     _AutoBuy2:TextBox('Amount', '1', function(text)
         _G['菜单']['自动购买的数量'] = tonumber(text)
+        pcall(refreshItemPrices)
+        updateTotal()
     end)
+    totalLabel = _AutoBuy2:Label('Total: pick an item')
     _AutoBuy2:Button('Buy', function()
         _G['菜单']['自动购买停止'] = false
         _G['菜单']['自动购买的地点'] = _G['自己的方块'].CFrame
