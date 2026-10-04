@@ -308,7 +308,7 @@ do
                 }
             end
 
-            function S:Slider(title, default, min, max, precise, cb, bind)
+            function S:Slider(title, default, min, max, precise, cb)
                 breathe()
                 cb = cb or function() end
                 min = min or 1
@@ -317,7 +317,7 @@ do
                 local ready = false
                 local obj = container:CreateSlider(tostring(title), min, max, default, precise and true or false, function(v)
                     if ready then cb(tonumber(v)) end
-                end, bind)
+                end)
                 ready = true
                 
                 return {
@@ -2386,7 +2386,7 @@ do
     local sWalk = _Player2:Slider('WalkSpeed', 50, 16, 500, false, function(value)
         speedSet = value
         applySpeed()
-    end, 'WalkSpeed')
+    end)
     _Player2:Toggle('Apply speed', false, function(v)
         applyOn = v
         applySpeed()
@@ -2452,29 +2452,29 @@ do
     end)
     local sJump = _Player2:Slider('JumpPower', 100, 60, 500, false, function(value)
         _G['菜单']['跳跃提升'] = value
-    end, 'JumpPower')
+    end)
     local defaultHip = 0
     pcall(function() defaultHip = _G['自己身体'].HipHeight end)
     local sHip = _Player2:Slider('HipHeight', 0, 0, 500, false, function(value)
         _G['自己身体'].HipHeight = value
-    end, 'HipHeight')
+    end)
     local sZoom = _Player2:Slider('Zoom Distance', 100, 1, 2000, false, function(value)
         _G['自己'].CameraMaxZoomDistance = value
-    end, 'ZoomDistance')
+    end)
     local sFov = _Player2:Slider('FOV', 70, 70, 150, false, function(value)
         game.Workspace.Camera.FieldOfView = value
-    end, 'Fov')
+    end)
     local sFly = _Player2:Slider('Fly Speed', 200, 50, 500, false, function(value)
         _G['菜单']['飞行速度'] = value
-    end, 'FlySpeed')
+    end)
     _Player2:Button('Reset sliders to default', function()
         
-        getgenv().WalkSpeed = 16
-        getgenv().JumpPower = 60
-        getgenv().HipHeight = defaultHip
-        getgenv().ZoomDistance = 128
-        getgenv().Fov = 70
-        getgenv().FlySpeed = 200
+        sWalk:SetValue(16)
+        sJump:SetValue(60)
+        sHip:SetValue(defaultHip)
+        sZoom:SetValue(128)
+        sFov:SetValue(70)
+        sFly:SetValue(200)
 
         
         speedSet = 16
@@ -4056,7 +4056,7 @@ do
 
     _Slot2:Slider('select slot', 1, 1, 6, false, function(value)
         _G['菜单']['存档'] = value
-    end, 'SelectSlot')
+    end)
     _Slot2:Toggle('Fast Load', false, function(enabled)
         _G['菜单']['快速加载'] = enabled
     end)
@@ -4232,7 +4232,7 @@ do
 
     _DupePower:Slider('Power slot', 1, 1, 6, false, function(value)
         _G['菜单']['有超级建造的存档'] = value
-    end, 'PowerSlot')
+    end)
     _DupePower:Button('Dupe Power To Build With ease', function()
         if _G['自己'].SuperBlueprint.Value then
             if _G['自己'].CurrentSaveSlot.Value ~= _G['菜单']['有超级建造的存档'] then
@@ -4568,32 +4568,32 @@ do
         WoodRus = {
             Character = game.Workspace.Stores.WoodRUs.Thom,
             Name = 'Thom',
-            ID = tonumber(9),
+            ID = tonumber(7),
         },
         FurnitureStore = {
             Character = game.Workspace.Stores.FurnitureStore.Corey,
             Name = 'Corey',
-            ID = tonumber(10),
+            ID = tonumber(8),
         },
         CarStore = {
             Character = game.Workspace.Stores.CarStore.Jenny,
             Name = 'Jenny',
-            ID = tonumber(11),
+            ID = tonumber(9),
         },
         ShackShop = {
             Character = game.Workspace.Stores.ShackShop.Bob,
             Name = 'Bob',
-            ID = tonumber(12),
+            ID = tonumber(10),
         },
         FineArt = {
             Character = game.Workspace.Stores.FineArt.Timothy,
             Name = 'Timothy',
-            ID = tonumber(13),
+            ID = tonumber(11),
         },
         LogicStore = {
             Character = game.Workspace.Stores.LogicStore.Lincoln,
             Name = 'Lincoln',
-            ID = tonumber(14),
+            ID = tonumber(12),
         },
     }
     _G['商店键'] = {
@@ -4604,19 +4604,11 @@ do
         FineArt = 'FineArt',
         LogicStore = 'LogicStore',
     }
+    _G['优先商店'] = { Wire = 'LogicStore' }
     _G['商人缓存'] = {}
     _G['商店ID文件'] = 'Rndm_npc_ids.json'
     _G['商店ID已载入'] = false
-    _G['固定商店ID'] = { WoodRUs = 9, FurnitureStore = 10, CarStore = 11, ShackShop = 12, FineArt = 13, LogicStore = 14 }
-    -- semua ID NPC yg sudah diketahui (toko + NPC lain), dilewati saat probe
-    _G['已知NPCID'] = {
-        [9] = 'Thom', [10] = 'Corey', [11] = 'Jenny', [12] = 'Bob', [13] = 'Timothy', [14] = 'Lincoln',
-        [4] = 'Ruhven', [17] = 'Merely', [15] = 'Hoover', [6] = 'Strange Man',
-    }
-    _G['已确认商店ID'] = {}
-    for k, v in pairs(_G['固定商店ID']) do
-        _G['已确认商店ID'][k] = v
-    end
+    _G['已确认商店ID'] = { WoodRUs = 9 }
     _G['载入商店ID'] = function()
         if _G['商店ID已载入'] then
             return
@@ -4684,9 +4676,7 @@ do
         end
         add(info.ID)
         for i = 1, 60 do
-            if not _G['已知NPCID'][i] then
-                add(i)
-            end
+            add(i)
         end
 
         local invoke = game.ReplicatedStorage.NPCDialog.PlayerChatted
@@ -4725,7 +4715,7 @@ do
 
         return nil
     end
-    _G['perkiraan商店ID'] = _G['固定商店ID']
+    _G['perkiraan商店ID'] = { WoodRUs = 9, FurnitureStore = 10, CarStore = 11, ShackShop = 12, FineArt = 13, LogicStore = 14 }
     _G['商人'] = function(storeName)
         if not storeName then
             return nil
@@ -4817,6 +4807,8 @@ do
     end
     _G['找到物品'] = function(flag, storeFilter)
         local mismatch = false
+        local preferred = _G['优先商店'][flag]
+        local fallback = nil
 
         for _, grp in ipairs(game.Workspace.Stores:GetChildren()) do
             if grp.Name == 'ShopItems' and grp:FindFirstChild('Box') then
@@ -4827,6 +4819,8 @@ do
 
                         if storeFilter and storeName ~= storeFilter then
                             mismatch = true
+                        elseif preferred and storeName ~= preferred then
+                            fallback = fallback or { child, storeName }
                         else
                             local storeInfo = _G['商人'](storeName)
                             local counter = storeName and (game.Workspace.Stores[storeName].Counter.CFrame + Vector3.new(0, 0.6, 0)) or nil
@@ -4836,6 +4830,14 @@ do
                     end
                 end
             end
+        end
+
+        if fallback then
+            local child, storeName = fallback[1], fallback[2]
+            local storeInfo = _G['商人'](storeName)
+            local counter = storeName and (game.Workspace.Stores[storeName].Counter.CFrame + Vector3.new(0, 0.6, 0)) or nil
+
+            return child, storeInfo, counter, false
         end
 
         return nil, nil, nil, mismatch
@@ -5182,7 +5184,7 @@ do
                 for _, child in ipairs(grp:GetChildren()) do
                     local nameVal = child:FindFirstChild('BoxItemName')
                     if nameVal and not _G['商店物品缓存'][nameVal.Value] then
-                        local storeName = _G['判断商店'](child)
+                        local storeName = _G['优先商店'][nameVal.Value] or _G['判断商店'](child)
                         if storeName then
                             _G['商店物品缓存'][nameVal.Value] = storeName
                             table.insert(_G['商店物品顺序'], nameVal.Value)
@@ -5555,7 +5557,7 @@ do
     end)
     _Other:Button('Toll Bridge', function()
         game.ReplicatedStorage.NPCDialog.PlayerChatted:InvokeServer({
-            ID = 17,
+            ID = 15,
             Character = 'name',
             Name = 'name',
             Dialog = 'Dialog',
@@ -5563,7 +5565,7 @@ do
     end)
     _Other:Button('Ferry Ticket', function()
         game.ReplicatedStorage.NPCDialog.PlayerChatted:InvokeServer({
-            ID = 15,
+            ID = 13,
             Character = 'name',
             Name = 'name',
             Dialog = 'Dialog',
@@ -5571,7 +5573,7 @@ do
     end)
     _Other:Button('Power Of Ease', function()
         game.ReplicatedStorage.NPCDialog.PlayerChatted:InvokeServer({
-            ID = 6,
+            ID = 3,
             Character = 'name',
             Name = 'name',
             Dialog = 'Dialog',
@@ -6243,10 +6245,10 @@ do
 
     _Vehicle2:Slider('Vehicle Speed', 1, 1, 5, false, function(value)
         _G['修改汽车的属性'](value, 'MaxSpeed')
-    end, 'VehicleSpeed')
+    end)
     _Vehicle2:Slider('Steer Angle', 0.7, 0.7, 5, true, function(value)
         _G['修改汽车的属性'](value, 'SteerAngle')
-    end, 'SteerAngle')
+    end)
     _Vehicle2:Button('Flip Vehicle', function()
         if _G['自己身体'].SeatPart or _G['自己身体'].SeatPart == 'DriveSeat' then
             _G['自己身体'].SeatPart.Parent:PivotTo(_G['自己身体'].SeatPart.Parent.PrimaryPart.CFrame * CFrame.Angles(math.rad(-180), 0, 0) + Vector3.new(0, 5, 0))
