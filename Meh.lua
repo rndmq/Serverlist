@@ -308,7 +308,7 @@ do
                 }
             end
 
-            function S:Slider(title, default, min, max, precise, cb)
+            function S:Slider(title, default, min, max, precise, cb, bind)
                 breathe()
                 cb = cb or function() end
                 min = min or 1
@@ -317,7 +317,7 @@ do
                 local ready = false
                 local obj = container:CreateSlider(tostring(title), min, max, default, precise and true or false, function(v)
                     if ready then cb(tonumber(v)) end
-                end)
+                end, bind)
                 ready = true
                 
                 return {
@@ -2386,7 +2386,7 @@ do
     local sWalk = _Player2:Slider('WalkSpeed', 50, 16, 500, false, function(value)
         speedSet = value
         applySpeed()
-    end)
+    end, 'WalkSpeed')
     _Player2:Toggle('Apply speed', false, function(v)
         applyOn = v
         applySpeed()
@@ -2452,29 +2452,29 @@ do
     end)
     local sJump = _Player2:Slider('JumpPower', 100, 60, 500, false, function(value)
         _G['菜单']['跳跃提升'] = value
-    end)
+    end, 'JumpPower')
     local defaultHip = 0
     pcall(function() defaultHip = _G['自己身体'].HipHeight end)
     local sHip = _Player2:Slider('HipHeight', 0, 0, 500, false, function(value)
         _G['自己身体'].HipHeight = value
-    end)
+    end, 'HipHeight')
     local sZoom = _Player2:Slider('Zoom Distance', 100, 1, 2000, false, function(value)
         _G['自己'].CameraMaxZoomDistance = value
-    end)
+    end, 'ZoomDistance')
     local sFov = _Player2:Slider('FOV', 70, 70, 150, false, function(value)
         game.Workspace.Camera.FieldOfView = value
-    end)
+    end, 'Fov')
     local sFly = _Player2:Slider('Fly Speed', 200, 50, 500, false, function(value)
         _G['菜单']['飞行速度'] = value
-    end)
+    end, 'FlySpeed')
     _Player2:Button('Reset sliders to default', function()
         
-        sWalk:SetValue(16)
-        sJump:SetValue(60)
-        sHip:SetValue(defaultHip)
-        sZoom:SetValue(128)
-        sFov:SetValue(70)
-        sFly:SetValue(200)
+        getgenv().WalkSpeed = 16
+        getgenv().JumpPower = 60
+        getgenv().HipHeight = defaultHip
+        getgenv().ZoomDistance = 128
+        getgenv().Fov = 70
+        getgenv().FlySpeed = 200
 
         
         speedSet = 16
@@ -4056,7 +4056,7 @@ do
 
     _Slot2:Slider('select slot', 1, 1, 6, false, function(value)
         _G['菜单']['存档'] = value
-    end)
+    end, 'SelectSlot')
     _Slot2:Toggle('Fast Load', false, function(enabled)
         _G['菜单']['快速加载'] = enabled
     end)
@@ -4232,7 +4232,7 @@ do
 
     _DupePower:Slider('Power slot', 1, 1, 6, false, function(value)
         _G['菜单']['有超级建造的存档'] = value
-    end)
+    end, 'PowerSlot')
     _DupePower:Button('Dupe Power To Build With ease', function()
         if _G['自己'].SuperBlueprint.Value then
             if _G['自己'].CurrentSaveSlot.Value ~= _G['菜单']['有超级建造的存档'] then
@@ -4568,32 +4568,32 @@ do
         WoodRus = {
             Character = game.Workspace.Stores.WoodRUs.Thom,
             Name = 'Thom',
-            ID = tonumber(7),
+            ID = tonumber(9),
         },
         FurnitureStore = {
             Character = game.Workspace.Stores.FurnitureStore.Corey,
             Name = 'Corey',
-            ID = tonumber(8),
+            ID = tonumber(10),
         },
         CarStore = {
             Character = game.Workspace.Stores.CarStore.Jenny,
             Name = 'Jenny',
-            ID = tonumber(9),
+            ID = tonumber(11),
         },
         ShackShop = {
             Character = game.Workspace.Stores.ShackShop.Bob,
             Name = 'Bob',
-            ID = tonumber(10),
+            ID = tonumber(12),
         },
         FineArt = {
             Character = game.Workspace.Stores.FineArt.Timothy,
             Name = 'Timothy',
-            ID = tonumber(11),
+            ID = tonumber(13),
         },
         LogicStore = {
             Character = game.Workspace.Stores.LogicStore.Lincoln,
             Name = 'Lincoln',
-            ID = tonumber(12),
+            ID = tonumber(14),
         },
     }
     _G['商店键'] = {
@@ -4604,11 +4604,18 @@ do
         FineArt = 'FineArt',
         LogicStore = 'LogicStore',
     }
-    _G['优先商店'] = { Wire = 'LogicStore' }
     _G['商人缓存'] = {}
     _G['商店ID文件'] = 'Rndm_npc_ids.json'
     _G['商店ID已载入'] = false
-    _G['已确认商店ID'] = { WoodRUs = 9 }
+    _G['固定商店ID'] = { WoodRUs = 9, FurnitureStore = 10, CarStore = 11, ShackShop = 12, FineArt = 13, LogicStore = 14 }
+    _G['已知NPCID'] = {
+        [9] = 'Thom', [10] = 'Corey', [11] = 'Jenny', [12] = 'Bob', [13] = 'Timothy', [14] = 'Lincoln',
+        [4] = 'Ruhven', [17] = 'Merely', [15] = 'Hoover', [6] = 'Strange Man',
+    }
+    _G['已确认商店ID'] = {}
+    for k, v in pairs(_G['固定商店ID']) do
+        _G['已确认商店ID'][k] = v
+    end
     _G['载入商店ID'] = function()
         if _G['商店ID已载入'] then
             return
@@ -4619,7 +4626,7 @@ do
                 local data = game:GetService('HttpService'):JSONDecode(readfile(_G['商店ID文件']))
                 if type(data) == 'table' and data.version == game.PlaceVersion and type(data.ids) == 'table' then
                     for name, id in pairs(data.ids) do
-                        if type(id) == 'number' then
+                        if type(id) == 'number' and not _G['固定商店ID'][name] then
                             _G['已确认商店ID'][name] = id
                         end
                     end
@@ -4676,7 +4683,9 @@ do
         end
         add(info.ID)
         for i = 1, 60 do
-            add(i)
+            if not _G['已知NPCID'][i] then
+                add(i)
+            end
         end
 
         local invoke = game.ReplicatedStorage.NPCDialog.PlayerChatted
@@ -4715,7 +4724,7 @@ do
 
         return nil
     end
-    _G['perkiraan商店ID'] = { WoodRUs = 9, FurnitureStore = 10, CarStore = 11, ShackShop = 12, FineArt = 13, LogicStore = 14 }
+    _G['perkiraan商店ID'] = _G['固定商店ID']
     _G['商人'] = function(storeName)
         if not storeName then
             return nil
@@ -4807,8 +4816,6 @@ do
     end
     _G['找到物品'] = function(flag, storeFilter)
         local mismatch = false
-        local preferred = _G['优先商店'][flag]
-        local fallback = nil
 
         for _, grp in ipairs(game.Workspace.Stores:GetChildren()) do
             if grp.Name == 'ShopItems' and grp:FindFirstChild('Box') then
@@ -4819,8 +4826,6 @@ do
 
                         if storeFilter and storeName ~= storeFilter then
                             mismatch = true
-                        elseif preferred and storeName ~= preferred then
-                            fallback = fallback or { child, storeName }
                         else
                             local storeInfo = _G['商人'](storeName)
                             local counter = storeName and (game.Workspace.Stores[storeName].Counter.CFrame + Vector3.new(0, 0.6, 0)) or nil
@@ -4832,269 +4837,446 @@ do
             end
         end
 
-        if fallback then
-            local child, storeName = fallback[1], fallback[2]
-            local storeInfo = _G['商人'](storeName)
-            local counter = storeName and (game.Workspace.Stores[storeName].Counter.CFrame + Vector3.new(0, 0.6, 0)) or nil
-
-            return child, storeInfo, counter, false
-        end
-
         return nil, nil, nil, mismatch
     end
+    _G.MaxBatch = 5
+    _G.PreferredStore = { Wire = 'LogicStore' }
+    _G.CarryFrames = 10
+    _G.BuyProgress = nil
     _G['传送物品'] = nil
-    _G['买'] = function(arg, storeFilter)
-        local wrongStore = false
-        local function locate()
-            local item, store, counter, mismatch = _G['找到物品'](arg, storeFilter)
 
-            _G['收银台'] = counter
-            _G['商人id'] = store
-            _G['物品'] = item
-            wrongStore = mismatch and true or false
-        end
+    _G.FindAllItems = function(flag, storeFilter)
+        local mismatch = false
+        local byStore, order = {}, {}
 
-        locate()
-
-        if _G['物品'] == nil and wrongStore then
-            _G['提醒'](tostring(arg) .. ' is not sold at ' .. tostring(storeFilter) .. ' - pick the item again')
-            _G['菜单']['自动购买停止'] = true
-            return false
-        end
-
-        if _G['物品'] == nil then
-            _G['提醒']('Wait for the item to refresh')
-
-            while _G['菜单']['自动购买停止'] ~= true do
-                task.wait()
-                locate()
-
-                if _G['物品'] ~= nil then
-                    break
-                end
-                if wrongStore then
-                    _G['提醒'](tostring(arg) .. ' is not sold at ' .. tostring(storeFilter) .. ' - pick the item again')
-                    _G['菜单']['自动购买停止'] = true
-                    break
+        for _, grp in ipairs(game.Workspace.Stores:GetChildren()) do
+            if grp.Name == 'ShopItems' and grp:FindFirstChild('Box') then
+                for _, child in ipairs(grp:GetChildren()) do
+                    local nameVal = child:FindFirstChild('BoxItemName')
+                    if nameVal and nameVal.Value == flag then
+                        local storeName = _G['判断商店'](child)
+                        if storeName then
+                            if storeFilter and storeName ~= storeFilter then
+                                mismatch = true
+                            else
+                                if not byStore[storeName] then
+                                    byStore[storeName] = {}
+                                    order[#order + 1] = storeName
+                                end
+                                table.insert(byStore[storeName], child)
+                            end
+                        end
+                    end
                 end
             end
         end
 
-        if _G['菜单']['自动购买停止'] == true or _G['物品'] == nil then
-            return false
+        local pick = nil
+        local preferred = _G.PreferredStore[flag]
+        if preferred and byStore[preferred] then
+            pick = preferred
+        else
+            local best = 0
+            for _, name in ipairs(order) do
+                if #byStore[name] > best then
+                    pick = name
+                    best = #byStore[name]
+                end
+            end
         end
-        if not _G['商人id'] or not _G['收银台'] then
+
+        if not pick then
+            return {}, nil, nil, mismatch
+        end
+
+        local info = _G['商人'](pick)
+        local counter = game.Workspace.Stores[pick].Counter.CFrame + Vector3.new(0, 0.6, 0)
+
+        return byStore[pick], info, counter, false
+    end
+
+    _G.BuyBatch = function(arg, want, storeFilter)
+        local menu = _G['菜单']
+        local RS = game:GetService('RunService')
+        local rep = game:GetService('ReplicatedStorage')
+        local drag = rep.Interaction.ClientIsDragging
+        local invoke = rep.NPCDialog.PlayerChatted
+
+        local function stopped()
+            return menu['自动购买停止'] == true
+        end
+
+        local items, npc, counter, mismatch
+        local waitStart = tick()
+        local noted = false
+
+        while true do
+            if stopped() then
+                return 0, 'stop'
+            end
+            items, npc, counter, mismatch = _G.FindAllItems(arg, storeFilter)
+            if #items > 0 then
+                break
+            end
+            if mismatch then
+                _G['提醒'](tostring(arg) .. ' is not sold at ' .. tostring(storeFilter) .. ' - pick the item again')
+                return 0, 'store'
+            end
+            if not noted then
+                noted = true
+                _G['提醒']('Wait for the item to refresh')
+            end
+            if tick() - waitStart > 45 then
+                return 0, 'stock'
+            end
+            task.wait(0.1)
+        end
+
+        if not npc or not counter then
             _G['提醒']('Store for ' .. tostring(arg) .. ' not found')
-            _G['菜单']['自动购买停止'] = true
-            return false
+            return 0, 'store'
         end
 
-        local item = _G['物品']
-        local counter = _G['收银台']
-        local npc = _G['商人id']
+        local n = math.min(want, #items, math.min(tonumber(_G.MaxBatch) or 5, 5))
+        local unit = tonumber(_G['商品价格'](arg, 1)) or 0
+        local money = 0
+        pcall(function() money = _G['自己'].leaderstats.Money.Value end)
 
-        local storeName = _G['判断商店'](item) or '?'
-        local function npcLabel()
-            return tostring(npc.Name) .. ' #' .. tostring(npc.ID)
+        if unit > 0 then
+            local afford = math.floor(money / unit)
+            if afford < 1 then
+                _G['提醒'](string.format('Not enough money for %s ($%d each, you have $%d)', tostring(arg), math.floor(unit), math.floor(money)))
+                return 0, 'money'
+            end
+            n = math.min(n, afford)
+        end
+        if not npc.Verified then
+            n = 1
+        end
+        n = math.max(1, math.floor(n))
+
+        local batch = {}
+        for i = 1, n do
+            batch[i] = items[i]
+        end
+        local storeName = _G['判断商店'](batch[1]) or '?'
+
+        local function partOf(it)
+            local p = it.PrimaryPart
+            if not p then
+                p = it:FindFirstChild('Main') or it:FindFirstChildOfClass('MeshPart') or it:FindFirstChildOfClass('Part')
+                if p then
+                    pcall(function() it.PrimaryPart = p end)
+                end
+            end
+            return p
         end
 
-        local function bringToCounter()
-            _G['传送'](item.Main.CFrame - Vector3.new(1, -3, 1))
-            value6(item, counter)
-            task.spawn(function()
-                _G['传送'](counter + Vector3.new(5, 0, 5))
+        local counterPart = nil
+        pcall(function() counterPart = game.Workspace.Stores[storeName].Counter end)
+        local topY = counter.Position.Y
+        if counterPart then
+            topY = counterPart.Position.Y + counterPart.Size.Y / 2
+        end
+
+        local gap = 0
+        for _, it in ipairs(batch) do
+            pcall(function()
+                local s = it:GetExtentsSize()
+                gap = math.max(gap, s.X, s.Z)
             end)
+        end
+        gap = gap + 0.6
+
+        local cols = math.min(n, 3)
+        local rows = math.ceil(n / 3)
+        local lift = 0
+
+        local function put(it, i)
+            local p = partOf(it)
+            if not p then return end
+            pcall(function()
+                local k = i - 1
+                local ox = ((k % 3) - (cols - 1) / 2) * gap
+                local oz = (math.floor(k / 3) - (rows - 1) / 2) * gap
+                local bbCF, bbSize = it:GetBoundingBox()
+                local base = CFrame.new(counter.Position.X, topY, counter.Position.Z) * counter.Rotation
+                local center = base * CFrame.new(ox, bbSize.Y / 2 + 0.5 + lift, oz)
+                local rel = bbCF:ToObjectSpace(it:GetPivot())
+                drag:FireServer(it)
+                p.AssemblyLinearVelocity = Vector3.zero
+                p.AssemblyAngularVelocity = Vector3.zero
+                it:PivotTo(center * rel)
+            end)
+        end
+
+        local function isBought(it)
+            local ok, res = pcall(function()
+                if it.Owner.Value ~= _G['自己'] then
+                    return false
+                end
+                return (not it:FindFirstChild('BoxItemName')) or it:IsDescendantOf(game.Workspace.PlayerModels)
+            end)
+            return ok and res == true
+        end
+
+        local function distToMe(pos)
+            local ok, d = pcall(function() return (_G['自己的方块'].Position - pos).Magnitude end)
+            return ok and d or math.huge
         end
 
         local function endChat()
             task.spawn(function()
-                pcall(function()
-                    game.ReplicatedStorage.NPCDialog.PlayerChatted:InvokeServer(npc, 'EndChat')
-                end)
+                pcall(function() invoke:InvokeServer(npc, 'EndChat') end)
             end)
         end
 
-        local invoking = false
-        local lastInvoke = 0
-        local function confirm()
-            if invoking and tick() - lastInvoke < 3 then
-                return
+        for i, it in ipairs(batch) do
+            if stopped() then
+                return 0, 'stop'
             end
-            invoking = true
-            lastInvoke = tick()
-            task.spawn(function()
-                pcall(function()
-                    game.ReplicatedStorage.NPCDialog.PlayerChatted:InvokeServer(npc, 'Initiate')
-                end)
-                pcall(function()
-                    game.ReplicatedStorage.NPCDialog.PlayerChatted:InvokeServer(npc, 'ConfirmPurchase')
-                end)
-                invoking = false
-            end)
-        end
-
-        local function itemToCounter()
-            local ok, d = pcall(function()
-                return (item.Main.Position - counter.Position).Magnitude
-            end)
-            return ok and d or math.huge
-        end
-        local function meToCounter()
-            local ok, d = pcall(function()
-                return (_G['自己的方块'].Position - counter.Position).Magnitude
-            end)
-            return ok and d or math.huge
-        end
-
-        bringToCounter()
-
-        local holdUntil = tick() + 1.2
-        while tick() < holdUntil do
-            pcall(function()
-                game.ReplicatedStorage.Interaction.ClientIsDragging:FireServer(item)
-                item.PrimaryPart.CFrame = counter
-            end)
-            game:GetService('RunService').Stepped:wait()
-        end
-
-        if not npc.Verified then
-            local unit = tonumber(_G['商品价格'](arg, 1))
-            if unit and unit > 0 then
-                _G['提醒']('Finding ' .. tostring(npc.Name) .. ' ID...')
-                local found = _G['探测商店ID'](npc, unit)
-                if found then
-                    npc.ID = found
-                    npc.Verified = true
-                    _G['存商店ID'](storeName, found)
+            local p = partOf(it)
+            if p then
+                if i == 1 or distToMe(p.Position) > 25 then
+                    pcall(function() _G['传送'](p.CFrame - Vector3.new(1, -3, 1)) end)
                 end
+                for _ = 1, 2 do
+                    put(it, i)
+                    RS.Heartbeat:Wait()
+                end
+            end
+        end
+
+        pcall(function() _G['传送'](counter + Vector3.new(5, 0, 5)) end)
+
+        for _ = 1, 4 do
+            for i, it in ipairs(batch) do
+                put(it, i)
+            end
+            RS.Heartbeat:Wait()
+        end
+
+        if not npc.Verified and unit > 0 then
+            _G['提醒']('Finding ' .. tostring(npc.Name) .. ' ID...')
+            local found = _G['探测商店ID'](npc, unit * n)
+            if found then
+                npc.ID = found
+                npc.Verified = true
+                _G['存商店ID'](storeName, found)
             end
         end
 
         local noteKey = tostring(arg) .. '@' .. storeName
         if _G['最后购买提示'] ~= noteKey then
             _G['最后购买提示'] = noteKey
-            _G['提醒']('Buying ' .. tostring(arg) .. ' at ' .. storeName .. ' (' .. npcLabel() .. ')')
+            _G['提醒']('Buying ' .. tostring(arg) .. ' at ' .. storeName .. ' (' .. tostring(npc.Name) .. ' #' .. tostring(npc.ID) .. ')')
         end
 
-        local t0 = tick()
+        local invoking, lastInvoke = false, 0
+        local function confirm()
+            if invoking and tick() - lastInvoke < 1.5 then
+                return
+            end
+            invoking = true
+            lastInvoke = tick()
+            task.spawn(function()
+                pcall(function() invoke:InvokeServer(npc, 'Initiate') end)
+                pcall(function() invoke:InvokeServer(npc, 'ConfirmPurchase') end)
+                invoking = false
+            end)
+        end
+
+        local reason = nil
+        local lastCount = 0
+        local lastProgress = tick()
         local lastCheck = tick()
 
         while true do
-            if _G['菜单']['自动购买停止'] == true then
-                return false
+            if stopped() then
+                reason = 'stop'
+                break
             end
 
             confirm()
-            wait()
+            RS.Heartbeat:Wait()
 
-            local ok, done = pcall(function()
-                if item.Owner.Value ~= _G['自己'] then
-                    return false
+            local count = 0
+            for _, it in ipairs(batch) do
+                if isBought(it) then
+                    count = count + 1
                 end
-                return not item:FindFirstChild('BoxItemName') or item:IsDescendantOf(game.Workspace.PlayerModels)
-            end)
-            if ok and done then
-                endChat()
-                if _G['已确认商店ID'][storeName] ~= npc.ID then
-                    npc.Verified = true
-                    _G['存商店ID'](storeName, npc.ID)
-                end
-                return true
             end
 
-            if tick() - lastCheck > 2 then
+            if count >= n then
+                break
+            end
+            if count > lastCount then
+                lastCount = count
+                lastProgress = tick()
+            end
+
+            if tick() - lastCheck > 0.5 then
                 lastCheck = tick()
-
-                if itemToCounter() > 12 then
-                    pcall(bringToCounter)
-                elseif meToCounter() > 25 then
-                    pcall(function()
-                        _G['传送'](counter + Vector3.new(5, 0, 5))
-                    end)
+                if tick() - lastProgress > 3 and lift == 0 then
+                    lift = 1
+                    for i, it in ipairs(batch) do
+                        if not isBought(it) then
+                            put(it, i)
+                        end
+                    end
+                end
+                for i, it in ipairs(batch) do
+                    if not isBought(it) then
+                        local p = partOf(it)
+                        if p and (p.Position - counter.Position).Magnitude > 8 then
+                            put(it, i)
+                        end
+                    end
+                end
+                if distToMe(counter.Position) > 25 then
+                    pcall(function() _G['传送'](counter + Vector3.new(5, 0, 5)) end)
                 end
             end
 
-            if tick() - t0 > 15 then
-                local money = 0
-                pcall(function() money = _G['自己'].leaderstats.Money.Value end)
-                _G['提醒'](string.format('%s not bought | store %s (%s) | item-counter %dst | you-counter %dst | $%d', tostring(arg), storeName, npcLabel(), math.min(itemToCounter(), 9999), math.min(meToCounter(), 9999), money))
-                endChat()
+            if tick() - lastProgress > 10 then
+                local m = 0
+                pcall(function() m = _G['自己'].leaderstats.Money.Value end)
+                _G['提醒'](string.format('%s not bought | store %s (%s #%s) | $%d', tostring(arg), storeName, tostring(npc.Name), tostring(npc.ID), math.floor(m)))
                 _G['忘记商店ID'](storeName)
-                return false
+                reason = 'fail'
+                break
             end
         end
+
+        local got = {}
+        for _, it in ipairs(batch) do
+            if isBought(it) then
+                got[#got + 1] = it
+            end
+        end
+
+        if #got > 0 then
+            local base = menu['自动购买的地点']
+            if not base then
+                pcall(function() base = _G['自己的方块'].CFrame end)
+            end
+            local startIdx = _G['数量'] or 0
+
+            for _ = 1, (tonumber(_G.CarryFrames) or 10) do
+                for i, it in ipairs(got) do
+                    pcall(function()
+                        local dest
+                        if menu['自动购买用锚点'] then
+                            local k = (startIdx + i - 1) % 24
+                            dest = base * CFrame.new(math.floor(k / 6) * 3, 1 + (k % 6) * 1.5, 0)
+                        else
+                            dest = base * CFrame.new(((i - 1) % 4) * 1.5, 0, math.floor((i - 1) / 4) * 1.5)
+                        end
+                        drag:FireServer(it)
+                        it:PivotTo(dest)
+                    end)
+                end
+                RS.Stepped:Wait()
+            end
+
+            if _G['已确认商店ID'][storeName] ~= npc.ID then
+                npc.Verified = true
+                _G['存商店ID'](storeName, npc.ID)
+            end
+        end
+
+        endChat()
+
+        return #got, reason
     end
 
-    _G['传送物品'] = nil
-    _G['自动购买v2'] = function(arg1, arg2, flag, storeFilter)
-        _G['自动数量'] = arg2
+    _G['自动购买v2'] = function(arg1, arg2, flag, storeFilter, resume)
+        local menu = _G['菜单']
+        local prog = _G.BuyProgress
 
-        if flag then
-            _G['自动数量'] = 9000000000
-        end
-        if flag == false and _G['商品价格'](arg1, arg2) > _G['自己'].leaderstats.Money.Value then
-            return _G['提醒']('you not have enough money')
+        if resume and prog and prog.item == arg1 then
+            menu['自动购买的地点'] = prog.dest
+            menu['自动购买用锚点'] = prog.anchor
         else
-            local flag2 = false
+            local origin = nil
+            pcall(function() origin = _G['自己的方块'].CFrame end)
+            prog = {
+                item = arg1,
+                target = flag and math.huge or math.max(1, math.floor(tonumber(arg2) or 1)),
+                bought = 0,
+                store = storeFilter,
+                dest = menu['自动购买的地点'],
+                anchor = menu['自动购买用锚点'],
+                origin = origin,
+            }
+            _G.BuyProgress = prog
+        end
 
-            _G['传送物品'] = game.Workspace.PlayerModels.ChildAdded:Connect(function(child)
-                child:WaitForChild('Owner', 60)
+        prog.resumable = false
+        _G['数量'] = prog.bought
+        _G['最后购买提示'] = nil
 
-                if child.Owner.Value == _G['自己'] then
-                    pcall(function()
-                        local dest = _G['菜单']['自动购买的地点']
-                        if _G['菜单']['自动购买用锚点'] then
-                            local n = (_G['数量'] or 0) % 24
-                            dest = dest * CFrame.new(math.floor(n / 6) * 3, 1 + (n % 6) * 1.5, 0)
-                        end
-
-                        for _ = 1, 15 do
-                            game:GetService('ReplicatedStorage').Interaction.ClientIsDragging:FireServer(child)
-                            child:PivotTo(dest)
-                            game:GetService('RunService').Stepped:wait()
-                        end
-
-                        flag2 = true
-                    end)
-                end
+        local function tgtText()
+            return prog.target == math.huge and 'inf' or tostring(prog.target)
+        end
+        local function show()
+            pcall(function()
+                _G['自己'].PlayerGui.MoneyDisplayGui.Text.Text = 'Autobuying:' .. prog.bought .. '/' .. tgtText()
             end)
-            _G['数量'] = 0
-            _G['最后购买提示'] = nil
+            pcall(function()
+                _G.BuyProgressLabel.Text = string.format('Progress: %d/%s %s', prog.bought, tgtText(), tostring(prog.item))
+            end)
+        end
+        show()
 
-            for _ = 1, math.max(1, math.floor(tonumber(_G['自动数量']) or 1)) do
-                flag2 = false
-
-                if _G['菜单']['自动购买停止'] ~= true then
-                    if not _G['买'](arg1, storeFilter) then
-                        break
-                    end
-
-                    _G['数量'] = _G['数量'] + 1
-                    _G['自己'].PlayerGui.MoneyDisplayGui.Text.Text = 'Autobuying:' .. tostring(_G['数量']) .. '/' .. tostring(arg2)
-
-                    local waitStart = tick()
-                    repeat
-                        task.wait()
-                    until flag2 or _G['菜单']['自动购买停止'] == true or tick() - waitStart > 10
-
-                    task.wait()
-                end
+        local reason = nil
+        while prog.bought < prog.target do
+            if menu['自动购买停止'] == true then
+                reason = 'stop'
+                break
             end
 
-            wait()
+            local got, why = _G.BuyBatch(arg1, prog.target - prog.bought, prog.store)
+            prog.bought = prog.bought + got
+            _G['数量'] = prog.bought
+            show()
 
-            _G['自己'].PlayerGui.MoneyDisplayGui.Text.Text = tostring(_G['自己'].leaderstats.Money.Value)
-
-            spawn(function()
-                pcall(function()
-                    _G['传送物品']:Disconnect()
-
-                    _G['传送物品'] = nil
-                end)
-            end)
-
-            return
+            if why then
+                reason = why
+                break
+            end
+            if got == 0 then
+                reason = 'fail'
+                break
+            end
         end
+
+        pcall(function()
+            _G['自己'].PlayerGui.MoneyDisplayGui.Text.Text = tostring(_G['自己'].leaderstats.Money.Value)
+        end)
+
+        if reason == nil then
+            if prog.target > 1 then
+                _G['提醒'](string.format('Done: bought %d x %s', prog.bought, tostring(arg1)))
+            end
+        else
+            local why = ({
+                stop = 'Stopped',
+                money = 'Not enough money',
+                stock = 'Item did not restock in time',
+                fail = 'Purchase timed out',
+                store = 'Store problem',
+            })[reason] or reason
+
+            if prog.target == math.huge or reason == 'store' then
+                _G['提醒'](string.format('%s. Bought %d x %s so far', why, prog.bought, tostring(arg1)))
+            else
+                prog.resumable = prog.bought < prog.target
+                _G['提醒'](string.format('%s: bought %d/%d x %s. Press "Continue" to buy the remaining %d.', why, prog.bought, prog.target, tostring(arg1), prog.target - prog.bought))
+            end
+        end
+
+        return
     end
     _G['获得商品名字'] = function()
         _G['全部商品'] = {}
@@ -5184,7 +5366,7 @@ do
                 for _, child in ipairs(grp:GetChildren()) do
                     local nameVal = child:FindFirstChild('BoxItemName')
                     if nameVal and not _G['商店物品缓存'][nameVal.Value] then
-                        local storeName = _G['优先商店'][nameVal.Value] or _G['判断商店'](child)
+                        local storeName = _G.PreferredStore[nameVal.Value] or _G['判断商店'](child)
                         if storeName then
                             _G['商店物品缓存'][nameVal.Value] = storeName
                             table.insert(_G['商店物品顺序'], nameVal.Value)
@@ -5346,6 +5528,7 @@ do
         updateTotal()
     end)
     totalLabel = _AutoBuy2:Label('Total: pick an item')
+    _G.BuyProgressLabel = _AutoBuy2:Label('Progress: -')
 
     task.spawn(function()
         while not u.IsUnloaded() do
@@ -5496,6 +5679,25 @@ do
     _AutoBuy2:Button('Abort', function()
         _G['菜单']['自动购买停止'] = true
     end, { stopper = true })
+    _AutoBuy2:Button('Continue', function()
+        local ok, err = pcall(function()
+            local prog = _G.BuyProgress
+            if not prog or not prog.resumable then
+                return _G['提醒']('Nothing to continue')
+            end
+
+            _G['菜单']['自动购买停止'] = false
+            _G['自动购买v2'](prog.item, prog.target, false, prog.store, true)
+            _G['菜单']['自动购买用锚点'] = false
+
+            if prog.origin then
+                _G['传送'](prog.origin)
+            end
+        end)
+        if not ok then
+            _G['提醒']('Continue error: ' .. tostring(err))
+        end
+    end)
     _AutoBuy2:Toggle('Loop Auto Buy', false, function(enabled)
         if enabled then
             if not _G['菜单']['自动购买的物品'] then
@@ -5557,7 +5759,7 @@ do
     end)
     _Other:Button('Toll Bridge', function()
         game.ReplicatedStorage.NPCDialog.PlayerChatted:InvokeServer({
-            ID = 15,
+            ID = 17,
             Character = 'name',
             Name = 'name',
             Dialog = 'Dialog',
@@ -5565,7 +5767,7 @@ do
     end)
     _Other:Button('Ferry Ticket', function()
         game.ReplicatedStorage.NPCDialog.PlayerChatted:InvokeServer({
-            ID = 13,
+            ID = 15,
             Character = 'name',
             Name = 'name',
             Dialog = 'Dialog',
@@ -5573,7 +5775,7 @@ do
     end)
     _Other:Button('Power Of Ease', function()
         game.ReplicatedStorage.NPCDialog.PlayerChatted:InvokeServer({
-            ID = 3,
+            ID = 6,
             Character = 'name',
             Name = 'name',
             Dialog = 'Dialog',
@@ -6245,10 +6447,10 @@ do
 
     _Vehicle2:Slider('Vehicle Speed', 1, 1, 5, false, function(value)
         _G['修改汽车的属性'](value, 'MaxSpeed')
-    end)
+    end, 'VehicleSpeed')
     _Vehicle2:Slider('Steer Angle', 0.7, 0.7, 5, true, function(value)
         _G['修改汽车的属性'](value, 'SteerAngle')
-    end)
+    end, 'SteerAngle')
     _Vehicle2:Button('Flip Vehicle', function()
         if _G['自己身体'].SeatPart or _G['自己身体'].SeatPart == 'DriveSeat' then
             _G['自己身体'].SeatPart.Parent:PivotTo(_G['自己身体'].SeatPart.Parent.PrimaryPart.CFrame * CFrame.Angles(math.rad(-180), 0, 0) + Vector3.new(0, 5, 0))
