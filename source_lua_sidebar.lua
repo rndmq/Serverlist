@@ -534,7 +534,8 @@ table.insert(Library.LibraryColorTable, FloatingIcon)
 
 Minimized = false
 local isDragging = false
-local iconPosition = UDim2.new(0, 100, 0, 100)   -- posisi ikon melayang (bisa digeser user)
+local ICON_DROP = 64                            -- seberapa jauh ikon diturunkan dari pojok kiri atas window (piksel)
+local iconPosition = UDim2.new(0, 14, 0, 120)   -- cadangan; dihitung ulang dari posisi window saat minimize
 local iconMoved = false
 local windowPosition = nil                        -- posisi window sebelum di-minimize
 local originalMainSize
@@ -620,12 +621,13 @@ local function MinimizeUI()
     Minimized = true
 
     windowPosition = Main.Position
-    if not iconMoved then
-        local inset = game:GetService("GuiService"):GetGuiInset()
-        iconPosition = UDim2.new(0, Main.AbsolutePosition.X, 0, Main.AbsolutePosition.Y - inset.Y)
-    end
     if not originalMainSize then
         originalMainSize = Main.Size
+    end
+    if not iconMoved then
+        -- X sama seperti posisi window, tapi diturunkan supaya nggak ketutup menu / voice chat Roblox
+        local inset = game:GetService("GuiService"):GetGuiInset()
+        iconPosition = UDim2.new(0, math.max(Main.AbsolutePosition.X, 8), 0, Main.AbsolutePosition.Y - inset.Y + ICON_DROP)
     end
     mainImageTransparency = Main.ImageTransparency
     CacheFade()
