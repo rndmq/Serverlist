@@ -308,7 +308,7 @@ do
                 }
             end
 
-            function S:Slider(title, default, min, max, precise, cb)
+            function S:Slider(title, default, min, max, precise, cb, bind)
                 breathe()
                 cb = cb or function() end
                 min = min or 1
@@ -317,7 +317,7 @@ do
                 local ready = false
                 local obj = container:CreateSlider(tostring(title), min, max, default, precise and true or false, function(v)
                     if ready then cb(tonumber(v)) end
-                end)
+                end, bind)
                 ready = true
                 
                 return {
@@ -2386,7 +2386,7 @@ do
     local sWalk = _Player2:Slider('WalkSpeed', 50, 16, 500, false, function(value)
         speedSet = value
         applySpeed()
-    end)
+    end, 'WalkSpeed')
     _Player2:Toggle('Apply speed', false, function(v)
         applyOn = v
         applySpeed()
@@ -2452,29 +2452,29 @@ do
     end)
     local sJump = _Player2:Slider('JumpPower', 100, 60, 500, false, function(value)
         _G['菜单']['跳跃提升'] = value
-    end)
+    end, 'JumpPower')
     local defaultHip = 0
     pcall(function() defaultHip = _G['自己身体'].HipHeight end)
     local sHip = _Player2:Slider('HipHeight', 0, 0, 500, false, function(value)
         _G['自己身体'].HipHeight = value
-    end)
+    end, 'HipHeight')
     local sZoom = _Player2:Slider('Zoom Distance', 100, 1, 2000, false, function(value)
         _G['自己'].CameraMaxZoomDistance = value
-    end)
+    end, 'ZoomDistance')
     local sFov = _Player2:Slider('FOV', 70, 70, 150, false, function(value)
         game.Workspace.Camera.FieldOfView = value
-    end)
+    end, 'Fov')
     local sFly = _Player2:Slider('Fly Speed', 200, 50, 500, false, function(value)
         _G['菜单']['飞行速度'] = value
-    end)
+    end, 'FlySpeed')
     _Player2:Button('Reset sliders to default', function()
         
-        sWalk:SetValue(16)
-        sJump:SetValue(60)
-        sHip:SetValue(defaultHip)
-        sZoom:SetValue(128)
-        sFov:SetValue(70)
-        sFly:SetValue(200)
+        getgenv().WalkSpeed = 16
+        getgenv().JumpPower = 60
+        getgenv().HipHeight = defaultHip
+        getgenv().ZoomDistance = 128
+        getgenv().Fov = 70
+        getgenv().FlySpeed = 200
 
         
         speedSet = 16
@@ -4056,7 +4056,7 @@ do
 
     _Slot2:Slider('select slot', 1, 1, 6, false, function(value)
         _G['菜单']['存档'] = value
-    end)
+    end, 'SelectSlot')
     _Slot2:Toggle('Fast Load', false, function(enabled)
         _G['菜单']['快速加载'] = enabled
     end)
@@ -4232,7 +4232,7 @@ do
 
     _DupePower:Slider('Power slot', 1, 1, 6, false, function(value)
         _G['菜单']['有超级建造的存档'] = value
-    end)
+    end, 'PowerSlot')
     _DupePower:Button('Dupe Power To Build With ease', function()
         if _G['自己'].SuperBlueprint.Value then
             if _G['自己'].CurrentSaveSlot.Value ~= _G['菜单']['有超级建造的存档'] then
@@ -4608,6 +4608,7 @@ do
     _G['商店ID文件'] = 'Rndm_npc_ids.json'
     _G['商店ID已载入'] = false
     _G['固定商店ID'] = { WoodRUs = 9, FurnitureStore = 10, CarStore = 11, ShackShop = 12, FineArt = 13, LogicStore = 14 }
+    -- semua ID NPC yg sudah diketahui (toko + NPC lain), dilewati saat probe
     _G['已知NPCID'] = {
         [9] = 'Thom', [10] = 'Corey', [11] = 'Jenny', [12] = 'Bob', [13] = 'Timothy', [14] = 'Lincoln',
         [4] = 'Ruhven', [17] = 'Merely', [15] = 'Hoover', [6] = 'Strange Man',
@@ -5554,7 +5555,7 @@ do
     end)
     _Other:Button('Toll Bridge', function()
         game.ReplicatedStorage.NPCDialog.PlayerChatted:InvokeServer({
-            ID = 15,
+            ID = 17,
             Character = 'name',
             Name = 'name',
             Dialog = 'Dialog',
@@ -5562,7 +5563,7 @@ do
     end)
     _Other:Button('Ferry Ticket', function()
         game.ReplicatedStorage.NPCDialog.PlayerChatted:InvokeServer({
-            ID = 13,
+            ID = 15,
             Character = 'name',
             Name = 'name',
             Dialog = 'Dialog',
@@ -5570,7 +5571,7 @@ do
     end)
     _Other:Button('Power Of Ease', function()
         game.ReplicatedStorage.NPCDialog.PlayerChatted:InvokeServer({
-            ID = 3,
+            ID = 6,
             Character = 'name',
             Name = 'name',
             Dialog = 'Dialog',
@@ -6242,10 +6243,10 @@ do
 
     _Vehicle2:Slider('Vehicle Speed', 1, 1, 5, false, function(value)
         _G['修改汽车的属性'](value, 'MaxSpeed')
-    end)
+    end, 'VehicleSpeed')
     _Vehicle2:Slider('Steer Angle', 0.7, 0.7, 5, true, function(value)
         _G['修改汽车的属性'](value, 'SteerAngle')
-    end)
+    end, 'SteerAngle')
     _Vehicle2:Button('Flip Vehicle', function()
         if _G['自己身体'].SeatPart or _G['自己身体'].SeatPart == 'DriveSeat' then
             _G['自己身体'].SeatPart.Parent:PivotTo(_G['自己身体'].SeatPart.Parent.PrimaryPart.CFrame * CFrame.Angles(math.rad(-180), 0, 0) + Vector3.new(0, 5, 0))
