@@ -4568,32 +4568,32 @@ do
         WoodRus = {
             Character = game.Workspace.Stores.WoodRUs.Thom,
             Name = 'Thom',
-            ID = tonumber(7),
+            ID = tonumber(9),
         },
         FurnitureStore = {
             Character = game.Workspace.Stores.FurnitureStore.Corey,
             Name = 'Corey',
-            ID = tonumber(8),
+            ID = tonumber(10),
         },
         CarStore = {
             Character = game.Workspace.Stores.CarStore.Jenny,
             Name = 'Jenny',
-            ID = tonumber(9),
+            ID = tonumber(11),
         },
         ShackShop = {
             Character = game.Workspace.Stores.ShackShop.Bob,
             Name = 'Bob',
-            ID = tonumber(10),
+            ID = tonumber(12),
         },
         FineArt = {
             Character = game.Workspace.Stores.FineArt.Timothy,
             Name = 'Timothy',
-            ID = tonumber(11),
+            ID = tonumber(13),
         },
         LogicStore = {
             Character = game.Workspace.Stores.LogicStore.Lincoln,
             Name = 'Lincoln',
-            ID = tonumber(12),
+            ID = tonumber(14),
         },
     }
     _G['商店键'] = {
@@ -4604,6 +4604,191 @@ do
         FineArt = 'FineArt',
         LogicStore = 'LogicStore',
     }
+    _G['商人缓存'] = {}
+    _G['商店ID文件'] = 'Rndm_npc_ids.json'
+    _G['商店ID已载入'] = false
+    _G['固定商店ID'] = { WoodRUs = 9, FurnitureStore = 10, CarStore = 11, ShackShop = 12, FineArt = 13, LogicStore = 14 }
+    _G['已知NPCID'] = {
+        [9] = 'Thom', [10] = 'Corey', [11] = 'Jenny', [12] = 'Bob', [13] = 'Timothy', [14] = 'Lincoln',
+        [4] = 'Ruhven', [17] = 'Merely', [15] = 'Hoover', [6] = 'Strange Man',
+    }
+    _G['已确认商店ID'] = {}
+    for k, v in pairs(_G['固定商店ID']) do
+        _G['已确认商店ID'][k] = v
+    end
+    _G['载入商店ID'] = function()
+        if _G['商店ID已载入'] then
+            return
+        end
+        _G['商店ID已载入'] = true
+        pcall(function()
+            if isfile and isfile(_G['商店ID文件']) then
+                local data = game:GetService('HttpService'):JSONDecode(readfile(_G['商店ID文件']))
+                if type(data) == 'table' and data.version == game.PlaceVersion and type(data.ids) == 'table' then
+                    for name, id in pairs(data.ids) do
+                        if type(id) == 'number' then
+                            _G['已确认商店ID'][name] = id
+                        end
+                    end
+                end
+            end
+        end)
+    end
+    _G['存商店ID'] = function(storeName, id)
+        _G['已确认商店ID'][storeName] = id
+        pcall(function()
+            writefile(_G['商店ID文件'], game:GetService('HttpService'):JSONEncode({
+                version = game.PlaceVersion,
+                ids = _G['已确认商店ID'],
+            }))
+        end)
+    end
+    _G['忘记商店ID'] = function(storeName)
+        _G['商人缓存'][storeName] = nil
+        _G['已确认商店ID'][storeName] = nil
+        pcall(function()
+            writefile(_G['商店ID文件'], game:GetService('HttpService'):JSONEncode({
+                version = game.PlaceVersion,
+                ids = _G['已确认商店ID'],
+            }))
+        end)
+    end
+    _G['含价格'] = function(v, total, visited, depth)
+        local t = type(v)
+        if t == 'number' then
+            return v == total
+        end
+        if t == 'string' then
+            local plain = tostring(math.floor(total))
+            local withComma = plain:reverse():gsub('(%d%d%d)', '%1,'):reverse():gsub('^,', '')
+            return string.find(v, '%f[%d]' .. plain .. '%f[%D]') ~= nil or string.find(v, '%f[%d]' .. withComma .. '%f[%D]') ~= nil
+        end
+        if t == 'table' and depth < 5 and not visited[v] then
+            visited[v] = true
+            for _, x in pairs(v) do
+                if _G['含价格'](x, total, visited, depth + 1) then
+                    return true
+                end
+            end
+        end
+        return false
+    end
+    _G['探测商店ID'] = function(info, total)
+        local order, seen = {}, {}
+        local function add(i)
+            if i and not seen[i] then
+                seen[i] = true
+                order[#order + 1] = i
+            end
+        end
+        add(info.ID)
+        for i = 1, 60 do
+            if not _G['已知NPCID'][i] then
+                add(i)
+            end
+        end
+
+        local invoke = game.ReplicatedStorage.NPCDialog.PlayerChatted
+        local started = tick()
+
+        for _, id in ipairs(order) do
+            if _G['菜单']['自动购买停止'] == true or tick() - started > 40 then
+                return nil
+            end
+
+            local probe = { ID = id, Character = info.Character, Name = info.Name, Dialog = info.Dialog }
+            local done, res = false, nil
+
+            task.spawn(function()
+                local ok, r = pcall(function()
+                    return invoke:InvokeServer(probe, 'Initiate')
+                end)
+                if ok then
+                    res = r
+                end
+                done = true
+                pcall(function()
+                    invoke:InvokeServer(probe, 'EndChat')
+                end)
+            end)
+
+            local t0 = tick()
+            repeat
+                task.wait()
+            until done or tick() - t0 > 2
+
+            if res ~= nil and _G['含价格'](res, total, {}, 0) then
+                return id
+            end
+        end
+
+        return nil
+    end
+    _G['perkiraan商店ID'] = _G['固定商店ID']
+    _G['商人'] = function(storeName)
+        if not storeName then
+            return nil
+        end
+        if _G['商人缓存'][storeName] then
+            return _G['商人缓存'][storeName]
+        end
+
+        local base = _G['获得商场id'][_G['商店键'][storeName]]
+        local npc = base and base.Character
+        if not npc then
+            return nil
+        end
+
+        _G['载入商店ID']()
+
+        local dialog = npc:FindFirstChild('Dialog')
+        local id = nil
+        local verified = false
+
+        for _, holder in ipairs(dialog and { npc, dialog } or { npc }) do
+            if not id then
+                pcall(function()
+                    id = holder:GetAttribute('ID')
+                    local v = holder:FindFirstChild('ID')
+                    if not id and v and v:IsA('ValueBase') then
+                        id = v.Value
+                    end
+                end)
+            end
+        end
+
+        if id then
+            verified = true
+        end
+
+        if not id and _G['已确认商店ID'][storeName] then
+            id = _G['已确认商店ID'][storeName]
+            verified = true
+        end
+
+        if not id and getgc then
+            pcall(function()
+                for _, t in ipairs(getgc(true)) do
+                    local ok, found = pcall(function()
+                        if type(t) == 'table' and rawget(t, 'Character') == npc and type(rawget(t, 'ID')) == 'number' then
+                            return rawget(t, 'ID')
+                        end
+                    end)
+                    if ok and found then
+                        id = found
+                        verified = true
+                        break
+                    end
+                end
+            end)
+        end
+
+        id = id or _G['perkiraan商店ID'][storeName] or base.ID
+
+        local info = { ID = id, Character = npc, Name = npc.Name, Dialog = dialog, Verified = verified }
+        _G['商人缓存'][storeName] = info
+        return info
+    end
     _G['判断商店'] = function(box)
         local pos = nil
         local main = box:FindFirstChild('Main') or box.PrimaryPart
@@ -4642,7 +4827,7 @@ do
                         if storeFilter and storeName ~= storeFilter then
                             mismatch = true
                         else
-                            local storeInfo = storeName and _G['获得商场id'][_G['商店键'][storeName]] or nil
+                            local storeInfo = _G['商人'](storeName)
                             local counter = storeName and (game.Workspace.Stores[storeName].Counter.CFrame + Vector3.new(0, 0.6, 0)) or nil
 
                             return child, storeInfo, counter, false
@@ -4706,12 +4891,8 @@ do
         local npc = _G['商人id']
 
         local storeName = _G['判断商店'](item) or '?'
-        local npcLabel = tostring(npc.Name) .. ' #' .. tostring(npc.ID)
-
-        local noteKey = tostring(arg) .. '@' .. storeName
-        if _G['最后购买提示'] ~= noteKey then
-            _G['最后购买提示'] = noteKey
-            _G['提醒']('Buying ' .. tostring(arg) .. ' at ' .. storeName .. ' (' .. npcLabel .. ')')
+        local function npcLabel()
+            return tostring(npc.Name) .. ' #' .. tostring(npc.ID)
         end
 
         local function bringToCounter()
@@ -4719,6 +4900,14 @@ do
             value6(item, counter)
             task.spawn(function()
                 _G['传送'](counter + Vector3.new(5, 0, 5))
+            end)
+        end
+
+        local function endChat()
+            task.spawn(function()
+                pcall(function()
+                    game.ReplicatedStorage.NPCDialog.PlayerChatted:InvokeServer(npc, 'EndChat')
+                end)
             end)
         end
 
@@ -4765,6 +4954,25 @@ do
             game:GetService('RunService').Stepped:wait()
         end
 
+        if not npc.Verified then
+            local unit = tonumber(_G['商品价格'](arg, 1))
+            if unit and unit > 0 then
+                _G['提醒']('Finding ' .. tostring(npc.Name) .. ' ID...')
+                local found = _G['探测商店ID'](npc, unit)
+                if found then
+                    npc.ID = found
+                    npc.Verified = true
+                    _G['存商店ID'](storeName, found)
+                end
+            end
+        end
+
+        local noteKey = tostring(arg) .. '@' .. storeName
+        if _G['最后购买提示'] ~= noteKey then
+            _G['最后购买提示'] = noteKey
+            _G['提醒']('Buying ' .. tostring(arg) .. ' at ' .. storeName .. ' (' .. npcLabel() .. ')')
+        end
+
         local t0 = tick()
         local lastCheck = tick()
 
@@ -4783,6 +4991,11 @@ do
                 return not item:FindFirstChild('BoxItemName') or item:IsDescendantOf(game.Workspace.PlayerModels)
             end)
             if ok and done then
+                endChat()
+                if _G['已确认商店ID'][storeName] ~= npc.ID then
+                    npc.Verified = true
+                    _G['存商店ID'](storeName, npc.ID)
+                end
                 return true
             end
 
@@ -4801,7 +5014,9 @@ do
             if tick() - t0 > 15 then
                 local money = 0
                 pcall(function() money = _G['自己'].leaderstats.Money.Value end)
-                _G['提醒'](string.format('%s not bought | store %s (%s) | item-counter %dst | you-counter %dst | $%d', tostring(arg), storeName, npcLabel, math.min(itemToCounter(), 9999), math.min(meToCounter(), 9999), money))
+                _G['提醒'](string.format('%s not bought | store %s (%s) | item-counter %dst | you-counter %dst | $%d', tostring(arg), storeName, npcLabel(), math.min(itemToCounter(), 9999), math.min(meToCounter(), 9999), money))
+                endChat()
+                _G['忘记商店ID'](storeName)
                 return false
             end
         end
