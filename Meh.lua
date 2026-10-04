@@ -4732,6 +4732,9 @@ do
             lastInvoke = tick()
             task.spawn(function()
                 pcall(function()
+                    game.ReplicatedStorage.NPCDialog.PlayerChatted:InvokeServer(npc, 'Initiate')
+                end)
+                pcall(function()
                     game.ReplicatedStorage.NPCDialog.PlayerChatted:InvokeServer(npc, 'ConfirmPurchase')
                 end)
                 invoking = false
@@ -4752,7 +4755,15 @@ do
         end
 
         bringToCounter()
-        wait()
+
+        local holdUntil = tick() + 1.2
+        while tick() < holdUntil do
+            pcall(function()
+                game.ReplicatedStorage.Interaction.ClientIsDragging:FireServer(item)
+                item.PrimaryPart.CFrame = counter
+            end)
+            game:GetService('RunService').Stepped:wait()
+        end
 
         local t0 = tick()
         local lastCheck = tick()
@@ -5118,6 +5129,13 @@ do
     end)
     totalLabel = _AutoBuy2:Label('Total: pick an item')
 
+    task.spawn(function()
+        while not u.IsUnloaded() do
+            task.wait(1)
+            pcall(updateTotal)
+        end
+    end)
+
     local pinLabel = _AutoBuy2:Label('Box location: not set (uses your position)')
     local pinMarker = nil
 
@@ -5163,94 +5181,99 @@ do
         _G['提醒']('Box location cleared')
     end)
     _AutoBuy2:Button('Buy', function()
-        if not _G['菜单']['自动购买的物品'] then
-            return _G['提醒']('Select an item first')
-        end
-
-        _G['菜单']['自动购买停止'] = false
-        _G['菜单']['自动购买的地点'] = _G['自己的方块'].CFrame
-        _G['菜单']['自动购买用锚点'] = false
-
-        if string.split(_G['菜单']['自动购买的物品'], '--')[1] ~= 'Rukiryaxe' then
-            local origin = _G['自己的方块'].CFrame
-            local pin = _G['菜单']['自动购买箱子地点']
-            local storeSel = _G['菜单']['商店名字']
-            if storeSel == 'All' then
-                storeSel = nil
+        local ok, err = pcall(function()
+            if not _G['菜单']['自动购买的物品'] then
+                return _G['提醒']('Select an item first')
             end
 
-            if pin then
-                _G['菜单']['自动购买的地点'] = pin
-                _G['菜单']['自动购买用锚点'] = true
-            end
-
-            _G['自动购买v2'](string.split(_G['菜单']['自动购买的物品'], '--')[1], _G['菜单']['自动购买的数量'], nil, storeSel)
+            _G['菜单']['自动购买停止'] = false
+            _G['菜单']['自动购买的地点'] = _G['自己的方块'].CFrame
             _G['菜单']['自动购买用锚点'] = false
-            _G['传送'](origin)
-        else
-            local _ = _G['自己的方块'].CFrame
 
-            if _G['商品价格']('BagOfSand', 1) + _G['商品价格']('CanOfWorms', 1) + _G['商品价格']('LightBulb', 1) <= _G['自己'].leaderstats.Money.Value then
-                _G['自动打开盒子'] = game.Workspace.PlayerModels.ChildAdded:Connect(function(child)
-                    child:WaitForChild('Owner', 60)
+            if string.split(_G['菜单']['自动购买的物品'], '--')[1] ~= 'Rukiryaxe' then
+                local origin = _G['自己的方块'].CFrame
+                local pin = _G['菜单']['自动购买箱子地点']
+                local storeSel = _G['菜单']['商店名字']
+                if storeSel == 'All' then
+                    storeSel = nil
+                end
+
+                if pin then
+                    _G['菜单']['自动购买的地点'] = pin
+                    _G['菜单']['自动购买用锚点'] = true
+                end
+
+                _G['自动购买v2'](string.split(_G['菜单']['自动购买的物品'], '--')[1], _G['菜单']['自动购买的数量'], nil, storeSel)
+                _G['菜单']['自动购买用锚点'] = false
+                _G['传送'](origin)
+            else
+                local _ = _G['自己的方块'].CFrame
+
+                if _G['商品价格']('BagOfSand', 1) + _G['商品价格']('CanOfWorms', 1) + _G['商品价格']('LightBulb', 1) <= _G['自己'].leaderstats.Money.Value then
+                    _G['自动打开盒子'] = game.Workspace.PlayerModels.ChildAdded:Connect(function(child)
+                        child:WaitForChild('Owner', 60)
+                        wait(1)
+
+                        if tostring(child.Owner.Value) == tostring(_G['自己']) and child:FindFirstChild('PurchasedBoxItemName') and (tostring(child.PurchasedBoxItemName.Value) == 'BagOfSand' or tostring(child.PurchasedBoxItemName.Value) == 'CanOfWorms' or tostring(child.PurchasedBoxItemName.Value) == 'LightBulb') then
+                            game:GetService('ReplicatedStorage').Interaction.ClientInteracted:FireServer(child, 'Open box')
+                        end
+                    end)
+                    _G['拿斧头'] = nil
+                    _G['拿斧头'] = game.Workspace.PlayerModels.ChildAdded:Connect(function(child)
+                        local _Main2 = child:WaitForChild('Main', 60)
+                        local _CFrame10 = _G['自己的方块'].CFrame
+
+                        if _Main2:FindFirstChild('Mesh') and _Main2.Mesh.TextureId == 'rbxassetid://273892918' then
+                            repeat
+                                wait()
+                            until child:FindFirstChild('ToolName')
+
+                            if child.Owner.Value == nil then
+                                _G['提醒']('Calming Rukiryaxe')
+                                _G['传送'](child.Main.CFrame)
+
+                                repeat
+                                    task.wait()
+                                    _G['拉东西']:FireServer(child)
+                                    game.ReplicatedStorage.Interaction.ClientInteracted:FireServer(child, 'Pick up tool')
+                                until tostring(child.Parent) ~= 'PlayerModels'
+                            end
+
+                            _G['传送'](_CFrame10)
+                            pcall(function()
+                                _G['自动打开盒子']:Disconnect()
+
+                                _G['自动打开盒子'] = nil
+
+                                _G['拿斧头']:Disconnect()
+
+                                _G['拿斧头'] = nil
+                            end)
+                        end
+                    end)
+                    _G['菜单']['自动购买的地点'] = CFrame.new(319, 43, 1914)
+
+                    _G['自动购买v2']('BagOfSand', 1)
                     wait(1)
 
-                    if tostring(child.Owner.Value) == tostring(_G['自己']) and child:FindFirstChild('PurchasedBoxItemName') and (tostring(child.PurchasedBoxItemName.Value) == 'BagOfSand' or tostring(child.PurchasedBoxItemName.Value) == 'CanOfWorms' or tostring(child.PurchasedBoxItemName.Value) == 'LightBulb') then
-                        game:GetService('ReplicatedStorage').Interaction.ClientInteracted:FireServer(child, 'Open box')
-                    end
-                end)
-                _G['拿斧头'] = nil
-                _G['拿斧头'] = game.Workspace.PlayerModels.ChildAdded:Connect(function(child)
-                    local _Main2 = child:WaitForChild('Main', 60)
-                    local _CFrame10 = _G['自己的方块'].CFrame
+                    _G['菜单']['自动购买的地点'] = CFrame.new(317, 43, 1918)
 
-                    if _Main2:FindFirstChild('Mesh') and _Main2.Mesh.TextureId == 'rbxassetid://273892918' then
-                        repeat
-                            wait()
-                        until child:FindFirstChild('ToolName')
+                    _G['自动购买v2']('CanOfWorms', 1)
+                    wait(1)
 
-                        if child.Owner.Value == nil then
-                            _G['提醒']('Calming Rukiryaxe')
-                            _G['传送'](child.Main.CFrame)
+                    _G['菜单']['自动购买的地点'] = CFrame.new(322, 43, 1916)
 
-                            repeat
-                                task.wait()
-                                _G['拉东西']:FireServer(child)
-                                game.ReplicatedStorage.Interaction.ClientInteracted:FireServer(child, 'Pick up tool')
-                            until tostring(child.Parent) ~= 'PlayerModels'
-                        end
-
-                        _G['传送'](_CFrame10)
-                        pcall(function()
-                            _G['自动打开盒子']:Disconnect()
-
-                            _G['自动打开盒子'] = nil
-
-                            _G['拿斧头']:Disconnect()
-
-                            _G['拿斧头'] = nil
-                        end)
-                    end
-                end)
-                _G['菜单']['自动购买的地点'] = CFrame.new(319, 43, 1914)
-
-                _G['自动购买v2']('BagOfSand', 1)
-                wait(1)
-
-                _G['菜单']['自动购买的地点'] = CFrame.new(317, 43, 1918)
-
-                _G['自动购买v2']('CanOfWorms', 1)
-                wait(1)
-
-                _G['菜单']['自动购买的地点'] = CFrame.new(322, 43, 1916)
-
-                _G['自动购买v2']('LightBulb', 1)
-            else
-                return _G['提醒']('you not have enough money')
+                    _G['自动购买v2']('LightBulb', 1)
+                else
+                    return _G['提醒']('you not have enough money')
+                end
             end
-        end
 
-        return
+            return
+        end)
+        if not ok then
+            _G['提醒']('Buy error: ' .. tostring(err))
+        end
     end)
     _AutoBuy2:Button('Abort', function()
         _G['菜单']['自动购买停止'] = true
