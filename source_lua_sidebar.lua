@@ -1313,7 +1313,7 @@ function TabElements:CreateSection(name)
     -- Setiap elemen otomatis jadi "kartu" bulat seperti Fluent
     SectionContent.ChildAdded:Connect(function(child)
         task.defer(function()
-            if child:IsA("Frame") and not child.Name:match("_ImageHolder$") and not child.Name:match("Button$") then
+            if child:IsA("Frame") and not child.Name:match("_ImageHolder$") and not child.Name:match("Button$") and not child.Name:match("Divider$") then
                 child.BackgroundColor3 = Color3.fromRGB(46, 46, 52)
                 child.BackgroundTransparency = 0.45
                 local corner = Instance.new("UICorner")
@@ -1322,6 +1322,139 @@ function TabElements:CreateSection(name)
             end
         end)
     end)
+
+-- Divider: garis pemisah (opsional dengan teks di tengah). Section:CreateDivider("Judul")
+function SectionElements:CreateDivider(text)
+    local Divider = Instance.new("Frame")
+    Divider.Name = tostring(text or "") .. "Divider"
+    Divider.Parent = SectionContent
+    Divider.BackgroundTransparency = 1
+    Divider.BorderSizePixel = 0
+    Divider.Size = UDim2.new(1, 0, 0, (text and text ~= "") and 22 or 12)
+    Divider.ZIndex = 5
+
+    local hasText = text and text ~= ""
+    local function makeLine(xPos, xSize)
+        local Line = Instance.new("Frame")
+        Line.Name = "Line"
+        Line.Parent = Divider
+        Line.AnchorPoint = Vector2.new(0, 0.5)
+        Line.BackgroundColor3 = Color3.fromRGB(120, 120, 130)
+        Line.BackgroundTransparency = 0.6
+        Line.BorderSizePixel = 0
+        Line.Position = xPos
+        Line.Size = xSize
+        Line.ZIndex = 5
+        return Line
+    end
+
+    if hasText then
+        local Label = Instance.new("TextLabel")
+        Label.Name = "DividerText"
+        Label.Parent = Divider
+        Label.AnchorPoint = Vector2.new(0.5, 0.5)
+        Label.BackgroundTransparency = 1
+        Label.Position = UDim2.new(0.5, 0, 0.5, 0)
+        Label.AutomaticSize = Enum.AutomaticSize.X
+        Label.Size = UDim2.new(0, 0, 1, 0)
+        Label.Font = Library.Theme.TextFont
+        Label.Text = tostring(text)
+        Label.TextColor3 = Color3.fromRGB(190, 190, 198)
+        Label.TextSize = 13
+        Label.ZIndex = 6
+        local pad = Instance.new("UIPadding")
+        pad.PaddingLeft = UDim.new(0, 8)
+        pad.PaddingRight = UDim.new(0, 8)
+        pad.Parent = Label
+        -- dua garis di kiri dan kanan teks
+        local function layoutLines()
+            local half = Label.AbsoluteSize.X / 2
+            makeLine(UDim2.new(0, 10, 0.5, 0), UDim2.new(0.5, -half - 10, 0, 1)).Name = "LineLeft"
+            makeLine(UDim2.new(0.5, half, 0.5, 0), UDim2.new(0.5, -half - 10, 0, 1)).Name = "LineRight"
+        end
+        task.defer(function()
+            if Label.AbsoluteSize.X <= 0 then Label:GetPropertyChangedSignal("AbsoluteSize"):Wait() end
+            layoutLines()
+        end)
+    else
+        makeLine(UDim2.new(0, 10, 0.5, 0), UDim2.new(1, -20, 0, 1))
+    end
+
+    return Divider
+end
+
+-- Paragraph: judul (opsional) + teks panjang yang otomatis wrap dan menyesuaikan tinggi.
+-- Section:CreateParagraph("Judul", "Teks panjang ...")  ->  { SetText, SetTitle }
+function SectionElements:CreateParagraph(title, text)
+    local Paragraph = Instance.new("Frame")
+    Paragraph.Name = tostring(title or "Text") .. "Paragraph"
+    Paragraph.Parent = SectionContent
+    Paragraph.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    Paragraph.BackgroundTransparency = 1
+    Paragraph.BorderSizePixel = 0
+    Paragraph.AutomaticSize = Enum.AutomaticSize.Y
+    Paragraph.Size = UDim2.new(1, 0, 0, 0)
+    Paragraph.ZIndex = 5
+
+    local pad = Instance.new("UIPadding")
+    pad.PaddingTop = UDim.new(0, 9)
+    pad.PaddingBottom = UDim.new(0, 10)
+    pad.PaddingLeft = UDim.new(0, 13)
+    pad.PaddingRight = UDim.new(0, 13)
+    pad.Parent = Paragraph
+
+    local list = Instance.new("UIListLayout")
+    list.SortOrder = Enum.SortOrder.LayoutOrder
+    list.Padding = UDim.new(0, 4)
+    list.Parent = Paragraph
+
+    local TitleLabel = Instance.new("TextLabel")
+    TitleLabel.Name = "ParagraphTitle"
+    TitleLabel.Parent = Paragraph
+    TitleLabel.LayoutOrder = 1
+    TitleLabel.BackgroundTransparency = 1
+    TitleLabel.AutomaticSize = Enum.AutomaticSize.Y
+    TitleLabel.Size = UDim2.new(1, 0, 0, 0)
+    TitleLabel.Font = Library.Theme.TextFont
+    TitleLabel.Text = tostring(title or "")
+    TitleLabel.TextColor3 = Library.Theme.TextColor
+    TitleLabel.TextSize = 15
+    TitleLabel.TextWrapped = true
+    TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    TitleLabel.TextYAlignment = Enum.TextYAlignment.Top
+    TitleLabel.Visible = (title ~= nil and title ~= "")
+    TitleLabel.ZIndex = 6
+    table.insert(Library.LibraryColorTable, TitleLabel)
+
+    local Body = Instance.new("TextLabel")
+    Body.Name = "ParagraphText"
+    Body.Parent = Paragraph
+    Body.LayoutOrder = 2
+    Body.BackgroundTransparency = 1
+    Body.AutomaticSize = Enum.AutomaticSize.Y
+    Body.Size = UDim2.new(1, 0, 0, 0)
+    Body.Font = Enum.Font.SourceSans
+    Body.Text = tostring(text or "")
+    Body.TextColor3 = Color3.fromRGB(190, 190, 198)
+    Body.TextSize = 14
+    Body.TextWrapped = true
+    Body.RichText = true
+    Body.TextXAlignment = Enum.TextXAlignment.Left
+    Body.TextYAlignment = Enum.TextYAlignment.Top
+    Body.ZIndex = 6
+
+    local function SetText(a, b)
+        local v = (type(a) == "table") and b or a
+        Body.Text = tostring(v or "")
+    end
+    local function SetTitle(a, b)
+        local v = (type(a) == "table") and b or a
+        TitleLabel.Text = tostring(v or "")
+        TitleLabel.Visible = (v ~= nil and v ~= "")
+    end
+
+    return { SetText = SetText, SetTitle = SetTitle, Frame = Paragraph }
+end
 
 function SectionElements:CreateLabel(name, text, callback, options)
     local NameLabel = Instance.new("TextLabel")
@@ -3168,6 +3301,244 @@ end
     end
 
     return TabElements
+end
+
+-- =====================================================================
+-- THEME SWITCHER (opsional)
+-- Library:CreateThemeTab()  -> membuat tab "Theme" di paling bawah sidebar, isinya sudah lengkap:
+--   dropdown preset, color picker (Accent / Background / Text), slider transparansi, tombol reset.
+-- Library:SetTheme("Ocean")  -> ganti preset dari script
+-- Library.ThemePresets["Nama"] = { Accent = Color3, Background = Color3, Text = Color3 }  -> tambah preset sendiri
+-- =====================================================================
+do
+    local function C(r, g, b) return Color3.fromRGB(r, g, b) end
+    local function ch(x) return math.clamp(math.floor(x + 0.5), 0, 255) end
+    local function colorKey(c) return ch(c.R * 255) * 65536 + ch(c.G * 255) * 256 + ch(c.B * 255) end
+    local function shift(c, d) return C(ch(c.R * 255 + d), ch(c.G * 255 + d), ch(c.B * 255 + d)) end
+
+    -- warna bawaan UI (sebelum tema diubah) per "peran"
+    local DefaultRoles = {
+        Accent = Library.Theme.MainColor, Background = Library.Theme.BackgroundColor,
+        Card = C(46, 46, 52), Panel = C(20, 20, 24), TabSel = C(58, 58, 66),
+        SliderBg = C(62, 62, 70), SliderVal = C(42, 42, 47), Drop = C(30, 30, 33),
+        Border = C(80, 80, 90), Line = C(120, 120, 130), Notif = C(28, 28, 32), Pick = C(45, 45, 45),
+        Text = Library.Theme.TextColor, Dim = C(185, 185, 185), Label = C(190, 190, 198),
+    }
+    local BG_ROLES = { "Accent", "Background", "Card", "Panel", "TabSel", "SliderBg", "SliderVal", "Drop", "Border", "Line", "Notif", "Pick" }
+    local TEXT_ROLES = { "Text", "Dim", "Label", "Accent" }
+
+    -- turunkan semua peran dari 3 warna dasar
+    local function Derive(accent, bg, text)
+        local light = (0.299 * bg.R + 0.587 * bg.G + 0.114 * bg.B) > 0.5
+        local sg = light and -1 or 1
+        return {
+            Accent = accent, Background = bg, Text = text,
+            Card = shift(bg, sg * 11), Panel = shift(bg, -sg * 15), TabSel = shift(bg, sg * 23),
+            SliderBg = shift(bg, sg * 27), SliderVal = shift(bg, sg * 7), Drop = shift(bg, -sg * 5),
+            Border = shift(bg, sg * 45), Line = shift(bg, sg * 85), Notif = shift(bg, -sg * 7), Pick = shift(bg, sg * 10),
+            Dim = text:Lerp(bg, 0.28), Label = text:Lerp(bg, 0.25),
+        }
+    end
+
+    Library.ThemePresets = {
+        Default  = { Default = true },
+        Dark     = { Accent = C(125, 125, 140), Background = C(22, 22, 26),   Text = C(255, 255, 255) },
+        Light    = { Accent = C(70, 110, 220),  Background = C(236, 238, 244), Text = C(28, 30, 38) },
+        Ocean    = { Accent = C(0, 150, 205),   Background = C(12, 30, 46),   Text = C(228, 242, 252) },
+        Midnight = { Accent = C(115, 95, 235),  Background = C(12, 12, 26),   Text = C(245, 245, 255) },
+        Rose     = { Accent = C(225, 85, 125),  Background = C(34, 20, 26),   Text = C(255, 240, 244) },
+        Forest   = { Accent = C(65, 175, 105),  Background = C(16, 30, 22),   Text = C(235, 250, 240) },
+        Amber    = { Accent = C(235, 165, 45),  Background = C(32, 26, 16),   Text = C(255, 248, 232) },
+        Purple   = { Accent = C(160, 90, 230),  Background = C(26, 16, 36),   Text = C(250, 240, 255) },
+    }
+
+    local function PresetNames()
+        local names = {}
+        for n in pairs(Library.ThemePresets) do if n ~= "Default" then table.insert(names, n) end end
+        table.sort(names)
+        table.insert(names, 1, "Default")
+        return names
+    end
+
+    -- ---------- penerapan warna ke seluruh UI ----------
+    -- Setiap elemen dikenali dari warnanya saat ini (warna bawaan atau warna tema terakhir),
+    -- lalu diganti ke warna peran yang sama di tema baru.
+    local currentRoles = {}
+    for k, v in pairs(DefaultRoles) do currentRoles[k] = v end
+
+    local function BuildLookups()
+        local lb, lt = {}, {}
+        for _, r in ipairs(BG_ROLES) do lb[colorKey(DefaultRoles[r])] = r end
+        for _, r in ipairs(BG_ROLES) do lb[colorKey(currentRoles[r])] = r end
+        for _, r in ipairs(TEXT_ROLES) do lt[colorKey(DefaultRoles[r])] = r end
+        for _, r in ipairs(TEXT_ROLES) do lt[colorKey(currentRoles[r])] = r end
+        return lb, lt
+    end
+
+    local function Recolor(inst, prop, lookup, target)
+        local ok, v = pcall(function() return inst[prop] end)
+        if ok and typeof(v) == "Color3" then
+            local role = lookup[colorKey(v)]
+            if role and target[role] then inst[prop] = target[role] end
+        end
+    end
+
+    local function ApplyRoles(target, transparency)
+        pcall(function() getgenv().StopRGB = true end)   -- hentikan animasi rainbow bawaan getgenv
+        local lookupBG, lookupText = BuildLookups()
+        for _, inst in ipairs(UILibrary:GetDescendants()) do
+            if inst:IsA("GuiObject") then Recolor(inst, "BackgroundColor3", lookupBG, target) end
+            if inst:IsA("ImageLabel") or inst:IsA("ImageButton") then
+                if inst.Name == "Icon" then
+                    inst.ImageColor3 = target.Text
+                else
+                    Recolor(inst, "ImageColor3", lookupBG, target)
+                end
+            end
+            if inst:IsA("TextLabel") or inst:IsA("TextButton") or inst:IsA("TextBox") then
+                Recolor(inst, "TextColor3", lookupText, target)
+            end
+            if inst:IsA("ScrollingFrame") then Recolor(inst, "ScrollBarImageColor3", lookupBG, target) end
+            if inst:IsA("UIStroke") then Recolor(inst, "Color", lookupBG, target) end
+        end
+        for k, v in pairs(target) do currentRoles[k] = v end
+        Library.Theme.MainColor = target.Accent
+        Library.Theme.BackgroundColor = target.Background
+        Library.Theme.TextColor = target.Text
+        if transparency then
+            Main.BackgroundTransparency = transparency
+            mainImageTransparency = transparency
+        end
+    end
+
+    -- ---------- state ----------
+    local state = { Preset = "Default", Custom = nil, Transparency = nil }
+    local initialTransparency = Main.BackgroundTransparency
+
+    local function BuildRoles()
+        if state.Custom then
+            return Derive(state.Custom.Accent, state.Custom.Background, state.Custom.Text)
+        end
+        local pr = Library.ThemePresets[state.Preset]
+        if not pr or pr.Default then return DefaultRoles end
+        return Derive(pr.Accent, pr.Background, pr.Text)
+    end
+
+    local pending = false
+    local function RequestApply()
+        if pending then return end
+        pending = true
+        task.delay(0.08, function()
+            pending = false
+            ApplyRoles(BuildRoles(), state.Transparency)
+        end)
+    end
+
+    local saveQueued = false
+    local function SaveTheme()
+        if saveQueued then return end
+        saveQueued = true
+        task.delay(0.6, function()
+            saveQueued = false
+            if state.Custom then
+                local function pack(c) return { ch(c.R * 255), ch(c.G * 255), ch(c.B * 255) } end
+                Settings.__Theme = {
+                    Accent = pack(state.Custom.Accent), Background = pack(state.Custom.Background), Text = pack(state.Custom.Text),
+                }
+            else
+                Settings.__Theme = nil
+            end
+            SaveSettings()
+        end)
+    end
+
+    function Library:SetTheme(nameOrColors)
+        if type(nameOrColors) == "table" then
+            state.Custom = {
+                Accent = nameOrColors.Accent or currentRoles.Accent,
+                Background = nameOrColors.Background or currentRoles.Background,
+                Text = nameOrColors.Text or currentRoles.Text,
+            }
+        elseif Library.ThemePresets[nameOrColors] then
+            state.Preset = nameOrColors
+            state.Custom = nil
+        else
+            warn("[Rndm] Theme '" .. tostring(nameOrColors) .. "' nggak ada")
+            return
+        end
+        ApplyRoles(BuildRoles(), state.Transparency)
+        SaveTheme()
+    end
+
+    function Library:CreateThemeTab(tabName, icon)
+        tabName = tabName or "Theme"
+
+        -- ambil custom warna yang tersimpan
+        local saved = Settings.__Theme
+        if type(saved) == "table" and type(saved.Accent) == "table" and type(saved.Background) == "table" and type(saved.Text) == "table" then
+            local function unpack3(t) return C(t[1] or 0, t[2] or 0, t[3] or 0) end
+            state.Custom = { Accent = unpack3(saved.Accent), Background = unpack3(saved.Background), Text = unpack3(saved.Text) }
+        end
+        local usingCustom = state.Custom ~= nil
+        local initializing = true
+
+        local Tab = Library:CreateTab(tabName, icon or "palette")
+        -- selalu di paling bawah daftar tab
+        local tabBtn = TabScrollingFrame:FindFirstChild(tabName .. "TabButton")
+        if tabBtn then tabBtn.LayoutOrder = 1000 end
+
+        -- Preset
+        local PresetSection = Tab:CreateSection("Preset")
+        local names = PresetNames()
+        local presetIndex = 2   -- index setelah "None" ditambahkan dropdown
+        for i, n in ipairs(names) do
+            if n == state.Preset then presetIndex = i + 1 end
+        end
+        PresetSection:CreateDropdown("Theme Preset", names, presetIndex, function(opt)
+            if opt == "None" or not Library.ThemePresets[opt] then return end
+            if initializing and usingCustom then return end
+            usingCustom = false
+            state.Preset = opt
+            state.Custom = nil
+            RequestApply()
+            if not initializing then SaveTheme() end
+        end)
+        PresetSection:CreateParagraph("Tema", "Pilih preset, atau atur warna sendiri di bagian <b>Warna</b>. Pengaturan tersimpan otomatis.")
+
+        -- Warna
+        local ColorSection = Tab:CreateSection("Warna")
+        local base = BuildRoles()
+        local function setCustom(key, color)
+            if initializing then return end
+            usingCustom = true
+            local cur = state.Custom or { Accent = currentRoles.Accent, Background = currentRoles.Background, Text = currentRoles.Text }
+            cur[key] = color
+            state.Custom = cur
+            RequestApply()
+            SaveTheme()
+        end
+        ColorSection:CreateColorPicker("Accent", base.Accent, function(c) setCustom("Accent", c) end)
+        ColorSection:CreateColorPicker("Background", base.Background, function(c) setCustom("Background", c) end)
+        ColorSection:CreateColorPicker("Text", base.Text, function(c) setCustom("Text", c) end)
+        ColorSection:CreateDivider("Tampilan")
+        ColorSection:CreateSlider("Window Transparency", 0, 90, math.floor(initialTransparency * 100 + 0.5), false, function(v)
+            state.Transparency = v / 100
+            if not initializing then RequestApply() end
+        end)
+        ColorSection:CreateDivider()
+        ColorSection:CreateButton("Reset Theme", function()
+            usingCustom = false
+            state.Preset = "Default"
+            state.Custom = nil
+            state.Transparency = initialTransparency
+            ApplyRoles(DefaultRoles, initialTransparency)
+            SaveTheme()
+        end)
+
+        initializing = false
+        ApplyRoles(BuildRoles(), state.Transparency)
+        return Tab
+    end
 end
 
 -- Library:SetLogo("rbxassetid://123")        -> gambar saja
