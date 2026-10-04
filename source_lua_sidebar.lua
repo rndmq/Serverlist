@@ -543,39 +543,28 @@ local originalMainSize
 -- ===== Animasi minimize / maximize =====
 -- Window mengecil ke posisi ikon sambil memudar (semua isi ikut memudar),
 -- dan sebaliknya saat dibuka lagi.
-local fadeCache = {}
 local mainImageTransparency = Main.ImageTransparency
 local animBusy = false
 
-local function CacheFade()
-    table.clear(fadeCache)
-    for _, d in ipairs(Main:GetDescendants()) do
-        local props
-        if d:IsA("TextLabel") or d:IsA("TextButton") or d:IsA("TextBox") then
-            props = { TextTransparency = d.TextTransparency, BackgroundTransparency = d.BackgroundTransparency }
-        elseif d:IsA("ImageLabel") or d:IsA("ImageButton") then
-            props = { ImageTransparency = d.ImageTransparency, BackgroundTransparency = d.BackgroundTransparency }
-        elseif d:IsA("ScrollingFrame") then
-            props = { BackgroundTransparency = d.BackgroundTransparency, ScrollBarImageTransparency = d.ScrollBarImageTransparency }
-        elseif d:IsA("GuiObject") then
-            props = { BackgroundTransparency = d.BackgroundTransparency }
-        elseif d:IsA("UIStroke") then
-            props = { Transparency = d.Transparency }
-        end
-        if props then fadeCache[d] = props end
-    end
-end
+-- Satu frame penutup yang memudar menggantikan fade per-elemen (jauh lebih ringan, nggak bikin FPS turun)
+local AnimCover = Instance.new("Frame")
+AnimCover.Name = "AnimCover"
+AnimCover.Parent = Main
+AnimCover.BackgroundColor3 = Library.Theme.BackgroundColor
+AnimCover.BackgroundTransparency = 1
+AnimCover.BorderSizePixel = 0
+AnimCover.Size = UDim2.new(1, 0, 1, 0)
+AnimCover.ZIndex = 500
+AnimCover.Active = false
+AnimCover.Visible = false
+Instance.new("UICorner", AnimCover).CornerRadius = UDim.new(0, 10)
 
-local function RunFade(out, duration)
-    local info = TweenInfo.new(duration, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-    for d, props in pairs(fadeCache) do
-        if d.Parent then
-            local goal = {}
-            for k, v in pairs(props) do goal[k] = out and 1 or v end
-            TweenService:Create(d, info, goal):Play()
-        end
-    end
-end
+-- Mengecil/membesar pakai UIScale (tanpa mengubah Size) supaya layout isi window nggak dihitung ulang tiap frame
+local MainScale = Instance.new("UIScale")
+MainScale.Name = "AnimScale"
+MainScale.Scale = 1
+MainScale.Parent = Main
+local MIN_SCALE = 0.1
 
 local function MaximizeUI()
     if animBusy then return end
@@ -584,22 +573,22 @@ local function MaximizeUI()
 
     local t = 0.45
     Main.Visible = true
-    Main.ClipsDescendants = true
     Main.Position = iconPosition
-    Main.Size = UDim2.new(0, 40, 0, 40)
+    MainScale.Scale = MIN_SCALE
     Main.ImageTransparency = 1
-    for d, props in pairs(fadeCache) do
-        if d.Parent then
-            for k in pairs(props) do d[k] = 1 end
-        end
-    end
+    AnimCover.Visible = true
+    AnimCover.BackgroundTransparency = 0
 
     TweenService:Create(Main, TweenInfo.new(t, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-        Size = originalMainSize or UDim2.new(0, Layout.W, 0, Layout.H),
         Position = windowPosition or Main.Position,
         ImageTransparency = mainImageTransparency
     }):Play()
-    task.delay(t * 0.25, function() RunFade(false, t * 0.75) end)
+    TweenService:Create(MainScale, TweenInfo.new(t, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+        Scale = 1
+    }):Play()
+    TweenService:Create(AnimCover, TweenInfo.new(t * 0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        BackgroundTransparency = 1
+    }):Play()
 
     TweenService:Create(FloatingIcon, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
         Size = UDim2.new(0, 0, 0, 0)
@@ -610,7 +599,7 @@ local function MaximizeUI()
         FloatingIcon.Size = UDim2.new(0, 40, 0, 40)
     end)
     task.delay(t, function()
-        Main.ClipsDescendants = false
+        AnimCover.Visible = false
         animBusy = false
     end)
 end
@@ -630,16 +619,20 @@ local function MinimizeUI()
         iconPosition = UDim2.new(0, math.max(Main.AbsolutePosition.X, 8), 0, Main.AbsolutePosition.Y - inset.Y + ICON_DROP)
     end
     mainImageTransparency = Main.ImageTransparency
-    CacheFade()
 
     local t = 0.4
-    Main.ClipsDescendants = true
     TweenService:Create(Main, TweenInfo.new(t, Enum.EasingStyle.Quint, Enum.EasingDirection.InOut), {
-        Size = UDim2.new(0, 40, 0, 40),
         Position = iconPosition,
         ImageTransparency = 1
     }):Play()
-    RunFade(true, t * 0.7)
+    TweenService:Create(MainScale, TweenInfo.new(t, Enum.EasingStyle.Quint, Enum.EasingDirection.InOut), {
+        Scale = MIN_SCALE
+    }):Play()
+    AnimCover.Visible = true
+    AnimCover.BackgroundTransparency = 1
+    TweenService:Create(AnimCover, TweenInfo.new(t * 0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        BackgroundTransparency = 0
+    }):Play()
 
     -- ikon muncul tepat saat window hampir sampai di posisinya
     task.delay(t * 0.6, function()
@@ -652,7 +645,6 @@ local function MinimizeUI()
     end)
     task.delay(t, function()
         Main.Visible = false
-        Main.ClipsDescendants = false
         animBusy = false
     end)
 end
