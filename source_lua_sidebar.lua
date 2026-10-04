@@ -348,16 +348,11 @@ UILibrary.ZIndexBehavior = Enum.ZIndexBehavior.Global
 Main.Name = "Main"
 Main.Parent = UILibrary
 Main.BackgroundColor3 = Library.Theme.BackgroundColor
-Main.BackgroundTransparency = 1.000
+Main.BackgroundTransparency = 0.25   -- jendela semi transparan (0 = solid, 1 = hilang)
 Main.Position = UDim2.new(0.5, -Layout.W / 2, 0.5, -Layout.H / 2)
 Main.Size = UDim2.new(0, Layout.W, 0, 0)
 Main.ZIndex = 2
-Main.Image = "rbxassetid://3570695787"
-Main.ImageColor3 = Library.Theme.BackgroundColor
-Main.ScaleType = Enum.ScaleType.Slice
-Main.SliceCenter = Rect.new(100, 100, 100, 100)
-Main.SliceScale = 0.050
-Main.ImageTransparency = 0.25   -- jendela semi transparan (0 = solid, 1 = hilang)
+Main.Image = ""   -- pakai fill polos + UICorner supaya sudut halus (tanpa gambar 9-slice yang bentrok)
 local UICorner = Instance.new("UICorner")
 UICorner.CornerRadius = UDim.new(0, 10)
 UICorner.Parent = Main
@@ -393,6 +388,7 @@ UITabs.Parent = Main
 UITabs.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 UITabs.BackgroundTransparency = 1.000
 UITabs.ClipsDescendants = true
+Instance.new("UICorner", UITabs).CornerRadius = UDim.new(0, 10)
 UITabs.Size = UDim2.new(1, 0, 1, 0)
 
 Tabs.Name = "Tabs"
@@ -406,18 +402,18 @@ Tabs.ZIndex = 2
 
 TabButtons.Name = "TabButtons"
 TabButtons.Parent = UITabs
-TabButtons.BackgroundColor3 = Library.Theme.MainColor
-TabButtons.BackgroundTransparency = 1.000
+TabButtons.BackgroundColor3 = Color3.fromRGB(20, 20, 24)
+TabButtons.BackgroundTransparency = 0.3
 TabButtons.Position = UDim2.new(0, 8, 0, Layout.Top + 4)
 TabButtons.Size = UDim2.new(0, Layout.Side - 4, 1, -(Layout.Top + 4 + 8))
 TabButtons.ZIndex = 2
-TabButtons.Image = "rbxassetid://3570695787"
-TabButtons.ImageColor3 = Color3.fromRGB(20, 20, 24)
-TabButtons.ImageTransparency = 0.3
-TabButtons.ScaleType = Enum.ScaleType.Slice
-TabButtons.SliceCenter = Rect.new(100, 100, 100, 100)
-TabButtons.SliceScale = 0.050
+TabButtons.Image = ""
 TabButtons.ClipsDescendants = true
+do
+    local tbc = Instance.new("UICorner")
+    tbc.CornerRadius = UDim.new(0, 8)
+    tbc.Parent = TabButtons
+end
 
 TabButtonLayout.Name = "TabButtonLayout"
 TabButtonLayout.Parent = TabButtons
@@ -542,7 +538,7 @@ local originalMainSize
 -- ===== Animasi minimize / maximize =====
 -- Window mengecil ke posisi ikon sambil memudar (semua isi ikut memudar),
 -- dan sebaliknya saat dibuka lagi.
-local mainImageTransparency = Main.ImageTransparency
+local mainImageTransparency = Main.BackgroundTransparency
 local animBusy = false
 
 -- Satu frame penutup yang memudar menggantikan fade per-elemen (jauh lebih ringan, nggak bikin FPS turun)
@@ -574,13 +570,13 @@ local function MaximizeUI()
     Main.Visible = true
     Main.Position = iconPosition
     MainScale.Scale = MIN_SCALE
-    Main.ImageTransparency = 1
+    Main.BackgroundTransparency = 1
     AnimCover.Visible = true
     AnimCover.BackgroundTransparency = 0
 
     TweenService:Create(Main, TweenInfo.new(t, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
         Position = windowPosition or Main.Position,
-        ImageTransparency = mainImageTransparency
+        BackgroundTransparency = mainImageTransparency
     }):Play()
     TweenService:Create(MainScale, TweenInfo.new(t, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
         Scale = 1
@@ -604,12 +600,12 @@ local function MinimizeUI()
     if not originalMainSize then
         originalMainSize = Main.Size
     end
-    mainImageTransparency = Main.ImageTransparency
+    mainImageTransparency = Main.BackgroundTransparency
 
     local t = 0.4
     TweenService:Create(Main, TweenInfo.new(t, Enum.EasingStyle.Quint, Enum.EasingDirection.InOut), {
         Position = iconPosition,
-        ImageTransparency = 1
+        BackgroundTransparency = 1
     }):Play()
     TweenService:Create(MainScale, TweenInfo.new(t, Enum.EasingStyle.Quint, Enum.EasingDirection.InOut), {
         Scale = MIN_SCALE
@@ -695,15 +691,15 @@ local function CloseAllTabs()
 end
 
 local TabNormalSize = UDim2.new(1, -16, 0, 28)   -- ukuran tab biasa
-local TabBigSize    = UDim2.new(1, -2, 0, 38)    -- ukuran tab yang sedang dibuka (membesar)
+local TabBigSize    = UDim2.new(1, -8, 0, 38)    -- ukuran tab yang sedang dibuka (membesar)
 
 local function SetTabVisual(btn, selected, extra)
     local info = TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)   -- transisi halus
     local soft = TweenInfo.new(0.25, Library.Theme.EasingStyle, Enum.EasingDirection.Out)
     TweenService:Create(btn, info, {
         Size = selected and TabBigSize or TabNormalSize,
-        ImageTransparency = selected and 0.25 or 1,
-        ImageColor3 = Color3.fromRGB(58, 58, 66)
+        BackgroundTransparency = selected and 0.25 or 1,
+        BackgroundColor3 = Color3.fromRGB(58, 58, 66)
     }):Play()
     local title = btn:FindFirstChild("Title")
     if title then
@@ -1048,16 +1044,12 @@ function Library:CreateTab(name, icon)
 
     NameTabButton.Name = (name .. "TabButton")
     NameTabButton.Parent = TabScrollingFrame
-    NameTabButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    NameTabButton.BackgroundColor3 = Color3.fromRGB(58, 58, 66)
     NameTabButton.BackgroundTransparency = 1.000
     NameTabButton.Size = TabNormalSize
     NameTabButton.ZIndex = 2
-    NameTabButton.Image = "rbxassetid://3570695787"
-    NameTabButton.ImageColor3 = Color3.fromRGB(58, 58, 66)
-    NameTabButton.ImageTransparency = 1
-    NameTabButton.ScaleType = Enum.ScaleType.Slice
-    NameTabButton.SliceCenter = Rect.new(100, 100, 100, 100)
-    NameTabButton.SliceScale = 0.050
+    NameTabButton.Image = ""
+    NameTabButton.AutoButtonColor = false
 
     Title.Name = "Title"
     Title.Parent = NameTabButton
