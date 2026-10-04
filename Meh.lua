@@ -4596,99 +4596,165 @@ do
             ID = tonumber(12),
         },
     }
-    _G['找到物品'] = function(flag)
-        local nextFn3 = next
-        local stores, startKey3 = game.Workspace.Stores:GetChildren()
-        local furnitureStore = nil
-        local num2 = nil
+    
+    
+    _G['商店键'] = {
+        WoodRUs = 'WoodRus',
+        FurnitureStore = 'FurnitureStore',
+        CarStore = 'CarStore',
+        ShackShop = 'ShackShop',
+        FineArt = 'FineArt',
+        LogicStore = 'LogicStore',
+    }
+    _G['判断商店'] = function(box)
+        local pos = nil
+        local main = box:FindFirstChild('Main') or box.PrimaryPart
+        if main then
+            pos = main.Position
+        else
+            local ok, cf = pcall(function() return box:GetPivot() end)
+            if ok then pos = cf.Position end
+        end
+        if not pos then
+            return nil
+        end
 
-        for _, store in nextFn3, stores, startKey3 do
-            if store.Name == 'ShopItems' then
-                if store:FindFirstChild('Box') then
-                    local nextFn4 = next
-                    local children2, startKey4 = store:GetChildren()
+        local bestName, bestDist = nil, math.huge
+        for _, st in ipairs(game.Workspace.Stores:GetChildren()) do
+            local counter = st:FindFirstChild('Counter')
+            if counter and _G['商店键'][st.Name] then
+                local d = (counter.Position - pos).Magnitude
+                if d < bestDist then
+                    bestName, bestDist = st.Name, d
+                end
+            end
+        end
+        return bestName
+    end
+    
+    
+    _G['找到物品'] = function(flag, storeFilter)
+        local mismatch = false
 
-                    for _, child in nextFn4, children2, startKey4 do
-                        if child.BoxItemName.Value ~= flag then
+        for _, grp in ipairs(game.Workspace.Stores:GetChildren()) do
+            if grp.Name == 'ShopItems' and grp:FindFirstChild('Box') then
+                for _, child in ipairs(grp:GetChildren()) do
+                    local nameVal = child:FindFirstChild('BoxItemName')
+                    if nameVal and nameVal.Value == flag then
+                        local storeName = _G['判断商店'](child)
+
+                        if storeFilter and storeName ~= storeFilter then
+                            mismatch = true
                         else
-                            local nextFn5 = next
-                            local children3, startKey5 = store:GetChildren()
+                            local storeInfo = storeName and _G['获得商场id'][_G['商店键'][storeName]] or nil
+                            local counter = storeName and (game.Workspace.Stores[storeName].Counter.CFrame + Vector3.new(0, 0.6, 0)) or nil
 
-                            for _, child2 in nextFn5, children3, startKey5 do
-                                if child2.BoxItemName.Value == 'Bed1' or child2.BoxItemName.Value == 'Seat_Couch' then
-                                    furnitureStore = _G['获得商场id'].FurnitureStore
-                                    num2 = game.Workspace.Stores.FurnitureStore.Counter.CFrame + Vector3.new(0, 0.6, 0)
-                                elseif child2.BoxItemName.Value == 'Sawmill' or child2.BoxItemName.Value == 'Sawmill2' then
-                                    furnitureStore = _G['获得商场id'].WoodRus
-                                    num2 = game.Workspace.Stores.WoodRUs.Counter.CFrame + Vector3.new(0, 0.6, 0)
-                                elseif child2.BoxItemName.Value == 'Trailer2' or child2.BoxItemName.Value == 'UtilityTruck2' then
-                                    furnitureStore = _G['获得商场id'].CarStore
-                                    num2 = game.Workspace.Stores.CarStore.Counter.CFrame + Vector3.new(0, 0.6, 0)
-                                elseif child2.BoxItemName.Value == 'CanOfWorms' or child2.BoxItemName.Value == 'Dynamite' then
-                                    furnitureStore = _G['获得商场id'].ShackShop
-                                    num2 = game.Workspace.Stores.ShackShop.Counter.CFrame + Vector3.new(0, 0.6, 0)
-                                elseif child2.BoxItemName.Value == 'Painting1' or child2.BoxItemName.Value == 'Painting2' then
-                                    furnitureStore = _G['获得商场id'].FineArt
-                                    num2 = game.Workspace.Stores.FineArt.Counter.CFrame + Vector3.new(0, 0.6, 0)
-                                elseif child2.BoxItemName.Value == 'GateXOR' or child2.BoxItemName.Value == 'NeonWireOrange' then
-                                    furnitureStore = _G['获得商场id'].LogicStore
-                                    num2 = game.Workspace.Stores.LogicStore.Counter.CFrame + Vector3.new(0, 0.6, 0)
-                                end
-                            end
-
-                            return child, furnitureStore, num2
+                            return child, storeInfo, counter, false
                         end
                     end
                 end
             end
         end
+
+        return nil, nil, nil, mismatch
     end
     _G['传送物品'] = nil
-    _G['买'] = function(arg)
-        local globals = _G
-        local globals2 = _G
-        local globals3 = _G
-        local item, item2, item3 = _G['找到物品'](arg)
+    _G['买'] = function(arg, storeFilter)
+        local wrongStore = false
+        local function locate()
+            local item, store, counter, mismatch = _G['找到物品'](arg, storeFilter)
 
-        globals3['收银台'] = item3
-        globals2['商人id'] = item2
-        globals['物品'] = item
+            _G['收银台'] = counter
+            _G['商人id'] = store
+            _G['物品'] = item
+            wrongStore = mismatch and true or false
+        end
+
+        locate()
+
+        if _G['物品'] == nil and wrongStore then
+            
+            _G['提醒'](tostring(arg) .. ' is not sold at ' .. tostring(storeFilter) .. ' - pick the item again')
+            _G['菜单']['自动购买停止'] = true
+            return false
+        end
 
         if _G['物品'] == nil then
             _G['提醒']('Wait for the item to refresh')
 
             while _G['菜单']['自动购买停止'] ~= true do
                 task.wait()
-
-                local globals4 = _G
-                local globals5 = _G
-                local globals6 = _G
-                local item4, item5, item6 = _G['找到物品'](arg)
-
-                globals6['收银台'] = item6
-                globals5['商人id'] = item5
-                globals4['物品'] = item4
+                locate()
 
                 if _G['物品'] ~= nil then
+                    break
+                end
+                if wrongStore then
+                    _G['提醒'](tostring(arg) .. ' is not sold at ' .. tostring(storeFilter) .. ' - pick the item again')
+                    _G['菜单']['自动购买停止'] = true
                     break
                 end
             end
         end
 
-        _G['传送'](_G['物品'].Main.CFrame - Vector3.new(1, -3, 1))
-        value6(_G['物品'], _G['收银台'])
-        spawn(function()
-            _G['传送'](_G['收银台'] + Vector3.new(5, 0, 5))
-        end)
+        if _G['菜单']['自动购买停止'] == true or _G['物品'] == nil then
+            return false
+        end
+        if not _G['商人id'] or not _G['收银台'] then
+            _G['提醒']('Store for ' .. tostring(arg) .. ' not found')
+            _G['菜单']['自动购买停止'] = true
+            return false
+        end
+
+        local item = _G['物品']
+        local counter = _G['收银台']
+        local npc = _G['商人id']
+
+        local function bringToCounter()
+            _G['传送'](item.Main.CFrame - Vector3.new(1, -3, 1))
+            value6(item, counter)
+            task.spawn(function()
+                _G['传送'](counter + Vector3.new(5, 0, 5))
+            end)
+        end
+
+        bringToCounter()
         wait()
 
-        repeat
-            game.ReplicatedStorage.NPCDialog.PlayerChatted:InvokeServer(_G['商人id'], 'ConfirmPurchase')
+        local t0 = tick()
+        local lastRetry = tick()
+
+        while true do
+            if _G['菜单']['自动购买停止'] == true then
+                return false
+            end
+
+            pcall(function()
+                game.ReplicatedStorage.NPCDialog.PlayerChatted:InvokeServer(npc, 'ConfirmPurchase')
+            end)
             wait()
-        until _G['物品'].Owner.Value == _G['自己'] and _G['物品'].Parent ~= 'ShopItem' and not _G['物品']:FindFirstChild('BoxItemName')
+
+            local ok, done = pcall(function()
+                return item.Owner.Value == _G['自己'] and item.Parent ~= 'ShopItem' and not item:FindFirstChild('BoxItemName')
+            end)
+            if ok and done then
+                return true
+            end
+
+            
+            if tick() - lastRetry > 2.5 then
+                lastRetry = tick()
+                pcall(bringToCounter)
+            end
+            
+            if tick() - t0 > 20 then
+                _G['提醒']('Purchase of ' .. tostring(arg) .. ' timed out (seller did not respond)')
+                return false
+            end
+        end
     end
     _G['传送物品'] = nil
-    _G['自动购买v2'] = function(arg1, arg2, flag, _)
+    _G['自动购买v2'] = function(arg1, arg2, flag, storeFilter)
         _G['自动数量'] = arg2
 
         if flag then
@@ -4704,9 +4770,16 @@ do
 
                 if child.Owner.Value == _G['自己'] then
                     pcall(function()
+                        local dest = _G['菜单']['自动购买的地点']
+                        if _G['菜单']['自动购买用锚点'] then
+                            
+                            local n = (_G['数量'] or 0) % 24
+                            dest = dest * CFrame.new(math.floor(n / 6) * 3, 1 + (n % 6) * 1.5, 0)
+                        end
+
                         for _ = 1, 15 do
                             game:GetService('ReplicatedStorage').Interaction.ClientIsDragging:FireServer(child)
-                            child:PivotTo(_G['菜单']['自动购买的地点'])
+                            child:PivotTo(dest)
                             game:GetService('RunService').Stepped:wait()
                         end
 
@@ -4716,18 +4789,21 @@ do
             end)
             _G['数量'] = 0
 
-            for _ = 1, _G['自动数量']do
+            for _ = 1, math.max(1, math.floor(tonumber(_G['自动数量']) or 1)) do
                 flag2 = false
 
                 if _G['菜单']['自动购买停止'] ~= true then
-                    _G['买'](arg1)
+                    if not _G['买'](arg1, storeFilter) then
+                        break
+                    end
 
                     _G['数量'] = _G['数量'] + 1
                     _G['自己'].PlayerGui.MoneyDisplayGui.Text.Text = 'Autobuying:' .. tostring(_G['数量']) .. '/' .. tostring(arg2)
 
+                    local waitStart = tick()
                     repeat
                         task.wait()
-                    until flag2
+                    until flag2 or _G['菜单']['自动购买停止'] == true or tick() - waitStart > 10
 
                     task.wait()
                 end
@@ -4824,51 +4900,38 @@ do
 
         return _G['商店名字']
     end
-    local storeItemCache = {}
-    local STORE_MARKERS = {
-        Bed1 = 'FurnitureStore', Seat_Couch = 'FurnitureStore',
-        Sawmill = 'WoodRUs', Sawmill2 = 'WoodRUs',
-        Trailer2 = 'CarStore', UtilityTruck2 = 'CarStore',
-        CanOfWorms = 'ShackShop', Dynamite = 'ShackShop',
-        Painting1 = 'FineArt', Painting2 = 'FineArt',
-        GateXOR = 'LogicStore', NeonWireOrange = 'LogicStore',
-    }
+    _G['商店物品缓存'] = {}
+    _G['商店物品顺序'] = {}
     _G['获得商店物品'] = function(flag)
         if flag == 'All' then
             return _G['升级物品名字']()
         end
 
-        if storeItemCache[flag] then
-            return table.clone(storeItemCache[flag])
-        end
-
         
-        local result = {}
-        local seen = {}
-        for _, store in ipairs(game.Workspace.Stores:GetChildren()) do
-            if store.Name == 'ShopItems' and store:FindFirstChild('Box') then
-                local names = {}
-                local belongsTo = nil
-                for _, child in ipairs(store:GetChildren()) do
+        
+        for _, grp in ipairs(game.Workspace.Stores:GetChildren()) do
+            if grp.Name == 'ShopItems' and grp:FindFirstChild('Box') then
+                for _, child in ipairs(grp:GetChildren()) do
                     local nameVal = child:FindFirstChild('BoxItemName')
-                    if nameVal then
-                        names[#names + 1] = nameVal.Value
-                        belongsTo = belongsTo or STORE_MARKERS[nameVal.Value]
-                    end
-                end
-                if belongsTo == flag then
-                    for _, n in ipairs(names) do
-                        if not seen[n] then
-                            seen[n] = true
-                            result[#result + 1] = n
+                    if nameVal and not _G['商店物品缓存'][nameVal.Value] then
+                        local storeName = _G['判断商店'](child)
+                        if storeName then
+                            _G['商店物品缓存'][nameVal.Value] = storeName
+                            table.insert(_G['商店物品顺序'], nameVal.Value)
                         end
                     end
                 end
             end
         end
 
-        storeItemCache[flag] = result
-        return table.clone(result)
+        local result = {}
+        for _, name in ipairs(_G['商店物品顺序']) do
+            if _G['商店物品缓存'][name] == flag then
+                result[#result + 1] = name
+            end
+        end
+
+        return result
     end
     _G['升级选择的物品名字'] = function(flag)
         _G['物品'] = {}
@@ -5015,13 +5078,77 @@ do
         updateTotal()
     end)
     totalLabel = _AutoBuy2:Label('Total: pick an item')
+
+    
+    local pinLabel = _AutoBuy2:Label('Box location: not set (uses your position)')
+    local pinMarker = nil
+
+    local function setPin(cf)
+        _G['菜单']['自动购买箱子地点'] = cf
+
+        if pinMarker then
+            pcall(function() pinMarker:Destroy() end)
+            pinMarker = nil
+        end
+
+        if cf then
+            pcall(function()
+                local part = Instance.new('Part')
+                part.Name = 'RndmBoxPin'
+                part.Shape = Enum.PartType.Ball
+                part.Size = Vector3.new(1.5, 1.5, 1.5)
+                part.Material = Enum.Material.Neon
+                part.Color = Color3.fromRGB(0, 217, 255)
+                part.Transparency = 0.35
+                part.Anchored = true
+                part.CanCollide = false
+                part.CanQuery = false
+                part.CanTouch = false
+                part.Position = cf.Position - Vector3.new(0, 2.5, 0)
+                part.Parent = game.Workspace
+                pinMarker = part
+            end)
+
+            local p = cf.Position
+            pinLabel.Text = string.format('Box location: %d, %d, %d', math.floor(p.X), math.floor(p.Y), math.floor(p.Z))
+        else
+            pinLabel.Text = 'Box location: not set (uses your position)'
+        end
+    end
+
+    _AutoBuy2:Button('Set Box Location (here)', function()
+        setPin(_G['自己的方块'].CFrame)
+        _G['提醒']('Box location saved')
+    end)
+    _AutoBuy2:Button('Clear Box Location', function()
+        setPin(nil)
+        _G['提醒']('Box location cleared')
+    end)
     _AutoBuy2:Button('Buy', function()
+        if not _G['菜单']['自动购买的物品'] then
+            return _G['提醒']('Select an item first')
+        end
+
         _G['菜单']['自动购买停止'] = false
         _G['菜单']['自动购买的地点'] = _G['自己的方块'].CFrame
+        _G['菜单']['自动购买用锚点'] = false
 
         if string.split(_G['菜单']['自动购买的物品'], '--')[1] ~= 'Rukiryaxe' then
-            _G['自动购买v2'](string.split(_G['菜单']['自动购买的物品'], '--')[1], _G['菜单']['自动购买的数量'])
-            _G['传送'](_G['菜单']['自动购买的地点'])
+            local origin = _G['自己的方块'].CFrame
+            local pin = _G['菜单']['自动购买箱子地点']
+            local storeSel = _G['菜单']['商店名字']
+            if storeSel == 'All' then
+                storeSel = nil
+            end
+
+            if pin then
+                _G['菜单']['自动购买的地点'] = pin
+                _G['菜单']['自动购买用锚点'] = true
+            end
+
+            _G['自动购买v2'](string.split(_G['菜单']['自动购买的物品'], '--')[1], _G['菜单']['自动购买的数量'], nil, storeSel)
+            _G['菜单']['自动购买用锚点'] = false
+            _G['传送'](origin)
         else
             local _ = _G['自己的方块'].CFrame
 
@@ -5092,11 +5219,25 @@ do
     end, { stopper = true })
     _AutoBuy2:Toggle('Loop Auto Buy', false, function(enabled)
         if enabled then
-            _G['菜单']['自动购买停止'] = false
-            _G['菜单']['自动购买的地点'] = _G['自己的方块'].CFrame
+            if not _G['菜单']['自动购买的物品'] then
+                return _G['提醒']('Select an item first')
+            end
 
-            _G['自动购买v2'](string.split(_G['菜单']['自动购买的物品'], '--')[1], 0, true)
-            _G['传送'](_G['菜单']['自动购买的地点'])
+            _G['菜单']['自动购买停止'] = false
+
+            local origin = _G['自己的方块'].CFrame
+            local pin = _G['菜单']['自动购买箱子地点']
+            local storeSel = _G['菜单']['商店名字']
+            if storeSel == 'All' then
+                storeSel = nil
+            end
+
+            _G['菜单']['自动购买的地点'] = pin or origin
+            _G['菜单']['自动购买用锚点'] = pin ~= nil
+
+            _G['自动购买v2'](string.split(_G['菜单']['自动购买的物品'], '--')[1], 0, true, storeSel)
+            _G['菜单']['自动购买用锚点'] = false
+            _G['传送'](origin)
         else
             _G['菜单']['自动购买停止'] = true
         end
@@ -5115,6 +5256,8 @@ do
             end)
 
             _G['菜单']['自动购买停止'] = false
+            _G['菜单']['自动购买用锚点'] = false
+            _G['菜单']['自动购买的地点'] = _G['自己的方块'].CFrame
 
             local nextFn3 = next
             local items2, startKey3 = game.ReplicatedStorage.ClientItemInfo:GetChildren()
