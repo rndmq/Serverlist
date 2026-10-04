@@ -493,9 +493,9 @@ local FloatingIcon = Instance.new("ImageButton")
 FloatingIcon.Name = "FloatingIcon"
 FloatingIcon.Parent = UILibrary
 FloatingIcon.BackgroundTransparency = 1
-FloatingIcon.Position = UDim2.new(0, 100, 0, 100)
+FloatingIcon.Position = UDim2.new(0, 70, 0, 130)
 FloatingIcon.Size = UDim2.new(0, 40, 0, 40)
-FloatingIcon.Visible = false
+FloatingIcon.Visible = true
 FloatingIcon.ZIndex = 50
 FloatingIcon.Image = "rbxassetid://3570695787"
 FloatingIcon.ImageColor3 = Library.Theme.MainColor
@@ -534,9 +534,8 @@ table.insert(Library.LibraryColorTable, FloatingIcon)
 
 Minimized = false
 local isDragging = false
-local ICON_DROP = 64                            -- seberapa jauh ikon diturunkan dari pojok kiri atas window (piksel)
-local iconPosition = UDim2.new(0, 14, 0, 120)   -- cadangan; dihitung ulang dari posisi window saat minimize
-local iconMoved = false
+-- Ikon selalu tampil (juga saat window terbuka): klik = minimize / maximize, tahan lalu geser = pindahkan
+local iconPosition = UDim2.new(0, 70, 0, 130)
 local windowPosition = nil                        -- posisi window sebelum di-minimize
 local originalMainSize
 
@@ -590,14 +589,6 @@ local function MaximizeUI()
         BackgroundTransparency = 1
     }):Play()
 
-    TweenService:Create(FloatingIcon, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-        Size = UDim2.new(0, 0, 0, 0)
-    }):Play()
-
-    task.delay(0.2, function()
-        FloatingIcon.Visible = false
-        FloatingIcon.Size = UDim2.new(0, 40, 0, 40)
-    end)
     task.delay(t, function()
         AnimCover.Visible = false
         animBusy = false
@@ -612,11 +603,6 @@ local function MinimizeUI()
     windowPosition = Main.Position
     if not originalMainSize then
         originalMainSize = Main.Size
-    end
-    if not iconMoved then
-        -- X sama seperti posisi window, tapi diturunkan supaya nggak ketutup menu / voice chat Roblox
-        local inset = game:GetService("GuiService"):GetGuiInset()
-        iconPosition = UDim2.new(0, math.max(Main.AbsolutePosition.X, 8), 0, Main.AbsolutePosition.Y - inset.Y + ICON_DROP)
     end
     mainImageTransparency = Main.ImageTransparency
 
@@ -634,15 +620,6 @@ local function MinimizeUI()
         BackgroundTransparency = 0
     }):Play()
 
-    -- ikon muncul tepat saat window hampir sampai di posisinya
-    task.delay(t * 0.6, function()
-        FloatingIcon.Position = iconPosition
-        FloatingIcon.Size = UDim2.new(0, 0, 0, 0)
-        FloatingIcon.Visible = true
-        TweenService:Create(FloatingIcon, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-            Size = UDim2.new(0, 40, 0, 40)
-        }):Play()
-    end)
     task.delay(t, function()
         Main.Visible = false
         animBusy = false
@@ -672,7 +649,6 @@ local function MakeDraggableWithTracking(gui)
         )
         gui.Position = newPosition
         iconPosition = newPosition
-        iconMoved = true
     end
 
     gui.InputBegan:Connect(function(input)
@@ -688,7 +664,7 @@ local function MakeDraggableWithTracking(gui)
                     isDragging = false
                     
                     if (input.Position - dragStart).Magnitude < 5 then
-                        MaximizeUI()
+                        if Minimized then MaximizeUI() else MinimizeUI() end
                     end
                 end
             end)
@@ -1763,7 +1739,9 @@ end
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 
-function SectionElements:CreateSlider(name, minimumvalue, maximumvalue, presetvalue, precisevalue, callback)
+-- bind (opsional): nama variabel global, mis. "varSlider". Slider akan ikut berubah kalau script mengisi varSlider = 60,
+-- dan varSlider otomatis ikut terisi saat slider digeser.
+function SectionElements:CreateSlider(name, minimumvalue, maximumvalue, presetvalue, precisevalue, callback, bind)
     local NameSlider = Instance.new("Frame")
     local Title = Instance.new("TextLabel")
     local SliderBackground = Instance.new("ImageLabel")
@@ -1774,6 +1752,21 @@ function SectionElements:CreateSlider(name, minimumvalue, maximumvalue, presetva
 
     local SliderDragging = false
     local StartingValue = presetvalue
+
+    -- nilai tersimpan (kalau ada) menggantikan preset
+    local sliderGameId = self.GameId or tostring(game.PlaceId)
+    if not Settings[sliderGameId] then Settings[sliderGameId] = {} end
+    local savedSliderValue = Settings[sliderGameId][name]
+    if type(savedSliderValue) == "number" then
+        StartingValue = math.clamp(savedSliderValue, minimumvalue, maximumvalue)
+    end
+    local currentValue = StartingValue or minimumvalue
+    callback = callback or function() end
+    local bindName = (type(bind) == "string" and bind ~= "") and bind or nil
+    local function PublishBind(v)
+        if not bindName then return end
+        pcall(function() getgenv()[bindName] = v end)
+    end
 
     NameSlider.Name = (name .. "Slider")
     NameSlider.Parent = SectionContent
@@ -1896,7 +1889,15 @@ table.insert(Library.LibraryColorTable, Title)
         SlidingValue = tonumber(string.format("%.2f", SlidingValue))
 
         Value.Text = tostring(SlidingValue)
+        currentValue = SlidingValue
+        PublishBind(SlidingValue)
         callback(SlidingValue)
+    end
+
+    -- simpan nilai slider (dipanggil saat selesai geser / selesai ketik / dari script)
+    local function SaveSliderValue()
+        Settings[sliderGameId][name] = currentValue
+        SaveSettings()
     end
 
     CircleSelector.InputBegan:Connect(function(input)
@@ -1911,6 +1912,7 @@ table.insert(Library.LibraryColorTable, Title)
     
     CircleSelector.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            if SliderDragging then SaveSliderValue() end
             SliderDragging = false
             SectionScrollingFrame.ScrollingEnabled = true
             shrinkCircle()   
@@ -1936,6 +1938,7 @@ table.insert(Library.LibraryColorTable, Title)
     end)
     HitArea.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            if SliderDragging then SaveSliderValue() end
             SliderDragging = false
             SectionScrollingFrame.ScrollingEnabled = true
             shrinkCircle()
@@ -1952,7 +1955,7 @@ table.insert(Library.LibraryColorTable, Title)
     
     Value.FocusLost:Connect(function()
         if not tonumber(Value.Text) then
-            Value.Text = tostring(StartingValue or precisevalue and tonumber(string.format("%.2f", StartingValue)))
+            Value.Text = tostring(currentValue)
         elseif Value.Text == "" or tonumber(Value.Text) <= minimumvalue then
             Value.Text = minimumvalue
         elseif Value.Text == "" or tonumber(Value.Text) >= maximumvalue then
@@ -1960,10 +1963,59 @@ table.insert(Library.LibraryColorTable, Title)
         end
 
         TweenService:Create(SliderIndicator, TweenInfo.new(0.02, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(((tonumber(Value.Text) or minimumvalue) - minimumvalue) / (maximumvalue - minimumvalue), 0, 1, 0)}):Play()
+        currentValue = tonumber(Value.Text) or currentValue
+        PublishBind(currentValue)
+        SaveSliderValue()
         callback(tonumber(Value.Text))
     end)
 
+    -- ubah nilai dari script: slider.SetValue(60) atau slider:SetValue(60)
+    local function SetValue(a, b)
+        local v = (type(a) == "table") and b or a
+        v = tonumber(v)
+        if not v then return end
+        v = math.clamp(v, minimumvalue, maximumvalue)
+        if precisevalue then
+            v = tonumber(string.format("%.2f", v))
+        else
+            v = math.floor(v + 0.5)
+        end
+        currentValue = v
+        Value.Text = tostring(v)
+        TweenService:Create(SliderIndicator, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            Size = UDim2.new((v - minimumvalue) / (maximumvalue - minimumvalue), 0, 1, 0)
+        }):Play()
+        PublishBind(v)
+        SaveSliderValue()
+        callback(v)
+    end
+
+    local function GetValue()
+        return currentValue
+    end
+
+    PublishBind(currentValue)
     callback(StartingValue)
+
+    -- pantau variabel global (kalau pakai bind): varSlider = 60 -> slider ikut geser ke 60
+    if bindName then
+        task.spawn(function()
+            while NameSlider and NameSlider.Parent do
+                task.wait(0.25)
+                local ok, v = pcall(function() return getgenv()[bindName] end)
+                if ok and type(v) == "number" and v ~= currentValue and not SliderDragging then
+                    SetValue(v)
+                end
+            end
+        end)
+    end
+
+    return {
+        SetValue = SetValue,
+        Set = SetValue,
+        GetValue = GetValue,
+        Get = GetValue
+    }
 end
 
 function SectionElements:CreateTextBox(name, characterLimit, placeholderText, callback)
@@ -2608,7 +2660,7 @@ function SectionElements:CreateDropdown(name, options, presetoption, callback)
                 table.insert(Library.LibraryColorTable, NameButton)
 
                 
-                ClickArea.MouseButton1Down:Connect(function()
+                ClickArea.MouseButton1Click:Connect(function()
                     SelectedOption = v
                     ResetAllDropdownItems()
                     TitleToggle.Text = (name .. " - " .. SelectedOption)
@@ -2637,7 +2689,11 @@ function SectionElements:CreateDropdown(name, options, presetoption, callback)
         end
     end
 
-    TitleToggle.MouseButton1Down:Connect(function()
+    local lastToggleClock = 0
+    TitleToggle.MouseButton1Click:Connect(function()
+        -- jeda singkat supaya ketukan ganda / sentuhan nyasar nggak langsung menutup lagi
+        if os.clock() - lastToggleClock < 0.3 then return end
+        lastToggleClock = os.clock()
         DropdownToggled = not DropdownToggled
         if DropdownToggled then
             searchTextBox.Visible = false
@@ -2854,7 +2910,11 @@ function SectionElements:CreateMultiDropdown(name, options, minSelect, maxSelect
         end
     end
 
-    TitleToggle.MouseButton1Down:Connect(function()
+    local lastToggleClock = 0
+    TitleToggle.MouseButton1Click:Connect(function()
+        -- jeda singkat supaya ketukan ganda / sentuhan nyasar nggak langsung menutup lagi
+        if os.clock() - lastToggleClock < 0.3 then return end
+        lastToggleClock = os.clock()
         DropdownToggled = not DropdownToggled
         
         if DropdownToggled then
