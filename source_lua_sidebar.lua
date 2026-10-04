@@ -2561,62 +2561,67 @@ end
             SetRGBValues()
             callback(Color.BackgroundColor3)
     
-            Color.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            local GuiService = game:GetService("GuiService")
+            local function IsPointer(input)
+                return input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch
+            end
+            local function PointerXY(input)
+                if input.UserInputType == Enum.UserInputType.Touch then
+                    local x, y = input.Position.X, input.Position.Y
+                    local gui = ColorPicker:FindFirstAncestorOfClass("ScreenGui")
+                    if gui and not gui.IgnoreGuiInset then
+                        y = y - GuiService:GetGuiInset().Y
+                    end
+                    return x, y
+                end
+                return Mouse.X, Mouse.Y
+            end
+            local function LockScroll(lock)
+                local sf = ColorPicker:FindFirstAncestorOfClass("ScrollingFrame")
+                if sf then sf.ScrollingEnabled = not lock end
+            end
+
+            local function BindDrag(area, getConn, setConn, step)
+                area.InputBegan:Connect(function(input)
+                    if not IsPointer(input) then return end
                     if RainbowColorPicker then return end
-    
-                    if ColorInput then
-                        ColorInput:Disconnect()
-                    end
-                    
-                    ColorInput = RunService.RenderStepped:Connect(function()
-                        local ColorX = (math.clamp(Mouse.X - Color.AbsolutePosition.X, 0, Color.AbsoluteSize.X) / Color.AbsoluteSize.X)
-                        local ColorY = (math.clamp(Mouse.Y - Color.AbsolutePosition.Y, 0, Color.AbsoluteSize.Y) / Color.AbsoluteSize.Y)
-    
-                        ColorSelection.Position = UDim2.new(ColorX, 0, ColorY, 0)
-                        ColorS = ColorX
-                        ColorV = 1 - ColorY
-    
-                        UpdateColorPicker(true)
+                    local old = getConn()
+                    if old then old:Disconnect() end
+                    LockScroll(true)
+
+                    local conn
+                    conn = RunService.RenderStepped:Connect(function()
+                        local px, py = PointerXY(input)
+                        step(px, py)
                     end)
-                end
-            end)
-    
-            Color.InputEnded:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    if ColorInput then
-                        ColorInput:Disconnect()
-                    end
-                end
-            end)
-    
-            Hue.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    if RainbowColorPicker then return end
-    
-                    if HueInput then
-                        HueInput:Disconnect()
-                    end
-                    
-                    HueInput = RunService.RenderStepped:Connect(function()
-                        local HueY = (math.clamp(Mouse.Y - Hue.AbsolutePosition.Y, 0, Hue.AbsoluteSize.Y) / Hue.AbsoluteSize.Y)
-    
-                        HueSelection.Position = UDim2.new(0.48, 0, HueY, 0)
-                        ColorH = 1 - HueY
-    
-                        UpdateColorPicker(true)
+                    setConn(conn)
+
+                    input.Changed:Connect(function()
+                        if input.UserInputState == Enum.UserInputState.End then
+                            conn:Disconnect()
+                            if getConn() == conn then setConn(nil) end
+                            LockScroll(false)
+                        end
                     end)
-                end
+                end)
+            end
+
+            BindDrag(Color, function() return ColorInput end, function(c) ColorInput = c end, function(px, py)
+                local ColorX = math.clamp(px - Color.AbsolutePosition.X, 0, Color.AbsoluteSize.X) / Color.AbsoluteSize.X
+                local ColorY = math.clamp(py - Color.AbsolutePosition.Y, 0, Color.AbsoluteSize.Y) / Color.AbsoluteSize.Y
+                ColorSelection.Position = UDim2.new(ColorX, 0, ColorY, 0)
+                ColorS = ColorX
+                ColorV = 1 - ColorY
+                UpdateColorPicker(true)
             end)
-    
-            Hue.InputEnded:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    if HueInput then
-                        HueInput:Disconnect()
-                    end
-                end
+
+            BindDrag(Hue, function() return HueInput end, function(c) HueInput = c end, function(px, py)
+                local HueY = math.clamp(py - Hue.AbsolutePosition.Y, 0, Hue.AbsoluteSize.Y) / Hue.AbsoluteSize.Y
+                HueSelection.Position = UDim2.new(0.48, 0, HueY, 0)
+                ColorH = 1 - HueY
+                UpdateColorPicker(true)
             end)
-    
+
             Toggle.MouseButton1Down:Connect(function()
                 RainbowColorPicker = not RainbowColorPicker
             
@@ -3365,6 +3370,21 @@ do
         Forest   = { Accent = C(65, 175, 105),  Background = C(16, 30, 22),   Text = C(235, 250, 240) },
         Amber    = { Accent = C(235, 165, 45),  Background = C(32, 26, 16),   Text = C(255, 248, 232) },
         Purple   = { Accent = C(160, 90, 230),  Background = C(26, 16, 36),   Text = C(250, 240, 255) },
+        Crimson  = { Accent = C(220, 50, 60),   Background = C(30, 14, 16),   Text = C(255, 238, 238) },
+        Sunset   = { Accent = C(250, 110, 70),  Background = C(34, 20, 22),   Text = C(255, 242, 236) },
+        Mint     = { Accent = C(70, 210, 170),  Background = C(14, 30, 28),   Text = C(232, 255, 250) },
+        Sky      = { Accent = C(90, 170, 250),  Background = C(16, 26, 40),   Text = C(235, 245, 255) },
+        Lavender = { Accent = C(170, 150, 240), Background = C(28, 24, 40),   Text = C(246, 242, 255) },
+        Cherry   = { Accent = C(235, 70, 110),  Background = C(32, 14, 22),   Text = C(255, 238, 244) },
+        Gold     = { Accent = C(215, 175, 60),  Background = C(26, 24, 16),   Text = C(255, 250, 232) },
+        Coffee   = { Accent = C(190, 135, 90),  Background = C(32, 24, 20),   Text = C(250, 240, 232) },
+        Slate    = { Accent = C(110, 150, 190), Background = C(24, 28, 34),   Text = C(236, 242, 248) },
+        Neon     = { Accent = C(40, 255, 150),  Background = C(10, 14, 12),   Text = C(230, 255, 240) },
+        Cyber    = { Accent = C(250, 230, 50),  Background = C(16, 14, 28),   Text = C(250, 248, 235) },
+        Ice      = { Accent = C(120, 205, 245), Background = C(226, 238, 246), Text = C(24, 36, 48) },
+        Sand     = { Accent = C(200, 140, 70),  Background = C(240, 232, 218), Text = C(46, 38, 28) },
+        Blossom  = { Accent = C(235, 100, 150), Background = C(248, 232, 238), Text = C(58, 30, 42) },
+        Graphite = { Accent = C(160, 160, 170), Background = C(34, 34, 38),   Text = C(240, 240, 244) },
     }
 
     local function PresetNames()
