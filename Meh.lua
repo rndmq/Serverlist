@@ -4596,8 +4596,6 @@ do
             ID = tonumber(12),
         },
     }
-    
-    
     _G['商店键'] = {
         WoodRUs = 'WoodRus',
         FurnitureStore = 'FurnitureStore',
@@ -4631,8 +4629,6 @@ do
         end
         return bestName
     end
-    
-    
     _G['找到物品'] = function(flag, storeFilter)
         local mismatch = false
 
@@ -4673,7 +4669,6 @@ do
         locate()
 
         if _G['物品'] == nil and wrongStore then
-            
             _G['提醒'](tostring(arg) .. ' is not sold at ' .. tostring(storeFilter) .. ' - pick the item again')
             _G['菜单']['自动购买停止'] = true
             return false
@@ -4710,6 +4705,15 @@ do
         local counter = _G['收银台']
         local npc = _G['商人id']
 
+        local storeName = _G['判断商店'](item) or '?'
+        local npcLabel = tostring(npc.Name) .. ' #' .. tostring(npc.ID)
+
+        local noteKey = tostring(arg) .. '@' .. storeName
+        if _G['最后购买提示'] ~= noteKey then
+            _G['最后购买提示'] = noteKey
+            _G['提醒']('Buying ' .. tostring(arg) .. ' at ' .. storeName .. ' (' .. npcLabel .. ')')
+        end
+
         local function bringToCounter()
             _G['传送'](item.Main.CFrame - Vector3.new(1, -3, 1))
             value6(item, counter)
@@ -4718,41 +4722,80 @@ do
             end)
         end
 
+        local invoking = false
+        local lastInvoke = 0
+        local function confirm()
+            if invoking and tick() - lastInvoke < 3 then
+                return
+            end
+            invoking = true
+            lastInvoke = tick()
+            task.spawn(function()
+                pcall(function()
+                    game.ReplicatedStorage.NPCDialog.PlayerChatted:InvokeServer(npc, 'ConfirmPurchase')
+                end)
+                invoking = false
+            end)
+        end
+
+        local function itemToCounter()
+            local ok, d = pcall(function()
+                return (item.Main.Position - counter.Position).Magnitude
+            end)
+            return ok and d or math.huge
+        end
+        local function meToCounter()
+            local ok, d = pcall(function()
+                return (_G['自己的方块'].Position - counter.Position).Magnitude
+            end)
+            return ok and d or math.huge
+        end
+
         bringToCounter()
         wait()
 
         local t0 = tick()
-        local lastRetry = tick()
+        local lastCheck = tick()
 
         while true do
             if _G['菜单']['自动购买停止'] == true then
                 return false
             end
 
-            pcall(function()
-                game.ReplicatedStorage.NPCDialog.PlayerChatted:InvokeServer(npc, 'ConfirmPurchase')
-            end)
+            confirm()
             wait()
 
             local ok, done = pcall(function()
-                return item.Owner.Value == _G['自己'] and item.Parent ~= 'ShopItem' and not item:FindFirstChild('BoxItemName')
+                if item.Owner.Value ~= _G['自己'] then
+                    return false
+                end
+                return not item:FindFirstChild('BoxItemName') or item:IsDescendantOf(game.Workspace.PlayerModels)
             end)
             if ok and done then
                 return true
             end
 
-            
-            if tick() - lastRetry > 2.5 then
-                lastRetry = tick()
-                pcall(bringToCounter)
+            if tick() - lastCheck > 2 then
+                lastCheck = tick()
+
+                if itemToCounter() > 12 then
+                    pcall(bringToCounter)
+                elseif meToCounter() > 25 then
+                    pcall(function()
+                        _G['传送'](counter + Vector3.new(5, 0, 5))
+                    end)
+                end
             end
-            
-            if tick() - t0 > 20 then
-                _G['提醒']('Purchase of ' .. tostring(arg) .. ' timed out (seller did not respond)')
+
+            if tick() - t0 > 15 then
+                local money = 0
+                pcall(function() money = _G['自己'].leaderstats.Money.Value end)
+                _G['提醒'](string.format('%s not bought | store %s (%s) | item-counter %dst | you-counter %dst | $%d', tostring(arg), storeName, npcLabel, math.min(itemToCounter(), 9999), math.min(meToCounter(), 9999), money))
                 return false
             end
         end
     end
+
     _G['传送物品'] = nil
     _G['自动购买v2'] = function(arg1, arg2, flag, storeFilter)
         _G['自动数量'] = arg2
@@ -4772,7 +4815,6 @@ do
                     pcall(function()
                         local dest = _G['菜单']['自动购买的地点']
                         if _G['菜单']['自动购买用锚点'] then
-                            
                             local n = (_G['数量'] or 0) % 24
                             dest = dest * CFrame.new(math.floor(n / 6) * 3, 1 + (n % 6) * 1.5, 0)
                         end
@@ -4788,6 +4830,7 @@ do
                 end
             end)
             _G['数量'] = 0
+            _G['最后购买提示'] = nil
 
             for _ = 1, math.max(1, math.floor(tonumber(_G['自动数量']) or 1)) do
                 flag2 = false
@@ -4907,8 +4950,6 @@ do
             return _G['升级物品名字']()
         end
 
-        
-        
         for _, grp in ipairs(game.Workspace.Stores:GetChildren()) do
             if grp.Name == 'ShopItems' and grp:FindFirstChild('Box') then
                 for _, child in ipairs(grp:GetChildren()) do
@@ -4970,7 +5011,6 @@ do
         return (r:gsub('^,', ''))
     end
 
-    
     local function withAmountPrices(list)
         local mult = amountMult()
         local out = {}
@@ -5020,9 +5060,8 @@ do
         totalLabel.Text = txt
     end
 
-    
     local function refreshItemPrices()
-        local saved = _G['物品'] 
+        local saved = _G['物品']
         local ok, res = pcall(_G['升级选择的物品名字'], _G['菜单']['商店名字'])
         _G['物品'] = saved
         if not ok or type(res) ~= 'table' then
@@ -5079,7 +5118,6 @@ do
     end)
     totalLabel = _AutoBuy2:Label('Total: pick an item')
 
-    
     local pinLabel = _AutoBuy2:Label('Box location: not set (uses your position)')
     local pinMarker = nil
 
