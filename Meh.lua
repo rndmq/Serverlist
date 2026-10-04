@@ -4839,9 +4839,9 @@ do
 
         return nil, nil, nil, mismatch
     end
-    _G.MaxBatch = 5
+    _G.MaxBatch = 3
     _G.PreferredStore = { Wire = 'LogicStore' }
-    _G.CarryFrames = 10
+    _G.CarryFrames = 15
     _G.BuyProgress = nil
     _G['传送物品'] = nil
 
@@ -4937,7 +4937,13 @@ do
             return 0, 'store'
         end
 
-        local n = math.min(want, #items, math.min(tonumber(_G.MaxBatch) or 5, 5))
+        local storeName = _G['判断商店'](items[1]) or '?'
+        if not npc.Verified and _G.FixedStoreIDs[storeName] == npc.ID then
+            npc.Verified = true
+        end
+
+        local limit = math.min(want, math.min(tonumber(_G.MaxBatch) or 3, 3))
+        local n = math.min(limit, #items)
         local unit = tonumber(_G['商品价格'](arg, 1)) or 0
         local money = 0
         pcall(function() money = _G['自己'].leaderstats.Money.Value end)
@@ -4955,11 +4961,14 @@ do
         end
         n = math.max(1, math.floor(n))
 
+        if #items < limit then
+            _G['提醒'](string.format('Only %d x %s in stock right now', #items, tostring(arg)))
+        end
+
         local batch = {}
         for i = 1, n do
             batch[i] = items[i]
         end
-        local storeName = _G['判断商店'](batch[1]) or '?'
 
         local function partOf(it)
             local p = it.PrimaryPart
@@ -4975,21 +4984,29 @@ do
         local counterPart = nil
         pcall(function() counterPart = game.Workspace.Stores[storeName].Counter end)
         local topY = counter.Position.Y
+        local halfX, halfZ = 1.5, 1.5
         if counterPart then
             topY = counterPart.Position.Y + counterPart.Size.Y / 2
+            halfX = math.min(math.max(counterPart.Size.X / 2 - 0.3, 0.5), 3)
+            halfZ = math.min(math.max(counterPart.Size.Z / 2 - 0.3, 0.5), 3)
         end
 
-        local gap = 0
+        local ex, ez, eh = 0, 0, 0
         for _, it in ipairs(batch) do
             pcall(function()
-                local s = it:GetExtentsSize()
-                gap = math.max(gap, s.X, s.Z)
+                local _, s = it:GetBoundingBox()
+                ex = math.max(ex, s.X)
+                ez = math.max(ez, s.Z)
+                eh = math.max(eh, s.Y)
             end)
         end
-        gap = gap + 0.6
+        ex = (ex > 0 and ex or 2) + 0.2
+        ez = (ez > 0 and ez or 2) + 0.2
+        eh = eh > 0 and eh or 2
 
-        local cols = math.min(n, 3)
-        local rows = math.ceil(n / 3)
+        local cols = math.max(1, math.floor(halfX * 2 / ex))
+        local rows = math.max(1, math.floor(halfZ * 2 / ez))
+        local perLayer = cols * rows
         local lift = 0
 
         local function put(it, i)
@@ -4997,11 +5014,16 @@ do
             if not p then return end
             pcall(function()
                 local k = i - 1
-                local ox = ((k % 3) - (cols - 1) / 2) * gap
-                local oz = (math.floor(k / 3) - (rows - 1) / 2) * gap
+                local layer = math.floor(k / perLayer)
+                local idx = k % perLayer
+                local layerCount = math.min(perLayer, n - layer * perLayer)
+                local usedCols = math.min(cols, layerCount)
+                local usedRows = math.ceil(layerCount / cols)
+                local ox = ((idx % cols) - (usedCols - 1) / 2) * ex
+                local oz = (math.floor(idx / cols) - (usedRows - 1) / 2) * ez
                 local bbCF, bbSize = it:GetBoundingBox()
                 local base = CFrame.new(counter.Position.X, topY, counter.Position.Z) * counter.Rotation
-                local center = base * CFrame.new(ox, bbSize.Y / 2 + 0.5 + lift, oz)
+                local center = base * CFrame.new(ox, bbSize.Y / 2 + 0.5 + lift + layer * (eh + 0.3), oz)
                 local rel = bbCF:ToObjectSpace(it:GetPivot())
                 drag:FireServer(it)
                 p.AssemblyLinearVelocity = Vector3.zero
@@ -5086,6 +5108,37 @@ do
             end)
         end
 
+        local arrived = {}
+        local arrivalConn = game.Workspace.PlayerModels.ChildAdded:Connect(function(child)
+            task.spawn(function()
+                local ov = child:WaitForChild('Owner', 5)
+                if ov and ov.Value == _G['自己'] then
+                    arrived[child] = true
+                end
+            end)
+        end)
+
+        local function validArrivals()
+            local list = {}
+            for child in pairs(arrived) do
+                local pv = child:FindFirstChild('PurchasedBoxItemName')
+                if child.Parent == game.Workspace.PlayerModels and pv and pv.Value == arg then
+                    list[#list + 1] = child
+                end
+            end
+            return list
+        end
+
+        local function boughtCount()
+            local c = 0
+            for _, it in ipairs(batch) do
+                if isBought(it) then
+                    c = c + 1
+                end
+            end
+            return math.max(c, #validArrivals())
+        end
+
         local reason = nil
         local lastCount = 0
         local lastProgress = tick()
@@ -5100,12 +5153,7 @@ do
             confirm()
             RS.Heartbeat:Wait()
 
-            local count = 0
-            for _, it in ipairs(batch) do
-                if isBought(it) then
-                    count = count + 1
-                end
-            end
+            local count = boughtCount()
 
             if count >= n then
                 break
@@ -5148,46 +5196,98 @@ do
             end
         end
 
-        local got = {}
-        for _, it in ipairs(batch) do
-            if isBought(it) then
-                got[#got + 1] = it
-            end
+        if reason == 'fail' then
+            task.wait(1)
         end
 
-        if #got > 0 then
-            local base = menu['自动购买的地点']
+        local base = menu['自动购买的地点']
+        if not base then
+            pcall(function() base = _G['自己的方块'].CFrame end)
+        end
+        local startIdx = _G['数量'] or 0
+        local carried = {}
+        local carriedCount = 0
+
+        local function carryNew()
             if not base then
-                pcall(function() base = _G['自己的方块'].CFrame end)
+                return 0
             end
-            local startIdx = _G['数量'] or 0
 
-            for _ = 1, (tonumber(_G.CarryFrames) or 10) do
-                for i, it in ipairs(got) do
-                    pcall(function()
-                        local dest
-                        if menu['自动购买用锚点'] then
-                            local k = (startIdx + i - 1) % 24
-                            dest = base * CFrame.new(math.floor(k / 6) * 3, 1 + (k % 6) * 1.5, 0)
-                        else
-                            dest = base * CFrame.new(((i - 1) % 4) * 1.5, 0, math.floor((i - 1) / 4) * 1.5)
-                        end
-                        drag:FireServer(it)
-                        it:PivotTo(dest)
-                    end)
+            local pending = {}
+            local function consider(it)
+                if carried[it] or not it.Parent then
+                    return
                 end
-                RS.Stepped:Wait()
+                carried[it] = true
+                carriedCount = carriedCount + 1
+                local i = carriedCount
+                local dest
+                if menu['自动购买用锚点'] then
+                    local k = (startIdx + i - 1) % 24
+                    dest = base * CFrame.new(math.floor(k / 6) * 3, 1 + (k % 6) * 1.5, 0)
+                else
+                    dest = base * CFrame.new(((i - 1) % 4) * 1.5, 0, math.floor((i - 1) / 4) * 1.5)
+                end
+                pending[#pending + 1] = { item = it, dest = dest }
             end
 
-            if _G['已确认商店ID'][storeName] ~= npc.ID then
-                npc.Verified = true
-                _G['存商店ID'](storeName, npc.ID)
+            for _, it in ipairs(batch) do
+                if isBought(it) then
+                    consider(it)
+                end
             end
+            for _, it in ipairs(validArrivals()) do
+                consider(it)
+            end
+
+            local total = #pending
+            if total == 0 then
+                return 0
+            end
+
+            for _ = 1, 3 do
+                for _ = 1, (tonumber(_G.CarryFrames) or 15) do
+                    for _, e in ipairs(pending) do
+                        pcall(function()
+                            drag:FireServer(e.item)
+                            e.item:PivotTo(e.dest)
+                        end)
+                    end
+                    RS.Stepped:Wait()
+                end
+
+                task.wait(0.1)
+
+                local again = {}
+                for _, e in ipairs(pending) do
+                    local ok, d = pcall(function()
+                        return (e.item:GetPivot().Position - e.dest.Position).Magnitude
+                    end)
+                    if e.item.Parent and (not ok or d > 8) then
+                        again[#again + 1] = e
+                    end
+                end
+                if #again == 0 then
+                    break
+                end
+                pending = again
+            end
+
+            return total
+        end
+
+        local total = carryNew()
+        total = total + carryNew()
+        pcall(function() arrivalConn:Disconnect() end)
+
+        if total > 0 and _G['已确认商店ID'][storeName] ~= npc.ID then
+            npc.Verified = true
+            _G['存商店ID'](storeName, npc.ID)
         end
 
         endChat()
 
-        return #got, reason
+        return total, reason
     end
 
     _G['自动购买v2'] = function(arg1, arg2, flag, storeFilter, resume)
@@ -5230,25 +5330,31 @@ do
         show()
 
         local reason = nil
-        while prog.bought < prog.target do
-            if menu['自动购买停止'] == true then
-                reason = 'stop'
-                break
-            end
+        local loopOk, loopErr = pcall(function()
+            while prog.bought < prog.target do
+                if menu['自动购买停止'] == true then
+                    reason = 'stop'
+                    break
+                end
 
-            local got, why = _G.BuyBatch(arg1, prog.target - prog.bought, prog.store)
-            prog.bought = prog.bought + got
-            _G['数量'] = prog.bought
-            show()
+                local got, why = _G.BuyBatch(arg1, prog.target - prog.bought, prog.store)
+                prog.bought = prog.bought + got
+                _G['数量'] = prog.bought
+                show()
 
-            if why then
-                reason = why
-                break
+                if why then
+                    reason = why
+                    break
+                end
+                if got == 0 then
+                    reason = 'fail'
+                    break
+                end
             end
-            if got == 0 then
-                reason = 'fail'
-                break
-            end
+        end)
+        if not loopOk then
+            reason = 'error'
+            _G['提醒']('Buy error: ' .. tostring(loopErr))
         end
 
         pcall(function()
@@ -5266,12 +5372,16 @@ do
                 stock = 'Item did not restock in time',
                 fail = 'Purchase timed out',
                 store = 'Store problem',
+                error = 'Error',
             })[reason] or reason
 
-            if prog.target == math.huge or reason == 'store' then
+            prog.resumable = reason ~= 'store' and prog.bought < prog.target
+
+            if reason == 'store' then
                 _G['提醒'](string.format('%s. Bought %d x %s so far', why, prog.bought, tostring(arg1)))
+            elseif prog.target == math.huge then
+                _G['提醒'](string.format('%s. Bought %d x %s so far. Press "Continue" to keep going.', why, prog.bought, tostring(arg1)))
             else
-                prog.resumable = prog.bought < prog.target
                 _G['提醒'](string.format('%s: bought %d/%d x %s. Press "Continue" to buy the remaining %d.', why, prog.bought, prog.target, tostring(arg1), prog.target - prog.bought))
             end
         end
@@ -5787,6 +5897,7 @@ do
 
     _ScreenGui4.Parent = game.CoreGui
     _ScreenGui4.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    _ScreenGui4.IgnoreGuiInset = true
     _Frame20.Parent = _ScreenGui4
     _Frame20.BackgroundColor3 = Color3.fromRGB(4, 0, 255)
     _Frame20.BackgroundTransparency = 0.8
@@ -6062,143 +6173,228 @@ do
 
     _G['点击选择物品'] = nil
 
+    _G.SelectModels = function()
+        local models = {}
+
+        for _, name in ipairs({ 'PlayerModels', 'LogModels' }) do
+            local folder = game.Workspace:FindFirstChild(name)
+            if folder then
+                for _, model in ipairs(folder:GetChildren()) do
+                    models[#models + 1] = model
+                end
+            end
+        end
+
+        return models
+    end
+
+    _G.RootModel = function(part)
+        local playerModels = game.Workspace:FindFirstChild('PlayerModels')
+        local logModels = game.Workspace:FindFirstChild('LogModels')
+        local cur = part
+
+        while cur and cur.Parent do
+            if cur.Parent == playerModels or cur.Parent == logModels then
+                return cur
+            end
+            cur = cur.Parent
+        end
+
+        return nil
+    end
+
+    _G.OwnedByTarget = function(model)
+        local ownerValue = model:FindFirstChild('Owner')
+        return ownerValue ~= nil and tostring(ownerValue.Value) == _G['菜单']['传送的玩家']
+    end
+
+    _G.SetSelected = function(model, selected)
+        local box = model:FindFirstChild('SelectionBox')
+
+        if selected and not box then
+            local selection = Instance.new('SelectionBox', model)
+
+            selection.LineThickness = 0.05
+            selection.Adornee = model
+        elseif not selected and box then
+            box:Destroy()
+        end
+    end
+
+    _G.SelectKey = function(model, isTarget)
+        local itemName = model:FindFirstChild('ItemName')
+        if itemName and (isTarget or model:FindFirstChild('DraggableItem')) then
+            return 'I:' .. tostring(itemName.Value)
+        end
+
+        local boxName = model:FindFirstChild('PurchasedBoxItemName')
+        if boxName then
+            return 'B:' .. tostring(boxName.Value)
+        end
+
+        local treeClass = model:FindFirstChild('TreeClass')
+        if treeClass then
+            return 'T:' .. tostring(treeClass.Value) .. ':' .. (model.Parent and model.Parent.Name or '')
+        end
+
+        return nil
+    end
+
     _selectItem:Toggle('Click To Select', false, function(enabled)
+        if _G['点击选择物品'] then
+            _G['点击选择物品']:Disconnect()
+            _G['点击选择物品'] = nil
+        end
+
         if enabled then
             _G['点击选择物品'] = _G['鼠标'].Button1Up:Connect(function()
-                local _Target2 = _G['鼠标'].Target
+                local target = _G['鼠标'].Target
+                local model = target and _G.RootModel(target)
 
-                if _Target2.Parent:FindFirstChild('Owner') and tostring(_Target2.Parent.Owner.Value) == _G['菜单']['传送的玩家'] and _Target2.Parent:FindFirstAncestor('PlayerModels') then
-                    if _Target2.Parent:FindFirstChild('SelectionBox') then
-                        _Target2.Parent:FindFirstChild('SelectionBox'):Destroy()
-                    else
-                        local _SelectionBox2 = Instance.new('SelectionBox', _Target2.Parent)
-
-                        _SelectionBox2.LineThickness = 0.05
-                        _SelectionBox2.Adornee = _Target2.Parent
-                    end
+                if model and _G.OwnedByTarget(model) then
+                    _G.SetSelected(model, not model:FindFirstChild('SelectionBox'))
                 end
             end)
-        else
-            _G['点击选择物品']:Disconnect()
-
-            _G['点击选择物品'] = nil
         end
     end)
     _selectItem:Toggle('Group Select', false, function(enabled)
+        if _G['点击选择同类型物品'] then
+            _G['点击选择同类型物品']:Disconnect()
+            _G['点击选择同类型物品'] = nil
+        end
+
         if enabled then
             _G['点击选择同类型物品'] = _G['鼠标'].Button1Up:Connect(function()
-                local _Target3 = _G['鼠标'].Target
+                local target = _G['鼠标'].Target
+                local root = target and _G.RootModel(target)
 
-                if _Target3.Parent:FindFirstChild('Owner') and tostring(_Target3.Parent.Owner.Value) == _G['菜单']['传送的玩家'] and _Target3.Parent:FindFirstAncestor('PlayerModels') then
-                    local nextFn3 = next
-                    local models, startKey3 = game:GetService('Workspace').PlayerModels:GetChildren()
+                if not root or not _G.OwnedByTarget(root) then
+                    return
+                end
 
-                    for _, model in nextFn3, models, startKey3 do
-                        if model:FindFirstChild('Owner') then
-                            if tostring(model.Owner.Value) == _G['菜单']['传送的玩家'] then
-                                if model:FindFirstChild('ItemName') and (_Target3.Parent:FindFirstChild('ItemName') and model:FindFirstChild('DraggableItem')) then
-                                    if model.ItemName.Value == _Target3.Parent.ItemName.Value then
-                                        if model:FindFirstChild('SelectionBox') then
-                                            model:FindFirstChild('SelectionBox'):Destroy()
-                                        else
-                                            local _SelectionBox3 = Instance.new('SelectionBox', model)
+                local key = _G.SelectKey(root, true)
+                if not key then
+                    return
+                end
 
-                                            _SelectionBox3.LineThickness = 0.05
-                                            _SelectionBox3.Adornee = model
-                                        end
-                                    end
-                                elseif model:FindFirstChild('PurchasedBoxItemName') and _Target3.Parent:FindFirstChild('PurchasedBoxItemName') then
-                                    if model.PurchasedBoxItemName.Value == _Target3.Parent.PurchasedBoxItemName.Value then
-                                        if model:FindFirstChild('SelectionBox') then
-                                            model:FindFirstChild('SelectionBox'):Destroy()
-                                        else
-                                            local _SelectionBox4 = Instance.new('SelectionBox', model)
+                local selecting = not root:FindFirstChild('SelectionBox')
 
-                                            _SelectionBox4.LineThickness = 0.05
-                                            _SelectionBox4.Adornee = model
-                                        end
-                                    end
-                                elseif model:FindFirstChild('TreeClass') then
-                                    if _Target3.Parent:FindFirstChild('TreeClass') then
-                                        if model.TreeClass.Value == _Target3.Parent.TreeClass.Value then
-                                            if model:FindFirstChild('SelectionBox') then
-                                                model:FindFirstChild('SelectionBox'):Destroy()
-                                            else
-                                                local _SelectionBox5 = Instance.new('SelectionBox', model)
-
-                                                _SelectionBox5.LineThickness = 0.05
-                                                _SelectionBox5.Adornee = model
-                                            end
-                                        end
-                                    end
-                                end
-                            end
-                        end
+                for _, model in ipairs(_G.SelectModels()) do
+                    if _G.OwnedByTarget(model) and _G.SelectKey(model, false) == key then
+                        _G.SetSelected(model, selecting)
                     end
                 end
             end)
-        else
-            _G['点击选择同类型物品']:Disconnect()
-
-            _G['点击选择同类型物品'] = nil
         end
     end)
     _selectItem:Toggle('Lasso Tool', false, function(enabled)
+        if _G['菜单']['物品框'] then
+            pcall(function() _G['菜单']['物品框']:Disconnect() end)
+            _G['菜单']['物品框'] = nil
+        end
+
         if enabled then
-            _G['菜单']['物品框'] = game:GetService('UserInputService').InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    _Frame20.Visible = true
-                    _Frame20.Position = UDim2.new(0, _G['鼠标'].X, 0, _G['鼠标'].Y)
+            local UIS = game:GetService('UserInputService')
+            local RS = game:GetService('RunService')
+            local GS = game:GetService('GuiService')
+            local dragging = false
 
-                    while game:GetService('UserInputService'):IsMouseButtonPressed(Enum.UserInputType.MouseButton1) or game:GetService('UserInputService'):IsMouseButtonPressed(Enum.UserInputType.MouseButton1) and game:GetService('UserInputService'):IsMouseButtonPressed(Enum.UserInputType.MouseButton2) do
-                        game:GetService('RunService').RenderStepped:wait()
-                        task.wait()
+            local function refPart(item)
+                return item:FindFirstChild('Main') or item:FindFirstChild('WoodSection') or item.PrimaryPart or item:FindFirstChildWhichIsA('BasePart')
+            end
 
-                        _Frame20.Size = UDim2.new(0, _G['鼠标'].X, 0, _G['鼠标'].Y) - _Frame20.Position
+            _G['菜单']['物品框'] = UIS.InputBegan:Connect(function(input, processed)
+                local isTouch = input.UserInputType == Enum.UserInputType.Touch
 
-                        for _, item in pairs(workspace.PlayerModels:GetChildren())do
-                            if item:FindFirstChild('Owner') and tostring(item.Owner.Value) == _G['菜单']['传送的玩家'] and item:FindFirstChild('WoodSection') then
-                                local value, flag2 = game.Workspace.CurrentCamera:WorldToScreenPoint(item.WoodSection.CFrame.p)
+                if processed or dragging or (input.UserInputType ~= Enum.UserInputType.MouseButton1 and not isTouch) then
+                    return
+                end
 
-                                if flag2 and _G['在框内'](value, _Frame20) and not item:FindFirstChild('SelectionBox') then
-                                    local _SelectionBox6 = Instance.new('SelectionBox', item)
+                dragging = true
 
-                                    _SelectionBox6.LineThickness = 0.05
-                                    _SelectionBox6.Adornee = item
-                                end
-                            end
-                            if item:FindFirstChild('Owner') and tostring(item.Owner.Value) == _G['菜单']['传送的玩家'] and item:FindFirstChild('DraggableItem') or item:FindFirstChild('PurchasedBoxItemName') then
-                                local value, flag2 = game.Workspace.CurrentCamera:WorldToScreenPoint(item.Main.CFrame.p)
+                local function pointer()
+                    if isTouch then
+                        return Vector2.new(input.Position.X, input.Position.Y + GS:GetGuiInset().Y)
+                    end
+                    return UIS:GetMouseLocation()
+                end
 
-                                if flag2 then
-                                    if _G['在框内'](value, _Frame20) then
-                                        if not item:FindFirstChild('SelectionBox') then
-                                            local _SelectionBox7 = Instance.new('SelectionBox', item)
+                local function held()
+                    if isTouch then
+                        return input.UserInputState ~= Enum.UserInputState.End and input.UserInputState ~= Enum.UserInputState.Cancel
+                    end
+                    return UIS:IsMouseButtonPressed(Enum.UserInputType.MouseButton1)
+                end
 
-                                            _SelectionBox7.LineThickness = 0.05
-                                            _SelectionBox7.Adornee = item
-                                        end
-                                    end
-                                end
-                            end
+                local cam = workspace.CurrentCamera
+                local camType = cam.CameraType
+                if isTouch then
+                    cam.CameraType = Enum.CameraType.Scriptable
+                end
+
+                local start = pointer()
+                local candidates = {}
+
+                for _, item in ipairs(_G.SelectModels()) do
+                    if _G.OwnedByTarget(item) and (item:FindFirstChild('WoodSection') or item:FindFirstChild('DraggableItem') or item:FindFirstChild('PurchasedBoxItemName')) then
+                        local part = refPart(item)
+                        if part then
+                            local ok, bbCF = pcall(function() return item:GetBoundingBox() end)
+                            candidates[#candidates + 1] = { item = item, part = part, center = ok and bbCF.Position or nil, had = item:FindFirstChild('SelectionBox') ~= nil }
                         end
                     end
                 end
 
+                _Frame20.Position = UDim2.fromOffset(start.X, start.Y)
+                _Frame20.Size = UDim2.fromOffset(0, 0)
+
+                while dragging and _G['菜单']['物品框'] and held() do
+                    RS.RenderStepped:Wait()
+
+                    pcall(function()
+                        local cur = pointer()
+                        local minX, minY = math.min(start.X, cur.X), math.min(start.Y, cur.Y)
+                        local maxX, maxY = math.max(start.X, cur.X), math.max(start.Y, cur.Y)
+
+                        _Frame20.Position = UDim2.fromOffset(minX, minY)
+                        _Frame20.Size = UDim2.fromOffset(maxX - minX, maxY - minY)
+                        _Frame20.Visible = (maxX - minX) > 3 or (maxY - minY) > 3
+
+                        local function inBox(pos)
+                            local v, onScreen = cam:WorldToViewportPoint(pos)
+                            return onScreen and v.Z > 0 and v.X >= minX and v.X <= maxX and v.Y >= minY and v.Y <= maxY
+                        end
+
+                        for _, c in ipairs(candidates) do
+                            if c.item.Parent and c.part.Parent then
+                                local inside = inBox(c.part.Position) or (c.center ~= nil and inBox(c.center))
+                                local box = c.item:FindFirstChild('SelectionBox')
+
+                                if inside and not box then
+                                    _G.SetSelected(c.item, true)
+                                elseif not inside and box and not c.had then
+                                    _G.SetSelected(c.item, false)
+                                end
+                            end
+                        end
+                    end)
+                end
+
+                dragging = false
                 _Frame20.Size = UDim2.new(0, 1, 0, 1)
                 _Frame20.Visible = false
+
+                if isTouch then
+                    pcall(function() cam.CameraType = camType end)
+                end
             end)
         else
             _Frame20.Visible = false
-
-            _G['菜单']['物品框']:Disconnect()
-
-            _G['菜单']['物品框'] = nil
         end
     end)
     _selectItem:Button('Deselect All Item', function()
         local nextFn3 = next
-        local models, startKey3 = game:GetService('Workspace').PlayerModels:GetChildren()
+        local models, startKey3 = _G.SelectModels()
 
         for _, model in nextFn3, models, startKey3 do
             if model:FindFirstChild('Owner') then
@@ -6215,7 +6411,7 @@ do
 
     _Item:Button('Make Selected Plank Size To 1', function()
         local nextFn3 = next
-        local models, startKey3 = game:GetService('Workspace').PlayerModels:GetChildren()
+        local models, startKey3 = _G.SelectModels()
 
         for _, model in nextFn3, models, startKey3 do
             if model:FindFirstChild('Owner') then
@@ -6234,7 +6430,7 @@ do
             _G['传送的东西'] = {}
 
             local nextFn3 = next
-            local models, startKey3 = game:GetService('Workspace').PlayerModels:GetChildren()
+            local models, startKey3 = _G.SelectModels()
 
             for _, model in nextFn3, models, startKey3 do
                 if model:FindFirstChild('Owner') then
@@ -7861,6 +8057,8 @@ do
 
     local _Credits = _Settings:Section('Credits')
     _Credits:Label('Made by Rndm')
+    
+    Library:CreateThemeTab()
 
     
     local _Server = _Settings:Section('Server')

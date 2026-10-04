@@ -561,6 +561,24 @@ MainScale.Scale = 1
 MainScale.Parent = Main
 local MIN_SCALE = 0.1
 
+-- Scroll positions are saved on minimize and restored on maximize (the scale tween would otherwise clamp them to the top)
+local savedScrolls = {}
+local function SaveScrolls()
+    savedScrolls = {}
+    for _, d in ipairs(Main:GetDescendants()) do
+        if d:IsA("ScrollingFrame") then
+            savedScrolls[d] = d.CanvasPosition
+        end
+    end
+end
+local function RestoreScrolls()
+    for sf, pos in pairs(savedScrolls) do
+        if sf.Parent then
+            sf.CanvasPosition = pos
+        end
+    end
+end
+
 local function MaximizeUI()
     if animBusy then return end
     animBusy = true
@@ -573,6 +591,9 @@ local function MaximizeUI()
     Main.BackgroundTransparency = 1
     AnimCover.Visible = true
     AnimCover.BackgroundTransparency = 0
+    RestoreScrolls()
+    local restoreConn
+    restoreConn = game:GetService("RunService").RenderStepped:Connect(RestoreScrolls)
 
     TweenService:Create(Main, TweenInfo.new(t, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
         Position = windowPosition or Main.Position,
@@ -586,6 +607,8 @@ local function MaximizeUI()
     }):Play()
 
     task.delay(t, function()
+        if restoreConn then restoreConn:Disconnect() end
+        RestoreScrolls()
         AnimCover.Visible = false
         animBusy = false
     end)
@@ -596,6 +619,7 @@ local function MinimizeUI()
     animBusy = true
     Minimized = true
 
+    SaveScrolls()
     windowPosition = Main.Position
     if not originalMainSize then
         originalMainSize = Main.Size
@@ -1151,7 +1175,7 @@ function Library:CreateTab(name, icon)
     local originalSize = NameTabButton.Size
     local smallSize = TabBigSize
 
-NameTabButton.MouseButton1Down:Connect(function()
+NameTabButton.MouseButton1Click:Connect(function()
     if CloseAllTabs and type(CloseAllTabs) == "function" then 
         CloseAllTabs() 
     else
@@ -3303,20 +3327,12 @@ end
     return TabElements
 end
 
--- =====================================================================
--- THEME SWITCHER (opsional)
--- Library:CreateThemeTab()  -> membuat tab "Theme" di paling bawah sidebar, isinya sudah lengkap:
---   dropdown preset, color picker (Accent / Background / Text), slider transparansi, tombol reset.
--- Library:SetTheme("Ocean")  -> ganti preset dari script
--- Library.ThemePresets["Nama"] = { Accent = Color3, Background = Color3, Text = Color3 }  -> tambah preset sendiri
--- =====================================================================
 do
     local function C(r, g, b) return Color3.fromRGB(r, g, b) end
     local function ch(x) return math.clamp(math.floor(x + 0.5), 0, 255) end
     local function colorKey(c) return ch(c.R * 255) * 65536 + ch(c.G * 255) * 256 + ch(c.B * 255) end
     local function shift(c, d) return C(ch(c.R * 255 + d), ch(c.G * 255 + d), ch(c.B * 255 + d)) end
 
-    -- warna bawaan UI (sebelum tema diubah) per "peran"
     local DefaultRoles = {
         Accent = Library.Theme.MainColor, Background = Library.Theme.BackgroundColor,
         Card = C(46, 46, 52), Panel = C(20, 20, 24), TabSel = C(58, 58, 66),
@@ -3327,7 +3343,6 @@ do
     local BG_ROLES = { "Accent", "Background", "Card", "Panel", "TabSel", "SliderBg", "SliderVal", "Drop", "Border", "Line", "Notif", "Pick" }
     local TEXT_ROLES = { "Text", "Dim", "Label", "Accent" }
 
-    -- turunkan semua peran dari 3 warna dasar
     local function Derive(accent, bg, text)
         local light = (0.299 * bg.R + 0.587 * bg.G + 0.114 * bg.B) > 0.5
         local sg = light and -1 or 1
@@ -3360,9 +3375,6 @@ do
         return names
     end
 
-    -- ---------- penerapan warna ke seluruh UI ----------
-    -- Setiap elemen dikenali dari warnanya saat ini (warna bawaan atau warna tema terakhir),
-    -- lalu diganti ke warna peran yang sama di tema baru.
     local currentRoles = {}
     for k, v in pairs(DefaultRoles) do currentRoles[k] = v end
 
@@ -3384,7 +3396,7 @@ do
     end
 
     local function ApplyRoles(target, transparency)
-        pcall(function() getgenv().StopRGB = true end)   -- hentikan animasi rainbow bawaan getgenv
+        pcall(function() getgenv().StopRGB = true end)
         local lookupBG, lookupText = BuildLookups()
         for _, inst in ipairs(UILibrary:GetDescendants()) do
             if inst:IsA("GuiObject") then Recolor(inst, "BackgroundColor3", lookupBG, target) end
@@ -3411,7 +3423,6 @@ do
         end
     end
 
-    -- ---------- state ----------
     local state = { Preset = "Default", Custom = nil, Transparency = nil }
     local initialTransparency = Main.BackgroundTransparency
 
@@ -3473,7 +3484,6 @@ do
     function Library:CreateThemeTab(tabName, icon)
         tabName = tabName or "Theme"
 
-        -- ambil custom warna yang tersimpan
         local saved = Settings.__Theme
         if type(saved) == "table" and type(saved.Accent) == "table" and type(saved.Background) == "table" and type(saved.Text) == "table" then
             local function unpack3(t) return C(t[1] or 0, t[2] or 0, t[3] or 0) end
@@ -3483,14 +3493,12 @@ do
         local initializing = true
 
         local Tab = Library:CreateTab(tabName, icon or "palette")
-        -- selalu di paling bawah daftar tab
         local tabBtn = TabScrollingFrame:FindFirstChild(tabName .. "TabButton")
         if tabBtn then tabBtn.LayoutOrder = 1000 end
 
-        -- Preset
         local PresetSection = Tab:CreateSection("Preset")
         local names = PresetNames()
-        local presetIndex = 2   -- index setelah "None" ditambahkan dropdown
+        local presetIndex = 2
         for i, n in ipairs(names) do
             if n == state.Preset then presetIndex = i + 1 end
         end
@@ -3503,10 +3511,9 @@ do
             RequestApply()
             if not initializing then SaveTheme() end
         end)
-        PresetSection:CreateParagraph("Tema", "Pilih preset, atau atur warna sendiri di bagian <b>Warna</b>. Pengaturan tersimpan otomatis.")
+        PresetSection:CreateParagraph("Theme", "Pick a preset, or set your own colors in the <b>Colors</b> section. Your choice is saved automatically.")
 
-        -- Warna
-        local ColorSection = Tab:CreateSection("Warna")
+        local ColorSection = Tab:CreateSection("Colors")
         local base = BuildRoles()
         local function setCustom(key, color)
             if initializing then return end
@@ -3520,7 +3527,7 @@ do
         ColorSection:CreateColorPicker("Accent", base.Accent, function(c) setCustom("Accent", c) end)
         ColorSection:CreateColorPicker("Background", base.Background, function(c) setCustom("Background", c) end)
         ColorSection:CreateColorPicker("Text", base.Text, function(c) setCustom("Text", c) end)
-        ColorSection:CreateDivider("Tampilan")
+        ColorSection:CreateDivider("Appearance")
         ColorSection:CreateSlider("Window Transparency", 0, 90, math.floor(initialTransparency * 100 + 0.5), false, function(v)
             state.Transparency = v / 100
             if not initializing then RequestApply() end
