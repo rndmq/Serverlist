@@ -749,8 +749,9 @@ do
 
         if identifyexecutor() ~= 'Krampus' then
             if tostring(obj.Parent) ~= 'Plank' then
-                for _ = 1, 3 do
+                for _ = 1, 5 do
                     game.ReplicatedStorage.Interaction.ClientIsDragging:FireServer(obj)
+                    game.ReplicatedStorage.TestPing:InvokeServer()
 
                     if obj:FindFirstChild('WoodSection') then
                         obj:PivotTo(arg2)
@@ -761,19 +762,20 @@ do
                     end
 
                     game.ReplicatedStorage.TestPing:InvokeServer()
-                    task.wait()
+                    task.wait(0.05)
                 end
 
                 return
             else
-                for _ = 1, 6 do
+                for _ = 1, 8 do
                     game.ReplicatedStorage.Interaction.ClientIsDragging:FireServer(obj)
+                    game.ReplicatedStorage.TestPing:InvokeServer()
                     value2(obj)
 
                     obj.PrimaryPart.CFrame = arg2
 
                     game.ReplicatedStorage.TestPing:InvokeServer()
-                    task.wait()
+                    task.wait(0.05)
                 end
 
                 return
@@ -1036,12 +1038,115 @@ do
         if child:IsA('Part') and (child:WaitForChild('BodyPosition', 5) and child:WaitForChild('BodyGyro', 5)) then
             if _G['菜单']['大力'] then
                 child.BrickColor = BrickColor.new('Really red')
-                child:WaitForChild('BodyPosition').P = 100500
-                child:WaitForChild('BodyPosition').D = 1040
-                child:WaitForChild('BodyPosition').MaxForce = Vector3.new(90000, 90000, 90000) * math.huge
-                child:WaitForChild('BodyGyro').P = 1400
-                child:WaitForChild('BodyGyro').D = 1040
-                child:WaitForChild('BodyGyro').MaxTorque = Vector3.new(9000, 9000, 9000) * math.huge
+
+                local bodyPosition = child:WaitForChild('BodyPosition')
+                local bodyGyro = child:WaitForChild('BodyGyro')
+
+                task.spawn(function()
+                    local RS = game:GetService('RunService')
+                    local dragRemote = game:GetService('ReplicatedStorage').Interaction.ClientIsDragging
+                    local lp = _G['自己']
+
+                    
+                    local POS_P, POS_D = 1000000, 8000     
+                    local GYRO_P, GYRO_D = 20000, 1500     
+                    local CLAIM_INTERVAL = 0.12            
+                    local SCAN_INTERVAL = 0.2              
+                    
+
+                    local HUGE = Vector3.new(math.huge, math.huge, math.huge)
+                    local original = {}
+                    local conns = {}
+                    local models = {}
+                    local applying = false
+
+                    
+                    local function strengthen()
+                        if applying then
+                            return
+                        end
+                        applying = true
+                        pcall(function()
+                            if bodyPosition.P ~= POS_P then bodyPosition.P = POS_P end
+                            if bodyPosition.D ~= POS_D then bodyPosition.D = POS_D end
+                            if bodyPosition.MaxForce ~= HUGE then bodyPosition.MaxForce = HUGE end
+                            if bodyGyro.P ~= GYRO_P then bodyGyro.P = GYRO_P end
+                            if bodyGyro.D ~= GYRO_D then bodyGyro.D = GYRO_D end
+                            if bodyGyro.MaxTorque ~= HUGE then bodyGyro.MaxTorque = HUGE end
+                        end)
+                        applying = false
+                    end
+
+                    
+                    for _, inst in ipairs({ bodyPosition, bodyGyro }) do
+                        for _, prop in ipairs(inst == bodyPosition and { 'P', 'D', 'MaxForce' } or { 'P', 'D', 'MaxTorque' }) do
+                            table.insert(conns, inst:GetPropertyChangedSignal(prop):Connect(strengthen))
+                        end
+                    end
+
+                    
+                    table.insert(conns, RS.Heartbeat:Connect(strengthen))
+
+                    local lastScan, lastClaim = 0, 0
+
+                    while child.Parent and _G['菜单']['大力'] do
+                        strengthen()
+
+                        local now = os.clock()
+
+                        
+                        if now - lastScan >= SCAN_INTERVAL then
+                            lastScan = now
+                            local ok, parts = pcall(function() return child:GetConnectedParts(true) end)
+                            if ok then
+                                table.clear(models)
+                                for _, part in ipairs(parts) do
+                                    if part ~= child then
+                                        if original[part] == nil then
+                                            original[part] = { part.CustomPhysicalProperties }
+                                            part.CustomPhysicalProperties = PhysicalProperties.new(0.01, 0.3, 0, 1, 1)
+                                        end
+
+                                        local model = part:FindFirstAncestorOfClass('Model')
+                                        if model and model ~= lp.Character and not model:FindFirstChildOfClass('Humanoid') then
+                                            models[model] = true
+                                        end
+                                    end
+                                end
+                            end
+                        end
+
+                        
+                        if now - lastClaim >= CLAIM_INTERVAL then
+                            lastClaim = now
+                            for model in pairs(models) do
+                                if model.Parent then
+                                    local main = model.PrimaryPart or model:FindFirstChildWhichIsA('BasePart')
+                                    local owned = true
+                                    if isnetworkowner and main then
+                                        local okOwn, res = pcall(isnetworkowner, main)
+                                        owned = okOwn and res
+                                    end
+                                    if not owned then
+                                        pcall(function() dragRemote:FireServer(model) end)
+                                    end
+                                else
+                                    models[model] = nil
+                                end
+                            end
+                        end
+
+                        RS.Stepped:Wait()
+                    end
+
+                    for _, c in ipairs(conns) do
+                        pcall(function() c:Disconnect() end)
+                    end
+
+                    for part, props in pairs(original) do
+                        pcall(function() part.CustomPhysicalProperties = props[1] end)
+                    end
+                end)
             else
                 child.BrickColor = BrickColor.new('Deep blue')
                 child:WaitForChild('BodyPosition').P = 10000
@@ -1685,19 +1790,36 @@ do
         _G['传送'](_CFrame)
     end
 
+    do
+        local lightingConn
+        lightingConn = game:GetService('RunService').RenderStepped:Connect(function()
+            if u.IsUnloaded() then
+                lightingConn:Disconnect()
+                return
+            end
+
+            local lighting = _G['灯光']
+            if _G['菜单']['终日黑夜'] then
+                if lighting.ClockTime ~= 2 then
+                    lighting.ClockTime = 2
+                end
+            elseif _G['菜单']['终日白天'] then
+                if lighting.ClockTime ~= 12 then
+                    lighting.ClockTime = 12
+                end
+                if lighting.Brightness ~= 2 then
+                    lighting.Brightness = 2
+                end
+            end
+        end)
+    end
+
     spawn(function()
         while task.wait(0.25) do
             spawn(function()
                 _G['自己身体'].JumpPower = _G['菜单']['跳跃提升']
             end)
 
-            if _G['菜单']['终日白天'] then
-                _G['灯光'].TimeOfDay = '12:00:00'
-                _G['灯光'].Brightness = 2
-            end
-            if _G['菜单']['终日黑夜'] then
-                _G['灯光'].TimeOfDay = '2:00:00'
-            end
             if _G['菜单']['消除雾'] then
                 _G['灯光'].FogEnd = 1000000
             end
@@ -4841,7 +4963,7 @@ do
     end
     _G.MaxBatch = 3
     _G.PreferredStore = { Wire = 'LogicStore' }
-    _G.CarryFrames = 15
+    _G.CarryFrames = 20
     _G.BuyProgress = nil
     _G['传送物品'] = nil
 
@@ -5047,6 +5169,18 @@ do
             return ok and d or math.huge
         end
 
+        local function ping()
+            local ok = pcall(function() rep.TestPing:InvokeServer() end)
+            if not ok then
+                RS.Heartbeat:Wait()
+            end
+        end
+
+        local function owns(part)
+            local ok, res = pcall(function() return isnetworkowner(part) end)
+            return (not ok) or res == true
+        end
+
         local function endChat()
             task.spawn(function()
                 pcall(function() invoke:InvokeServer(npc, 'EndChat') end)
@@ -5064,7 +5198,7 @@ do
                 end
                 for _ = 1, 2 do
                     put(it, i)
-                    RS.Heartbeat:Wait()
+                    ping()
                 end
             end
         end
@@ -5075,7 +5209,7 @@ do
             for i, it in ipairs(batch) do
                 put(it, i)
             end
-            RS.Heartbeat:Wait()
+            ping()
         end
 
         if not npc.Verified and unit > 0 then
@@ -5246,17 +5380,33 @@ do
             end
 
             for _ = 1, 3 do
-                for _ = 1, (tonumber(_G.CarryFrames) or 15) do
+                for _, e in ipairs(pending) do
+                    local part = partOf(e.item)
+                    for _ = 1, 8 do
+                        pcall(function() drag:FireServer(e.item) end)
+                        ping()
+                        if not part or owns(part) then
+                            break
+                        end
+                        task.wait(0.05)
+                    end
+                end
+
+                for frame = 1, (tonumber(_G.CarryFrames) or 20) do
                     for _, e in ipairs(pending) do
                         pcall(function()
                             drag:FireServer(e.item)
                             e.item:PivotTo(e.dest)
                         end)
                     end
-                    RS.Stepped:Wait()
+                    if frame % 4 == 0 then
+                        ping()
+                    else
+                        RS.Stepped:Wait()
+                    end
                 end
 
-                task.wait(0.1)
+                task.wait(0.2)
 
                 local again = {}
                 for _, e in ipairs(pending) do
@@ -8057,8 +8207,6 @@ do
 
     local _Credits = _Settings:Section('Credits')
     _Credits:Label('Made by Rndm')
-    
-    Library:CreateThemeTab()
 
     
     local _Server = _Settings:Section('Server')
