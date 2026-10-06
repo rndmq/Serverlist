@@ -453,9 +453,11 @@ local Minimized = false
 -- gradasi tipis supaya terasa seperti kaca
 do
     local g = Instance.new("UIGradient")
+    g.Name = "GlassGradient"
     g.Color = ColorSequence.new(Color3.fromRGB(255, 255, 255), Color3.fromRGB(200, 200, 212))
     g.Rotation = 90
     g.Parent = Main
+    Library.GlassGradient = g
 end
 
 
@@ -1175,7 +1177,8 @@ function Library:CreateTab(name, icon)
     local originalSize = NameTabButton.Size
     local smallSize = TabBigSize
 
-NameTabButton.MouseButton1Click:Connect(function()
+local function SelectThisTab()
+    if Library._CloseSearch then Library._CloseSearch() end
     if CloseAllTabs and type(CloseAllTabs) == "function" then 
         CloseAllTabs() 
     else
@@ -1216,7 +1219,10 @@ NameTabButton.MouseButton1Click:Connect(function()
     TweenService:Create(NameTab, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
         Position = UDim2.new(0, 0, 0, 0)
     }):Play()
-end)
+end
+NameTabButton.MouseButton1Click:Connect(SelectThisTab)
+Library.TabSelectors = Library.TabSelectors or {}
+Library.TabSelectors[NameTab] = SelectThisTab
 
     ResetAllTabButtons = function()
     for _, v in pairs(TabScrollingFrame:GetChildren()) do
@@ -1262,7 +1268,7 @@ end
 
   
 
-function TabElements:CreateSection(name)
+function TabElements:CreateSection(name, collapsible, startClosed)
     local NameSection = Instance.new("Frame")
     local SectionTitle = Instance.new("TextLabel")
     local SectionContent = Instance.new("Frame")
@@ -1327,10 +1333,13 @@ function TabElements:CreateSection(name)
     SectionContentLayout.Padding = UDim.new(0, 3)
 
     -- Tinggi section otomatis mengikuti isinya (dropdown dibuka -> section ikut turun)
+    local Collapsed = false
+    local SectionAnimating = false
     local function ResizeSection()
         local h = SectionContentLayout.AbsoluteContentSize.Y
         SectionContent.Size = UDim2.new(1, 0, 0, h)
-        NameSection.Size = UDim2.new(1, 0, 0, h + 34)
+        if SectionAnimating then return end
+        NameSection.Size = UDim2.new(1, 0, 0, Collapsed and 30 or (h + 34))
     end
     SectionContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(ResizeSection)
 
@@ -1346,6 +1355,118 @@ function TabElements:CreateSection(name)
             end
         end)
     end)
+
+    -- Section yang bisa dibuka/tutup: Tab:CreateSection("Nama", true) atau Tab:CreateSection("Nama", true, true) (mulai tertutup)
+    -- juga bisa: Tab:CreateSection("Nama", { Collapsible = true, Closed = true })
+    do
+        local wantCollapsible = (collapsible == true)
+        if type(collapsible) == "table" then
+            wantCollapsible = collapsible.Collapsible ~= false
+            startClosed = collapsible.Closed or collapsible.StartClosed or startClosed
+        end
+
+        local Arrow, HeaderToggle
+        local animToken = 0
+
+        local function SetCollapsed(value, instant)
+            if not wantCollapsible then return end
+            value = value and true or false
+            if value == Collapsed then return end
+            Collapsed = value
+            animToken = animToken + 1
+            local token = animToken
+            local info = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+
+            if Arrow then
+                if instant then Arrow.Rotation = Collapsed and -90 or 0
+                else TweenService:Create(Arrow, info, { Rotation = Collapsed and -90 or 0 }):Play() end
+            end
+
+            if Collapsed then
+                if instant then
+                    SectionContent.Visible = false
+                    NameSection.Size = UDim2.new(1, 0, 0, 30)
+                    return
+                end
+                SectionAnimating = true
+                NameSection.ClipsDescendants = true
+                TweenService:Create(NameSection, info, { Size = UDim2.new(1, 0, 0, 30) }):Play()
+                task.delay(0.22, function()
+                    if token ~= animToken then return end
+                    SectionContent.Visible = false
+                    SectionAnimating = false
+                end)
+            else
+                SectionContent.Visible = true
+                if instant then
+                    NameSection.ClipsDescendants = false
+                    ResizeSection()
+                    return
+                end
+                SectionAnimating = true
+                NameSection.ClipsDescendants = true
+                task.spawn(function()
+                    local h = SectionContentLayout.AbsoluteContentSize.Y
+                    if h <= 0 then
+                        RunService.Heartbeat:Wait()
+                        h = SectionContentLayout.AbsoluteContentSize.Y
+                    end
+                    if token ~= animToken then return end
+                    TweenService:Create(NameSection, info, { Size = UDim2.new(1, 0, 0, h + 34) }):Play()
+                    task.wait(0.22)
+                    if token ~= animToken then return end
+                    SectionAnimating = false
+                    NameSection.ClipsDescendants = false
+                    ResizeSection()
+                end)
+            end
+        end
+
+        if wantCollapsible then
+            local iconId = ResolveIcon("chevron-down")
+            if iconId then
+                Arrow = Instance.new("ImageLabel")
+                Arrow.Image = iconId
+                Arrow.ImageColor3 = Library.Theme.TextColor
+                Arrow.ImageTransparency = 0.25
+            else
+                Arrow = Instance.new("TextLabel")
+                Arrow.Text = "v"
+                Arrow.Font = Library.Theme.TextFont
+                Arrow.TextSize = 14
+                Arrow.TextColor3 = Library.Theme.TextColor
+            end
+            Arrow.Name = "Icon"
+            Arrow.BackgroundTransparency = 1
+            Arrow.AnchorPoint = Vector2.new(0.5, 0.5)
+            Arrow.Position = UDim2.new(1, -14, 0, 12)
+            Arrow.Size = UDim2.new(0, 16, 0, 16)
+            Arrow.ZIndex = 6
+            Arrow.Parent = NameSection
+
+            HeaderToggle = Instance.new("TextButton")
+            HeaderToggle.Name = "HeaderToggle"
+            HeaderToggle.BackgroundTransparency = 1
+            HeaderToggle.Text = ""
+            HeaderToggle.AutoButtonColor = false
+            HeaderToggle.Position = UDim2.new(0, 0, 0, 0)
+            HeaderToggle.Size = UDim2.new(1, 0, 0, 27)
+            HeaderToggle.ZIndex = 7
+            HeaderToggle.Parent = NameSection
+            HeaderToggle.MouseButton1Click:Connect(function()
+                SetCollapsed(not Collapsed)
+            end)
+
+            Library.SectionToggles = Library.SectionToggles or {}
+            Library.SectionToggles[NameSection] = SetCollapsed
+
+            if startClosed then SetCollapsed(true, true) end
+        end
+
+        function SectionElements:SetCollapsed(value) SetCollapsed(value) end
+        function SectionElements:IsCollapsed() return Collapsed end
+        function SectionElements:Toggle() SetCollapsed(not Collapsed) end
+    end
 
 -- Divider: garis pemisah (opsional dengan teks di tengah). Section:CreateDivider("Judul")
 function SectionElements:CreateDivider(text)
@@ -1478,6 +1599,119 @@ function SectionElements:CreateParagraph(title, text)
     end
 
     return { SetText = SetText, SetTitle = SetTitle, Frame = Paragraph }
+end
+
+-- Progress bar: Section:CreateProgressBar("Loading", 0, 100, 25) -> { SetValue, GetValue, SetText, SetRange }
+function SectionElements:CreateProgressBar(name, minimumvalue, maximumvalue, presetvalue, suffix)
+    minimumvalue = tonumber(minimumvalue) or 0
+    maximumvalue = tonumber(maximumvalue) or 100
+    if maximumvalue == minimumvalue then maximumvalue = minimumvalue + 1 end
+    local current = math.clamp(tonumber(presetvalue) or minimumvalue, minimumvalue, maximumvalue)
+    local customText = nil
+
+    local Bar = Instance.new("Frame")
+    Bar.Name = tostring(name) .. "ProgressBar"
+    Bar.Parent = SectionContent
+    Bar.BackgroundTransparency = 1
+    Bar.BorderSizePixel = 0
+    Bar.Size = UDim2.new(1, 0, 0, 50)
+    Bar.ZIndex = 5
+
+    local Title = Instance.new("TextLabel")
+    Title.Name = "Title"
+    Title.Parent = Bar
+    Title.BackgroundTransparency = 1
+    Title.Position = UDim2.new(0, 12, 0, 0)
+    Title.Size = UDim2.new(1, -90, 0, 35)
+    Title.ZIndex = 5
+    Title.Font = Library.Theme.TextFont
+    Title.Text = tostring(name)
+    Title.TextColor3 = Library.Theme.TextColor
+    Title.TextSize = 15
+    Title.TextXAlignment = Enum.TextXAlignment.Left
+    table.insert(Library.LibraryColorTable, Title)
+
+    local ValueLabel = Instance.new("TextLabel")
+    ValueLabel.Name = "ValueLabel"
+    ValueLabel.Parent = Bar
+    ValueLabel.BackgroundTransparency = 1
+    ValueLabel.AnchorPoint = Vector2.new(1, 0)
+    ValueLabel.Position = UDim2.new(1, -12, 0, 0)
+    ValueLabel.Size = UDim2.new(0, 120, 0, 35)
+    ValueLabel.ZIndex = 5
+    ValueLabel.Font = Library.Theme.TextFont
+    ValueLabel.TextColor3 = Color3.fromRGB(190, 190, 198)
+    ValueLabel.TextSize = 14
+    ValueLabel.TextXAlignment = Enum.TextXAlignment.Right
+
+    local Track = Instance.new("Frame")
+    Track.Name = "Track"
+    Track.Parent = Bar
+    Track.BackgroundColor3 = Color3.fromRGB(62, 62, 70)
+    Track.BorderSizePixel = 0
+    Track.Position = UDim2.new(0, 12, 0, 38)
+    Track.Size = UDim2.new(1, -24, 0, 6)
+    Track.ZIndex = 5
+    Instance.new("UICorner", Track).CornerRadius = UDim.new(1, 0)
+
+    local Fill = Instance.new("Frame")
+    Fill.Name = "Fill"
+    Fill.Parent = Track
+    Fill.BackgroundColor3 = Library.Theme.MainColor
+    Fill.BorderSizePixel = 0
+    Fill.Size = UDim2.new(0, 0, 1, 0)
+    Fill.ZIndex = 6
+    Instance.new("UICorner", Fill).CornerRadius = UDim.new(1, 0)
+
+    local function fraction()
+        return (current - minimumvalue) / (maximumvalue - minimumvalue)
+    end
+    local function refreshText()
+        if customText then
+            ValueLabel.Text = customText
+        elseif suffix ~= nil then
+            ValueLabel.Text = tostring(math.floor(current * 100 + 0.5) / 100) .. tostring(suffix)
+        else
+            ValueLabel.Text = tostring(math.floor(fraction() * 100 + 0.5)) .. "%"
+        end
+    end
+    local function render(instant)
+        local goal = UDim2.new(fraction(), 0, 1, 0)
+        if instant then
+            Fill.Size = goal
+        else
+            TweenService:Create(Fill, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Size = goal }):Play()
+        end
+        refreshText()
+    end
+    render(true)
+
+    local api = {}
+    function api.SetValue(a, b)
+        local v = (type(a) == "table") and b or a
+        v = tonumber(v)
+        if not v then return end
+        current = math.clamp(v, minimumvalue, maximumvalue)
+        render(false)
+    end
+    function api.GetValue() return current end
+    function api.SetText(a, b)
+        local v = (type(a) == "table") and b or a
+        customText = (v ~= nil) and tostring(v) or nil
+        refreshText()
+    end
+    function api.SetRange(a, b, c)
+        local lo, hi = a, b
+        if type(a) == "table" then lo, hi = b, c end
+        lo, hi = tonumber(lo), tonumber(hi)
+        if not lo or not hi or lo == hi then return end
+        minimumvalue, maximumvalue = lo, hi
+        current = math.clamp(current, lo, hi)
+        render(false)
+    end
+    api.Set, api.Get = api.SetValue, api.GetValue
+    api.Frame = Bar
+    return api
 end
 
 function SectionElements:CreateLabel(name, text, callback, options)
@@ -3415,6 +3649,7 @@ do
         end
     end
 
+    local ApplyGradient
     local function ApplyRoles(target, transparency)
         pcall(function() getgenv().StopRGB = true end)
         local lookupBG, lookupText = BuildLookups()
@@ -3441,9 +3676,10 @@ do
             Main.BackgroundTransparency = transparency
             mainImageTransparency = transparency
         end
+        if ApplyGradient then ApplyGradient() end
     end
 
-    local state = { Preset = "Default", Custom = nil, Transparency = nil }
+    local state = { Preset = "Default", Custom = nil, Transparency = nil, Gradient = nil }
     local initialTransparency = Main.BackgroundTransparency
 
     local function BuildRoles()
@@ -3466,21 +3702,121 @@ do
     end
 
     local saveQueued = false
+    local function pack(c) return { ch(c.R * 255), ch(c.G * 255), ch(c.B * 255) } end
     local function SaveTheme()
         if saveQueued then return end
         saveQueued = true
         task.delay(0.6, function()
             saveQueued = false
             if state.Custom then
-                local function pack(c) return { ch(c.R * 255), ch(c.G * 255), ch(c.B * 255) } end
                 Settings.__Theme = {
                     Accent = pack(state.Custom.Accent), Background = pack(state.Custom.Background), Text = pack(state.Custom.Text),
                 }
             else
                 Settings.__Theme = nil
             end
+            local g = state.Gradient
+            if g and g.On then
+                Settings.__Gradient = {
+                    Mode = g.Mode, Name = g.Name, Angle = g.Angle,
+                    C1 = g.C1 and pack(g.C1) or nil, C2 = g.C2 and pack(g.C2) or nil,
+                }
+            else
+                Settings.__Gradient = nil
+            end
             SaveSettings()
         end)
+    end
+
+    -- Gradient background: Library:SetGradient("Sunset") / Library:SetGradient({Color1=..., Color2=..., Angle=90}) / "RGB" / false
+    Library.GradientPresets = {
+        Sunset       = { C(150, 60, 60),  C(60, 30, 90),   45 },
+        ["Ocean Deep"] = { C(10, 70, 110),  C(10, 20, 50),   90 },
+        Aurora       = { C(20, 110, 100), C(60, 40, 120),  60 },
+        ["Neon Night"] = { C(90, 20, 130),  C(10, 10, 40),   90 },
+        Ember        = { C(140, 50, 20),  C(40, 15, 15),   90 },
+        Candy        = { C(170, 70, 130), C(70, 60, 150),  45 },
+        ["Forest Mist"] = { C(30, 100, 70),  C(12, 35, 35),   90 },
+        Royal        = { C(50, 50, 140),  C(15, 15, 45),  120 },
+        Steel        = { C(80, 90, 110),  C(25, 28, 36),   90 },
+        Peach        = { C(190, 110, 90), C(90, 50, 80),   45 },
+        Lagoon       = { C(20, 130, 150), C(20, 50, 100),  60 },
+        Midnight     = { C(40, 40, 90),   C(8, 8, 20),     90 },
+        Rose         = { C(170, 60, 100), C(50, 20, 50),   60 },
+        Graphite     = { C(70, 70, 78),   C(18, 18, 22),   90 },
+    }
+
+    local glassSeq = ColorSequence.new(C(255, 255, 255), C(200, 200, 212))
+    local CoverGradient = Instance.new("UIGradient")
+    CoverGradient.Name = "ThemeGradient"
+    CoverGradient.Enabled = false
+    CoverGradient.Parent = AnimCover
+
+    local function SetGradientColors(c1, c2, angle)
+        local seq = ColorSequence.new(c1, c2)
+        local gg = Library.GlassGradient
+        if gg then gg.Color = seq; gg.Rotation = angle end
+        CoverGradient.Color = seq
+        CoverGradient.Rotation = angle
+    end
+
+    local rgbRunning = false
+    local function StartRGB()
+        if rgbRunning then return end
+        rgbRunning = true
+        task.spawn(function()
+            local h = 0
+            while rgbRunning and state.Gradient and state.Gradient.On and state.Gradient.Mode == "rgb" do
+                h = (h + 0.004) % 1
+                SetGradientColors(Color3.fromHSV(h, 0.75, 0.5), Color3.fromHSV((h + 0.25) % 1, 0.75, 0.4), state.Gradient.Angle or 90)
+                task.wait(0.06)
+            end
+            rgbRunning = false
+        end)
+    end
+
+    ApplyGradient = function()
+        local g = state.Gradient
+        if g and g.On then
+            Main.BackgroundColor3 = C(255, 255, 255)
+            AnimCover.BackgroundColor3 = C(255, 255, 255)
+            CoverGradient.Enabled = true
+            if g.Mode == "rgb" then
+                StartRGB()
+            else
+                SetGradientColors(g.C1, g.C2, g.Angle or 90)
+            end
+        else
+            rgbRunning = false
+            CoverGradient.Enabled = false
+            local gg = Library.GlassGradient
+            if gg then gg.Color = glassSeq; gg.Rotation = 90 end
+            Main.BackgroundColor3 = currentRoles.Background
+            AnimCover.BackgroundColor3 = currentRoles.Background
+        end
+    end
+
+    function Library:SetGradient(arg)
+        if arg == nil or arg == false or arg == "Off" or arg == "None" then
+            state.Gradient = nil
+        elseif type(arg) == "table" then
+            state.Gradient = {
+                On = true, Mode = "custom",
+                C1 = arg.Color1 or arg[1] or C(60, 40, 100),
+                C2 = arg.Color2 or arg[2] or C(20, 20, 40),
+                Angle = arg.Angle or arg[3] or 90,
+            }
+        elseif arg == "RGB" then
+            state.Gradient = { On = true, Mode = "rgb", Angle = (state.Gradient and state.Gradient.Angle) or 90 }
+        elseif Library.GradientPresets[arg] then
+            local gp = Library.GradientPresets[arg]
+            state.Gradient = { On = true, Mode = "preset", Name = arg, C1 = gp[1], C2 = gp[2], Angle = gp[3] or 90 }
+        else
+            warn("[Rndm] Gradient '" .. tostring(arg) .. "' not found")
+            return
+        end
+        ApplyGradient()
+        SaveTheme()
     end
 
     function Library:SetTheme(nameOrColors)
@@ -3494,7 +3830,7 @@ do
             state.Preset = nameOrColors
             state.Custom = nil
         else
-            warn("[Rndm] Theme '" .. tostring(nameOrColors) .. "' nggak ada")
+            warn("[Rndm] Theme '" .. tostring(nameOrColors) .. "' not found")
             return
         end
         ApplyRoles(BuildRoles(), state.Transparency)
@@ -3511,6 +3847,16 @@ do
         end
         local usingCustom = state.Custom ~= nil
         local initializing = true
+
+        local savedGrad = Settings.__Gradient
+        if type(savedGrad) == "table" and not state.Gradient then
+            local function un3(t) return t and C(t[1] or 0, t[2] or 0, t[3] or 0) or nil end
+            if savedGrad.Mode == "rgb" then
+                state.Gradient = { On = true, Mode = "rgb", Angle = savedGrad.Angle or 90 }
+            elseif un3(savedGrad.C1) and un3(savedGrad.C2) then
+                state.Gradient = { On = true, Mode = savedGrad.Mode or "custom", Name = savedGrad.Name, C1 = un3(savedGrad.C1), C2 = un3(savedGrad.C2), Angle = savedGrad.Angle or 90 }
+            end
+        end
 
         local Tab = Library:CreateTab(tabName, icon or "palette")
         local tabBtn = TabScrollingFrame:FindFirstChild(tabName .. "TabButton")
@@ -3552,11 +3898,65 @@ do
             state.Transparency = v / 100
             if not initializing then RequestApply() end
         end)
-        ColorSection:CreateDivider()
-        ColorSection:CreateButton("Reset Theme", function()
+
+        -- Gradient (collapsible section)
+        local GradSection = Tab:CreateSection("Gradient", true, true)
+        local gradNames = { "Off" }
+        do
+            local list = {}
+            for n in pairs(Library.GradientPresets) do table.insert(list, n) end
+            table.sort(list)
+            for _, n in ipairs(list) do table.insert(gradNames, n) end
+            table.insert(gradNames, "RGB")
+        end
+        local gradIndex = 2
+        do
+            local cur = state.Gradient and state.Gradient.On and (state.Gradient.Mode == "rgb" and "RGB" or state.Gradient.Name) or "Off"
+            for i, n in ipairs(gradNames) do
+                if n == cur then gradIndex = i + 1 end
+            end
+        end
+        local angleValue = (state.Gradient and state.Gradient.Angle) or 90
+        local angleSlider
+        GradSection:CreateDropdown("Gradient Preset", gradNames, gradIndex, function(opt)
+            if initializing or opt == "None" then return end
+            Library:SetGradient(opt)
+            local g = state.Gradient
+            if g and g.Angle and angleSlider then
+                angleValue = g.Angle
+                angleSlider.SetValue(g.Angle)
+            end
+        end)
+        GradSection:CreateParagraph("Gradient", "Pick a preset, <b>RGB</b> for a color-cycling background, or set two colors and an angle yourself below.")
+        local function setGrad(key, value)
+            if initializing then return end
+            local g = state.Gradient
+            local base1 = (g and g.C1) or C(60, 40, 100)
+            local base2 = (g and g.C2) or C(20, 20, 40)
+            state.Gradient = { On = true, Mode = "custom", C1 = base1, C2 = base2, Angle = angleValue }
+            state.Gradient[key] = value
+            ApplyGradient()
+            SaveTheme()
+        end
+        GradSection:CreateColorPicker("Gradient Color 1", (state.Gradient and state.Gradient.C1) or C(60, 40, 100), function(c) setGrad("C1", c) end)
+        GradSection:CreateColorPicker("Gradient Color 2", (state.Gradient and state.Gradient.C2) or C(20, 20, 40), function(c) setGrad("C2", c) end)
+        angleSlider = GradSection:CreateSlider("Gradient Angle", 0, 360, angleValue, false, function(v)
+            angleValue = v
+            if initializing then return end
+            local g = state.Gradient
+            if g and g.On then
+                g.Angle = v
+                ApplyGradient()
+                SaveTheme()
+            end
+        end)
+
+        local ResetSection = Tab:CreateSection("Reset")
+        ResetSection:CreateButton("Reset Theme", function()
             usingCustom = false
             state.Preset = "Default"
             state.Custom = nil
+            state.Gradient = nil
             state.Transparency = initialTransparency
             ApplyRoles(DefaultRoles, initialTransparency)
             SaveTheme()
@@ -3565,6 +3965,307 @@ do
         initializing = false
         ApplyRoles(BuildRoles(), state.Transparency)
         return Tab
+    end
+end
+
+-- Global search: kotak di atas daftar tab, hasil muncul di area konten. Klik hasil -> pindah tab, buka section, scroll, highlight.
+do
+    local UserInputService = game:GetService("UserInputService")
+
+    local SearchBar = Instance.new("Frame")
+    SearchBar.Name = "SearchBar"
+    SearchBar.Parent = TabButtons
+    SearchBar.BackgroundColor3 = Color3.fromRGB(46, 46, 52)
+    SearchBar.BackgroundTransparency = 0.3
+    SearchBar.BorderSizePixel = 0
+    SearchBar.Position = UDim2.new(0, 6, 0, 6)
+    SearchBar.Size = UDim2.new(1, -12, 0, 26)
+    SearchBar.ZIndex = 4
+    Instance.new("UICorner", SearchBar).CornerRadius = UDim.new(0, 6)
+
+    local searchIconId = ResolveIcon("search")
+    if searchIconId then
+        local SIcon = Instance.new("ImageLabel")
+        SIcon.Name = "Icon"
+        SIcon.Parent = SearchBar
+        SIcon.BackgroundTransparency = 1
+        SIcon.AnchorPoint = Vector2.new(0, 0.5)
+        SIcon.Position = UDim2.new(0, 7, 0.5, 0)
+        SIcon.Size = UDim2.new(0, 14, 0, 14)
+        SIcon.ZIndex = 5
+        SIcon.Image = searchIconId
+        SIcon.ImageColor3 = Library.Theme.TextColor
+        SIcon.ImageTransparency = 0.35
+    end
+
+    local SearchBox = Instance.new("TextBox")
+    SearchBox.Name = "SearchBox"
+    SearchBox.Parent = SearchBar
+    SearchBox.BackgroundTransparency = 1
+    SearchBox.Position = UDim2.new(0, 26, 0, 0)
+    SearchBox.Size = UDim2.new(1, -30, 1, 0)
+    SearchBox.ZIndex = 5
+    SearchBox.Font = Library.Theme.TextFont
+    SearchBox.PlaceholderText = "Search..."
+    SearchBox.PlaceholderColor3 = Color3.fromRGB(150, 150, 158)
+    SearchBox.Text = ""
+    SearchBox.TextColor3 = Library.Theme.TextColor
+    SearchBox.TextSize = 13
+    SearchBox.TextXAlignment = Enum.TextXAlignment.Left
+    SearchBox.ClearTextOnFocus = false
+    SearchBox.TextTruncate = Enum.TextTruncate.AtEnd
+
+    TabScrollingFrame.Position = UDim2.new(0, 0, 0, 38)
+    TabScrollingFrame.Size = UDim2.new(1, 0, 1, -38)
+    TabListPadding.PaddingTop = UDim.new(0, 4)
+
+    -- overlay hasil pencarian (menutupi area konten)
+    local Results = Instance.new("Frame")
+    Results.Name = "SearchResults"
+    Results.Parent = UITabs
+    Results.BackgroundColor3 = Library.Theme.BackgroundColor
+    Results.BackgroundTransparency = 0
+    Results.BorderSizePixel = 0
+    Results.Position = Tabs.Position
+    Results.Size = Tabs.Size
+    Results.Visible = false
+    Results.ZIndex = 50
+    Results.Active = true
+    Instance.new("UICorner", Results).CornerRadius = UDim.new(0, 8)
+
+    local ResultsTitle = Instance.new("TextLabel")
+    ResultsTitle.Name = "ResultsTitle"
+    ResultsTitle.Parent = Results
+    ResultsTitle.BackgroundTransparency = 1
+    ResultsTitle.Position = UDim2.new(0, 11, 0, 0)
+    ResultsTitle.Size = UDim2.new(1, -11, 0, 30)
+    ResultsTitle.ZIndex = 51
+    ResultsTitle.Font = Library.Theme.TextFont
+    ResultsTitle.Text = "Search"
+    ResultsTitle.TextColor3 = Library.Theme.TextColor
+    ResultsTitle.TextSize = 22
+    ResultsTitle.TextXAlignment = Enum.TextXAlignment.Left
+    table.insert(Library.LibraryColorTable, ResultsTitle)
+
+    local List = Instance.new("ScrollingFrame")
+    List.Name = "ResultsList"
+    List.Parent = Results
+    List.BackgroundTransparency = 1
+    List.BorderSizePixel = 0
+    List.Position = UDim2.new(0, 0, 0, 34)
+    List.Size = UDim2.new(1, 0, 1, -34)
+    List.ScrollBarThickness = 4
+    List.ScrollBarImageColor3 = Color3.fromRGB(110, 110, 110)
+    List.CanvasSize = UDim2.new(0, 0, 0, 0)
+    List.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    List.ScrollingDirection = Enum.ScrollingDirection.Y
+    List.ZIndex = 51
+    local ListLayout = Instance.new("UIListLayout")
+    ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    ListLayout.Padding = UDim.new(0, 4)
+    ListLayout.Parent = List
+    local ListPad = Instance.new("UIPadding")
+    ListPad.PaddingLeft = UDim.new(0, 4)
+    ListPad.PaddingRight = UDim.new(0, 8)
+    ListPad.PaddingBottom = UDim.new(0, 4)
+    ListPad.Parent = List
+
+    local EmptyLabel = Instance.new("TextLabel")
+    EmptyLabel.Name = "EmptyLabel"
+    EmptyLabel.Parent = Results
+    EmptyLabel.BackgroundTransparency = 1
+    EmptyLabel.Position = UDim2.new(0, 0, 0, 44)
+    EmptyLabel.Size = UDim2.new(1, 0, 0, 30)
+    EmptyLabel.ZIndex = 51
+    EmptyLabel.Font = Library.Theme.TextFont
+    EmptyLabel.Text = "No results"
+    EmptyLabel.TextColor3 = Color3.fromRGB(190, 190, 198)
+    EmptyLabel.TextSize = 14
+    EmptyLabel.Visible = false
+
+    local SUFFIXES = { "MultiDropdown", "ColorPicker", "ProgressBar", "Dropdown", "TextBox", "Keybind", "Toggle", "Slider", "Button", "Label", "Paragraph" }
+    local function ElementInfo(child)
+        local n = child.Name
+        if n:match("Divider$") or n:match("_ImageHolder$") then return nil end
+        for _, suf in ipairs(SUFFIXES) do
+            if #n > #suf and n:sub(-#suf) == suf then
+                return n:sub(1, #n - #suf), suf
+            end
+        end
+        return nil
+    end
+
+    local function Highlight(target)
+        if not target or not target.Parent then return end
+        local stroke = Instance.new("UIStroke")
+        stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+        stroke.Color = Library.Theme.MainColor
+        stroke.Thickness = 2
+        stroke.Transparency = 0
+        stroke.Parent = target
+        local info = TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut, 2, true)
+        TweenService:Create(stroke, info, { Transparency = 0.75 }):Play()
+        task.delay(1.6, function()
+            TweenService:Create(stroke, TweenInfo.new(0.3), { Transparency = 1 }):Play()
+            task.wait(0.35)
+            stroke:Destroy()
+        end)
+    end
+
+    local function GoTo(tabFrame, section, target)
+        Library._CloseSearch()
+        local selector = Library.TabSelectors and Library.TabSelectors[tabFrame]
+        if selector then selector() end
+        local toggler = Library.SectionToggles and Library.SectionToggles[section]
+        if toggler then toggler(false) end
+        task.delay(0.4, function()
+            local sf = tabFrame:FindFirstChild("SectionScrollingFrame")
+            if sf and target and target.Parent then
+                local y = target.AbsolutePosition.Y - sf.AbsolutePosition.Y + sf.CanvasPosition.Y - 8
+                TweenService:Create(sf, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    CanvasPosition = Vector2.new(0, math.max(0, y))
+                }):Play()
+            end
+            Highlight(target)
+        end)
+    end
+
+    local function Collect(query)
+        local words = {}
+        for w in query:lower():gmatch("%S+") do table.insert(words, w) end
+        local found = {}
+        if #words == 0 then return found end
+        local function matches(...)
+            local hay = table.concat({ ... }, " "):lower()
+            for _, w in ipairs(words) do
+                if not hay:find(w, 1, true) then return false end
+            end
+            return true
+        end
+        for _, tabFrame in ipairs(Tabs:GetChildren()) do
+            if tabFrame:IsA("Frame") and tabFrame.Name:match("Tab$") then
+                local tabName = tabFrame.Name:sub(1, #tabFrame.Name - 3)
+                local sf = tabFrame:FindFirstChild("SectionScrollingFrame")
+                if sf then
+                    for _, sec in ipairs(sf:GetChildren()) do
+                        if sec:IsA("Frame") and sec.Name:match("Section$") then
+                            local secName = sec.Name:sub(1, #sec.Name - 7)
+                            local content = sec:FindFirstChild("SectionContent")
+                            if matches(secName) and #found < 60 then
+                                table.insert(found, { name = secName, kind = "Section", path = tabName, tab = tabFrame, section = sec, target = sec })
+                            end
+                            if content then
+                                for _, child in ipairs(content:GetChildren()) do
+                                    local display, kind = ElementInfo(child)
+                                    if display and matches(display, kind, secName, tabName) and #found < 60 then
+                                        table.insert(found, { name = display, kind = kind, path = tabName .. "  >  " .. secName, tab = tabFrame, section = sec, target = child })
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        return found
+    end
+
+    local function ClearList()
+        for _, c in ipairs(List:GetChildren()) do
+            if c:IsA("GuiObject") then c:Destroy() end
+        end
+    end
+
+    local function Render(query)
+        ClearList()
+        local items = Collect(query)
+        EmptyLabel.Visible = #items == 0
+        for i, it in ipairs(items) do
+            local Item = Instance.new("TextButton")
+            Item.Name = "Result"
+            Item.LayoutOrder = i
+            Item.Parent = List
+            Item.AutoButtonColor = false
+            Item.Text = ""
+            Item.BackgroundColor3 = Color3.fromRGB(46, 46, 52)
+            Item.BackgroundTransparency = 0.35
+            Item.BorderSizePixel = 0
+            Item.Size = UDim2.new(1, 0, 0, 38)
+            Item.ZIndex = 52
+            Instance.new("UICorner", Item).CornerRadius = UDim.new(0, 6)
+
+            local NameL = Instance.new("TextLabel")
+            NameL.BackgroundTransparency = 1
+            NameL.Position = UDim2.new(0, 12, 0, 3)
+            NameL.Size = UDim2.new(1, -90, 0, 18)
+            NameL.ZIndex = 53
+            NameL.Font = Library.Theme.TextFont
+            NameL.Text = it.name
+            NameL.TextColor3 = Library.Theme.TextColor
+            NameL.TextSize = 15
+            NameL.TextXAlignment = Enum.TextXAlignment.Left
+            NameL.TextTruncate = Enum.TextTruncate.AtEnd
+            NameL.Parent = Item
+            table.insert(Library.LibraryColorTable, NameL)
+
+            local PathL = Instance.new("TextLabel")
+            PathL.BackgroundTransparency = 1
+            PathL.Position = UDim2.new(0, 12, 0, 20)
+            PathL.Size = UDim2.new(1, -90, 0, 14)
+            PathL.ZIndex = 53
+            PathL.Font = Enum.Font.SourceSans
+            PathL.Text = it.path
+            PathL.TextColor3 = Color3.fromRGB(190, 190, 198)
+            PathL.TextSize = 12
+            PathL.TextXAlignment = Enum.TextXAlignment.Left
+            PathL.TextTruncate = Enum.TextTruncate.AtEnd
+            PathL.Parent = Item
+
+            local KindL = Instance.new("TextLabel")
+            KindL.BackgroundTransparency = 1
+            KindL.AnchorPoint = Vector2.new(1, 0.5)
+            KindL.Position = UDim2.new(1, -10, 0.5, 0)
+            KindL.Size = UDim2.new(0, 76, 0, 16)
+            KindL.ZIndex = 53
+            KindL.Font = Enum.Font.SourceSans
+            KindL.Text = it.kind
+            KindL.TextColor3 = Color3.fromRGB(190, 190, 198)
+            KindL.TextSize = 12
+            KindL.TextXAlignment = Enum.TextXAlignment.Right
+            KindL.Parent = Item
+
+            Item.MouseButton1Click:Connect(function()
+                GoTo(it.tab, it.section, it.target)
+            end)
+        end
+    end
+
+    function Library._CloseSearch()
+        SearchBox.Text = ""
+        Results.Visible = false
+        ClearList()
+    end
+
+    local token = 0
+    SearchBox:GetPropertyChangedSignal("Text"):Connect(function()
+        token = token + 1
+        local my = token
+        local q = SearchBox.Text
+        if q:match("^%s*$") then
+            Results.Visible = false
+            ClearList()
+            return
+        end
+        task.delay(0.12, function()
+            if my ~= token then return end
+            Results.Visible = true
+            Render(SearchBox.Text)
+        end)
+    end)
+
+    -- Library:Search("teks") -> isi dan jalankan pencarian dari script
+    function Library:Search(text)
+        SearchBox.Text = tostring(text or "")
     end
 end
 
