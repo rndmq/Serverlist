@@ -2402,6 +2402,8 @@ do
             for i = 1, 16 do hex = hex .. string.format('%02x', bytes[i]) end
             return hex:sub(1, 8) .. '-' .. hex:sub(9, 12) .. '-' .. hex:sub(13, 16) .. '-' .. hex:sub(17, 20) .. '-' .. hex:sub(21, 32)
         end
+        u.EncodeServerId = encodeServerId
+        u.DecodeServerId = decodeServerId
         
 
         local TREE_TYPES = {
@@ -2801,51 +2803,6 @@ do
             setStatus('stopped')
         end, { stopper = true })
 
-        
-        
-        
-        local Srv = Finder:Section('Server ID', true)
-        Srv:Button('Copy Server ID', function()
-            local id = encodeServerId(game.JobId) or game.JobId
-            if setclipboard then
-                setclipboard(id)
-                _G['提醒']('Copied ' .. id)
-            else
-                _G['提醒']('Executor has no setclipboard: ' .. id)
-            end
-        end)
-        Srv:Button('Copy raw Job ID', function()
-            if setclipboard then
-                setclipboard(game.JobId)
-                _G['提醒']('Copied raw Job ID')
-            else
-                _G['提醒']('Executor has no setclipboard: ' .. game.JobId)
-            end
-        end)
-        local JOIN_HINT = 'Job ID'
-        local joinText = ''
-        Srv:TextBox('Server ID to join', JOIN_HINT, function(v)
-            joinText = (v == JOIN_HINT) and '' or v
-        end)
-        Srv:Button('Join Server ID', function()
-            local raw = decodeServerId(joinText)
-            if not raw then
-                _G['提醒']('Invalid server ID (use a Job ID)')
-                return
-            end
-            if raw == game.JobId then
-                _G['提醒']('You are already in this server')
-                return
-            end
-            _G['提醒']('Joining server...')
-            pcall(function()
-                TeleportService:TeleportToPlaceInstance(game.PlaceId, raw, LP)
-            end)
-        end)
-
-        
-        
-        
         local Hop = Finder:Section('Continuous Hop', true)
         Hop:Label('Hunts MANY trees (pick in Trees to find)')
         Hop:Label('On a find: notification with a Stop button, tap it within 5s to stay, or it hops on')
@@ -8900,6 +8857,47 @@ do
             hopping = false
         end)
     end)
+
+    do
+        local Srv = _Settings:Section('Server ID', true)
+        Srv:Button('Copy Server ID', function()
+            local id = u.EncodeServerId(game.JobId) or game.JobId
+            if setclipboard then
+                setclipboard(id)
+                _G['提醒']('Copied ' .. id)
+            else
+                _G['提醒']('Executor has no setclipboard: ' .. id)
+            end
+        end)
+        Srv:Button('Copy raw Job ID', function()
+            if setclipboard then
+                setclipboard(game.JobId)
+                _G['提醒']('Copied raw Job ID')
+            else
+                _G['提醒']('Executor has no setclipboard: ' .. game.JobId)
+            end
+        end)
+        local JOIN_HINT = 'Job ID'
+        local joinText = ''
+        Srv:TextBox('Server ID to join', JOIN_HINT, function(v)
+            joinText = (v == JOIN_HINT) and '' or v
+        end)
+        Srv:Button('Join Server ID', function()
+            local raw = u.DecodeServerId(joinText)
+            if not raw then
+                _G['提醒']('Invalid server ID (use a Job ID)')
+                return
+            end
+            if raw == game.JobId then
+                _G['提醒']('You are already in this server')
+                return
+            end
+            _G['提醒']('Joining server...')
+            pcall(function()
+                TeleportService:TeleportToPlaceInstance(game.PlaceId, raw, _G['自己'])
+            end)
+        end)
+    end
 
     u.BuildSettings()
     _G['提醒']('Rndm load success')
