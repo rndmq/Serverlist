@@ -563,6 +563,24 @@ MainScale.Scale = 1
 MainScale.Parent = Main
 local MIN_SCALE = 0.1
 
+-- Scroll lock reset: a drag/hold that was cut off by minimizing must not leave scrolling disabled
+local function ForceScrollable(enabled)
+    for _, d in ipairs(Main:GetDescendants()) do
+        if d:IsA("ScrollingFrame") then
+            d.ScrollingEnabled = enabled
+        elseif d.Name == "Tooltip" and d:IsA("TextLabel") then
+            d.Visible = false
+        end
+    end
+end
+game:GetService("UserInputService").InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+        task.defer(function()
+            if not Minimized then ForceScrollable(true) end
+        end)
+    end
+end)
+
 -- Scroll positions are saved on minimize and restored on maximize (the scale tween would otherwise clamp them to the top)
 local savedScrolls = {}
 local function SaveScrolls()
@@ -588,6 +606,7 @@ local function MaximizeUI()
 
     local t = 0.45
     Main.Visible = true
+    ForceScrollable(true)
     Main.Position = iconPosition
     MainScale.Scale = MIN_SCALE
     Main.BackgroundTransparency = 1
@@ -644,6 +663,7 @@ local function MinimizeUI()
 
     task.delay(t, function()
         Main.Visible = false
+        ForceScrollable(false)
         animBusy = false
     end)
 end
@@ -2025,38 +2045,60 @@ function SectionElements:CreateToggle(name, ...)
         Tooltip.Name = "Tooltip"
         Tooltip.Parent = NameToggle
         Tooltip.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        Tooltip.Position = UDim2.new(0, 10, 0, -10)
-        Tooltip.ZIndex = 10
+        Tooltip.AnchorPoint = Vector2.new(0, 1)
+        Tooltip.Position = UDim2.new(0, 10, 0, -4)
+        Tooltip.AutomaticSize = Enum.AutomaticSize.XY
+        Tooltip.Size = UDim2.new(0, 0, 0, 0)
+        Tooltip.ZIndex = 12
         Tooltip.Font = Library and Library.Theme and Library.Theme.TextFont or Enum.Font.SourceSansBold
         Tooltip.Text = tooltipText
         Tooltip.TextColor3 = Color3.fromRGB(0, 0, 0)
         Tooltip.TextSize = 14.000
+        Tooltip.TextWrapped = true
+        Tooltip.TextXAlignment = Enum.TextXAlignment.Left
+        Tooltip.TextYAlignment = Enum.TextYAlignment.Top
         Tooltip.Visible = false
-        Tooltip.ClipsDescendants = true
 
         local UICorner = Instance.new("UICorner")
         UICorner.CornerRadius = UDim.new(0, 5)
         UICorner.Parent = Tooltip
 
-        local lineCount = 0
-        for _ in tooltipText:gmatch("\n") do
-            lineCount = lineCount + 1
+        local TipPad = Instance.new("UIPadding")
+        TipPad.PaddingLeft = UDim.new(0, 7)
+        TipPad.PaddingRight = UDim.new(0, 7)
+        TipPad.PaddingTop = UDim.new(0, 4)
+        TipPad.PaddingBottom = UDim.new(0, 4)
+        TipPad.Parent = Tooltip
+
+        local TipLimit = Instance.new("UISizeConstraint")
+        TipLimit.MaxSize = Vector2.new(230, 1000)
+        TipLimit.Parent = Tooltip
+
+        local function ShowTooltip()
+            Tooltip.Visible = true
+            task.spawn(function()
+                RunService.Heartbeat:Wait()
+                if not Tooltip.Visible or not Tooltip.Parent then return end
+                local sf = NameToggle:FindFirstAncestorOfClass("ScrollingFrame")
+                local room = sf and (NameToggle.AbsolutePosition.Y - sf.AbsolutePosition.Y) or math.huge
+                if room < Tooltip.AbsoluteSize.Y + 8 then
+                    Tooltip.AnchorPoint = Vector2.new(0, 0)
+                    Tooltip.Position = UDim2.new(0, 10, 1, 2)
+                else
+                    Tooltip.AnchorPoint = Vector2.new(0, 1)
+                    Tooltip.Position = UDim2.new(0, 10, 0, -4)
+                end
+            end)
         end
-        Tooltip.Position = UDim2.new(0, 10, 0, -10 - (lineCount * 20))
-        Tooltip.Size = UDim2.new(0, math.min(Tooltip.TextBounds.X + 10, 187), 0, Tooltip.TextBounds.Y + 5)
 
         Title.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
-                Tooltip.Visible = true
-            elseif input.UserInputType == Enum.UserInputType.MouseMovement then
-                Tooltip.Visible = true
+            if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.MouseMovement then
+                ShowTooltip()
             end
         end)
 
         Title.InputEnded:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
-                Tooltip.Visible = false
-            elseif input.UserInputType == Enum.UserInputType.MouseMovement then
+            if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.MouseMovement then
                 Tooltip.Visible = false
             end
         end)
@@ -2332,6 +2374,15 @@ table.insert(Library.LibraryColorTable, Title)
         if SliderDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
             
             Sliding(input)
+        end
+    end)
+
+    UserInputService.InputEnded:Connect(function(input)
+        if SliderDragging and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+            SaveSliderValue()
+            SliderDragging = false
+            SectionScrollingFrame.ScrollingEnabled = true
+            shrinkCircle()
         end
     end)
 
