@@ -1,5 +1,5 @@
 print('loading')
--- It is indeed from Dark X V5.0, but revamped. Feel free to take the script if u want.
+-- It is indeed from Dark X V5.0, but revamped. Feel free to take the script if u want. but gip me some credit too? :>
 repeat
     wait(0.1)
 until game:IsLoaded()
@@ -278,7 +278,7 @@ do
                 })
             end
 
-            function S:Toggle(title, default, cb)
+            function S:Toggle(title, default, cb, tooltip)
                 breathe()
                 cb = cb or function() end
                 local muted = false
@@ -286,7 +286,7 @@ do
                 local tg = container:CreateToggle(uniq(title), default and true or false, function(v)
                     entry.state = v and true or false
                     if not muted then cb(v) end
-                end)
+                end, tooltip)
                 
                 if not default and not panicSkipTabs[tabTitle or ''] then
                     entry.off = function()
@@ -382,6 +382,22 @@ do
                 }
             end
 
+            function S:MultiDropDown(title, list, cb, default, minSel, maxSel)
+                breathe()
+                cb = cb or function() end
+                local values = {}
+                for _, v in ipairs(list or {}) do table.insert(values, v) end
+                local preset = {}
+                for _, v in ipairs(default or {}) do
+                    if table.find(values, v) then table.insert(preset, v) end
+                end
+                return container:CreateMultiDropdown(uniq(title), values, minSel or 0, maxSel or #values, preset, function(sel)
+                    local copy = {}
+                    for _, v in ipairs(sel or {}) do table.insert(copy, v) end
+                    cb(copy)
+                end)
+            end
+
             function S:DropDown(title, list, isPlayers, _, cb, default)
                 breathe()
                 cb = cb or function() end
@@ -461,6 +477,13 @@ do
             end
         end
 
+        u.NotifyAction = function(_, title, text, duration, btnText, cb)
+            Library:CreateNotification(title, text, duration or 5,
+                { btnText },
+                { function() if cb then cb() end end }
+            )
+        end
+
         u.IsUnloaded = function()
             return not (libGui and libGui.Parent)
         end
@@ -514,8 +537,8 @@ do
                     settingsTab = raw
                 end
                 local T = {}
-                function T:Section(name)
-                    return makeSection(raw:CreateSection(name), title)
+                function T:Section(name, collapsible, startClosed)
+                    return makeSection(raw:CreateSection(name, collapsible, startClosed), title)
                 end
                 return T
             end
@@ -804,6 +827,63 @@ do
         end
     end
 
+    
+    
+    _G['快速移动木头'] = function(obj, cf)
+        local okEx, ex = pcall(identifyexecutor)
+        if okEx and ex == 'Krampus' then
+            return value3(obj, cf)
+        end
+
+        cf = cf or _G['自己'].Character.HumanoidRootPart.CFrame
+        value2(obj)
+
+        local RS = game:GetService('RunService')
+        local dragEvt = game.ReplicatedStorage.Interaction.ClientIsDragging
+        local t0 = tick()
+        local stable, frame = 0, 0
+
+        while obj.Parent and tick() - t0 < 4 do
+            local pp = obj.PrimaryPart or obj:FindFirstChild('WoodSection')
+            if pp then
+                frame = frame + 1
+                if frame % 3 == 1 then
+                    pcall(function()
+                        dragEvt:FireServer(obj)
+                    end)
+                end
+
+                pcall(function()
+                    pp.Velocity = Vector3.new(0, 0, 0)
+                    pp.RotVelocity = Vector3.new(0, 0, 0)
+
+                    if obj:FindFirstChild('WoodSection') then
+                        obj:PivotTo(cf)
+                    else
+                        pp.CFrame = cf
+                    end
+                end)
+
+                local owned = true
+                if isnetworkowner then
+                    local okOwn, res = pcall(isnetworkowner, pp)
+                    owned = (not okOwn) or res
+                end
+
+                if owned and (pp.Position - cf.Position).Magnitude < 10 then
+                    stable = stable + 1
+                    if stable >= 20 and tick() - t0 >= 0.4 then
+                        break
+                    end
+                else
+                    stable = 0
+                end
+            end
+
+            RS.Heartbeat:Wait()
+        end
+    end
+
     _G['穿'] = nil
     _G['穿墙'] = function(flag)
         if flag then
@@ -884,30 +964,35 @@ do
         end
 
         for _, tool2 in next, tool do
-            local damage = _G['获得工具的伤害'](tool2)
+            
+            local skip = false
+            if _G['木头种类'] == 'LoneCave' then
+                local tn = tool2:FindFirstChild('ToolName')
+                skip = not (tn and tn.Value == 'EndTimesAxe')
+            end
 
-            if damage.SpecialTrees and damage.SpecialTrees[_G['木头种类'] ] then
-                local _Damage = damage.SpecialTrees[_G['木头种类'] ].Damage
+            if not skip then
+                local damage = _G['获得工具的伤害'](tool2)
 
-                if _G['木头种类'] ~= 'LoneCave' or tool2.ToolName.Value == 'EndTimesAxe' then
-                    return tool2, _Damage
+                if damage.SpecialTrees and damage.SpecialTrees[_G['木头种类'] ] then
+                    return tool2, damage.SpecialTrees[_G['木头种类'] ].Damage
                 else
-                    return _G['提醒']('you need at least one end times axe')
-                end
-            else
-                local _Damage2 = damage.Damage
+                    local _Damage2 = damage.Damage
 
-                if _Damage2 <= 0 then
-                    tool2 = nil
-                end
-                if _G['木头种类'] ~= 'LoneCave' or tool2.ToolName.Value == 'EndTimesAxe' then
+                    if _Damage2 <= 0 then
+                        tool2 = nil
+                    end
+
                     return tool2, _Damage2
-                else
-                    return _G['提醒']('you need at least one end times axe')
                 end
             end
         end
+
+        if _G['木头种类'] == 'LoneCave' then
+            return _G['提醒']('you need at least one end times axe')
+        end
     end
+
     _G['找木头'] = function(flag)
         local nextFn = next
         local children, startKey = Workspace:GetChildren()
@@ -1229,6 +1314,35 @@ do
         end)
     end
 
+    _G['带来树取斧中'] = false
+    _G['取基地斧头'] = function()
+        local pm = Workspace:FindFirstChild('PlayerModels')
+        if not pm then return false end
+
+        for _, m in ipairs(pm:GetChildren()) do
+            local tn = m:FindFirstChild('ToolName')
+            local ow = m:FindFirstChild('Owner')
+            if tn and ow and tostring(tn.Value) == 'EndTimesAxe' and ow.Value == _G['自己'] then
+                local part = m:FindFirstChild('Main') or m:FindFirstChildWhichIsA('BasePart')
+                if part then
+                    _G['带来树取斧中'] = true
+                    pcall(function()
+                        _G['传送'](part.CFrame + Vector3.new(0, 4, 0))
+                    end)
+                    task.wait(0.4)
+                    pcall(function()
+                        game:GetService('ReplicatedStorage').Interaction.ClientInteracted:FireServer(m, 'Pick up tool')
+                    end)
+                    task.wait(0.4)
+                    _G['带来树取斧中'] = false
+                    return true
+                end
+            end
+        end
+
+        return false
+    end
+
     _G['带来树'] = function(arg)
         _G['树的种类'] = arg
 
@@ -1294,7 +1408,7 @@ do
                 cutDone = true
                 _G['树砍好了'] = true
 
-                value3(child, _G['菜单']['树放置的地点'])
+                _G['快速移动木头'](child, _G['菜单']['树放置的地点'])
 
                 if _G['菜单']['选择的树'] == 'LoneCave' then
                     _G['带来树丢斧'] = true
@@ -1360,13 +1474,40 @@ do
 
             _G['传送'](CFrame.new(-1456.40442, 433.399719, 1285.89697))
 
+            local LAVA_POS = Vector3.new(-1675.2002, 255.002533, 1284.19983)
+            local function findLava()
+                if _G['岩浆'] and _G['岩浆'].Parent then
+                    return _G['岩浆']
+                end
+                local vol = Workspace:FindFirstChild('Region_Volcano')
+                if vol then
+                    for _, r in ipairs(vol:GetChildren()) do
+                        local l = r:FindFirstChild('Lava')
+                        if l and (l.Position - LAVA_POS).Magnitude < 5 then
+                            _G['岩浆'] = l
+                            return l
+                        end
+                    end
+                end
+                return nil
+            end
+
+            local lavaT0 = tick()
             repeat
-                pcall(function()
-                    firetouchinterest(_G['自己的方块'], _G['岩浆'], 0)
-                    firetouchinterest(_G['自己的方块'], _G['岩浆'], 1)
-                end)
+                local lava = findLava()
+                if lava then
+                    pcall(function()
+                        firetouchinterest(_G['自己的方块'], lava, 0)
+                        firetouchinterest(_G['自己的方块'], lava, 1)
+                    end)
+                end
                 task.wait()
-            until _G['自己的方块']:FindFirstChild('LavaFire') or cancelled()
+            until _G['自己的方块']:FindFirstChild('LavaFire') or cancelled() or tick() - lavaT0 > 10
+
+            if not cancelled() and not _G['自己的方块']:FindFirstChild('LavaFire') then
+                _G['提醒'](_G['岩浆'] and 'Lava touch failed (firetouchinterest)' or 'Lava not found (Region_Volcano)')
+                return ownCleanup()
+            end
 
             if cancelled() then
                 return ownCleanup()
@@ -1400,7 +1541,7 @@ do
                 if cancelled() or cutDone then
                     break
                 end
-                if _G['自己角色']:FindFirstChild('Head') and 30 < _G['自己身体'].Health then
+                if _G['自己角色']:FindFirstChild('Head') and 30 < _G['自己身体'].Health and not _G['带来树取斧中'] then
                     local w = _G['木头']
                     if w and w.Parent then
                         _G['传送'](w.CFrame + Vector3.new(3, 5, 0))
@@ -1415,19 +1556,34 @@ do
 
             local t0 = tick()
             local lastCheck = -10
+            local warnedNoBase = false
 
             while not cancelled() and not cutDone do
                 if _G['自己角色']:FindFirstChildOfClass('Tool') and _G['斧头'] and _G['斧头'].Parent == _G['自己角色'] then
                     return true
                 end
 
-                if tick() - lastCheck > 1.5 and _G['获得工具']() ~= nil then
+                if tick() - lastCheck > 1.5 then
                     lastCheck = tick()
 
-                    local a, d = _G['检查斧头'](_G['树的种类'])
-                    if a and d then
-                        _G['斧头'] = a
-                        _G['伤害'] = d
+                    local gotAxe = false
+                    if _G['获得工具']() ~= nil then
+                        local a, d = _G['检查斧头'](_G['树的种类'])
+                        if a and d then
+                            _G['斧头'] = a
+                            _G['伤害'] = d
+                            gotAxe = true
+                        end
+                    end
+
+                    if not gotAxe and _G['菜单']['基地斧头'] then
+                        if _G['取基地斧头']() then
+                            _G['提醒']('Axe gone, took End Times Axe from base')
+                            lastCheck = -10
+                        elseif not warnedNoBase then
+                            warnedNoBase = true
+                            _G['提醒']('No End Times Axe found in base')
+                        end
                     end
                 end
 
@@ -2147,6 +2303,7 @@ do
         local TeleportService = game:GetService('TeleportService')
         local LP = Players.LocalPlayer
 
+        local SCRIPT_URL = 'https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/Meh.lua'
         local FILE = 'DarkX_treefinder.json'
         local cfg = {
             type = 'SpookyNeon',
@@ -2158,11 +2315,16 @@ do
             webhookOn = false,
             webhook = '',
             loadOn = false,
-            scriptUrl = '',
-            source = 'DarkX.lua',
+            source = SCRIPT_URL,
             active = false,
             hops = 0,
             visited = {},
+            multi = {},
+            stop = {},
+            extra = '',
+            autoHop = false,
+            soundOn = true,
+            sound = '',
         }
 
         local function save()
@@ -2179,16 +2341,159 @@ do
             end
         end)
 
+        if cfg.source == 'DarkX.lua' and not (isfile and isfile('DarkX.lua')) then
+            cfg.source = SCRIPT_URL
+        end
+
         local token = {}
         if getgenv then getgenv().DarkXFinderToken = token end
         local function isCurrent()
             return (not getgenv) or getgenv().DarkXFinderToken == token
         end
 
+        
+        
+        
+        local B62 = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+        local B62_INDEX = {}
+        for i = 1, #B62 do B62_INDEX[B62:sub(i, i)] = i - 1 end
+
+        local function encodeServerId(jobId)
+            local hex = tostring(jobId or ''):gsub('-', ''):lower()
+            if #hex ~= 32 or hex:find('[^0-9a-f]') then return nil end
+            local bytes = {}
+            for i = 1, 32, 2 do
+                bytes[#bytes + 1] = tonumber(hex:sub(i, i + 1), 16)
+            end
+            local digits = {}
+            for _ = 1, 22 do
+                local rem = 0
+                for i = 1, 16 do
+                    local cur = rem * 256 + bytes[i]
+                    bytes[i] = math.floor(cur / 62)
+                    rem = cur % 62
+                end
+                digits[#digits + 1] = B62:sub(rem + 1, rem + 1)
+            end
+            return 'RNDM_' .. string.reverse(table.concat(digits))
+        end
+
+        local function decodeServerId(text)
+            text = tostring(text or ''):gsub('%s+', '')
+            if text:match('^%x%x%x%x%x%x%x%x%-%x%x%x%x%-%x%x%x%x%-%x%x%x%x%-%x%x%x%x%x%x%x%x%x%x%x%x$') then
+                return text:lower()
+            end
+            local body = text:match('^[Rr][Nn][Dd][Mm]_(%w+)$')
+            if not body or #body ~= 22 then return nil end
+            local bytes = {}
+            for i = 1, 16 do bytes[i] = 0 end
+            for i = 1, #body do
+                local d = B62_INDEX[body:sub(i, i)]
+                if not d then return nil end
+                local carry = d
+                for j = 16, 1, -1 do
+                    local cur = bytes[j] * 62 + carry
+                    bytes[j] = cur % 256
+                    carry = math.floor(cur / 256)
+                end
+                if carry > 0 then return nil end
+            end
+            local hex = ''
+            for i = 1, 16 do hex = hex .. string.format('%02x', bytes[i]) end
+            return hex:sub(1, 8) .. '-' .. hex:sub(9, 12) .. '-' .. hex:sub(13, 16) .. '-' .. hex:sub(17, 20) .. '-' .. hex:sub(21, 32)
+        end
+        
+
         local TREE_TYPES = {
             'Generic', 'GoldSwampy', 'CaveCrawler', 'Cherry', 'Frost', 'Volcano', 'Oak', 'Walnut',
             'Birch', 'SnowGlow', 'Pine', 'GreenSwampy', 'Koa', 'Palm', 'LoneCave', 'Spooky', 'SpookyNeon',
         }
+
+        
+        local DEFAULT_SOUNDS = {
+            'rbxasset://sounds/electronicpingshort.wav',
+            'rbxasset://sounds/uuhhh.mp3',
+            'rbxasset://sounds/snap.mp3',
+            'rbxasset://sounds/impact_water.mp3',
+        }
+        local soundCache = {}
+
+        local function resolveSound(src)
+            src = tostring(src or '')
+            src = src:gsub('^%s+', '')
+            src = src:gsub('%s+$', '')
+            if src:match('^%d+$') then return 'rbxassetid://' .. src end
+            if src:match('^rbxassetid://') or src:match('^rbxasset://') then return src end
+
+            local gca = getcustomasset or getsynasset
+            if src:match('^https?://') then
+                if not (gca and writefile) then
+                    return nil, 'Executor has no getcustomasset/writefile'
+                end
+                if soundCache[src] then return soundCache[src] end
+                local ok, data = pcall(function() return game:HttpGet(src) end)
+                if not ok or type(data) ~= 'string' or #data == 0 then
+                    return nil, 'Could not download sound'
+                end
+                local low = src:lower()
+                local ext = low:match('%.(mp3)') or low:match('%.(ogg)') or low:match('%.(wav)') or 'mp3'
+                local fname = 'rndm_alert_' .. #data .. '.' .. ext
+                pcall(writefile, fname, data)
+                local ok2, asset = pcall(gca, fname)
+                if ok2 and asset then
+                    soundCache[src] = asset
+                    return asset
+                end
+                return nil, 'getcustomasset failed'
+            end
+
+            if gca and isfile and isfile(src) then
+                local ok2, asset = pcall(gca, src)
+                if ok2 and asset then return asset end
+            end
+            return nil, 'Unknown sound source'
+        end
+
+        local function playAlert()
+            task.spawn(function()
+                local SoundService = game:GetService('SoundService')
+
+                local function tryPlay(soundId, timeout)
+                    local snd = Instance.new('Sound')
+                    snd.Name = 'RndmAlert'
+                    snd.SoundId = soundId
+                    snd.Volume = 2
+                    snd.Parent = SoundService
+                    local t0 = tick()
+                    while not snd.IsLoaded and tick() - t0 < timeout do
+                        task.wait(0.1)
+                    end
+                    if not snd.IsLoaded then
+                        snd:Destroy()
+                        return false
+                    end
+                    for _ = 1, 3 do
+                        snd:Play()
+                        task.wait(math.min(math.max(snd.TimeLength, 0.3), 4) + 0.3)
+                        snd:Stop()
+                    end
+                    snd:Destroy()
+                    return true
+                end
+
+                local src = tostring(cfg.sound or '')
+                if src:match('%S') and src:lower() ~= 'default' then
+                    local id, err = resolveSound(src)
+                    if id and tryPlay(id, 5) then return end
+                    _G['提醒']((err or 'Custom sound failed to load') .. ', using default ping')
+                end
+                for _, id in ipairs(DEFAULT_SOUNDS) do
+                    if tryPlay(id, 1.5) then return end
+                end
+                _G['提醒']('Could not play any alert sound, set a URL or file in Sound Alert')
+            end)
+        end
+        
 
         local Finder = window:CreateTab('Tree Finder', '')
 
@@ -2234,7 +2539,7 @@ do
         Set:Toggle('Stop hopping when found', cfg.stopFound, function(v)
             cfg.stopFound = v
             save()
-        end)
+        end, 'Tree Finder only. On: stops after a find. Off: shows a notification with Stop for 5s, then hops on. Continuous Hop uses Stop hop if found instead.')
         Set:Toggle('Teleport to tree when found', cfg.tpFound, function(v)
             cfg.tpFound = v
             save()
@@ -2243,21 +2548,25 @@ do
             cfg.loadOn = v
             save()
         end)
-        Set:TextBox('Script URL (e.g. KronHub)', cfg.scriptUrl ~= '' and cfg.scriptUrl or 'https://...', function(v)
-            if v:match('^https?://') then
-                cfg.scriptUrl = v
-                save()
-                _G['提醒']('Script URL saved')
-            else
-                _G['提醒']('URL must start with http')
-            end
-        end)
-        Set:TextBox('Reload source (file or URL)', cfg.source, function(v)
-            cfg.source = v
+
+        local Snd = Finder:Section('Sound Alert', true)
+        Snd:Toggle('Play sound when found', cfg.soundOn, function(v)
+            cfg.soundOn = v
             save()
+        end, 'Plays an alert sound 3 times when a tree is found\nso you do not have to keep watching.')
+        local SOUND_HINT = 'default ping, or ID / URL / file'
+        Snd:TextBox('Sound (ID / URL / file)', cfg.sound ~= '' and cfg.sound or SOUND_HINT, function(v)
+            cfg.sound = (v == SOUND_HINT) and '' or v
+            save()
+        end)
+        Snd:Button('Test sound', function()
+            playAlert()
         end)
 
         local Run = Finder:Section('Tree Finder')
+        Run:Label('Hunts ONE tree type (set in Tree Option)')
+        Run:Label('Hops servers until found, then stops (see Settings)')
+        Run:Label('If it keeps hopping, a Stop notification shows first')
         local statusLabel = Run:Label('Status : idle')
         local function setStatus(t)
             statusLabel.Text = 'Status : ' .. t
@@ -2271,7 +2580,8 @@ do
             return false
         end
 
-        local function findTrees()
+        local function findTrees(matcher, ignoreSize)
+            matcher = matcher or matchesType
             local list = {}
             local seen = 0
             for _, region in ipairs(game:GetService('Workspace'):GetChildren()) do
@@ -2280,7 +2590,7 @@ do
                         seen = seen + 1
                         if seen % 250 == 0 then task.wait() end
                         local tc = m:FindFirstChild('TreeClass')
-                        if tc and matchesType(tostring(tc.Value)) then
+                        if tc and matcher(tostring(tc.Value)) then
                             local owner = m:FindFirstChild('Owner')
                             local ws = m:FindFirstChild('WoodSection')
                             if owner and ws and (owner.Value == nil or owner.Value == LP) then
@@ -2288,7 +2598,7 @@ do
                                 for _, c in ipairs(m:GetChildren()) do
                                     if c.Name == 'WoodSection' then n = n + 1 end
                                 end
-                                local ok = (cfg.size == 'Any')
+                                local ok = ignoreSize or (cfg.size == 'Any')
                                     or (cfg.size == 'Small' and n <= cfg.limit)
                                     or (cfg.size == 'Big' and n > cfg.limit)
                                 if ok then
@@ -2314,7 +2624,7 @@ do
                 return
             end
             local body = HttpService:JSONEncode({
-                username = 'Rndm',
+                username = 'Rndm script',
                 embeds = {{
                     title = 'Tree found: ' .. t.class,
                     color = 5763719,
@@ -2322,6 +2632,7 @@ do
                         { name = 'Sections', value = tostring(t.sections), inline = true },
                         { name = 'Players', value = string.format('%d/%d', #Players:GetPlayers(), Players.MaxPlayers), inline = true },
                         { name = 'Hops', value = tostring(cfg.hops), inline = true },
+                        { name = 'Server ID', value = '`' .. (encodeServerId(game.JobId) or game.JobId) .. '`\n`' .. game.JobId .. '`' },
                         { name = 'Join', value = string.format('```lua\ngame:GetService("TeleportService"):TeleportToPlaceInstance(%d, "%s")\n```', game.PlaceId, game.JobId) },
                     },
                 }},
@@ -2331,12 +2642,13 @@ do
 
         local function onFound(t)
             _G['提醒'](string.format('%s tree found! (%d sections)', t.class, t.sections))
+            if cfg.soundOn then playAlert() end
             sendWebhook(t)
             if cfg.tpFound then
                 pcall(function() _G['传送'](t.part.CFrame) end)
             end
-            if cfg.loadOn and cfg.scriptUrl:match('^https?://') then
-                pcall(function() loadstring(game:HttpGet(cfg.scriptUrl))() end)
+            if cfg.loadOn then
+                pcall(function() loadstring(game:HttpGet(SCRIPT_URL))() end)
             end
         end
 
@@ -2405,7 +2717,7 @@ do
 
         pcall(function()
             TeleportService.TeleportInitFailed:Connect(function()
-                if cfg.active then setStatus('teleport failed, trying another...') end
+                if cfg.active or cfg.autoHop then setStatus('teleport failed, trying another...') end
             end)
         end)
 
@@ -2413,6 +2725,21 @@ do
             local t0 = tick()
             repeat task.wait(0.5) until game:GetService('Workspace'):FindFirstChild('TreeRegion') or tick() - t0 > 20
             task.wait(3)
+        end
+
+        local function userStopsHop(foundLabel, isRunning)
+            isRunning = isRunning or function() return cfg.autoHop and isCurrent() end
+            local responded = false
+            local text = (foundLabel and ('Found ' .. foundLabel .. '. ') or '') .. 'Hopping in 5s. Tap Stop to stay.'
+            pcall(function()
+                u:NotifyAction('Rndm Hop', text, 5, 'Stop', function() responded = true end)
+            end)
+            local t0 = tick()
+            while tick() - t0 < 5.2 and not responded do
+                task.wait(0.1)
+                if not isRunning() then return true end
+            end
+            return responded
         end
 
         local function startLoop()
@@ -2433,7 +2760,12 @@ do
                             return
                         end
                         setStatus('found ' .. list[1].class .. ', continuing...')
-                        task.wait(3)
+                        if userStopsHop(list[1].class, function() return cfg.active and isCurrent() end) then
+                            cfg.active = false
+                            save()
+                            setStatus('stopped (you tapped Stop)')
+                            return
+                        end
                     end
                     hop()
                 end
@@ -2443,6 +2775,10 @@ do
         Run:Button('Start', function()
             if cfg.active then
                 _G['提醒']('Finder already running')
+                return
+            end
+            if cfg.autoHop then
+                _G['提醒']('Stop Continuous Hop first')
                 return
             end
             local q = (syn and syn.queue_on_teleport) or queue_on_teleport or (fluxus and fluxus.queue_on_teleport)
@@ -2465,8 +2801,283 @@ do
             setStatus('stopped')
         end, { stopper = true })
 
+        
+        
+        
+        local Srv = Finder:Section('Server ID', true)
+        Srv:Button('Copy Server ID', function()
+            local id = encodeServerId(game.JobId) or game.JobId
+            if setclipboard then
+                setclipboard(id)
+                _G['提醒']('Copied ' .. id)
+            else
+                _G['提醒']('Executor has no setclipboard: ' .. id)
+            end
+        end)
+        Srv:Button('Copy raw Job ID', function()
+            if setclipboard then
+                setclipboard(game.JobId)
+                _G['提醒']('Copied raw Job ID')
+            else
+                _G['提醒']('Executor has no setclipboard: ' .. game.JobId)
+            end
+        end)
+        local JOIN_HINT = 'Job ID'
+        local joinText = ''
+        Srv:TextBox('Server ID to join', JOIN_HINT, function(v)
+            joinText = (v == JOIN_HINT) and '' or v
+        end)
+        Srv:Button('Join Server ID', function()
+            local raw = decodeServerId(joinText)
+            if not raw then
+                _G['提醒']('Invalid server ID (use a Job ID)')
+                return
+            end
+            if raw == game.JobId then
+                _G['提醒']('You are already in this server')
+                return
+            end
+            _G['提醒']('Joining server...')
+            pcall(function()
+                TeleportService:TeleportToPlaceInstance(game.PlaceId, raw, LP)
+            end)
+        end)
+
+        
+        
+        
+        local Hop = Finder:Section('Continuous Hop', true)
+        Hop:Label('Hunts MANY trees (pick in Trees to find)')
+        Hop:Label('On a find: notification with a Stop button, tap it within 5s to stay, or it hops on')
+        Hop:Label('Trees in Stop hop if found stop it automatically')
+
+        local EXTRA_HINT = 'e.g. Sinister'
+        local function extraClasses()
+            local list = {}
+            for c in tostring(cfg.extra or ''):gmatch('[^,%s]+') do
+                if not table.find(list, c) then list[#list + 1] = c end
+            end
+            return list
+        end
+        local function allOptions()
+            local opts = {}
+            for _, c in ipairs(TREE_TYPES) do opts[#opts + 1] = c end
+            for _, c in ipairs(extraClasses()) do
+                if not table.find(opts, c) then opts[#opts + 1] = c end
+            end
+            return opts
+        end
+        local function activeClasses()
+            local set, n = {}, 0
+            for _, c in ipairs(cfg.multi) do
+                if not set[c] then set[c] = true; n = n + 1 end
+            end
+            for _, c in ipairs(cfg.stop) do
+                if not set[c] then set[c] = true; n = n + 1 end
+            end
+            return set, n
+        end
+
+        local function postJson(tbl)
+            if not cfg.webhookOn then return false end
+            if not cfg.webhook:match('^https://[%w%.]*discord%w*%.com/api/webhooks/') then
+                _G['提醒']('Webhook URL not set / invalid')
+                return false
+            end
+            local req = (syn and syn.request) or http_request or request or (fluxus and fluxus.request)
+            if not req then
+                _G['提醒']('Executor has no http request function')
+                return false
+            end
+            pcall(req, { Url = cfg.webhook, Method = 'POST', Headers = { ['Content-Type'] = 'application/json' }, Body = HttpService:JSONEncode(tbl) })
+            return true
+        end
+
+        local function sendHopWebhook(list)
+            local byClass, order = {}, {}
+            for _, t in ipairs(list) do
+                local g = byClass[t.class]
+                if not g then
+                    g = { n = 0, maxSec = 0 }
+                    byClass[t.class] = g
+                    order[#order + 1] = t.class
+                end
+                g.n = g.n + 1
+                if t.sections > g.maxSec then g.maxSec = t.sections end
+            end
+            local lines = {}
+            for i, c in ipairs(order) do
+                if i > 15 then break end
+                lines[#lines + 1] = string.format('%s x%d (max %d sections)', c, byClass[c].n, byClass[c].maxSec)
+            end
+            local title = 'Tree found: ' .. table.concat(order, ', ')
+            if #title > 250 then title = title:sub(1, 247) .. '...' end
+            return postJson({
+                username = 'Rndm',
+                embeds = {{
+                    title = title,
+                    color = 5763719,
+                    fields = {
+                        { name = 'Trees', value = table.concat(lines, '\n') },
+                        { name = 'Server ID', value = '`' .. (encodeServerId(game.JobId) or game.JobId) .. '`' },
+                        { name = 'Job ID', value = '`' .. game.JobId .. '`' },
+                        { name = 'Players', value = string.format('%d/%d', #Players:GetPlayers(), Players.MaxPlayers), inline = true },
+                        { name = 'Hops', value = tostring(cfg.hops), inline = true },
+                        { name = 'Join', value = string.format('```lua\ngame:GetService("TeleportService"):TeleportToPlaceInstance(%d, "%s")\n```', game.PlaceId, game.JobId) },
+                    },
+                }},
+            })
+        end
+
+        local lastSentJob = nil
+        local function onFoundMulti(list)
+            local names, seenName = {}, {}
+            for _, t in ipairs(list) do
+                if not seenName[t.class] then
+                    seenName[t.class] = true
+                    names[#names + 1] = t.class
+                end
+            end
+            local label = table.concat(names, ', ')
+            _G['提醒']('Found: ' .. label)
+            if cfg.soundOn then playAlert() end
+            if lastSentJob ~= game.JobId then
+                lastSentJob = game.JobId
+                sendHopWebhook(list)
+            end
+            if cfg.tpFound then
+                pcall(function() _G['传送'](list[1].part.CFrame) end)
+            end
+            if cfg.loadOn then
+                pcall(function() loadstring(game:HttpGet(SCRIPT_URL))() end)
+            end
+            return label
+        end
+
+        
+        local function startAutoHop()
+            task.spawn(function()
+                repeat task.wait() until game:IsLoaded()
+                repeat task.wait() until LP.Character and LP.Character:FindFirstChild('HumanoidRootPart')
+                local retry = false
+                while cfg.autoHop and isCurrent() and not u.IsUnloaded() do
+                    if not retry then
+                        setStatus('checking server...')
+                        waitForTrees()
+                        if not (cfg.autoHop and isCurrent()) then break end
+                        local set = activeClasses()
+                        local list = findTrees(function(c) return set[c] == true end, true)
+                        local label = nil
+                        local stopHere = false
+                        if #list > 0 then
+                            label = onFoundMulti(list)
+                            setStatus('found ' .. label)
+                            local stopSet = {}
+                            for _, c in ipairs(cfg.stop) do stopSet[c] = true end
+                            for _, t in ipairs(list) do
+                                if stopSet[t.class] then
+                                    stopHere = true
+                                    break
+                                end
+                            end
+                        end
+                        if stopHere then
+                            cfg.autoHop = false
+                            save()
+                            setStatus('FOUND ' .. label .. ' (stopped)')
+                            break
+                        end
+                        if userStopsHop(label) then
+                            cfg.autoHop = false
+                            save()
+                            setStatus('stopped (you tapped Stop)')
+                            break
+                        end
+                    end
+                    retry = true
+                    hop()
+                end
+            end)
+        end
+
+        local findDD = Hop:MultiDropDown('Trees to find', allOptions(), function(sel)
+            cfg.multi = sel
+            save()
+        end, cfg.multi)
+        local stopDD = Hop:MultiDropDown('Stop hop if found', allOptions(), function(sel)
+            cfg.stop = sel
+            save()
+        end, cfg.stop)
+        Hop:TextBox('Extra tree classes (comma separated)', cfg.extra ~= '' and cfg.extra or EXTRA_HINT, function(v)
+            cfg.extra = (v == EXTRA_HINT) and '' or v
+            save()
+            local opts = allOptions()
+            pcall(function() findDD.Refresh(opts, 0, #opts) end)
+            pcall(function() stopDD.Refresh(opts, 0, #opts) end)
+        end)
+        Hop:Button('Scan tree classes in this server', function()
+            local counts, order = {}, {}
+            for _, region in ipairs(game:GetService('Workspace'):GetChildren()) do
+                if region.Name == 'TreeRegion' then
+                    for _, m in ipairs(region:GetChildren()) do
+                        local tc = m:FindFirstChild('TreeClass')
+                        if tc then
+                            local c = tostring(tc.Value)
+                            if not counts[c] then counts[c] = 0; order[#order + 1] = c end
+                            counts[c] = counts[c] + 1
+                        end
+                    end
+                end
+            end
+            table.sort(order)
+            local parts = {}
+            for _, c in ipairs(order) do parts[#parts + 1] = c .. ' x' .. counts[c] end
+            local out = table.concat(parts, ', ')
+            print('[Rndm] tree classes: ' .. out)
+            if setclipboard and out ~= '' then setclipboard(out) end
+            _G['提醒'](#order > 0 and (#order .. ' tree classes found (console + clipboard)') or 'No trees loaded yet')
+        end)
+        Hop:Button('Start Continuous Hop', function()
+            if cfg.autoHop then
+                _G['提醒']('Continuous Hop already running')
+                return
+            end
+            if cfg.active then
+                _G['提醒']('Stop Tree Finder first')
+                return
+            end
+            local _, n = activeClasses()
+            if n == 0 then
+                _G['提醒']('Pick at least one tree first')
+                return
+            end
+            local q = (syn and syn.queue_on_teleport) or queue_on_teleport or (fluxus and fluxus.queue_on_teleport)
+            if not q then
+                _G['提醒']('Executor has no queue_on_teleport, cannot auto-continue after hop')
+                return
+            end
+            if not cfg.source:match('^https?://') and not (isfile and isfile(cfg.source)) then
+                _G['提醒']('Save this script as "' .. cfg.source .. '" in executor workspace, or put a URL in Reload source')
+                return
+            end
+            if not cfg.webhookOn or not cfg.webhook:match('^https://[%w%.]*discord%w*%.com/api/webhooks/') then
+                _G['提醒']('Webhook is off / invalid: finds will only notify in game')
+            end
+            cfg.autoHop = true
+            cfg.hops = 0
+            save()
+            startAutoHop()
+        end)
+        Hop:Button('Stop Continuous Hop', function()
+            cfg.autoHop = false
+            save()
+            setStatus('stopped')
+        end, { stopper = true })
+
         if cfg.active then
             startLoop()
+        elseif cfg.autoHop then
+            startAutoHop()
         end
     end
 
@@ -3173,7 +3784,7 @@ do
     end
 
     local _Wood = window:CreateTab('Wood', '6034503369')
-    local _BringTree = _Wood:Section('Bring Tree')
+    local _BringTree = _Wood:Section('Bring Tree', true)
 
     _BringTree:DropDown('Select Tree', {
         'Generic',
@@ -3209,6 +3820,11 @@ do
     _BringTree:TextBox('Tree Amount', '1', function(text)
         _G['菜单']['带来树的数量'] = tonumber(text)
     end)
+    _G['菜单']['基地斧头'] = false
+    _BringTree:Toggle('Use End Times Axe in base if gone', false, function(v)
+        _G['菜单']['基地斧头'] = v
+    end, 'Takes another End Times Axe from your base if the one in use falls into the void.')
+
     _BringTree:Button('Bring', function()
         _G['菜单']['树放置的地点'] = _G['自己的方块'].CFrame
         _G['菜单']['带来树起点'] = _G['自己的方块'].CFrame
@@ -3298,7 +3914,259 @@ do
         return value
     end
 
-    local _Mod = _Wood:Section('Mod')
+    local _Farm = _Wood:Section('Auto Farm', true)
+    do
+        local RunService = game:GetService('RunService')
+        local SELL_CF = CFrame.new(315, 0, 85.5)
+
+        local running = false
+        local farmSize = 'medium'
+        _G['菜单']['最小木块数'] = 3
+        local runId = 0
+        local cycles = 0
+        local conns = {}
+        local farmToggle
+
+        local sawLabel = _Farm:Label('Sawmill : not selected')
+        local statLabel = _Farm:Label('Status : idle')
+        local function setStatus(t)
+            statLabel.Text = 'Status : ' .. t
+        end
+        local function sawmill()
+            local s = _G['菜单']['选择的锯木机']
+            if s and s.Parent and s:FindFirstChild('Particles') then
+                return s
+            end
+            return nil
+        end
+        local function refreshSawLabel()
+            sawLabel.Text = sawmill() and 'Sawmill : selected' or 'Sawmill : not selected'
+        end
+        local function cleanup()
+            for _, c in ipairs(conns) do
+                pcall(function() c:Disconnect() end)
+            end
+            conns = {}
+        end
+        local function alive(my)
+            return running and my == runId and not u.IsUnloaded()
+        end
+
+        local function runCycle(my)
+            local saw = sawmill()
+            if not saw then
+                return false, 'select a sawmill first', true
+            end
+            local treeType = _G['菜单']['选择的树']
+            if type(treeType) ~= 'string' then
+                return false, 'pick a tree in Bring Tree > Select Tree', true
+            end
+            if treeType == 'LoneCave' then
+                return false, 'LoneCave cannot be auto farmed', true
+            end
+            local sawPos = saw.Particles.CFrame.Position
+            local wsv = game:GetService('Workspace')
+            local LogModels = wsv:FindFirstChild('LogModels') or wsv:WaitForChild('LogModels', 10)
+            local PlayerModels = wsv:FindFirstChild('PlayerModels') or wsv:WaitForChild('PlayerModels', 10)
+            if not LogModels or not PlayerModels then
+                return false, 'map folders not found'
+            end
+
+            _G['菜单']['树放置的地点'] = _G['自己的方块'].CFrame
+            _G['菜单']['停止砍树'] = false
+            _G['菜单']['树的大小'] = farmSize
+            _G['树砍好了'] = false
+
+            local myLog = nil
+            local planks = {}
+            conns[#conns + 1] = LogModels.ChildAdded:Connect(function(m)
+                local o = m:WaitForChild('Owner', 10)
+                if o and o.Value == _G['自己'] and not myLog then myLog = m end
+            end)
+            conns[#conns + 1] = PlayerModels.ChildAdded:Connect(function(m)
+                local o = m:WaitForChild('Owner', 5)
+                if o and o.Value == _G['自己'] and m:WaitForChild('WoodSection', 5) then
+                    table.insert(planks, m)
+                end
+            end)
+
+            setStatus('getting tree...')
+            local cutDone = false
+            local cutTh = task.spawn(function()
+                pcall(_G['带来树'], treeType)
+                cutDone = true
+            end)
+            local tb = tick()
+            while alive(my) and not cutDone and tick() - tb < 90 do
+                task.wait(0.3)
+            end
+            if not cutDone then
+
+                _G['菜单']['停止砍树'] = true
+                _G['树砍好了'] = true
+                pcall(function() task.cancel(cutTh) end)
+                pcall(function()
+                    if _G['树加入'] then
+                        _G['树加入']:Disconnect()
+                        _G['树加入'] = nil
+                    end
+                end)
+                if not alive(my) then return false, 'stopped' end
+                return false, 'cutting timed out (tree unreachable?)'
+            end
+            if not alive(my) then return false, 'stopped' end
+            if not _G['树砍好了'] then
+                return false, 'no ' .. treeType .. ' tree / no axe'
+            end
+            local t0 = tick()
+            repeat task.wait(0.1) until myLog or tick() - t0 > 5
+            if not myLog then
+                return false, 'log not found'
+            end
+
+            setStatus('mod wood...')
+            local done = false
+            local th = task.spawn(function()
+                pcall(_G['处理树'], myLog)
+                done = true
+            end)
+            local t1 = tick()
+            while alive(my) and not done and tick() - t1 < (farmSize == 'big' and 300 or 150) do
+                task.wait(0.3)
+            end
+            if not done then
+                pcall(function() task.cancel(th) end)
+                _G['菜单']['飞行'] = false
+                pcall(function() _G['飞行'](false) end)
+                setStatus('mod wood stuck, selling logs...')
+                pcall(_G['卖木头'])
+                pcall(function() _G['传送'](SELL_CF) end)
+                if not alive(my) then return false, 'stopped' end
+                return false, 'mod wood timed out'
+            end
+            if not alive(my) then return false, 'stopped' end
+
+            setStatus('waiting sawmill...')
+            local tw, lastN, lastChange = tick(), 0, tick()
+            while alive(my) and tick() - tw < 30 do
+                local n = #planks
+                if n ~= lastN then
+                    lastN = n
+                    lastChange = tick()
+                end
+                if n > 0 and tick() - lastChange > 2.5 then break end
+                task.wait(0.3)
+            end
+            if #planks == 0 then
+
+                setStatus('sawmill gave no planks, selling logs...')
+                pcall(_G['卖木头'])
+                pcall(function() _G['传送'](SELL_CF) end)
+                return false, 'sawmill gave no planks (sold logs instead)'
+            end
+
+            setStatus('selling planks...')
+            for _, p in ipairs(planks) do
+                if not alive(my) then break end
+                local ws = p.Parent and p:FindFirstChild('WoodSection')
+                if ws and (ws.Position - sawPos).Magnitude < 80 then
+                    pcall(function() _G['传送'](ws.CFrame) end)
+                    task.wait(0.15)
+                    for _ = 1, 20 do
+                        pcall(function()
+                            _G['拉东西']:FireServer(p)
+                            p:PivotTo(SELL_CF)
+                        end)
+                        RunService.Heartbeat:Wait()
+                        if not p.Parent then break end
+                    end
+                end
+            end
+
+            setStatus('selling leftovers...')
+            pcall(_G['卖木头'])
+            pcall(function() _G['传送'](SELL_CF) end)
+            return true
+        end
+
+        local function farmLoop(my)
+            local fails = 0
+            while alive(my) do
+                local okc, ok, err, fatal = pcall(runCycle, my)
+                cleanup()
+                if not okc then
+                    err = tostring(ok)
+                    ok = false
+                end
+                if ok then
+                    fails = 0
+                    cycles = cycles + 1
+                    setStatus(string.format('cycle %d done', cycles))
+                elseif alive(my) then
+                    fails = fails + 1
+                    setStatus(err or 'failed')
+                    if fatal or fails >= 3 then
+                        running = false
+                        _G['提醒']('Auto Farm stopped: ' .. tostring(err))
+                        if farmToggle then farmToggle:SetValue(false) end
+                        break
+                    end
+                    task.wait(3)
+                end
+                task.wait(0.5)
+            end
+            if my == runId then
+                _G['菜单']['停止砍树'] = true
+            end
+            cleanup()
+        end
+
+        _Farm:DropDown('Auto Farm tree size', { 'Smallest', 'Medium', 'Largest' }, false, false, function(v)
+            if v == 'Largest' then
+                farmSize = 'big'
+            elseif v == 'Medium' then
+                farmSize = 'medium'
+            else
+                farmSize = 'Smallest'
+            end
+        end, 'Medium')
+        _Farm:TextBox('Min tree sections (Smallest)', '3', function(v)
+            local n = tonumber(v)
+            if n and n >= 1 then
+                _G['菜单']['最小木块数'] = math.floor(n)
+            else
+                _G['提醒']('Must be a number')
+            end
+        end)
+        _Farm:Button('Select Sawmill', function()
+            _G['菜单']['选择的锯木机'] = _G['选择锯木机']()
+            pcall(function() _G['处理树锯木机'].Text = 'Selected' end)
+            refreshSawLabel()
+        end)
+
+        farmToggle = _Farm:Toggle('Auto Farm', false, function(v)
+            if v then
+                if not sawmill() then
+                    _G['提醒']('Select a sawmill first!')
+                    farmToggle:SetValue(false)
+                    return
+                end
+                running = true
+                runId = runId + 1
+                cycles = 0
+                refreshSawLabel()
+                local my = runId
+                task.spawn(function() farmLoop(my) end)
+            else
+                running = false
+                runId = runId + 1
+                _G['菜单']['停止砍树'] = true
+                setStatus('stopped')
+            end
+        end)
+    end
+
+    local _Mod = _Wood:Section('Sawmill Mod', true, true)
 
     _G['处理树锯木机'] = _Mod:Label('Please Selecet one Sawmill')
 
@@ -3607,259 +4475,7 @@ do
         _G['拿蛋']()
     end)
 
-    local _Farm = _Wood:Section('Auto Farm')
-    do
-        local RunService = game:GetService('RunService')
-        local SELL_CF = CFrame.new(315, 0, 85.5)
-
-        local running = false
-        local farmSize = 'medium'
-        _G['菜单']['最小木块数'] = 3
-        local runId = 0
-        local cycles = 0
-        local conns = {}
-        local farmToggle
-
-        local sawLabel = _Farm:Label('Sawmill : not selected')
-        local statLabel = _Farm:Label('Status : idle')
-        local function setStatus(t)
-            statLabel.Text = 'Status : ' .. t
-        end
-        local function sawmill()
-            local s = _G['菜单']['选择的锯木机']
-            if s and s.Parent and s:FindFirstChild('Particles') then
-                return s
-            end
-            return nil
-        end
-        local function refreshSawLabel()
-            sawLabel.Text = sawmill() and 'Sawmill : selected' or 'Sawmill : not selected'
-        end
-        local function cleanup()
-            for _, c in ipairs(conns) do
-                pcall(function() c:Disconnect() end)
-            end
-            conns = {}
-        end
-        local function alive(my)
-            return running and my == runId and not u.IsUnloaded()
-        end
-
-        local function runCycle(my)
-            local saw = sawmill()
-            if not saw then
-                return false, 'select a sawmill first', true
-            end
-            local treeType = _G['菜单']['选择的树']
-            if type(treeType) ~= 'string' then
-                return false, 'pick a tree in Bring Tree > Select Tree', true
-            end
-            if treeType == 'LoneCave' then
-                return false, 'LoneCave cannot be auto farmed', true
-            end
-            local sawPos = saw.Particles.CFrame.Position
-            local wsv = game:GetService('Workspace')
-            local LogModels = wsv:FindFirstChild('LogModels') or wsv:WaitForChild('LogModels', 10)
-            local PlayerModels = wsv:FindFirstChild('PlayerModels') or wsv:WaitForChild('PlayerModels', 10)
-            if not LogModels or not PlayerModels then
-                return false, 'map folders not found'
-            end
-
-            _G['菜单']['树放置的地点'] = _G['自己的方块'].CFrame
-            _G['菜单']['停止砍树'] = false
-            _G['菜单']['树的大小'] = farmSize
-            _G['树砍好了'] = false
-
-            local myLog = nil
-            local planks = {}
-            conns[#conns + 1] = LogModels.ChildAdded:Connect(function(m)
-                local o = m:WaitForChild('Owner', 10)
-                if o and o.Value == _G['自己'] and not myLog then myLog = m end
-            end)
-            conns[#conns + 1] = PlayerModels.ChildAdded:Connect(function(m)
-                local o = m:WaitForChild('Owner', 5)
-                if o and o.Value == _G['自己'] and m:WaitForChild('WoodSection', 5) then
-                    table.insert(planks, m)
-                end
-            end)
-
-            setStatus('getting tree...')
-            local cutDone = false
-            local cutTh = task.spawn(function()
-                pcall(_G['带来树'], treeType)
-                cutDone = true
-            end)
-            local tb = tick()
-            while alive(my) and not cutDone and tick() - tb < 90 do
-                task.wait(0.3)
-            end
-            if not cutDone then
-
-                _G['菜单']['停止砍树'] = true
-                _G['树砍好了'] = true
-                pcall(function() task.cancel(cutTh) end)
-                pcall(function()
-                    if _G['树加入'] then
-                        _G['树加入']:Disconnect()
-                        _G['树加入'] = nil
-                    end
-                end)
-                if not alive(my) then return false, 'stopped' end
-                return false, 'cutting timed out (tree unreachable?)'
-            end
-            if not alive(my) then return false, 'stopped' end
-            if not _G['树砍好了'] then
-                return false, 'no ' .. treeType .. ' tree / no axe'
-            end
-            local t0 = tick()
-            repeat task.wait(0.1) until myLog or tick() - t0 > 5
-            if not myLog then
-                return false, 'log not found'
-            end
-
-            setStatus('mod wood...')
-            local done = false
-            local th = task.spawn(function()
-                pcall(_G['处理树'], myLog)
-                done = true
-            end)
-            local t1 = tick()
-            while alive(my) and not done and tick() - t1 < (farmSize == 'big' and 300 or 150) do
-                task.wait(0.3)
-            end
-            if not done then
-                pcall(function() task.cancel(th) end)
-                _G['菜单']['飞行'] = false
-                pcall(function() _G['飞行'](false) end)
-                setStatus('mod wood stuck, selling logs...')
-                pcall(_G['卖木头'])
-                pcall(function() _G['传送'](SELL_CF) end)
-                if not alive(my) then return false, 'stopped' end
-                return false, 'mod wood timed out'
-            end
-            if not alive(my) then return false, 'stopped' end
-
-            setStatus('waiting sawmill...')
-            local tw, lastN, lastChange = tick(), 0, tick()
-            while alive(my) and tick() - tw < 30 do
-                local n = #planks
-                if n ~= lastN then
-                    lastN = n
-                    lastChange = tick()
-                end
-                if n > 0 and tick() - lastChange > 2.5 then break end
-                task.wait(0.3)
-            end
-            if #planks == 0 then
-
-                setStatus('sawmill gave no planks, selling logs...')
-                pcall(_G['卖木头'])
-                pcall(function() _G['传送'](SELL_CF) end)
-                return false, 'sawmill gave no planks (sold logs instead)'
-            end
-
-            setStatus('selling planks...')
-            for _, p in ipairs(planks) do
-                if not alive(my) then break end
-                local ws = p.Parent and p:FindFirstChild('WoodSection')
-                if ws and (ws.Position - sawPos).Magnitude < 80 then
-                    pcall(function() _G['传送'](ws.CFrame) end)
-                    task.wait(0.15)
-                    for _ = 1, 20 do
-                        pcall(function()
-                            _G['拉东西']:FireServer(p)
-                            p:PivotTo(SELL_CF)
-                        end)
-                        RunService.Heartbeat:Wait()
-                        if not p.Parent then break end
-                    end
-                end
-            end
-
-            setStatus('selling leftovers...')
-            pcall(_G['卖木头'])
-            pcall(function() _G['传送'](SELL_CF) end)
-            return true
-        end
-
-        local function farmLoop(my)
-            local fails = 0
-            while alive(my) do
-                local okc, ok, err, fatal = pcall(runCycle, my)
-                cleanup()
-                if not okc then
-                    err = tostring(ok)
-                    ok = false
-                end
-                if ok then
-                    fails = 0
-                    cycles = cycles + 1
-                    setStatus(string.format('cycle %d done', cycles))
-                elseif alive(my) then
-                    fails = fails + 1
-                    setStatus(err or 'failed')
-                    if fatal or fails >= 3 then
-                        running = false
-                        _G['提醒']('Auto Farm stopped: ' .. tostring(err))
-                        if farmToggle then farmToggle:SetValue(false) end
-                        break
-                    end
-                    task.wait(3)
-                end
-                task.wait(0.5)
-            end
-            if my == runId then
-                _G['菜单']['停止砍树'] = true
-            end
-            cleanup()
-        end
-
-        _Farm:DropDown('Auto Farm tree size', { 'Smallest', 'Medium', 'Largest' }, false, false, function(v)
-            if v == 'Largest' then
-                farmSize = 'big'
-            elseif v == 'Medium' then
-                farmSize = 'medium'
-            else
-                farmSize = 'Smallest'
-            end
-        end, 'Medium')
-        _Farm:TextBox('Min tree sections (Smallest)', '3', function(v)
-            local n = tonumber(v)
-            if n and n >= 1 then
-                _G['菜单']['最小木块数'] = math.floor(n)
-            else
-                _G['提醒']('Must be a number')
-            end
-        end)
-        _Farm:Button('Select Sawmill', function()
-            _G['菜单']['选择的锯木机'] = _G['选择锯木机']()
-            pcall(function() _G['处理树锯木机'].Text = 'Selected' end)
-            refreshSawLabel()
-        end)
-
-        farmToggle = _Farm:Toggle('Auto Farm', false, function(v)
-            if v then
-                if not sawmill() then
-                    _G['提醒']('Select a sawmill first!')
-                    farmToggle:SetValue(false)
-                    return
-                end
-                running = true
-                runId = runId + 1
-                cycles = 0
-                refreshSawLabel()
-                local my = runId
-                task.spawn(function() farmLoop(my) end)
-            else
-                running = false
-                runId = runId + 1
-                _G['菜单']['停止砍树'] = true
-                setStatus('stopped')
-            end
-        end)
-    end
-
-    local _Misc = _Wood:Section('Misc')
+    local _Misc = _Wood:Section('Chop Tools', true)
 
     _Misc:Button('Cut Tree Joints', function()
         local tree = nil
@@ -3984,6 +4600,8 @@ do
 
     _G['点击卖木板'] = nil
     _G['鼠标移动'] = nil
+
+    _Misc = _Wood:Section('Bulk Bring & Sell', true, true)
 
     _Misc:Toggle('Click to Sell Plank', false, function(enabled)
         if enabled then
@@ -8321,3 +8939,4 @@ do
 
     return
 end
+-- wat r u doing??
