@@ -1315,14 +1315,14 @@ do
     end
 
     _G['带来树取斧中'] = false
-    _G['取基地斧头'] = function()
+    _G['取基地斧头'] = function(allow)
         local pm = Workspace:FindFirstChild('PlayerModels')
         if not pm then return false end
 
         for _, m in ipairs(pm:GetChildren()) do
             local tn = m:FindFirstChild('ToolName')
             local ow = m:FindFirstChild('Owner')
-            if tn and ow and tostring(tn.Value) == 'EndTimesAxe' and ow.Value == _G['自己'] then
+            if tn and ow and tostring(tn.Value) == 'EndTimesAxe' and ow.Value == _G['自己'] and (not allow or allow[m]) then
                 local part = m:FindFirstChild('Main') or m:FindFirstChildWhichIsA('BasePart')
                 if part then
                     _G['带来树取斧中'] = true
@@ -1380,7 +1380,57 @@ do
         local cutDone = false 
         local treeConn = nil
 
+        local function ownedAxeModels()
+            local list = {}
+            local pm = Workspace:FindFirstChild('PlayerModels')
+            if pm then
+                for _, m in ipairs(pm:GetChildren()) do
+                    local tn = m:FindFirstChild('ToolName')
+                    local ow = m:FindFirstChild('Owner')
+                    if tn and ow and tostring(tn.Value) == 'EndTimesAxe' and ow.Value == _G['自己'] then
+                        table.insert(list, m)
+                    end
+                end
+            end
+            return list
+        end
+
+        local baseAxes = {}
+        for _, m in ipairs(ownedAxeModels()) do
+            baseAxes[m] = true
+        end
+
+        local function findDroppedAxe()
+            for _, m in ipairs(ownedAxeModels()) do
+                if not baseAxes[m] then
+                    return m
+                end
+            end
+            return nil
+        end
+
+        local finished = false
+
+        local function returnHome()
+            local home = _G['菜单']['带来树起点']
+            if not home then
+                return
+            end
+
+            local t0 = tick()
+
+            repeat
+                task.wait(0.1)
+            until (_G['自己角色'] and _G['自己角色']:FindFirstChild('HumanoidRootPart') and _G['自己身体'] and _G['自己身体'].Health > 0) or tick() - t0 > 20
+
+            for _ = 1, 5 do
+                pcall(_G['传送'], home)
+                task.wait(0.1)
+            end
+        end
+
         local function ownCleanup()
+            finished = true
             pcall(function()
                 if treeConn then
                     treeConn:Disconnect()
@@ -1391,6 +1441,9 @@ do
             end
             if _G['带来树运行ID'] == myRun then
                 _G['带来树清理']()
+                if arg == 'LoneCave' and not cutDone and not _G['菜单']['停止砍树'] then
+                    returnHome()
+                end
             end
         end
 
@@ -1538,7 +1591,7 @@ do
             while true do
                 game['Run Service'].Heartbeat:wait()
 
-                if cancelled() or cutDone then
+                if cancelled() or cutDone or finished then
                     break
                 end
                 if _G['自己角色']:FindFirstChild('Head') and 30 < _G['自己身体'].Health and not _G['带来树取斧中'] then
@@ -1577,12 +1630,19 @@ do
                     end
 
                     if not gotAxe and _G['菜单']['基地斧头'] then
-                        if _G['取基地斧头']() then
-                            _G['提醒']('Axe gone, took End Times Axe from base')
-                            lastCheck = -10
-                        elseif not warnedNoBase then
-                            warnedNoBase = true
-                            _G['提醒']('No End Times Axe found in base')
+                        local dropped = findDroppedAxe()
+                        if dropped then
+                            pcall(function()
+                                game:GetService('ReplicatedStorage').Interaction.ClientInteracted:FireServer(dropped, 'Pick up tool')
+                            end)
+                        elseif tick() - t0 >= 2 then
+                            if _G['取基地斧头'](baseAxes) then
+                                _G['提醒']('Axe gone, took End Times Axe from base')
+                                lastCheck = -10
+                            elseif not warnedNoBase then
+                                warnedNoBase = true
+                                _G['提醒']('No End Times Axe found in base')
+                            end
                         end
                     end
                 end
@@ -1815,33 +1875,6 @@ do
         end
     end
 
-    spawn(function()
-        while task.wait(20) do
-            local nextFn2 = next
-            local children2, startKey2 = Workspace:GetChildren()
-
-            for _, child in nextFn2, children2, startKey2 do
-                if child.Name == 'TreeRegion' then
-                    local nextFn3 = next
-                    local children3, startKey3 = child:GetChildren()
-
-                    for _, child2 in nextFn3, children3, startKey3 do
-                        if child2:FindFirstChild('TreeClass') then
-                            if child2:FindFirstChild('Owner') then
-                                if tostring(child2.TreeClass.Value) == 'Spooky' or tostring(child2.TreeClass.Value) == 'SpookyNeon' then
-                                    if child2.Owner.Value == nil or tostring(child2.Owner.Value) == _G['自己'] then
-                                        if child2:FindFirstChild('WoodSection') then
-                                            _G['提醒']('Found Spooky or an SpookyNeon wood')
-                                        end
-                                    end
-                                end
-                            end
-                        end
-                    end
-                end
-            end
-        end
-    end)
     spawn(function()
         while task.wait() do
             if _G['菜单']['自动卖标志牌'] then
@@ -2092,7 +2125,7 @@ do
         Credits:Label("Didn't put any discord link because his link alrd expired")
 
         local Status = Home:Section('Server Status')
-        local labels, lastText, wasFound, esp = {}, {}, {}, {}
+        local labels, lastText, lastNotify, esp = {}, {}, {}, {}
         local notifyOn, espOn = false, false
         local viewOn, viewTarget, viewChoice = false, nil, 'Any'
 
@@ -2101,9 +2134,10 @@ do
         end
 
         local function scan()
-            local result = {}
+            local result, chopped = {}, {}
             for _, t in ipairs(TRACK) do
                 result[t.class] = {}
+                chopped[t.class] = {}
             end
             local seen = 0
             for _, region in ipairs(game:GetService('Workspace'):GetChildren()) do
@@ -2112,17 +2146,30 @@ do
                         seen = seen + 1
                         if seen % 250 == 0 then task.wait() end
                         local tc = m:FindFirstChild('TreeClass')
-                        local bucket = tc and result[tostring(tc.Value)]
+                        local class = tc and tostring(tc.Value)
+                        local bucket = class and result[class]
                         if bucket then
                             local owner = m:FindFirstChild('Owner')
-                            if owner and (owner.Value == nil or owner.Value == LP) and m:FindFirstChild('WoodSection') then
-                                table.insert(bucket, m)
+                            if owner and m:FindFirstChild('WoodSection') then
+                                local intact = false
+                                for _, c in ipairs(m:GetChildren()) do
+                                    local id = c:IsA('BasePart') and c:FindFirstChild('ID')
+                                    if id and id.Value == 1 and c.Size.Y > 0.5 then
+                                        intact = true
+                                        break
+                                    end
+                                end
+                                if intact and (owner.Value == nil or owner.Value == LP) then
+                                    table.insert(bucket, m)
+                                else
+                                    table.insert(chopped[class], m)
+                                end
                             end
                         end
                     end
                 end
             end
-            return result
+            return result, chopped
         end
 
         local function clearEsp(m)
@@ -2175,11 +2222,13 @@ do
             end)
         end
 
-        local function pickTarget(res)
-            for _, t in ipairs(TRACK) do
-                if viewChoice == 'Any' or viewChoice == t.name then
-                    local m = res[t.class][1]
-                    if m then return m end
+        local function pickTarget(res, cut)
+            for _, source in ipairs({ res, cut }) do
+                for _, t in ipairs(TRACK) do
+                    if viewChoice == 'Any' or viewChoice == t.name then
+                        local m = source[t.class][1]
+                        if m then return m end
+                    end
                 end
             end
             return nil
@@ -2190,8 +2239,11 @@ do
             game:GetService('Workspace').CurrentCamera.CameraSubject = m:FindFirstChild('WoodSection')
         end
 
-        local function startView(res)
-            local m = pickTarget(res or scan())
+        local function startView(res, cut)
+            if not res then
+                res, cut = scan()
+            end
+            local m = pickTarget(res, cut)
             if m then
                 setView(m)
             else
@@ -2201,16 +2253,19 @@ do
         end
 
         local function refresh()
-            local res = scan()
+            local res, cut = scan()
             local keep, present = {}, {}
             local hrp = LP.Character and LP.Character:FindFirstChild('HumanoidRootPart')
 
             for _, t in ipairs(TRACK) do
                 local list = res[t.class]
+                local cutList = cut[t.class]
                 local n = #list
                 local text
                 if n > 0 then
                     text = string.format('%s : ✅ Exists (%d)', t.name, n)
+                elseif #cutList > 0 then
+                    text = string.format('%s : 🪓 Chopped (%d)', t.name, #cutList)
                 else
                     text = t.name .. ' : ❌ Not found'
                 end
@@ -2219,20 +2274,26 @@ do
                     labels[t.class].Text = text
                 end
 
-                if notifyOn and n > 0 and not wasFound[t.class] then
+                if notifyOn and n > 0 and tick() - (lastNotify[t.class] or -120) >= 120 then
+                    lastNotify[t.class] = tick()
                     _G['提醒'](t.name .. ' tree exists in this server!')
                 end
-                wasFound[t.class] = n > 0
+                if n == 0 then
+                    lastNotify[t.class] = nil
+                end
 
-                for _, m in ipairs(list) do
-                    present[m] = true
-                    if espOn then
-                        ensureEsp(m, t)
-                        keep[m] = true
-                        local e = esp[m]
-                        if e and hrp and e.part then
-                            local d = math.floor((e.part.Position - hrp.Position).Magnitude)
-                            e.lbl.Text = string.format('%s [%d studs]', e.name, d)
+                for _, entry in ipairs({ { list, false }, { cutList, true } }) do
+                    for _, m in ipairs(entry[1]) do
+                        present[m] = true
+                        if espOn then
+                            ensureEsp(m, t)
+                            keep[m] = true
+                            local e = esp[m]
+                            if e and hrp and e.part then
+                                local d = math.floor((e.part.Position - hrp.Position).Magnitude)
+                                local nm = entry[2] and (t.name .. ' (chopped)') or t.name
+                                e.lbl.Text = string.format('%s [%d studs]', nm, d)
+                            end
                         end
                     end
                 end
@@ -2245,7 +2306,7 @@ do
             end
 
             if viewOn and viewTarget and not present[viewTarget] then
-                local m = pickTarget(res)
+                local m = pickTarget(res, cut)
                 if m then
                     setView(m)
                 else
@@ -2260,7 +2321,7 @@ do
         Options:Toggle('Notify if exist', false, function(v)
             notifyOn = v
             if v then
-                wasFound = {}
+                lastNotify = {}
                 pcall(refresh)
             end
         end)
@@ -2597,12 +2658,17 @@ do
                             local ws = m:FindFirstChild('WoodSection')
                             if owner and ws and (owner.Value == nil or owner.Value == LP) then
                                 local n = 0
+                                local intact = false
                                 for _, c in ipairs(m:GetChildren()) do
                                     if c.Name == 'WoodSection' then n = n + 1 end
+                                    local id = c:IsA('BasePart') and c:FindFirstChild('ID')
+                                    if id and id.Value == 1 and c.Size.Y > 0.5 then
+                                        intact = true
+                                    end
                                 end
-                                local ok = ignoreSize or (cfg.size == 'Any')
+                                local ok = intact and (ignoreSize or (cfg.size == 'Any')
                                     or (cfg.size == 'Small' and n <= cfg.limit)
-                                    or (cfg.size == 'Big' and n > cfg.limit)
+                                    or (cfg.size == 'Big' and n > cfg.limit))
                                 if ok then
                                     table.insert(list, { model = m, class = tostring(tc.Value), sections = n, part = ws })
                                 end
