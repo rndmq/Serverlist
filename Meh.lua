@@ -8679,6 +8679,7 @@ do
 
     local _Settings = window:CreateTab('Settings', '6031280882')
     local _Util = _Settings:Section('Utility')
+    Library:CreateThemeTab()
 
     
     local wmGui, wmConn = nil, nil
