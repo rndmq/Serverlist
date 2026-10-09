@@ -8978,28 +8978,55 @@ do
             return
         end
 
-        hooked = true
-        origNamecall = hookmetamethod(game, '__namecall', wrap(function(obj, ...)
-            local method = getnamecallmethod()
+        if not (hookmetamethod and getnamecallmethod) then
+            _G['提醒']('Executor has no hookmetamethod, Water God Mode and Wire Mod will not work')
+            return
+        end
 
-            if method == 'FireServer' then
-                if _G['菜单']['水中无敌'] and obj.Name == 'DamageHumanoid' then
-                    return
-                end
-            elseif method == 'FindPartOnRayWithIgnoreList' then
-                if _G['菜单']['超级电线'] then
-                    local _, ignoreList = ...
+        local installed = pcall(function()
+            origNamecall = hookmetamethod(game, '__namecall', wrap(function(obj, ...)
+                local method = getnamecallmethod()
 
-                    if type(ignoreList) == 'table' and ignoreList[2] then
-                        setnamecallmethod(method)
+                if method == 'FireServer' or method == 'fireServer' then
+                    if _G['菜单']['水中无敌'] and typeof(obj) == 'Instance' and obj.Name == 'DamageHumanoid' then
+                        return
+                    end
+                elseif method == 'FindPartOnRayWithIgnoreList' then
+                    if _G['菜单']['超级电线'] then
+                        local _, ignoreList = ...
 
-                        return origNamecall(obj, Ray.new(Vector3.new(0, 0, 0), Vector3.new(0, 0, 0)), select(2, ...))
+                        if type(ignoreList) == 'table' and ignoreList[2] then
+                            setnamecallmethod(method)
+
+                            return origNamecall(obj, Ray.new(Vector3.new(0, 0, 0), Vector3.new(0, 0, 0)), select(2, ...))
+                        end
                     end
                 end
-            end
 
-            return origNamecall(obj, ...)
-        end))
+                return origNamecall(obj, ...)
+            end))
+        end)
+
+        if not installed then
+            _G['提醒']('Failed to hook namecall, Water God Mode and Wire Mod will not work')
+            return
+        end
+
+        hooked = true
+
+        if hookfunction then
+            pcall(function()
+                local fireRemote = Instance.new('RemoteEvent')
+                local origFire
+                origFire = hookfunction(fireRemote.FireServer, wrap(function(self, ...)
+                    if _G['菜单']['水中无敌'] and typeof(self) == 'Instance' and self.Name == 'DamageHumanoid' then
+                        return
+                    end
+
+                    return origFire(self, ...)
+                end))
+            end)
+        end
     end
 
     return
