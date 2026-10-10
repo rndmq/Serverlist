@@ -80,6 +80,7 @@ end
 LoadSettings()
 
 local function SaveSettings()
+    if Library and Library._BulkLoading then return end
     local saveFile = "Rdnm.json"
     pcall(function()
         if getgenv and getgenv().SaveFile then
@@ -121,8 +122,8 @@ Library = {
         UIToggleKey = Enum.KeyCode.RightControl,
         TextFont = Enum.Font.SourceSansBold,
         EasingStyle = Enum.EasingStyle.Quart,
-        Color = Color3.fromRGB(100, 100, 110),      
-        TextColor = Color3.fromRGB(255, 255, 255) 
+        Color = Color3.fromRGB(100, 100, 110),
+        TextColor = Color3.fromRGB(255, 255, 255)
     }
 }
 local selectedColor = Color3.fromRGB(100, 100, 110)
@@ -296,18 +297,18 @@ local function MakeDraggable(topbarobject, object)
     local DragInput = nil
     local DragStart = nil
     local StartPosition = nil
-    
+
     local function Update(input)
         local Delta = input.Position - DragStart
         object.Position = UDim2.new(StartPosition.X.Scale, StartPosition.X.Offset + Delta.X, StartPosition.Y.Scale, StartPosition.Y.Offset + Delta.Y)
     end
-    
+
     topbarobject.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             Dragging = true
             DragStart = input.Position
             StartPosition = object.Position
-            
+
             input.Changed:Connect(function()
                 if input.UserInputState == Enum.UserInputState.End then
                     Dragging = false
@@ -315,13 +316,13 @@ local function MakeDraggable(topbarobject, object)
             end)
         end
     end)
-    
+
     topbarobject.InputChanged:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
             DragInput = input
         end
     end)
-    
+
     UserInputService.InputChanged:Connect(function(input)
         if input == DragInput and Dragging then
             Update(input)
@@ -348,11 +349,11 @@ UILibrary.ZIndexBehavior = Enum.ZIndexBehavior.Global
 Main.Name = "Main"
 Main.Parent = UILibrary
 Main.BackgroundColor3 = Library.Theme.BackgroundColor
-Main.BackgroundTransparency = 0.25   -- jendela semi transparan (0 = solid, 1 = hilang)
+Main.BackgroundTransparency = 0.25
 Main.Position = UDim2.new(0.5, -Layout.W / 2, 0.5, -Layout.H / 2)
 Main.Size = UDim2.new(0, Layout.W, 0, 0)
 Main.ZIndex = 2
-Main.Image = ""   -- pakai fill polos + UICorner supaya sudut halus (tanpa gambar 9-slice yang bentrok)
+Main.Image = ""
 local UICorner = Instance.new("UICorner")
 UICorner.CornerRadius = UDim.new(0, 10)
 UICorner.Parent = Main
@@ -449,8 +450,6 @@ MakeDraggable(Topbar, Main)
 
 local Minimized = false
 
-
--- gradasi tipis supaya terasa seperti kaca
 do
     local g = Instance.new("UIGradient")
     g.Name = "GlassGradient"
@@ -459,7 +458,6 @@ do
     g.Parent = Main
     Library.GlassGradient = g
 end
-
 
 local TweenService = game:GetService("TweenService")
 
@@ -516,7 +514,7 @@ local function AutoContrast()
     if color == "white" then
         FloatingText.TextColor3 = Color3.fromRGB(0, 0, 0)
     elseif color == "black" then
-        FloatingText.TextColor3 = Color3.fromRGB(255, 255, 255) 
+        FloatingText.TextColor3 = Color3.fromRGB(255, 255, 255)
     else
         FloatingText.TextColor3 = Color3.fromRGB(255, 255, 255)
     end
@@ -532,18 +530,14 @@ table.insert(Library.LibraryColorTable, FloatingIcon)
 
 Minimized = false
 local isDragging = false
--- Ikon selalu tampil (juga saat window terbuka): klik = minimize / maximize, tahan lalu geser = pindahkan
+
 local iconPosition = UDim2.new(0, 70, 0, 130)
-local windowPosition = nil                        -- posisi window sebelum di-minimize
+local windowPosition = nil
 local originalMainSize
 
--- ===== Animasi minimize / maximize =====
--- Window mengecil ke posisi ikon sambil memudar (semua isi ikut memudar),
--- dan sebaliknya saat dibuka lagi.
 local mainImageTransparency = Main.BackgroundTransparency
 local animBusy = false
 
--- Satu frame penutup yang memudar menggantikan fade per-elemen (jauh lebih ringan, nggak bikin FPS turun)
 local AnimCover = Instance.new("Frame")
 AnimCover.Name = "AnimCover"
 AnimCover.Parent = Main
@@ -556,14 +550,12 @@ AnimCover.Active = false
 AnimCover.Visible = false
 Instance.new("UICorner", AnimCover).CornerRadius = UDim.new(0, 10)
 
--- Mengecil/membesar pakai UIScale (tanpa mengubah Size) supaya layout isi window nggak dihitung ulang tiap frame
 local MainScale = Instance.new("UIScale")
 MainScale.Name = "AnimScale"
 MainScale.Scale = 1
 MainScale.Parent = Main
 local MIN_SCALE = 0.1
 
--- Scroll lock reset: a drag/hold that was cut off by minimizing must not leave scrolling disabled
 local function ForceScrollable(enabled)
     for _, d in ipairs(Main:GetDescendants()) do
         if d:IsA("ScrollingFrame") then
@@ -581,7 +573,6 @@ game:GetService("UserInputService").InputEnded:Connect(function(input)
     end
 end)
 
--- Scroll positions are saved on minimize and restored on maximize (the scale tween would otherwise clamp them to the top)
 local savedScrolls = {}
 local function SaveScrolls()
     savedScrolls = {}
@@ -684,9 +675,9 @@ local function MakeDraggableWithTracking(gui)
     local function update(input)
         local delta = input.Position - dragStart
         local newPosition = UDim2.new(
-            startPos.X.Scale, 
+            startPos.X.Scale,
             startPos.X.Offset + delta.X,
-            startPos.Y.Scale, 
+            startPos.Y.Scale,
             startPos.Y.Offset + delta.Y
         )
         gui.Position = newPosition
@@ -704,7 +695,7 @@ local function MakeDraggableWithTracking(gui)
                 if input.UserInputState == Enum.UserInputState.End then
                     dragging = false
                     isDragging = false
-                    
+
                     if (input.Position - dragStart).Magnitude < 5 then
                         if Minimized then MaximizeUI() else MinimizeUI() end
                     end
@@ -736,11 +727,11 @@ local function CloseAllTabs()
     end
 end
 
-local TabNormalSize = UDim2.new(1, -16, 0, 28)   -- ukuran tab biasa
-local TabBigSize    = UDim2.new(1, -8, 0, 38)    -- ukuran tab yang sedang dibuka (membesar)
+local TabNormalSize = UDim2.new(1, -16, 0, 28)
+local TabBigSize    = UDim2.new(1, -8, 0, 38)
 
 local function SetTabVisual(btn, selected, extra)
-    local info = TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)   -- transisi halus
+    local info = TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
     local soft = TweenInfo.new(0.25, Library.Theme.EasingStyle, Enum.EasingDirection.Out)
     TweenService:Create(btn, info, {
         Size = selected and TabBigSize or TabNormalSize,
@@ -798,7 +789,7 @@ end
 
 local function ToggleUI()
     Library.UIOpen = not Library.UIOpen
-            
+
     if Library.UIOpen then
         TweenService:Create(Main, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(0, Layout.W, 0, 0)}):Play()
         TweenService:Create(Border, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageTransparency = 1}):Play()
@@ -822,9 +813,7 @@ coroutine.wrap(function()
         end
     end
 end)()
--- ===== Icon library (Lucide, gaya Fluent) =====
--- Pemakaian: Library:CreateTab("Main", "user")  -> otomatis cari icon "user"
--- Bisa juga "lucide-user", "rbxassetid://123", atau angka ID langsung.
+
 local IconData = [[
 accessibility=10709751939,activity=10709752035,air-vent=10709752131,airplay=10709752254,
 alarm-check=10709752405,alarm-clock=10709752630,alarm-clock-off=10709752508,alarm-minus=10709752732,
@@ -1017,11 +1006,18 @@ local IconAssets = {}
 for name, id in IconData:gmatch("([%w%-]+)=(%d+)") do
     IconAssets[name] = "rbxassetid://" .. id
 end
+
+local CustomIcons = {
+    pumpkin = 80019912554239, halloween = 80019912554239, ["jack-o-lantern"] = 80019912554239,
+    jackolantern = 80019912554239, spooky = 80019912554239,
+}
+for name, id in pairs(CustomIcons) do
+    IconAssets[name] = "rbxassetid://" .. id
+end
 local IconNames = {}
 for name in pairs(IconAssets) do table.insert(IconNames, name) end
 table.sort(IconNames)
 
--- nama umum yang nggak ada di Lucide -> icon terdekat
 local IconAliases = {
     player = "user", players = "users", profile = "user", account = "user",
     main = "home", home = "home", general = "home", settings = "settings", setting = "settings",
@@ -1047,23 +1043,21 @@ local function ResolveIcon(icon)
     if s:match("^rbxassetid://") or s:match("^rbxasset://") or s:match("^https?://") then return s end
 
     local key = s:lower():gsub("^lucide[%-_ ]", ""):gsub("[%s_]+", "-")
-    if IconAssets[key] then return IconAssets[key] end                       -- cocok persis
-    if IconAliases[key] and IconAssets[IconAliases[key]] then               -- alias umum
+    if IconAssets[key] then return IconAssets[key] end
+    if IconAliases[key] and IconAssets[IconAliases[key]] then
         return IconAssets[IconAliases[key]]
     end
-    for _, n in ipairs(IconNames) do                                          -- diawali kata itu
+    for _, n in ipairs(IconNames) do
         if n:sub(1, #key) == key then return IconAssets[n] end
     end
-    for _, n in ipairs(IconNames) do                                          -- mengandung kata itu
+    for _, n in ipairs(IconNames) do
         if n:find(key, 1, true) then return IconAssets[n] end
     end
     warn("[Rndm] Icon '" .. s .. "' nggak ketemu")
     return nil
 end
 Library.ResolveIcon = ResolveIcon
--- ===== end Icon library =====
 
--- Library:CreateTab("Nama", "user")  -> icon dicari otomatis dari nama (atau rbxassetid / angka ID)
 function Library:CreateTab(name, icon)
     local NameTab = Instance.new("Frame")
     local NameTabButton = Instance.new("ImageButton")
@@ -1112,7 +1106,7 @@ function Library:CreateTab(name, icon)
     Title.Font = Library.Theme.TextFont
     Title.Text = name
     Title.TextColor3 = Library.Theme.TextColor
-    table.insert(Library.LibraryColorTable, Title) 
+    table.insert(Library.LibraryColorTable, Title)
     Title.TextSize = 15.000
 
     local TabCorner = Instance.new("UICorner")
@@ -1193,25 +1187,24 @@ function Library:CreateTab(name, icon)
 
     NameTab.Visible = false
 
-
     local originalSize = NameTabButton.Size
     local smallSize = TabBigSize
 
 local function SelectThisTab()
     if Library._CloseSearch then Library._CloseSearch() end
-    if CloseAllTabs and type(CloseAllTabs) == "function" then 
-        CloseAllTabs() 
+    if CloseAllTabs and type(CloseAllTabs) == "function" then
+        CloseAllTabs()
     else
         for _, v in pairs(Tabs:GetChildren()) do
-            if v:IsA("Frame") then 
-                v.Visible = false 
+            if v:IsA("Frame") then
+                v.Visible = false
                 v.Position = UDim2.new(0, 0, 0, 0)
             end
         end
     end
-    
-    if ResetAllTabButtons and type(ResetAllTabButtons) == "function" then 
-        ResetAllTabButtons() 
+
+    if ResetAllTabButtons and type(ResetAllTabButtons) == "function" then
+        ResetAllTabButtons()
     else
         for _, v in pairs(TabButtons:GetChildren()) do
             if v:IsA("ImageButton") then
@@ -1219,22 +1212,22 @@ local function SelectThisTab()
             end
         end
     end
-    
+
     NameTab.Position = UDim2.new(0, 0, 0, 14)
     NameTab.Visible = true
-    
+
     for _, child in pairs(NameTab:GetChildren()) do
         if child:IsA("ImageLabel") and child.Name:match("Section$") then
             child.ImageTransparency = 1
             child.ImageColor3 = Library.Theme.MainColor
-            
+
             TweenService:Create(child, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
                 ImageTransparency = 0,
                 ImageColor3 = Library.Theme.BackgroundColor
             }):Play()
         end
     end
-    
+
     SetTabVisual(NameTabButton, true, { Size = smallSize })
     TweenService:Create(NameTab, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
         Position = UDim2.new(0, 0, 0, 0)
@@ -1256,7 +1249,7 @@ local function ShowFirstTab()
     if NameTab.Name == (Library.FirstTab .. "Tab") then
         NameTab.Visible = true
         SetTabVisual(NameTabButton, true, { Size = smallSize })
-        
+
         TweenService:Create(NameTab, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
             Position = UDim2.new(0, 0, 0, 0)
         }):Play()
@@ -1265,7 +1258,7 @@ end
 
     task.wait(0.1)
 ShowFirstTab()
-task.wait(0.1)  
+task.wait(0.1)
 if NameTab.Name == (Library.FirstTab .. "Tab") then
     for _, child in pairs(NameTab:GetChildren()) do
         if child:IsA("ImageLabel") and child.Name:match("Section$") then
@@ -1286,8 +1279,6 @@ if NameTab.Name == (Library.FirstTab .. "Tab") then
     end
 end
 
-  
-
 function TabElements:CreateSection(name, collapsible, startClosed)
     local NameSection = Instance.new("Frame")
     local SectionTitle = Instance.new("TextLabel")
@@ -1298,7 +1289,6 @@ function TabElements:CreateSection(name, collapsible, startClosed)
 
     sectionOrder = sectionOrder + 1
 
-    -- Section = judul di atas + daftar elemen memanjang ke bawah (gaya Fluent)
     NameSection.Name = (name .. "Section")
     NameSection.Parent = SectionScrollingFrame
     NameSection.BackgroundTransparency = 1
@@ -1352,7 +1342,6 @@ function TabElements:CreateSection(name, collapsible, startClosed)
     SectionContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
     SectionContentLayout.Padding = UDim.new(0, 3)
 
-    -- Tinggi section otomatis mengikuti isinya (dropdown dibuka -> section ikut turun)
     local Collapsed = false
     local SectionAnimating = false
     local function ResizeSection()
@@ -1363,7 +1352,6 @@ function TabElements:CreateSection(name, collapsible, startClosed)
     end
     SectionContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(ResizeSection)
 
-    -- Setiap elemen otomatis jadi "kartu" bulat seperti Fluent
     SectionContent.ChildAdded:Connect(function(child)
         task.defer(function()
             if child:IsA("Frame") and not child.Name:match("_ImageHolder$") and not child.Name:match("Button$") and not child.Name:match("Divider$") then
@@ -1376,8 +1364,6 @@ function TabElements:CreateSection(name, collapsible, startClosed)
         end)
     end)
 
-    -- Section yang bisa dibuka/tutup: Tab:CreateSection("Nama", true) atau Tab:CreateSection("Nama", true, true) (mulai tertutup)
-    -- juga bisa: Tab:CreateSection("Nama", { Collapsible = true, Closed = true })
     do
         local wantCollapsible = (collapsible == true)
         if type(collapsible) == "table" then
@@ -1488,7 +1474,6 @@ function TabElements:CreateSection(name, collapsible, startClosed)
         function SectionElements:Toggle() SetCollapsed(not Collapsed) end
     end
 
--- Divider: garis pemisah (opsional dengan teks di tengah). Section:CreateDivider("Judul")
 function SectionElements:CreateDivider(text)
     local Divider = Instance.new("Frame")
     Divider.Name = tostring(text or "") .. "Divider"
@@ -1531,7 +1516,7 @@ function SectionElements:CreateDivider(text)
         pad.PaddingLeft = UDim.new(0, 8)
         pad.PaddingRight = UDim.new(0, 8)
         pad.Parent = Label
-        -- dua garis di kiri dan kanan teks
+
         local function layoutLines()
             local half = Label.AbsoluteSize.X / 2
             makeLine(UDim2.new(0, 10, 0.5, 0), UDim2.new(0.5, -half - 10, 0, 1)).Name = "LineLeft"
@@ -1548,8 +1533,6 @@ function SectionElements:CreateDivider(text)
     return Divider
 end
 
--- Paragraph: judul (opsional) + teks panjang yang otomatis wrap dan menyesuaikan tinggi.
--- Section:CreateParagraph("Judul", "Teks panjang ...")  ->  { SetText, SetTitle }
 function SectionElements:CreateParagraph(title, text)
     local Paragraph = Instance.new("Frame")
     Paragraph.Name = tostring(title or "Text") .. "Paragraph"
@@ -1621,7 +1604,6 @@ function SectionElements:CreateParagraph(title, text)
     return { SetText = SetText, SetTitle = SetTitle, Frame = Paragraph }
 end
 
--- Progress bar: Section:CreateProgressBar("Loading", 0, 100, 25) -> { SetValue, GetValue, SetText, SetRange }
 function SectionElements:CreateProgressBar(name, minimumvalue, maximumvalue, presetvalue, suffix)
     minimumvalue = tonumber(minimumvalue) or 0
     maximumvalue = tonumber(maximumvalue) or 100
@@ -1857,8 +1839,6 @@ function SectionElements:CreateLabel(name, text, callback, options)
         end
     end)
 
-    -- (tinggi diatur otomatis oleh ResizeSection)
-
     return {
         ChangeText = ChangeText,
         Refresh = RefreshLabel
@@ -1915,8 +1895,6 @@ table.insert(Library.LibraryColorTable, Button)
                 RippleEffect(Button)
             end)
 
-            -- callback dijalankan saat klik selesai (lepas di atas tombol), bukan saat baru disentuh,
-            -- supaya nggak kepicu waktu scroll / geser jari
             Button.MouseButton1Click:Connect(function()
                 if type(callback) == "function" then
                     local ok, err = pcall(callback, Button)
@@ -2136,7 +2114,7 @@ function SectionElements:CreateToggle(name, ...)
     end
 
     if SectionContent and SectionContentLayout then
-        -- (tinggi diatur otomatis oleh ResizeSection)
+
     end
 
     task.delay(1, function()
@@ -2146,7 +2124,7 @@ function SectionElements:CreateToggle(name, ...)
         end
     end)
 
-    return {
+    local ToggleAPI = {
         SetState = function(state)
             Toggled = state
             UIReferences.Toggles[name].EnabledDuringLoad = true
@@ -2160,12 +2138,16 @@ function SectionElements:CreateToggle(name, ...)
             task.wait()
         end
     }
+    if Library._RegSetter then
+        Library._RegSetter(gameId, name, function(v)
+            if type(v) == "boolean" then ToggleAPI.SetState(v) end
+        end)
+    end
+    return ToggleAPI
 end
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 
--- bind (opsional): nama variabel global, mis. "varSlider". Slider akan ikut berubah kalau script mengisi varSlider = 60,
--- dan varSlider otomatis ikut terisi saat slider digeser.
 function SectionElements:CreateSlider(name, minimumvalue, maximumvalue, presetvalue, precisevalue, callback, bind)
     local NameSlider = Instance.new("Frame")
     local Title = Instance.new("TextLabel")
@@ -2178,7 +2160,6 @@ function SectionElements:CreateSlider(name, minimumvalue, maximumvalue, presetva
     local SliderDragging = false
     local StartingValue = presetvalue
 
-    -- nilai tersimpan (kalau ada) menggantikan preset
     local sliderGameId = self.GameId or tostring(game.PlaceId)
     if not Settings[sliderGameId] then Settings[sliderGameId] = {} end
     local savedSliderValue = Settings[sliderGameId][name]
@@ -2286,16 +2267,13 @@ table.insert(Library.LibraryColorTable, Title)
     Value.TextColor3 = Color3.fromRGB(255, 255, 255)
     Value.TextSize = 14.000
 
-    
     local function enlargeCircle()
         TweenService:Create(CircleSelector, TweenInfo.new(0.1), {Size = UDim2.new(0, 20, 0, 20)}):Play()
     end
 
-    
     local function shrinkCircle()
         TweenService:Create(CircleSelector, TweenInfo.new(0.1), {Size = UDim2.new(0, 14, 0, 14)}):Play()
     end
-
 
     local function Sliding(input)
         local SliderPosition
@@ -2319,7 +2297,6 @@ table.insert(Library.LibraryColorTable, Title)
         callback(SlidingValue)
     end
 
-    -- simpan nilai slider (dipanggil saat selesai geser / selesai ketik / dari script)
     local function SaveSliderValue()
         Settings[sliderGameId][name] = currentValue
         SaveSettings()
@@ -2329,22 +2306,20 @@ table.insert(Library.LibraryColorTable, Title)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             SliderDragging = true
             SectionScrollingFrame.ScrollingEnabled = false
-            enlargeCircle()  
-            Sliding(input)   
+            enlargeCircle()
+            Sliding(input)
         end
     end)
 
-    
     CircleSelector.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             if SliderDragging then SaveSliderValue() end
             SliderDragging = false
             SectionScrollingFrame.ScrollingEnabled = true
-            shrinkCircle()   
+            shrinkCircle()
         end
     end)
 
-    
     local HitArea = Instance.new("Frame")
     HitArea.Name = "HitArea"
     HitArea.Parent = SliderBackground
@@ -2372,7 +2347,7 @@ table.insert(Library.LibraryColorTable, Title)
 
     UserInputService.InputChanged:Connect(function(input)
         if SliderDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-            
+
             Sliding(input)
         end
     end)
@@ -2386,7 +2361,6 @@ table.insert(Library.LibraryColorTable, Title)
         end
     end)
 
-    
     Value.FocusLost:Connect(function()
         if not tonumber(Value.Text) then
             Value.Text = tostring(currentValue)
@@ -2403,7 +2377,6 @@ table.insert(Library.LibraryColorTable, Title)
         callback(tonumber(Value.Text))
     end)
 
-    -- ubah nilai dari script: slider.SetValue(60) atau slider:SetValue(60)
     local function SetValue(a, b)
         local v = (type(a) == "table") and b or a
         v = tonumber(v)
@@ -2431,7 +2404,6 @@ table.insert(Library.LibraryColorTable, Title)
     PublishBind(currentValue)
     callback(StartingValue)
 
-    -- pantau variabel global (kalau pakai bind): varSlider = 60 -> slider ikut geser ke 60
     if bindName then
         task.spawn(function()
             while NameSlider and NameSlider.Parent do
@@ -2444,12 +2416,159 @@ table.insert(Library.LibraryColorTable, Title)
         end)
     end
 
+    if Library._RegSetter then
+        Library._RegSetter(sliderGameId, name, SetValue)
+    end
+
     return {
         SetValue = SetValue,
         Set = SetValue,
         GetValue = GetValue,
         Get = GetValue
     }
+end
+
+function SectionElements:CreateNumberInput(name, minimumvalue, maximumvalue, presetvalue, callback, step, bind)
+    minimumvalue = tonumber(minimumvalue) or 0
+    maximumvalue = tonumber(maximumvalue) or 100
+    if maximumvalue < minimumvalue then minimumvalue, maximumvalue = maximumvalue, minimumvalue end
+    step = tonumber(step)
+    if not step or step <= 0 then step = 1 end
+    callback = callback or function() end
+    local bindName = (type(bind) == "string" and bind ~= "") and bind or nil
+
+    local decimals = 0
+    do
+        local frac = tostring(step):match("%.(%d+)$")
+        if frac then decimals = math.min(#frac, 4) end
+    end
+    local function norm(v)
+        v = math.clamp(v, minimumvalue, maximumvalue)
+        if decimals == 0 then return math.floor(v + 0.5) end
+        return tonumber(string.format("%." .. decimals .. "f", v))
+    end
+
+    local numGameId = self.GameId or tostring(game.PlaceId)
+    if not Settings[numGameId] then Settings[numGameId] = {} end
+    local startValue = presetvalue
+    if type(Settings[numGameId][name]) == "number" then startValue = Settings[numGameId][name] end
+    local current = norm(tonumber(startValue) or minimumvalue)
+
+    local Row = Instance.new("Frame")
+    Row.Name = tostring(name) .. "NumberInput"
+    Row.Parent = SectionContent
+    Row.BackgroundTransparency = 1
+    Row.BorderSizePixel = 0
+    Row.Size = UDim2.new(1, 0, 0, 40)
+    Row.ZIndex = 5
+
+    local Title = Instance.new("TextLabel")
+    Title.Name = "Title"
+    Title.Parent = Row
+    Title.BackgroundTransparency = 1
+    Title.Position = UDim2.new(0, 12, 0, 0)
+    Title.Size = UDim2.new(1, -150, 1, 0)
+    Title.ZIndex = 5
+    Title.Font = Library.Theme.TextFont
+    Title.Text = tostring(name)
+    Title.TextColor3 = Library.Theme.TextColor
+    Title.TextSize = 15
+    Title.TextXAlignment = Enum.TextXAlignment.Left
+    Title.TextTruncate = Enum.TextTruncate.AtEnd
+    table.insert(Library.LibraryColorTable, Title)
+
+    local function makeStepButton(text, xOffset)
+        local B = Instance.new("TextButton")
+        B.Name = "Step"
+        B.Parent = Row
+        B.AnchorPoint = Vector2.new(1, 0.5)
+        B.Position = UDim2.new(1, xOffset, 0.5, 0)
+        B.Size = UDim2.new(0, 26, 0, 26)
+        B.BackgroundColor3 = Color3.fromRGB(62, 62, 70)
+        B.BorderSizePixel = 0
+        B.AutoButtonColor = false
+        B.ZIndex = 6
+        B.Font = Library.Theme.TextFont
+        B.Text = text
+        B.TextColor3 = Library.Theme.TextColor
+        B.TextSize = 18
+        Instance.new("UICorner", B).CornerRadius = UDim.new(0, 5)
+        table.insert(Library.LibraryColorTable, B)
+        return B
+    end
+    local Plus = makeStepButton("+", -10)
+    local Minus = makeStepButton("-", -108)
+
+    local Box = Instance.new("TextBox")
+    Box.Name = "NumberBox"
+    Box.Parent = Row
+    Box.AnchorPoint = Vector2.new(1, 0.5)
+    Box.Position = UDim2.new(1, -40, 0.5, 0)
+    Box.Size = UDim2.new(0, 64, 0, 26)
+    Box.BackgroundColor3 = Color3.fromRGB(65, 65, 65)
+    Box.BackgroundTransparency = 0.1
+    Box.BorderSizePixel = 0
+    Box.ZIndex = 6
+    Box.Font = Library.Theme.TextFont
+    Box.Text = tostring(current)
+    Box.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Box.TextSize = 14
+    Box.ClearTextOnFocus = false
+    Instance.new("UICorner", Box).CornerRadius = UDim.new(0, 5)
+
+    local function publish(v)
+        if bindName then pcall(function() getgenv()[bindName] = v end) end
+    end
+
+    local function setNumber(v, silent)
+        v = tonumber(v)
+        if not v then return end
+        current = norm(v)
+        Box.Text = tostring(current)
+        Settings[numGameId][name] = current
+        SaveSettings()
+        publish(current)
+        if not silent then
+            local ok, err = pcall(callback, current)
+            if not ok then warn(err) end
+        end
+    end
+
+    Box.FocusLost:Connect(function()
+        local n = tonumber(Box.Text)
+        if n then setNumber(n) else Box.Text = tostring(current) end
+    end)
+    Plus.MouseButton1Click:Connect(function() setNumber(current + step) end)
+    Minus.MouseButton1Click:Connect(function() setNumber(current - step) end)
+
+    publish(current)
+    pcall(callback, current)
+
+    if bindName then
+        task.spawn(function()
+            while Row and Row.Parent do
+                task.wait(0.25)
+                local ok, v = pcall(function() return getgenv()[bindName] end)
+                if ok and type(v) == "number" and v ~= current and not Box:IsFocused() then
+                    setNumber(v)
+                end
+            end
+        end)
+    end
+
+    if Library._RegSetter then
+        Library._RegSetter(numGameId, name, function(v) setNumber(v) end)
+    end
+
+    local api = {}
+    function api.SetValue(a, b)
+        local v = (type(a) == "table") and b or a
+        setNumber(v)
+    end
+    function api.GetValue() return current end
+    api.Set, api.Get = api.SetValue, api.GetValue
+    api.Frame = Row
+    return api
 end
 
 function SectionElements:CreateTextBox(name, characterLimit, placeholderText, callback)
@@ -2507,6 +2626,12 @@ function SectionElements:CreateTextBox(name, characterLimit, placeholderText, ca
                 end
             end)
 
+            if Library._RegSetter then
+                Library._RegSetter(gameId, name, function(v)
+                    InputBox.Text = tostring(v)
+                end)
+            end
+
             return NameTextBox, InputBox
         end
 function SectionElements:CreateImage(name, imageId, size)
@@ -2531,9 +2656,6 @@ ImageHolder.ZIndex = 999
     ImageLabel.ScaleType = Enum.ScaleType.Fit
     ImageLabel.Parent = ImageHolder
     ImageLabel.ZIndex = 999
-
-
-
 
     local Element = {
         Type = "Image",
@@ -2569,7 +2691,7 @@ end
             local Hue = Instance.new("ImageLabel")
             local UIGradient = Instance.new("UIGradient")
             local HueSelection = Instance.new("ImageLabel")
-            
+
             local ColorPickerToggled = false
             local OldToggleColor = Color3.fromRGB(0, 0, 0)
             local OldColor = Color3.fromRGB(0, 0, 0)
@@ -2601,7 +2723,7 @@ end
             Title.TextColor3 = Library.Theme.TextColor
             Title.TextSize = 15.000
             Title.TextXAlignment = Enum.TextXAlignment.Left
-            
+
             ColorPickerToggle.Name = "ColorPickerToggle"
             ColorPickerToggle.Parent = NameColorPicker
             ColorPickerToggle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -2614,7 +2736,7 @@ end
             ColorPickerToggle.ScaleType = Enum.ScaleType.Slice
             ColorPickerToggle.SliceCenter = Rect.new(100, 100, 100, 100)
             ColorPickerToggle.SliceScale = 0.030
-            
+
             ColorPicker.Name = "ColorPicker"
             ColorPicker.Parent = NameColorPicker
             ColorPicker.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
@@ -2638,7 +2760,7 @@ end
             Color.Size = UDim2.new(0, 124, 0, 105)
             Color.ZIndex = 10
             Color.Image = "rbxassetid://4155801252"
-            
+
             ColorRound.Name = "ColorRound"
             ColorRound.Parent = Color
             ColorRound.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -2651,7 +2773,7 @@ end
             ColorRound.ScaleType = Enum.ScaleType.Slice
             ColorRound.SliceCenter = Rect.new(128, 128, 128, 128)
             ColorRound.SliceScale = 0.050
-    
+
             ColorSelection.Name = "ColorSelection"
             ColorSelection.Parent = Color
             ColorSelection.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -2662,7 +2784,7 @@ end
             ColorSelection.ZIndex = 25
             ColorSelection.Image = "rbxassetid://4953646208"
             ColorSelection.ScaleType = Enum.ScaleType.Fit
-            
+
             RValue.Name = "RValue"
             RValue.Parent = ColorPicker
             RValue.BackgroundColor3 = Color3.fromRGB(65, 65, 65)
@@ -2675,7 +2797,7 @@ end
             RValue.ScaleType = Enum.ScaleType.Slice
             RValue.SliceCenter = Rect.new(100, 100, 100, 100)
             RValue.SliceScale = 0.030
-            
+
             ValueR.Name = "ValueR"
             ValueR.Parent = RValue
             ValueR.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -2686,7 +2808,7 @@ end
             ValueR.Text = "R: 255"
             ValueR.TextColor3 = Color3.fromRGB(255, 255, 255)
             ValueR.TextSize = 14.000
-            
+
             GValue.Name = "GValue"
             GValue.Parent = ColorPicker
             GValue.BackgroundColor3 = Color3.fromRGB(65, 65, 65)
@@ -2699,7 +2821,7 @@ end
             GValue.ScaleType = Enum.ScaleType.Slice
             GValue.SliceCenter = Rect.new(100, 100, 100, 100)
             GValue.SliceScale = 0.030
-            
+
             ValueG.Name = "ValueG"
             ValueG.Parent = GValue
             ValueG.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -2710,7 +2832,7 @@ end
             ValueG.Text = "G: 255"
             ValueG.TextColor3 = Color3.fromRGB(255, 255, 255)
             ValueG.TextSize = 14.000
-            
+
             BValue.Name = "BValue"
             BValue.Parent = ColorPicker
             BValue.BackgroundColor3 = Color3.fromRGB(65, 65, 65)
@@ -2723,7 +2845,7 @@ end
             BValue.ScaleType = Enum.ScaleType.Slice
             BValue.SliceCenter = Rect.new(100, 100, 100, 100)
             BValue.SliceScale = 0.030
-            
+
             ValueB.Name = "ValueB"
             ValueB.Parent = BValue
             ValueB.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -2734,7 +2856,7 @@ end
             ValueB.Text = "B: 255"
             ValueB.TextColor3 = Color3.fromRGB(255, 255, 255)
             ValueB.TextSize = 14.000
-            
+
             RainbowToggle.Name = "RainbowToggle"
             RainbowToggle.Parent = ColorPicker
             RainbowToggle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -2742,7 +2864,7 @@ end
             RainbowToggle.Position = UDim2.new(0, 10, 0, 143)
             RainbowToggle.Size = UDim2.new(0, 160, 0, 35)
             RainbowToggle.ZIndex = 10
-            
+
             RainbowToggleTitle.Name = "RainbowToggleTitle"
             RainbowToggleTitle.Parent = RainbowToggle
             RainbowToggleTitle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -2754,7 +2876,7 @@ end
             RainbowToggleTitle.TextColor3 = Color3.fromRGB(185, 185, 185)
             RainbowToggleTitle.TextSize = 15
             RainbowToggleTitle.TextXAlignment = Enum.TextXAlignment.Left
-            
+
             Toggle.Name = "Toggle"
             Toggle.Parent = RainbowToggle
             Toggle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -2767,7 +2889,7 @@ end
             Toggle.Text = ""
             Toggle.TextColor3 = Color3.fromRGB(0, 0, 0)
             Toggle.TextSize = 14.000
-            
+
             CheckboxOutline.Name = "CheckboxOutline"
             CheckboxOutline.Parent = Toggle
             CheckboxOutline.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -2777,7 +2899,7 @@ end
             CheckboxOutline.ZIndex = 10
             CheckboxOutline.Image = "http://www.roblox.com/asset/?id=5416796047"
             CheckboxOutline.ImageColor3 = Color3.fromRGB(65, 65, 65)
-            
+
             CheckboxTicked.Name = "CheckboxTicked"
             CheckboxTicked.Parent = Toggle
             CheckboxTicked.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -2795,7 +2917,7 @@ end
             TickCover.Position = UDim2.new(0.5, -7, 0.5, -7)
             TickCover.Size = UDim2.new(0, 14, 0, 14)
             TickCover.ZIndex = 10
-            
+
             Hue.Name = "Hue"
             Hue.Parent = ColorPicker
             Hue.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -2811,7 +2933,7 @@ end
             UIGradient.Color = ColorSequence.new{ColorSequenceKeypoint.new(0.00, Color3.fromRGB(255, 0, 4)), ColorSequenceKeypoint.new(0.20, Color3.fromRGB(234, 255, 0)), ColorSequenceKeypoint.new(0.40, Color3.fromRGB(21, 255, 0)), ColorSequenceKeypoint.new(0.60, Color3.fromRGB(0, 255, 255)), ColorSequenceKeypoint.new(0.80, Color3.fromRGB(0, 17, 255)), ColorSequenceKeypoint.new(0.90, Color3.fromRGB(255, 0, 251)), ColorSequenceKeypoint.new(1.00, Color3.fromRGB(255, 0, 4))}
             UIGradient.Rotation = 270
             UIGradient.Parent = Hue
-            
+
             HueSelection.Name = "HueSelection"
             HueSelection.Parent = Hue
             HueSelection.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -2828,24 +2950,24 @@ end
                 ValueG.Text = ("G: " .. math.floor(ColorPickerToggle.ImageColor3.g * 255))
                 ValueB.Text = ("B: " .. math.floor(ColorPickerToggle.ImageColor3.b * 255))
             end
-    
+
             local function UpdateColorPicker(nope)
                 ColorPickerToggle.ImageColor3 = Color3.fromHSV(ColorH, ColorS, ColorV)
                 Color.BackgroundColor3 = Color3.fromHSV(ColorH, 1, 1)
-    
+
                 SetRGBValues()
                 callback(ColorPickerToggle.ImageColor3)
             end
-    
+
             ColorH = 1 - (math.clamp(HueSelection.AbsolutePosition.Y - Hue.AbsolutePosition.Y, 0, Hue.AbsoluteSize.Y) / Hue.AbsoluteSize.Y)
             ColorS = (math.clamp(ColorSelection.AbsolutePosition.X - Color.AbsolutePosition.X, 0, Color.AbsoluteSize.X) / Color.AbsoluteSize.X)
             ColorV = 1 - (math.clamp(ColorSelection.AbsolutePosition.Y - Color.AbsolutePosition.Y, 0, Color.AbsoluteSize.Y) / Color.AbsoluteSize.Y)
-    
+
             ColorPickerToggle.ImageColor3 = presetcolor
             Color.BackgroundColor3 = presetcolor
             SetRGBValues()
             callback(Color.BackgroundColor3)
-    
+
             local GuiService = game:GetService("GuiService")
             local function IsPointer(input)
                 return input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch
@@ -2909,33 +3031,33 @@ end
 
             Toggle.MouseButton1Down:Connect(function()
                 RainbowColorPicker = not RainbowColorPicker
-            
+
                 if ColorInput then
                     ColorInput:Disconnect()
                 end
-    
+
                 if HueInput then
                     HueInput:Disconnect()
                 end
-    
-                if RainbowColorPicker then              
+
+                if RainbowColorPicker then
                     TweenService:Create(RainbowToggleTitle, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
                     TweenService:Create(TickCover, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = UDim2.new(0.5, 0, 0.5, 0), Size = UDim2.new(0, 0, 0, 0)}):Play()
                     TweenService:Create(CheckboxOutline, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {ImageColor3 = Library.Theme.MainColor}):Play()
                     TweenService:Create(CheckboxTicked, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {ImageColor3 = Library.Theme.MainColor}):Play()
-    
+
                     OldToggleColor = ColorPickerToggle.ImageColor3
                     OldColor = Color.BackgroundColor3
                     OldColorSelectionPosition = ColorSelection.Position
                     OldHueSelectionPosition = HueSelection.Position
-    
+
                     while RainbowColorPicker do
                         ColorPickerToggle.ImageColor3 = Color3.fromHSV(Library.RainbowColorValue, 1, 1)
                         Color.BackgroundColor3 = Color3.fromHSV(Library.RainbowColorValue, 1, 1)
-            
+
                         ColorSelection.Position = UDim2.new(1, 0, 0, 0)
                         HueSelection.Position = UDim2.new(0.48, 0, 0, Library.HueSelectionPosition)
-            
+
                         SetRGBValues()
                         callback(Color.BackgroundColor3)
                         wait()
@@ -2943,10 +3065,10 @@ end
                 elseif not RainbowColorPicker then
                     ColorPickerToggle.ImageColor3 = OldToggleColor
                     Color.BackgroundColor3 = OldColor
-    
+
                     ColorSelection.Position = OldColorSelectionPosition
                     HueSelection.Position = OldHueSelectionPosition
-    
+
                     SetRGBValues()
                     callback(ColorPickerToggle.ImageColor3)
 
@@ -2984,7 +3106,6 @@ function SectionElements:CreateDropdown(name, options, presetoption, callback)
     if not Settings[gameId] then Settings[gameId] = {} end
     local SelectedOption = tostring(Settings[gameId][name] or options[presetoption] or options[1] or "None")
 
-    
     NameDropdown.Name = (name .. "Dropdown")
     NameDropdown.Parent = SectionContent
     NameDropdown.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -3081,24 +3202,22 @@ function SectionElements:CreateDropdown(name, options, presetoption, callback)
                 NameButton.Text = v
                 NameButton.TextColor3 = (v == SelectedOption) and Library.Theme.MainColor or Color3.fromRGB(255, 255, 255)
                 NameButton.TextSize = 15.000
-                
+
                 NameButton.TextXAlignment = Enum.TextXAlignment.Center
 
-                
-                local textBounds = NameButton.TextBounds.X + 20 
+                local textBounds = NameButton.TextBounds.X + 20
                 local ClickArea = Instance.new("TextButton")
                 ClickArea.Name = "ClickArea"
                 ClickArea.Parent = NameButton
                 ClickArea.BackgroundTransparency = 1.000
                 ClickArea.Size = UDim2.new(0, textBounds, 0, 25)
-                ClickArea.Position = UDim2.new(0.5, -textBounds / 2, 0, 0) 
+                ClickArea.Position = UDim2.new(0.5, -textBounds / 2, 0, 0)
                 ClickArea.ZIndex = 15
                 ClickArea.Text = ""
                 ClickArea.AutoButtonColor = false
 
                 table.insert(Library.LibraryColorTable, NameButton)
 
-                
                 ClickArea.MouseButton1Click:Connect(function()
                     SelectedOption = v
                     ResetAllDropdownItems()
@@ -3130,7 +3249,7 @@ function SectionElements:CreateDropdown(name, options, presetoption, callback)
 
     local lastToggleClock = 0
     TitleToggle.MouseButton1Click:Connect(function()
-        -- jeda singkat supaya ketukan ganda / sentuhan nyasar nggak langsung menutup lagi
+
         if os.clock() - lastToggleClock < 0.3 then return end
         lastToggleClock = os.clock()
         DropdownToggled = not DropdownToggled
@@ -3160,18 +3279,33 @@ function SectionElements:CreateDropdown(name, options, presetoption, callback)
         options = newoptions or options
         local presetValue = options[newpresetoption] or Settings[gameId][name] or options[1]
         SelectedOption = presetValue
-        
+
         if SelectedOption and SelectedOption ~= "None" and type(newcallback) == "function" then
             callback(SelectedOption)
         end
-        
+
         TitleToggle.Text = (name .. " - " .. SelectedOption)
         Settings[gameId][name] = SelectedOption
         SaveSettings()
-        
+
         ClearAllDropdownItems()
         updateOptions("")
     end
+
+    local function SetSelected(v)
+        v = tostring(v)
+        if not table.find(options, v) then return end
+        SelectedOption = v
+        TitleToggle.Text = (name .. " - " .. SelectedOption)
+        Settings[gameId][name] = SelectedOption
+        SaveSettings()
+        if type(callback) == "function" and SelectedOption ~= "None" then
+            callback(SelectedOption)
+        end
+        ClearAllDropdownItems()
+        updateOptions("")
+    end
+    if Library._RegSetter then Library._RegSetter(gameId, name, SetSelected) end
 
     updateOptions("")
     if type(callback) == "function" and SelectedOption ~= "None" then
@@ -3179,11 +3313,12 @@ function SectionElements:CreateDropdown(name, options, presetoption, callback)
     end
 
     if SectionContent and SectionContentLayout then
-        -- (tinggi diatur otomatis oleh ResizeSection)
+
     end
 
     return {
-        Refresh = Refresh
+        Refresh = Refresh,
+        SetValue = SetSelected
     }
 end
 function SectionElements:CreateMultiDropdown(name, options, minSelect, maxSelect, presetOptions, callback)
@@ -3191,28 +3326,26 @@ function SectionElements:CreateMultiDropdown(name, options, minSelect, maxSelect
     local TitleToggle = Instance.new("TextButton")
     local Dropdown = Instance.new("ImageLabel")
     local DropdownContentLayout = Instance.new("UIListLayout")
-    
+
     local DropdownToggled = false
     local gameId = self.GameId
     local SelectedOptions = presetOptions or {}
     local minSelect = tonumber(minSelect) or 1
     local maxSelect = tonumber(maxSelect) or (#options or 0)
 
-    
     if not Settings[gameId] then
         Settings[gameId] = {}
     end
 
-    
     if Settings[gameId][name] and type(Settings[gameId][name]) == "table" then
         SelectedOptions = Settings[gameId][name]
-        
+
         for i = #SelectedOptions, 1, -1 do
             if not table.find(options, SelectedOptions[i]) then
                 table.remove(SelectedOptions, i)
             end
         end
-        
+
         while #SelectedOptions > maxSelect do
             table.remove(SelectedOptions, #SelectedOptions)
         end
@@ -3224,9 +3357,9 @@ function SectionElements:CreateMultiDropdown(name, options, minSelect, maxSelect
             end
         end
     else
-        
+
         Settings[gameId][name] = SelectedOptions
-        SaveSettings() 
+        SaveSettings()
     end
 
     NameDropdown.Name = (name .. "MultiDropdown")
@@ -3297,10 +3430,10 @@ function SectionElements:CreateMultiDropdown(name, options, minSelect, maxSelect
 
     local function PopulateDropdown()
         ClearAllDropdownItems()
-        
+
         for _, v in pairs(options or {}) do
             local NameButton = Instance.new("TextButton")
-            
+
             NameButton.Name = (v .. "DropdownButton")
             NameButton.Parent = Dropdown
             NameButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -3321,7 +3454,7 @@ function SectionElements:CreateMultiDropdown(name, options, minSelect, maxSelect
                         table.remove(SelectedOptions, index)
                         TweenService:Create(NameButton, TweenInfo.new(0.35, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
                         Settings[gameId][name] = SelectedOptions
-                        SaveSettings() 
+                        SaveSettings()
                         UpdateTitle()
                     end
                 else
@@ -3329,7 +3462,7 @@ function SectionElements:CreateMultiDropdown(name, options, minSelect, maxSelect
                         table.insert(SelectedOptions, v)
                         TweenService:Create(NameButton, TweenInfo.new(0.35, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {TextColor3 = Library.Theme.MainColor}):Play()
                         Settings[gameId][name] = SelectedOptions
-                        SaveSettings() 
+                        SaveSettings()
                         UpdateTitle()
                     end
                 end
@@ -3351,11 +3484,11 @@ function SectionElements:CreateMultiDropdown(name, options, minSelect, maxSelect
 
     local lastToggleClock = 0
     TitleToggle.MouseButton1Click:Connect(function()
-        -- jeda singkat supaya ketukan ganda / sentuhan nyasar nggak langsung menutup lagi
+
         if os.clock() - lastToggleClock < 0.3 then return end
         lastToggleClock = os.clock()
         DropdownToggled = not DropdownToggled
-        
+
         if DropdownToggled then
             PopulateDropdown()
             TweenService:Create(TitleToggle, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {TextColor3 = Color3.fromRGB(185, 185, 185)}):Play()
@@ -3373,17 +3506,17 @@ function SectionElements:CreateMultiDropdown(name, options, minSelect, maxSelect
         minSelect = tonumber(newMinSelect) or minSelect
         maxSelect = tonumber(newMaxSelect) or maxSelect
         SelectedOptions = newPresetOptions or SelectedOptions
-        
+
         for i = #SelectedOptions, 1, -1 do
             if not table.find(options, SelectedOptions[i]) then
                 table.remove(SelectedOptions, i)
             end
         end
-        
+
         while #SelectedOptions > maxSelect do
             table.remove(SelectedOptions, #SelectedOptions)
         end
-        
+
         if #SelectedOptions < minSelect then
             for i = 1, minSelect - #SelectedOptions do
                 if options[i] and not table.find(SelectedOptions, options[i]) then
@@ -3392,7 +3525,7 @@ function SectionElements:CreateMultiDropdown(name, options, minSelect, maxSelect
             end
         end
         Settings[gameId][name] = SelectedOptions
-        SaveSettings() 
+        SaveSettings()
         UpdateTitle()
 
         if DropdownToggled then
@@ -3400,6 +3533,15 @@ function SectionElements:CreateMultiDropdown(name, options, minSelect, maxSelect
             TweenService:Create(NameDropdown, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 0, 35 + DropdownContentLayout.AbsoluteContentSize.Y)}):Play()
             TweenService:Create(Dropdown, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {Size = UDim2.new(1, -30, 0, DropdownContentLayout.AbsoluteContentSize.Y)}):Play()
         end
+    end
+
+    if Library._RegSetter then
+        Library._RegSetter(gameId, name, function(v)
+            if type(v) ~= "table" then return end
+            local list = {}
+            for _, x in ipairs(v) do table.insert(list, x) end
+            Refresh(nil, nil, nil, list)
+        end)
     end
 
     UpdateTitle()
@@ -3526,7 +3668,7 @@ end
             KeybindButton.TextColor3 = Color3.fromRGB(255, 255, 255)
             KeybindButton.TextSize = 15.000
             KeybindButton.TextWrapped = true
-            
+
             if LoadFromPreset then
                 KeybindButton.Text = presetbind
             end
@@ -3550,7 +3692,7 @@ end
                     JustBinded = false
                     return
                 end
-                
+
                 if (Input.UserInputType ~= Enum.UserInputType.Keyboard and (AllowedMouseTypes[Input.UserInputType.Name]) and (not keyboardonly)) or (Input.KeyCode and (not NotAllowedKeys[Input.KeyCode.Name])) then
                     local BindName = ((Input.UserInputType ~= Enum.UserInputType.Keyboard and Input.UserInputType.Name) or Input.KeyCode.Name)
                     KeybindButton.Text = ShortenedNames[BindName] or BindName
@@ -3562,9 +3704,9 @@ end
                     Library.CurrentlyBinding = false
                 end
             end)
-            
+
             if not holdmode then
-                UserInputService.InputBegan:Connect(function(input, gameprocessedevent) 
+                UserInputService.InputBegan:Connect(function(input, gameprocessedevent)
                     if not gameprocessedevent then
                         if UserInputService:GetFocusedTextBox() then return end
                         if OldBind == Enum.KeyCode.Unknown.Name then return end
@@ -3572,13 +3714,13 @@ end
 
                         local BindName = ((input.UserInputType ~= Enum.UserInputType.Keyboard and input.UserInputType.Name) or input.KeyCode.Name)
 
-                        if BindName == OldBind then 
+                        if BindName == OldBind then
                             callback()
                         end
                     end
                 end)
             else
-                UserInputService.InputBegan:Connect(function(input, gameprocessedevent) 
+                UserInputService.InputBegan:Connect(function(input, gameprocessedevent)
                     if not gameprocessedevent then
                         if UserInputService:GetFocusedTextBox() then return end
                         if OldBind == Enum.KeyCode.Unknown.Name then return end
@@ -3586,13 +3728,13 @@ end
 
                         local BindName = ((input.UserInputType ~= Enum.UserInputType.Keyboard and input.UserInputType.Name) or input.KeyCode.Name)
 
-                        if BindName == OldBind then 
+                        if BindName == OldBind then
                             callback(true)
                         end
                     end
                 end)
 
-                UserInputService.InputEnded:Connect(function(input, gameprocessedevent) 
+                UserInputService.InputEnded:Connect(function(input, gameprocessedevent)
                     if not gameprocessedevent then
                         if UserInputService:GetFocusedTextBox() then return end
                         if OldBind == Enum.KeyCode.Unknown.Name then return end
@@ -3601,15 +3743,13 @@ end
                         HoldModeToggled = false
                         local BindName = ((input.UserInputType ~= Enum.UserInputType.Keyboard and input.UserInputType.Name) or input.KeyCode.Name)
 
-                        if BindName == OldBind then 
+                        if BindName == OldBind then
                             callback(false)
                         end
                     end
                 end)
             end
         end
-
-        -- (tinggi diatur otomatis oleh ResizeSection)
 
         return SectionElements
     end
@@ -3779,7 +3919,6 @@ do
         end)
     end
 
-    -- Gradient background: Library:SetGradient("Sunset") / Library:SetGradient({Color1=..., Color2=..., Angle=90}) / "RGB" / false
     Library.GradientPresets = {
         Sunset       = { C(150, 60, 60),  C(60, 30, 90),   45 },
         ["Ocean Deep"] = { C(10, 70, 110),  C(10, 20, 50),   90 },
@@ -3950,7 +4089,6 @@ do
             if not initializing then RequestApply() end
         end)
 
-        -- Gradient (collapsible section)
         local GradSection = Tab:CreateSection("Gradient", true, true)
         local gradNames = { "Off" }
         do
@@ -4019,7 +4157,6 @@ do
     end
 end
 
--- Global search: kotak di atas daftar tab, hasil muncul di area konten. Klik hasil -> pindah tab, buka section, scroll, highlight.
 do
     local UserInputService = game:GetService("UserInputService")
 
@@ -4070,7 +4207,6 @@ do
     TabScrollingFrame.Size = UDim2.new(1, 0, 1, -38)
     TabListPadding.PaddingTop = UDim.new(0, 4)
 
-    -- overlay hasil pencarian (menutupi area konten)
     local Results = Instance.new("Frame")
     Results.Name = "SearchResults"
     Results.Parent = UITabs
@@ -4134,7 +4270,7 @@ do
     EmptyLabel.TextSize = 14
     EmptyLabel.Visible = false
 
-    local SUFFIXES = { "MultiDropdown", "ColorPicker", "ProgressBar", "Dropdown", "TextBox", "Keybind", "Toggle", "Slider", "Button", "Label", "Paragraph" }
+    local SUFFIXES = { "NumberInput", "MultiDropdown", "ColorPicker", "ProgressBar", "Dropdown", "TextBox", "Keybind", "Toggle", "Slider", "Button", "Label", "Paragraph" }
     local function ElementInfo(child)
         local n = child.Name
         if n:match("Divider$") or n:match("_ImageHolder$") then return nil end
@@ -4314,17 +4450,222 @@ do
         end)
     end)
 
-    -- Library:Search("teks") -> isi dan jalankan pencarian dari script
     function Library:Search(text)
         SearchBox.Text = tostring(text or "")
     end
 end
 
--- Library:SetLogo("rbxassetid://123")        -> gambar saja
--- Library:SetLogo("123456")                  -> gambar saja (angka = asset id)
--- Library:SetLogo("DX")                      -> huruf saja
--- Library:SetLogo("rbxassetid://123", "DX")  -> gambar + huruf
--- Library:SetLogo({ Image = "...", Text = "DX" })
+do
+    Library._ConfigSetters = {}
+    Library._ConfigIgnore = {
+        ["Profile"] = true, ["Profile Name"] = true, ["Import JSON"] = true,
+        ["Theme Preset"] = true, ["Window Transparency"] = true, ["Gradient Preset"] = true, ["Gradient Angle"] = true,
+    }
+    function Library._RegSetter(gameId, name, fn)
+        Library._ConfigSetters[tostring(gameId) .. "\n" .. tostring(name)] = fn
+    end
+
+    local function gid() return tostring(game.PlaceId) end
+    local function copy(v)
+        if type(v) == "table" then
+            local t = {}
+            for k, x in pairs(v) do t[k] = copy(x) end
+            return t
+        end
+        return v
+    end
+    local function gameSettings()
+        local id = gid()
+        if not Settings[id] then Settings[id] = {} end
+        return Settings[id]
+    end
+    local function profiles()
+        if type(Settings.__Profiles) ~= "table" then Settings.__Profiles = {} end
+        if type(Settings.__Profiles[gid()]) ~= "table" then Settings.__Profiles[gid()] = {} end
+        return Settings.__Profiles[gid()]
+    end
+    local function snapshot()
+        local out = {}
+        for k, v in pairs(gameSettings()) do
+            if type(k) == "string" and not Library._ConfigIgnore[k] then out[k] = copy(v) end
+        end
+        return out
+    end
+    local function profileNames()
+        local names = {}
+        for n in pairs(profiles()) do table.insert(names, n) end
+        table.sort(names)
+        return names
+    end
+    local function notify(title, msg)
+        pcall(function() Library:CreateNotification(title, msg, 3) end)
+    end
+
+    local function applyData(data)
+        local id = gid()
+        Library._BulkLoading = true
+        pcall(function()
+            for key, value in pairs(data) do
+                local setter = Library._ConfigSetters[id .. "\n" .. key]
+                if setter then
+                    pcall(setter, copy(value))
+                else
+                    gameSettings()[key] = copy(value)
+                end
+            end
+        end)
+        Library._BulkLoading = false
+        SaveSettings()
+    end
+
+    local function userKey() return tostring(LocalPlayer.UserId) end
+    local function getAutoload()
+        local al = Settings.__AutoLoad
+        if type(al) == "table" and type(al[userKey()]) == "table" then return al[userKey()][gid()] end
+        return nil
+    end
+    local function setAutoload(name)
+        if type(Settings.__AutoLoad) ~= "table" then Settings.__AutoLoad = {} end
+        if type(Settings.__AutoLoad[userKey()]) ~= "table" then Settings.__AutoLoad[userKey()] = {} end
+        Settings.__AutoLoad[userKey()][gid()] = name
+        SaveSettings()
+    end
+
+    function Library:GetProfiles() return profileNames() end
+    function Library:SaveProfile(name)
+        name = tostring(name or ""):gsub("^%s+", ""):gsub("%s+$", "")
+        if name == "" then return false end
+        profiles()[name] = snapshot()
+        SaveSettings()
+        return true
+    end
+    function Library:LoadProfile(name)
+        local data = profiles()[tostring(name)]
+        if not data then return false end
+        task.spawn(applyData, copy(data))
+        return true
+    end
+    function Library:DeleteProfile(name)
+        if profiles()[tostring(name)] == nil then return false end
+        profiles()[tostring(name)] = nil
+        SaveSettings()
+        return true
+    end
+
+    function Library:CreateConfigTab(tabName, icon)
+        tabName = tabName or "Config"
+        local gs = gameSettings()
+        gs["Profile"], gs["Profile Name"], gs["Import JSON"] = nil, nil, nil
+
+        local Tab = Library:CreateTab(tabName, icon or "settings")
+        local tabBtn = TabScrollingFrame:FindFirstChild(tabName .. "TabButton")
+        if tabBtn then tabBtn.LayoutOrder = 990 end
+
+        local selected = nil
+        local dd
+
+        local function refreshDropdown(select)
+            local list = { "None" }
+            local idx = 1
+            for _, n in ipairs(profileNames()) do
+                table.insert(list, n)
+                if n == select then idx = #list end
+            end
+            selected = (idx > 1) and select or nil
+            if dd then dd.Refresh(list, idx) end
+        end
+
+        local Prof = Tab:CreateSection("Profiles")
+        dd = Prof:CreateDropdown("Profile", profileNames(), 1, function(opt)
+            selected = (opt ~= "None") and opt or nil
+        end)
+        local _, nameBox = Prof:CreateTextBox("Profile Name", 30, "", function() end)
+        nameBox.PlaceholderText = "New profile name..."
+        local function readName()
+            local t = nameBox.Text:gsub("^%s+", ""):gsub("%s+$", "")
+            return t ~= "" and t or nil
+        end
+
+        Prof:CreateButton("Save Profile", function()
+            local n = readName() or selected
+            if not n then notify("Config", "Type a profile name first") return end
+            Library:SaveProfile(n)
+            nameBox.Text = ""
+            gameSettings()["Profile Name"] = nil
+            refreshDropdown(n)
+            notify("Config", "Saved profile '" .. n .. "'")
+        end)
+        Prof:CreateButton("Load Profile", function()
+            if not selected then notify("Config", "Select a profile first") return end
+            if Library:LoadProfile(selected) then notify("Config", "Loaded '" .. selected .. "'") end
+        end)
+        Prof:CreateButton("Delete Profile", function()
+            if not selected then notify("Config", "Select a profile first") return end
+            local n = selected
+            Library:DeleteProfile(n)
+            if getAutoload() == n then setAutoload(nil) end
+            refreshDropdown(nil)
+            notify("Config", "Deleted '" .. n .. "'")
+        end)
+
+        local Share = Tab:CreateSection("Share")
+        Share:CreateButton("Export to Clipboard", function()
+            local ok = pcall(function()
+                setclipboard(HttpService:JSONEncode({ rndm = 1, place = gid(), data = snapshot() }))
+            end)
+            notify("Config", ok and "Copied to clipboard" or "Clipboard not supported by this executor")
+        end)
+        local _, importBox = Share:CreateTextBox("Import JSON", 100000, "", function() end)
+        importBox.PlaceholderText = "Paste exported config here..."
+        Share:CreateButton("Import and Apply", function()
+            local raw = importBox.Text
+            local ok, decoded = pcall(function() return HttpService:JSONDecode(raw) end)
+            if not ok or type(decoded) ~= "table" or type(decoded.data) ~= "table" then
+                notify("Import failed", "Invalid config text")
+                return
+            end
+            local clean = {}
+            for k, v in pairs(decoded.data) do
+                if type(k) == "string" and not Library._ConfigIgnore[k] then clean[k] = copy(v) end
+            end
+            local n = readName() or "Imported"
+            profiles()[n] = clean
+            SaveSettings()
+            refreshDropdown(n)
+            task.spawn(applyData, copy(clean))
+            importBox.Text = ""
+            gameSettings()["Import JSON"] = nil
+            notify("Config", "Imported as '" .. n .. "'")
+        end)
+
+        local Acc = Tab:CreateSection("Account")
+        local accPara = Acc:CreateParagraph("Account", "")
+        local function refreshAccount()
+            accPara.SetText(LocalPlayer.Name .. " (" .. LocalPlayer.UserId .. ")\nAutoload: " .. (getAutoload() or "none"))
+        end
+        refreshAccount()
+        Acc:CreateButton("Autoload Selected Profile", function()
+            if not selected then notify("Config", "Select a profile first") return end
+            setAutoload(selected)
+            refreshAccount()
+            notify("Config", "'" .. selected .. "' will load automatically on this account")
+        end)
+        Acc:CreateButton("Clear Autoload", function()
+            setAutoload(nil)
+            refreshAccount()
+        end)
+
+        local al = getAutoload()
+        if al and profiles()[al] then
+            task.delay(0.6, function()
+                refreshDropdown(al)
+                Library:LoadProfile(al)
+            end)
+        end
+        return Tab
+    end
+end
+
 function Library:SetLogo(a, b)
     local image, text
     if type(a) == "table" then
@@ -4378,7 +4719,6 @@ function Library:SetLogo(a, b)
         c.CornerRadius = UDim.new(0, 6)
         c.Parent = Img
 
-        -- ikon melayang saat window di-minimize ikut pakai gambar yang sama
         local Fi = Instance.new("ImageLabel")
         Fi.Name = "LogoImage"
         Fi.Parent = FloatingIcon
@@ -4488,7 +4828,7 @@ function Library:CreateText(texts, duration, colorHex)
     textLabel.Text = texts[1]
     textLabel.TextColor3 = color
     textLabel.TextTransparency = 0
-    textLabel.TextSize = 14 
+    textLabel.TextSize = 14
     textLabel.TextWrapped = true
     textLabel.TextXAlignment = Enum.TextXAlignment.Left
 
@@ -4513,10 +4853,6 @@ function Library:CreateText(texts, duration, colorHex)
     return textContainer
 end
 
-
--- =====================================================================
--- NOTIFICATION SYSTEM (module-level, bisa dipanggil kapan saja)
--- =====================================================================
 Library.ActiveNotifications = {}
 
 function Library:CreateNotification(title, message, duration, buttons, buttonCallbacks)
@@ -4542,7 +4878,6 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
     NotificationFrame.Size = UDim2.new(0, 300, 0, notifHeight)
     NotificationFrame.ZIndex = 100
 
-    -- Background gelap, bukan MainColor
     NotificationBackground.Name = "Background"
     NotificationBackground.Parent = NotificationFrame
     NotificationBackground.BackgroundColor3 = Color3.fromRGB(28, 28, 32)
@@ -4551,7 +4886,6 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
     UICorner.CornerRadius = UDim.new(0, 10)
     UICorner.Parent = NotificationBackground
 
-    -- Top accent strip pakai MainColor
     TopAccent.Name = "TopAccent"
     TopAccent.Parent = NotificationBackground
     TopAccent.BackgroundColor3 = Library.Theme.MainColor
@@ -4605,7 +4939,6 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
         TweenService:Create(CloseButton, TweenInfo.new(0.15), {TextColor3 = Color3.fromRGB(160,160,160)}):Play()
     end)
 
-    -- Timer bar bawah
     TimerBar.Name = "TimerBar"
     TimerBar.Parent = NotificationBackground
     TimerBar.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
@@ -4698,7 +5031,6 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
 
     CloseButton.MouseButton1Click:Connect(closeNotification)
 
-    -- Slide-in dari kanan
     NotificationFrame.Position = UDim2.new(1, 20, 1, -110)
     TweenService:Create(NotificationFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
         Position = UDim2.new(1, -310, 1, -110)
@@ -4707,16 +5039,11 @@ function Library:CreateNotification(title, message, duration, buttons, buttonCal
     return NotificationFrame
 end
 
--- =====================================================================
--- KEY SYSTEM UI
--- =====================================================================
 function Library:CreateKeySystem(config)
     config = config or {}
     local ksTabs = config.tabs or {}
     local tabCount = math.clamp(#ksTabs, 1, 2)
 
-    -- DARK hardcoded background — tidak pakai Library.Theme.BackgroundColor
-    -- karena bisa ter-override oleh LibraryColorTable saat runtime
     local KS_BG      = Color3.fromRGB(22, 22, 26)
     local KS_SURFACE = Color3.fromRGB(30, 30, 36)
     local KS_BORDER  = Color3.fromRGB(48, 48, 58)
@@ -4735,7 +5062,6 @@ function Library:CreateKeySystem(config)
     MainCorner.CornerRadius = UDim.new(0, 10)
     MainCorner.Parent = KSOverlay
 
-    -- Thin accent line di paling atas
     local TopAccent = Instance.new("Frame")
     TopAccent.Name = "TopAccent"
     TopAccent.Parent = KSOverlay
@@ -4749,7 +5075,6 @@ function Library:CreateKeySystem(config)
     TopAccentCorner.CornerRadius = UDim.new(0, 10)
     TopAccentCorner.Parent = TopAccent
 
-    -- Header bar (dark surface)
     local HeaderBar = Instance.new("Frame")
     HeaderBar.Name = "KSHeader"
     HeaderBar.Parent = KSOverlay
@@ -4770,7 +5095,6 @@ function Library:CreateKeySystem(config)
     titleLabel.TextColor3 = Library.Theme.TextColor
     titleLabel.TextSize = 17
 
-    -- Separator bawah header
     local HeaderSep = Instance.new("Frame")
     HeaderSep.Parent = KSOverlay
     HeaderSep.BackgroundColor3 = KS_BORDER
@@ -4779,7 +5103,6 @@ function Library:CreateKeySystem(config)
     HeaderSep.Size = UDim2.new(1, 0, 0, 1)
     HeaderSep.ZIndex = 202
 
-    -- Tab bar (gelap, pakai underline indicator bukan background merah)
     local TabBar = Instance.new("Frame")
     TabBar.Name = "TabBar"
     TabBar.Parent = KSOverlay
@@ -4797,7 +5120,6 @@ function Library:CreateKeySystem(config)
     TabSep.Size = UDim2.new(1, 0, 0, 1)
     TabSep.ZIndex = 202
 
-    -- Content area
     local ContentArea = Instance.new("Frame")
     ContentArea.Name = "ContentArea"
     ContentArea.Parent = KSOverlay
@@ -4816,7 +5138,7 @@ function Library:CreateKeySystem(config)
         for i, tab in ipairs(tabObjects) do
             local isActive = (i == index)
             tab.content.Visible = isActive
-            -- Underline indicator: visible saat active
+
             TweenService:Create(tab.indicator, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                 BackgroundTransparency = isActive and 0 or 1
             }):Play()
@@ -4842,7 +5164,6 @@ function Library:CreateKeySystem(config)
         btn.TextColor3 = Color3.fromRGB(100, 100, 110)
         btn.TextSize = 14
 
-        -- Underline indicator (accent color, bawah tab button)
         local indicator = Instance.new("Frame")
         indicator.Name = "TabIndicator"
         indicator.Parent = btn
@@ -4858,7 +5179,6 @@ function Library:CreateKeySystem(config)
         indicatorCorner.CornerRadius = UDim.new(1, 0)
         indicatorCorner.Parent = indicator
 
-        -- ScrollingFrame content
         local content = Instance.new("ScrollingFrame")
         content.Name = "KSContent"..i
         content.Parent = ContentArea
@@ -4888,10 +5208,10 @@ function Library:CreateKeySystem(config)
         btn.MouseButton1Click:Connect(function() ShowTab(i) end)
 
         local TabAPI = {
-            -- AddLabel: fixed height 20px (tidak pakai AutomaticSize biar tidak collapse)
+
             AddLabel = function(self, text)
                 local t = text or ""
-                -- Jika kosong/spasi → spacer kecil
+
                 local h = (t == "" or t == " ") and 6 or 20
                 local lbl = Instance.new("TextLabel")
                 lbl.Parent = content
@@ -4954,7 +5274,6 @@ function Library:CreateKeySystem(config)
                 return box
             end,
 
-            -- AddButton: solid BackgroundColor3 (bukan ImageLabel) supaya selalu visible
             AddButton = function(self, name, callback)
                 local btn2 = Instance.new("TextButton")
                 btn2.Parent = content
@@ -4973,7 +5292,6 @@ function Library:CreateKeySystem(config)
                 bCorner.CornerRadius = UDim.new(0, 6)
                 bCorner.Parent = btn2
 
-                -- Micro-interaction: press down = scale kecil + gelap
                 btn2.MouseButton1Down:Connect(function()
                     TweenService:Create(btn2, TweenInfo.new(0.08, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                         Size = UDim2.new(0.96, 0, 0, 32),
@@ -5023,9 +5341,6 @@ function Library:CreateKeySystem(config)
     }
 end
 
--- =====================================================================
--- BOTTOM BAR
--- =====================================================================
 function Library:CreateBottomBar()
     local overlay   = Library._lastKSOverlay
     local contentArea = Library._lastKSContentArea
@@ -5035,7 +5350,6 @@ function Library:CreateBottomBar()
         return {SetPlaceholder=function()end, OnSubmit=function()end, AddButton=function()end}
     end
 
-    -- Kurangi tinggi ContentArea supaya ada ruang untuk bottom bar
     if contentArea then
         contentArea.Size = UDim2.new(1, -24, 1, -158)
     end
@@ -5044,7 +5358,6 @@ function Library:CreateBottomBar()
     local KS_SURFACE = Color3.fromRGB(30, 30, 36)
     local KS_BORDER  = Color3.fromRGB(48, 48, 58)
 
-    -- Separator garis di atas bottom bar
     local Sep = Instance.new("Frame")
     Sep.Name = "BottomBarSep"
     Sep.Parent = overlay
