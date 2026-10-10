@@ -1008,8 +1008,8 @@ for name, id in IconData:gmatch("([%w%-]+)=(%d+)") do
 end
 
 local CustomIcons = {
-    pumpkin = 80019912554239, halloween = 80019912554239, ["jack-o-lantern"] = 80019912554239,
-    jackolantern = 80019912554239, spooky = 80019912554239,
+    pumpkin = 96785524532664, halloween = 96785524532664, ["jack-o-lantern"] = 96785524532664,
+    jackolantern = 96785524532664, spooky = 96785524532664,
 }
 for name, id in pairs(CustomIcons) do
     IconAssets[name] = "rbxassetid://" .. id
