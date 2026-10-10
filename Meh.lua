@@ -651,6 +651,9 @@ do
             _Weld2.Part1 = _G['自己身体'].SeatPart
         end
 
+        -- Input comes from Humanoid.MoveDirection, so the same code works with WASD,
+        -- the phone thumbstick and gamepads. Up/Down come from the fly panel buttons
+        -- (phone) or Space / LeftCtrl (PC) through the flags in _G['菜单'].
         Fly = function()
             local _BodyGyro = Instance.new('BodyGyro', _G['自己的方块'])
 
@@ -663,51 +666,56 @@ do
             _BodyVelocity.Velocity = Vector3.new(0, 0.1, 0)
             _BodyVelocity.maxForce = Vector3.new(9000000000, 9000000000, 9000000000)
 
-            local __continue_break_1 = false
+            local heartbeat = game:GetService('RunService').Heartbeat
 
-            while true do
-                local num
+            while _G['菜单']['正在飞行'] do
+                heartbeat:Wait()
 
-                if true then
-                    wait()
+                local ok = pcall(function()
+                    local camCF = game.Workspace.CurrentCamera.CFrame
+                    local move = _G['自己身体'].MoveDirection
+                    local f, r = 0, 0
 
-                    num = _G['菜单']['飞行速度']
+                    if move.Magnitude > 0.05 then
+                        local flatLook = Vector3.new(camCF.LookVector.X, 0, camCF.LookVector.Z)
+                        local flatRight = Vector3.new(camCF.RightVector.X, 0, camCF.RightVector.Z)
 
-                    local baseSpeed = 50
-
-                    if data.l + data.r ~= 0 or data.f + data.b ~= 0 then
-                        if maxSpeed < num then
-                            num = maxSpeed
+                        if flatLook.Magnitude > 0.001 then
+                            f = move:Dot(flatLook.Unit)
                         end
-                    elseif data.l + data.r ~= 0 or data.f + data.b ~= 0 then
-                        num = baseSpeed
-                    else
-                        num = baseSpeed - 50
-
-                        local _ = num < 0
+                        if flatRight.Magnitude > 0.001 then
+                            r = move:Dot(flatRight.Unit)
+                        end
                     end
-                end
-                if data.l + data.r ~= 0 or data.f + data.b ~= 0 then
-                    _BodyVelocity.Velocity = (game.Workspace.CurrentCamera.CoordinateFrame.lookVector * (data.f + data.b) + (game.Workspace.CurrentCamera.CoordinateFrame * CFrame.new(data.l + data.r, (data.f + data.b) * 0.2, 0).p - game.Workspace.CurrentCamera.CoordinateFrame.p)) * num
-                    data2 = {
-                        f = data.f,
-                        b = data.b,
-                        l = data.l,
-                        r = data.r,
-                    }
-                elseif (data.l + data.r == 0 or data.f + data.b == 0) and num ~= 0 then
-                    _BodyVelocity.Velocity = (game.Workspace.CurrentCamera.CoordinateFrame.lookVector * (data2.f + data2.b) + (game.Workspace.CurrentCamera.CoordinateFrame * CFrame.new(data2.l + data2.r, (data2.f + data2.b) * 0.2, 0).p - game.Workspace.CurrentCamera.CoordinateFrame.p)) * num
-                else
+
+                    local v = 0
+
+                    if _G['菜单']['飞行上'] then v = v + 1 end
+                    if _G['菜单']['飞行下'] then v = v - 1 end
+
+                    local speed = math.min(_G['菜单']['飞行速度'], maxSpeed)
+                    local dir = camCF.LookVector * f + camCF.RightVector * r + Vector3.new(0, v, 0)
+
+                    if dir.Magnitude > 1 then
+                        dir = dir.Unit
+                    end
+
+                    if dir.Magnitude > 0.05 then
+                        _BodyVelocity.Velocity = dir * speed
+                    else
+                        _BodyVelocity.Velocity = Vector3.new(0, 0.1, 0)
+                    end
+
+                    _BodyGyro.CFrame = camCF * CFrame.Angles(-math.rad(f * 50 * speed / maxSpeed), 0, 0)
+                end)
+
+                if not ok then
                     _BodyVelocity.Velocity = Vector3.new(0, 0.1, 0)
                 end
-
-                _BodyGyro.CFrame = game.Workspace.CurrentCamera.CoordinateFrame * CFrame.Angles(-math.rad((data.f + data.b) * 50 * num / maxSpeed), 0, 0)
-
-                if _G['菜单']['正在飞行'] then
-                else
-                    break
-                end
             end
+
+            _G['菜单']['飞行上'] = false
+            _G['菜单']['飞行下'] = false
 
             _BodyGyro:Destroy()
             _BodyVelocity:Destroy()
@@ -737,49 +745,6 @@ do
 
             return
         end
-
-        _G['鼠标'].KeyDown:Connect(function(key)
-            if key:lower() ~= 'w' then
-                if key:lower() ~= 'a' then
-                    if key:lower() ~= 's' then
-                        if key:lower() == 'd' then
-                            isSDown = true
-                            data.r = 1
-                        end
-                    else
-                        isSDown = true
-                        data.b = -1
-                    end
-                else
-                    isADown = true
-                    data.l = -1
-                end
-            else
-                isWDown = true
-                data.f = 1
-            end
-        end)
-        _G['鼠标'].KeyUp:Connect(function(key)
-            if key:lower() ~= 'w' then
-                if key:lower() ~= 'a' then
-                    if key:lower() ~= 's' then
-                        if key:lower() == 'd' then
-                            isDDown = false
-                            data.r = 0
-                        end
-                    else
-                        isSDown = false
-                        data.b = 0
-                    end
-                else
-                    isADown = false
-                    data.l = 0
-                end
-            else
-                isWDown = false
-                data.f = 0
-            end
-        end)
 
         if flag then
             if flag then
@@ -3305,6 +3270,251 @@ do
             _G['飞行'](true)
         end
     end)
+    -- ===== Fly panel for phones (also works with mouse) =====
+    local flyPanel = { gui = nil, conns = {} }
+
+    local function destroyFlyPanel()
+        for _, c in ipairs(flyPanel.conns) do
+            pcall(function() c:Disconnect() end)
+        end
+        flyPanel.conns = {}
+        if flyPanel.gui then
+            pcall(function() flyPanel.gui:Destroy() end)
+            flyPanel.gui = nil
+        end
+        _G['菜单']['飞行上'] = false
+        _G['菜单']['飞行下'] = false
+    end
+
+    local function createFlyPanel()
+        if flyPanel.gui then
+            return
+        end
+
+        local UIS = game:GetService('UserInputService')
+        local BASE = Color3.fromRGB(38, 38, 52)
+        local ACTIVE = Color3.fromRGB(90, 120, 255)
+        local ON = Color3.fromRGB(46, 160, 90)
+        local OFF = Color3.fromRGB(170, 55, 55)
+
+        local gui = Instance.new('ScreenGui')
+
+        gui.Name = 'RndmFlyPanel'
+        gui.ResetOnSpawn = false
+        gui.DisplayOrder = 50
+        gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+        local okParent = pcall(function() gui.Parent = game:GetService('CoreGui') end)
+
+        if not okParent or not gui.Parent then
+            gui.Parent = _G['自己']:WaitForChild('PlayerGui')
+        end
+
+        flyPanel.gui = gui
+
+        local function mk(class, props, parent)
+            local inst = Instance.new(class)
+
+            for k, v in pairs(props) do
+                inst[k] = v
+            end
+            inst.Parent = parent
+
+            return inst
+        end
+
+        local function round(inst, r)
+            mk('UICorner', { CornerRadius = UDim.new(0, r or 8) }, inst)
+        end
+
+        local frame = mk('Frame', {
+            Name = 'Panel',
+            Size = UDim2.fromOffset(156, 178),
+            Position = UDim2.new(1, -176, 0.5, -89),
+            BackgroundColor3 = Color3.fromRGB(18, 18, 26),
+            BackgroundTransparency = 0.12,
+            BorderSizePixel = 0,
+        }, gui)
+
+        round(frame, 12)
+
+        local title = mk('TextButton', {
+            Size = UDim2.new(1, -34, 0, 28),
+            BackgroundTransparency = 1,
+            Text = '≡  Fly (drag)',
+            TextColor3 = Color3.fromRGB(220, 220, 235),
+            TextSize = 14,
+            Font = Enum.Font.GothamBold,
+            AutoButtonColor = false,
+        }, frame)
+
+        local collapse = mk('TextButton', {
+            Size = UDim2.fromOffset(28, 22),
+            Position = UDim2.new(1, -31, 0, 3),
+            BackgroundColor3 = BASE,
+            Text = '–',
+            TextColor3 = Color3.new(1, 1, 1),
+            TextSize = 16,
+            Font = Enum.Font.GothamBold,
+        }, frame)
+
+        round(collapse, 6)
+
+        local body = mk('Frame', {
+            Size = UDim2.new(1, 0, 1, -30),
+            Position = UDim2.fromOffset(0, 30),
+            BackgroundTransparency = 1,
+        }, frame)
+
+        local function button(text, size, pos)
+            local b = mk('TextButton', {
+                Size = size,
+                Position = pos,
+                BackgroundColor3 = BASE,
+                Text = text,
+                TextColor3 = Color3.new(1, 1, 1),
+                TextSize = 18,
+                Font = Enum.Font.GothamBold,
+                AutoButtonColor = false,
+            }, body)
+
+            round(b, 8)
+
+            return b
+        end
+
+        local flyBtn = button('FLY: OFF', UDim2.new(1, -16, 0, 40), UDim2.fromOffset(8, 0))
+        local upBtn = button('▲ UP', UDim2.new(0.5, -12, 0, 46), UDim2.fromOffset(8, 48))
+        local downBtn = button('▼ DOWN', UDim2.new(0.5, -12, 0, 46), UDim2.new(0.5, 4, 0, 48))
+        local minus = button('-', UDim2.fromOffset(40, 34), UDim2.fromOffset(8, 102))
+        local plus = button('+', UDim2.fromOffset(40, 34), UDim2.new(1, -48, 0, 102))
+        local speedLabel = mk('TextLabel', {
+            Size = UDim2.new(1, -104, 0, 34),
+            Position = UDim2.fromOffset(52, 102),
+            BackgroundTransparency = 1,
+            Text = '',
+            TextColor3 = Color3.fromRGB(220, 220, 235),
+            TextSize = 14,
+            Font = Enum.Font.GothamBold,
+        }, body)
+
+        -- hold-to-fly up/down (multi-touch safe: tracks the exact finger)
+        local function hold(btn, key)
+            btn.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    _G['菜单'][key] = true
+                    btn.BackgroundColor3 = ACTIVE
+
+                    local conn
+
+                    conn = input.Changed:Connect(function()
+                        if input.UserInputState == Enum.UserInputState.End then
+                            _G['菜单'][key] = false
+                            btn.BackgroundColor3 = BASE
+                            conn:Disconnect()
+                        end
+                    end)
+                end
+            end)
+        end
+
+        hold(upBtn, '飞行上')
+        hold(downBtn, '飞行下')
+
+        flyBtn.Activated:Connect(function()
+            if _G['菜单']['飞行'] ~= false then
+                _G['菜单']['飞行'] = false
+                task.spawn(function() pcall(_G['飞行'], false) end)
+            else
+                _G['菜单']['飞行'] = true
+                task.spawn(function() pcall(_G['飞行'], true) end)
+            end
+        end)
+
+        local function changeSpeed(delta)
+            local v = math.clamp((_G['菜单']['飞行速度'] or 200) + delta, 50, 500)
+
+            _G['菜单']['飞行速度'] = v
+            pcall(function() getgenv().FlySpeed = v end)
+        end
+
+        minus.Activated:Connect(function() changeSpeed(-25) end)
+        plus.Activated:Connect(function() changeSpeed(25) end)
+
+        -- collapse
+        local collapsed = false
+
+        collapse.Activated:Connect(function()
+            collapsed = not collapsed
+            body.Visible = not collapsed
+            frame.Size = collapsed and UDim2.fromOffset(156, 30) or UDim2.fromOffset(156, 178)
+            collapse.Text = collapsed and '+' or '–'
+        end)
+
+        -- drag by title
+        local dragInput, dragStart, startPos
+
+        title.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+                dragInput, dragStart, startPos = input, input.Position, frame.Position
+
+                input.Changed:Connect(function()
+                    if input.UserInputState == Enum.UserInputState.End then
+                        dragInput = nil
+                    end
+                end)
+            end
+        end)
+        table.insert(flyPanel.conns, UIS.InputChanged:Connect(function(input)
+            if dragInput and input == dragInput then
+                local d = input.Position - dragStart
+
+                frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + d.X, startPos.Y.Scale, startPos.Y.Offset + d.Y)
+            end
+        end))
+
+        -- PC keys: Space = up, LeftCtrl = down
+        table.insert(flyPanel.conns, UIS.InputBegan:Connect(function(input, processed)
+            if processed or not _G['菜单']['正在飞行'] then return end
+            if input.KeyCode == Enum.KeyCode.Space then _G['菜单']['飞行上'] = true end
+            if input.KeyCode == Enum.KeyCode.LeftControl then _G['菜单']['飞行下'] = true end
+        end))
+        table.insert(flyPanel.conns, UIS.InputEnded:Connect(function(input)
+            if input.KeyCode == Enum.KeyCode.Space then _G['菜单']['飞行上'] = false end
+            if input.KeyCode == Enum.KeyCode.LeftControl then _G['菜单']['飞行下'] = false end
+        end))
+
+        -- keep labels in sync (also when fly is toggled from the menu / Q key)
+        task.spawn(function()
+            while flyPanel.gui == gui and not u.IsUnloaded() do
+                local flying = _G['菜单']['正在飞行'] == true
+
+                flyBtn.Text = flying and 'FLY: ON' or 'FLY: OFF'
+                flyBtn.BackgroundColor3 = flying and ON or OFF
+                speedLabel.Text = tostring(math.floor(_G['菜单']['飞行速度'] or 0))
+                task.wait(0.2)
+            end
+
+            if flyPanel.gui == gui then
+                destroyFlyPanel()
+            end
+        end)
+    end
+
+    local UISvc = game:GetService('UserInputService')
+    local isPhone = UISvc.TouchEnabled and not UISvc.KeyboardEnabled
+
+    _Player2:Toggle('Fly Panel (phone buttons)', isPhone, function(enabled)
+        if enabled then
+            createFlyPanel()
+        else
+            destroyFlyPanel()
+        end
+    end)
+
+    if isPhone then
+        createFlyPanel()
+    end
     _Player2:Toggle('NoClip', false, function(enabled)
         _G['穿墙'](enabled)
     end)
@@ -5396,6 +5606,69 @@ do
         repeat
             _G['复制斧头']()
         until _G['菜单']['自动复制斧头'] == false
+    end)
+
+    -- Drops every axe you are holding (backpack + equipped). While ON it keeps checking,
+    -- so axes that show up after a dupe get dropped too. Only real axes are touched.
+    local dropAxesRun = 0
+
+    _AxeDupe:Toggle('Drop All Axes', false, function(enabled)
+        dropAxesRun = dropAxesRun + 1
+
+        local run = dropAxesRun
+
+        if not enabled then
+            return
+        end
+
+        task.spawn(function()
+            local axeNames = {}
+
+            for _, name in ipairs(_G['获得所有斧头']()) do
+                axeNames[name] = true
+            end
+
+            local n = 0
+
+            while dropAxesRun == run and not u.IsUnloaded() do
+                local char = _G['自己角色']
+                local root = char and char:FindFirstChild('HumanoidRootPart')
+
+                if root then
+                    local axes = {}
+
+                    for _, container in ipairs({ _G['自己'].Backpack, char }) do
+                        for _, t in ipairs(container:GetChildren()) do
+                            if t:IsA('Tool') then
+                                local tn = t:FindFirstChild('ToolName')
+
+                                if tn and axeNames[tostring(tn.Value)] then
+                                    table.insert(axes, t)
+                                end
+                            end
+                        end
+                    end
+
+                    for _, t in ipairs(axes) do
+                        if dropAxesRun ~= run or not root.Parent then
+                            break
+                        end
+
+                        n = n + 1
+
+                        -- spread them out in a small grid in front of you
+                        local spot = root.CFrame * CFrame.new(((n % 5) - 2) * 3, -2, -5 - (math.floor(n / 5) % 4) * 3)
+
+                        pcall(function()
+                            game:GetService('ReplicatedStorage').Interaction.ClientInteracted:FireServer(t, 'Drop tool', spot)
+                        end)
+                        task.wait(0.15)
+                    end
+                end
+
+                task.wait(0.5)
+            end
+        end)
     end)
 
     local _Wipe = _Slot:Section('Wipe')
