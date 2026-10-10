@@ -196,11 +196,14 @@ do
             ['Slot'] = 'save',
             ['Dupe'] = 'copy',
             ['Auto Buy'] = 'shopping-cart',
+            ['Pumpkin'] = 'shopping-bag',
             ['Items'] = 'package',
             ['Vehicle'] = 'car',
             ['AutoBuild'] = 'hammer',
             ['Troll'] = 'skull',
             ['Settings'] = 'settings',
+            ['Halloween'] = 'spooky',
+            
         }
 
         local built = 0
@@ -360,6 +363,51 @@ do
                         if v then pcall(cb, v) end
                     end
                 end
+            end
+
+            function S:NumberInput(title, default, min, max, cb, step, bind)
+                breathe()
+                cb = cb or function() end
+                min = min or 1
+                max = max or 100
+                default = tonumber(default) or min
+                step = step or 1
+
+                if type(container.CreateNumberInput) ~= 'function' then
+                    return S:TextBox(title, tostring(default), function(text)
+                        local n = tonumber(text)
+                        if n then
+                            cb(math.max(min, math.min(max, n)))
+                        end
+                    end)
+                end
+
+                local ready = false
+                local obj = container:CreateNumberInput(uniq(title), min, max, default, function(v)
+                    if ready and tonumber(v) then
+                        cb(tonumber(v))
+                    end
+                end, step, bind)
+                ready = true
+
+                if type(obj) == 'table' and type(obj.GetValue) == 'function' then
+                    local ok, v = pcall(obj.GetValue)
+                    if ok and tonumber(v) then
+                        pcall(cb, tonumber(v))
+                    end
+                end
+
+                return {
+                    SetValue = function(_, v)
+                        pcall(function()
+                            obj.SetValue(v)
+                        end)
+                    end,
+                    GetValue = function()
+                        local ok, v = pcall(obj.GetValue)
+                        return ok and v or nil
+                    end,
+                }
             end
 
             function S:KeyBind(title, key, cb, mode)
@@ -2126,6 +2174,7 @@ do
 
         local Status = Home:Section('Server Status')
         local labels, lastText, lastNotify, esp = {}, {}, {}, {}
+        local choppedSeen = setmetatable({}, { __mode = 'k' })
         local notifyOn, espOn = false, false
         local viewOn, viewTarget, viewChoice = false, nil, 'Any'
 
@@ -2260,7 +2309,16 @@ do
             for _, t in ipairs(TRACK) do
                 local list = res[t.class]
                 local cutList = cut[t.class]
+                for _, m in ipairs(cutList) do
+                    choppedSeen[m] = true
+                end
                 local n = #list
+                local fresh = 0
+                for _, m in ipairs(list) do
+                    if not choppedSeen[m] then
+                        fresh = fresh + 1
+                    end
+                end
                 local text
                 if n > 0 then
                     text = string.format('%s : ✅ Exists (%d)', t.name, n)
@@ -2274,12 +2332,9 @@ do
                     labels[t.class].Text = text
                 end
 
-                if notifyOn and n > 0 and tick() - (lastNotify[t.class] or -120) >= 120 then
+                if notifyOn and fresh > 0 and tick() - (lastNotify[t.class] or -120) >= 120 then
                     lastNotify[t.class] = tick()
                     _G['提醒'](t.name .. ' tree exists in this server!')
-                end
-                if n == 0 then
-                    lastNotify[t.class] = nil
                 end
 
                 for _, entry in ipairs({ { list, false }, { cutList, true } }) do
@@ -2569,15 +2624,10 @@ do
             cfg.size = v
             save()
         end, cfg.size)
-        Opt:TextBox('Small/Big limit (sections)', tostring(cfg.limit), function(v)
-            local n = tonumber(v)
-            if n and n >= 1 then
-                cfg.limit = math.floor(n)
-                save()
-            else
-                _G['提醒']('Limit must be a number')
-            end
-        end)
+        Opt:NumberInput('Small/Big limit (sections)', tonumber(cfg.limit) or 1, 1, 1000, function(n)
+            cfg.limit = math.floor(n)
+            save()
+        end, 1)
         Opt:Toggle('Find Spooky + SpookyNeon both', cfg.both, function(v)
             cfg.both = v
             save()
@@ -3311,7 +3361,7 @@ do
     _Tp:Button('Tp to Player', function()
         _G['传送'](_G['玩家'][_G['菜单']['传送的玩家'] ].Character.HumanoidRootPart.CFrame)
     end)
-    _Tp:DropDown('Tp To Place', {
+    _Tp:DropDown('Select Place', {
         'Spawn',
         'Wood R Us',
         'Land Store',
@@ -3334,6 +3384,15 @@ do
         'Ski Lodge',
         'Fur Wood',
     }, false, false, function(option)
+        _G['菜单']['传送的地点'] = option
+    end)
+    _Tp:Button('Tp to Place', function()
+        local option = _G['菜单']['传送的地点']
+
+        if not option then
+            return _G['提醒']('Select a place first')
+        end
+
         if option == 'Wood R Us' then
             _G['传送'](CFrame.new(270, 4, 60))
         elseif option == 'Spawn' then
@@ -3496,6 +3555,68 @@ do
     for _, item in nextFn2, items, startKey2 do
         if item:FindFirstChild('ItemImage') then
             CreateSlot(item.ItemImage.Value)
+        end
+    end
+
+    do
+        local origNamecall = nil
+        local hooked = false
+        local wrap = newcclosure or function(f) return f end
+
+        _G['EnsureNamecallHook'] = function()
+            if hooked then
+                return
+            end
+
+            if not (hookmetamethod and getnamecallmethod) then
+                _G['提醒']('Executor has no hookmetamethod, Water God Mode and Wire Mod will not work')
+                return
+            end
+
+            local installed = pcall(function()
+                origNamecall = hookmetamethod(game, '__namecall', wrap(function(obj, ...)
+                    local method = getnamecallmethod()
+
+                    if method == 'FireServer' or method == 'fireServer' then
+                        if _G['菜单']['水中无敌'] and typeof(obj) == 'Instance' and obj.Name == 'DamageHumanoid' then
+                            return
+                        end
+                    elseif method == 'FindPartOnRayWithIgnoreList' then
+                        if _G['菜单']['超级电线'] then
+                            local _, ignoreList = ...
+
+                            if type(ignoreList) == 'table' and ignoreList[2] then
+                                setnamecallmethod(method)
+
+                                return origNamecall(obj, Ray.new(Vector3.new(0, 0, 0), Vector3.new(0, 0, 0)), select(2, ...))
+                            end
+                        end
+                    end
+
+                    return origNamecall(obj, ...)
+                end))
+            end)
+
+            if not installed then
+                _G['提醒']('Failed to hook namecall, Water God Mode and Wire Mod will not work')
+                return
+            end
+
+            hooked = true
+
+            if hookfunction then
+                pcall(function()
+                    local fireRemote = Instance.new('RemoteEvent')
+                    local origFire
+                    origFire = hookfunction(fireRemote.FireServer, wrap(function(self, ...)
+                        if _G['菜单']['水中无敌'] and typeof(self) == 'Instance' and self.Name == 'DamageHumanoid' then
+                            return
+                        end
+
+                        return origFire(self, ...)
+                    end))
+                end)
+            end
         end
     end
 
@@ -3840,9 +3961,9 @@ do
             _G['菜单']['树的大小'] = 'Smallest'
         end
     end)
-    _BringTree:TextBox('Tree Amount', '1', function(text)
-        _G['菜单']['带来树的数量'] = tonumber(text)
-    end)
+    _BringTree:NumberInput('Tree Amount', 1, 1, 999, function(n)
+        _G['菜单']['带来树的数量'] = n
+    end, 1)
     _G['菜单']['基地斧头'] = false
     _BringTree:Toggle('Use End Times Axe in base if gone', false, function(v)
         _G['菜单']['基地斧头'] = v
@@ -4153,14 +4274,9 @@ do
                 farmSize = 'Smallest'
             end
         end, 'Medium')
-        _Farm:TextBox('Min tree sections (Smallest)', '3', function(v)
-            local n = tonumber(v)
-            if n and n >= 1 then
-                _G['菜单']['最小木块数'] = math.floor(n)
-            else
-                _G['提醒']('Must be a number')
-            end
-        end)
+        _Farm:NumberInput('Min tree sections (Smallest)', 3, 1, 999, function(n)
+            _G['菜单']['最小木块数'] = math.floor(n)
+        end, 1)
         _Farm:Button('Select Sawmill', function()
             _G['菜单']['选择的锯木机'] = _G['选择锯木机']()
             pcall(function() _G['处理树锯木机'].Text = 'Selected' end)
@@ -5266,9 +5382,9 @@ do
         _G['菜单']['自动捡斧头'] = enabled
     end)
 
-    _AxeDupe:TextBox('Amount', '1', function(text)
-        _G['菜单']['复制斧头数量'] = tonumber(text)
-    end)
+    _AxeDupe:NumberInput('Amount', 1, 1, 999, function(n)
+        _G['菜单']['复制斧头数量'] = n
+    end, 1)
     _AxeDupe:Button('Dupe Axe', function()
         for _ = 1, _G['菜单']['复制斧头数量']do
             _G['复制斧头']()
@@ -5346,12 +5462,12 @@ do
         ShackShop = {
             Character = game.Workspace.Stores.ShackShop.Bob,
             Name = 'Bob',
-            ID = tonumber(12),
+            ID = tonumber(13),
         },
         FineArt = {
             Character = game.Workspace.Stores.FineArt.Timothy,
             Name = 'Timothy',
-            ID = tonumber(13),
+            ID = tonumber(12),
         },
         LogicStore = {
             Character = game.Workspace.Stores.LogicStore.Lincoln,
@@ -5370,14 +5486,25 @@ do
     _G['商人缓存'] = {}
     _G['商店ID文件'] = 'Rndm_npc_ids.json'
     _G['商店ID已载入'] = false
-    _G['固定商店ID'] = { WoodRUs = 9, FurnitureStore = 10, CarStore = 11, ShackShop = 12, FineArt = 13, LogicStore = 14 }
+    _G['固定商店ID'] = { WoodRUs = 9, FurnitureStore = 10, CarStore = 11, ShackShop = 13, FineArt = 12, LogicStore = 14 }
+    -- ShackShop (Bob) and FineArt (Timothy) swap between 12 and 13 depending on the server,
+    -- so they are NOT trusted as fixed: they get probed once per session instead.
+    _G['可变商店'] = { ShackShop = true, FineArt = true }
+    _G.FixedStoreIDs = {}
+    for k, v in pairs(_G['固定商店ID']) do
+        if not _G['可变商店'][k] then
+            _G.FixedStoreIDs[k] = v
+        end
+    end
     _G['已知NPCID'] = {
-        [9] = 'Thom', [10] = 'Corey', [11] = 'Jenny', [12] = 'Bob', [13] = 'Timothy', [14] = 'Lincoln',
+        [9] = 'Thom', [10] = 'Corey', [11] = 'Jenny', [13] = 'Bob', [12] = 'Timothy', [14] = 'Lincoln',
         [4] = 'Ruhven', [17] = 'Merely', [15] = 'Hoover', [6] = 'Strange Man',
     }
     _G['已确认商店ID'] = {}
     for k, v in pairs(_G['固定商店ID']) do
-        _G['已确认商店ID'][k] = v
+        if not _G['可变商店'][k] then
+            _G['已确认商店ID'][k] = v
+        end
     end
     _G['载入商店ID'] = function()
         if _G['商店ID已载入'] then
@@ -5445,6 +5572,8 @@ do
             end
         end
         add(info.ID)
+        add(12)
+        add(13)
         for i = 1, 60 do
             if not _G['已知NPCID'][i] then
                 add(i)
@@ -6179,6 +6308,25 @@ do
 
         return
     end
+    do
+        local runBuy = _G['自动购买v2']
+
+        _G['自动购买v2'] = function(...)
+            if _G.BuyRunning then
+                return _G['提醒']('Another auto buy is already running')
+            end
+
+            _G.BuyRunning = true
+
+            local ok, err = pcall(runBuy, ...)
+
+            _G.BuyRunning = false
+
+            if not ok then
+                _G['提醒']('Buy error: ' .. tostring(err))
+            end
+        end
+    end
     _G['获得商品名字'] = function()
         _G['全部商品'] = {}
 
@@ -6423,11 +6571,27 @@ do
         updateTotal()
     end)
 
-    _AutoBuy2:TextBox('Amount', '1', function(text)
-        _G['菜单']['自动购买的数量'] = tonumber(text)
-        pcall(refreshItemPrices)
+    local amountToken = 0
+
+    _AutoBuy2:NumberInput('Amount', 1, 1, 999, function(n)
+        _G['菜单']['自动购买的数量'] = n
         updateTotal()
-    end)
+
+        -- Rebuilding the whole item dropdown (every store box + price) on each +/- tap
+        -- is what froze the game. Wait until the number stops changing, then do it once.
+        amountToken = amountToken + 1
+
+        local token = amountToken
+
+        task.delay(0.6, function()
+            if token ~= amountToken or u.IsUnloaded() then
+                return
+            end
+
+            pcall(refreshItemPrices)
+            pcall(updateTotal)
+        end)
+    end, 1)
     totalLabel = _AutoBuy2:Label('Total: pick an item')
     _G.BuyProgressLabel = _AutoBuy2:Label('Progress: -')
 
@@ -6931,6 +7095,452 @@ do
         end)
     end
 
+    do
+        local _Pumpkin = window:CreateTab('Halloween', '')
+        local _PBuy = _Pumpkin:Section('Auto Buy')
+        local RS = game:GetService('ReplicatedStorage')
+        local ITEM = 'PumpkinCarved'
+        local state = {
+            amount = 1,
+            itemCF = nil,
+            placed = 0,
+            placedDests = {},
+            openConn = nil,
+            moveRun = 0,
+            marker = nil,
+            opening = {},
+        }
+
+        pcall(function()
+            for _, child in ipairs(game.Workspace:GetChildren()) do
+                if child.Name == 'RndmItemPin' then
+                    child:Destroy()
+                end
+            end
+        end)
+
+        _PBuy:Label('Item: ' .. ITEM)
+        _PBuy:NumberInput('Amount', 1, 1, 999, function(n)
+            state.amount = math.max(1, math.floor(n))
+        end, 1)
+
+        local function startBuy(loop)
+            if _G.BuyRunning then
+                return _G['提醒']('Another auto buy is already running')
+            end
+
+            local menu = _G['菜单']
+            local origin = _G['自己的方块'].CFrame
+            local pin = menu['自动购买箱子地点']
+
+            menu['自动购买停止'] = false
+            menu['自动购买的地点'] = pin or origin
+            menu['自动购买用锚点'] = pin ~= nil
+
+            _G['自动购买v2'](ITEM, loop and 0 or state.amount, loop and true or nil, nil)
+
+            menu['自动购买用锚点'] = false
+
+            _G['传送'](origin)
+        end
+
+        _PBuy:Button('Buy', function()
+            task.spawn(startBuy, false)
+        end)
+        _PBuy:Toggle('Loop Auto Buy', false, function(enabled)
+            if enabled then
+                task.spawn(startBuy, true)
+            else
+                _G['菜单']['自动购买停止'] = true
+            end
+        end)
+        _PBuy:Button('Abort', function()
+            _G['菜单']['自动购买停止'] = true
+        end, { stopper = true })
+
+        local _POpen = _Pumpkin:Section('Auto Open')
+        local pmFolder = game.Workspace:WaitForChild('PlayerModels', 10)
+
+        state.opening = {}
+        state.boxPos = setmetatable({}, { __mode = 'k' })
+        state.boxDrops = {}
+        state.firstSeen = setmetatable({}, { __mode = 'k' })
+        state.handled = setmetatable({}, { __mode = 'k' })
+        state.reserved = {}
+        state.moves = {}
+        state.openRun = 0
+
+        local function isMyBox(model)
+            local owner = model:FindFirstChild('Owner')
+            local boxName = model:FindFirstChild('PurchasedBoxItemName')
+
+            return owner ~= nil and boxName ~= nil and owner.Value == _G['自己'] and tostring(boxName.Value) == ITEM
+        end
+
+        local function pivotPos(model)
+            local ok, pos = pcall(function() return model:GetPivot().Position end)
+
+            return ok and pos or nil
+        end
+
+        -- Remember where each of my boxes was; when a box disappears (= opened),
+        -- the pumpkin that spawns there belongs to that "drop".
+        if pmFolder then
+            pmFolder.ChildRemoved:Connect(function(child)
+                local pos = state.boxPos[child]
+
+                if pos then
+                    state.boxPos[child] = nil
+                    table.insert(state.boxDrops, { pos = pos, t = tick(), used = false })
+                end
+            end)
+        end
+
+        local function openBox(box)
+            if state.opening[box] then
+                return
+            end
+
+            state.opening[box] = true
+
+            task.spawn(function()
+                -- No waiting for the buy run or for the box to reach the buy spot:
+                -- open as soon as the box exists and keep retrying until it's gone.
+                for _ = 1, 14 do
+                    if not box.Parent or u.IsUnloaded() then
+                        break
+                    end
+
+                    pcall(function()
+                        RS.Interaction.ClientInteracted:FireServer(box, 'Open box')
+                    end)
+                    task.wait(0.5)
+                end
+
+                state.opening[box] = nil
+            end)
+        end
+
+        _POpen:Toggle('Auto Open Box', false, function(enabled)
+            state.openRun = state.openRun + 1
+
+            local run = state.openRun
+
+            if state.openConn then
+                state.openConn:Disconnect()
+                state.openConn = nil
+            end
+
+            if not enabled or not pmFolder then
+                return
+            end
+
+            -- Event: new box shows up. Wait for BOTH Owner and PurchasedBoxItemName
+            -- (the old code only waited for Owner, so boxes were skipped at random).
+            state.openConn = pmFolder.ChildAdded:Connect(function(child)
+                task.spawn(function()
+                    if not child:WaitForChild('Owner', 5) then
+                        return
+                    end
+                    if not child:WaitForChild('PurchasedBoxItemName', 5) then
+                        return
+                    end
+
+                    if state.openRun == run and isMyBox(child) then
+                        openBox(child)
+                    end
+                end)
+            end)
+
+            -- Safety net: sweep every 0.5s so a missed event never leaves a box closed.
+            task.spawn(function()
+                while state.openRun == run and not u.IsUnloaded() do
+                    for _, model in ipairs(pmFolder:GetChildren()) do
+                        if isMyBox(model) then
+                            openBox(model)
+                        end
+                    end
+
+                    task.wait(0.5)
+                end
+            end)
+        end)
+
+        local _PPos = _Pumpkin:Section('After Open')
+        local posLabel = _PPos:Label('Item position: not set')
+
+        local function setItemPos(cf)
+            state.itemCF = cf
+            state.reserved = {}
+
+            if state.marker then
+                pcall(function() state.marker:Destroy() end)
+                state.marker = nil
+            end
+
+            if cf then
+                pcall(function()
+                    local part = Instance.new('Part')
+
+                    part.Name = 'RndmItemPin'
+                    part.Shape = Enum.PartType.Ball
+                    part.Size = Vector3.new(1.5, 1.5, 1.5)
+                    part.Material = Enum.Material.Neon
+                    part.Color = Color3.fromRGB(255, 140, 0)
+                    part.Transparency = 0.35
+                    part.Anchored = true
+                    part.CanCollide = false
+                    part.CanQuery = false
+                    part.CanTouch = false
+                    part.Position = cf.Position - Vector3.new(0, 2.5, 0)
+                    part.Parent = game.Workspace
+                    state.marker = part
+                end)
+
+                local p = cf.Position
+
+                posLabel.Text = string.format('Item position: %d, %d, %d', math.floor(p.X), math.floor(p.Y), math.floor(p.Z))
+            else
+                posLabel.Text = 'Item position: not set'
+            end
+        end
+
+        _PPos:Button('Set Item Position (here)', function()
+            setItemPos(_G['自己的方块'].CFrame)
+            _G['提醒']('Item position saved')
+        end)
+        _PPos:Button('Clear Item Position', function()
+            setItemPos(nil)
+            _G['提醒']('Item position cleared')
+        end)
+
+        local function isNewItem(model)
+            local itemName = model:FindFirstChild('ItemName')
+            local owner = model:FindFirstChild('Owner')
+
+            return itemName ~= nil and owner ~= nil and itemName.Value == ITEM and owner.Value == _G['自己'] and not model:FindFirstChild('PurchasedBoxItemName')
+        end
+
+        -- A pumpkin counts as "fresh from my box" only if it appeared right where
+        -- one of my boxes just got opened. Pumpkins riding a conveyor, or ones the
+        -- server re-creates after a move, are never picked up again.
+        local function claimDrop(model)
+            local pos = pivotPos(model)
+
+            if not pos then
+                return false
+            end
+
+            local now = tick()
+
+            for i = #state.boxDrops, 1, -1 do
+                local d = state.boxDrops[i]
+
+                if now - d.t > 20 then
+                    table.remove(state.boxDrops, i)
+                elseif not d.used and (Vector3.new(pos.X, 0, pos.Z) - Vector3.new(d.pos.X, 0, d.pos.Z)).Magnitude <= 30 then
+                    d.used = true
+
+                    return true
+                end
+            end
+
+            return false
+        end
+
+        local function isMoveReplacement(model)
+            local pos = pivotPos(model)
+
+            if not pos then
+                return false
+            end
+
+            local now = tick()
+
+            for _, m in ipairs(state.moves) do
+                if now < m.untilT and (pos - m.dest.Position).Magnitude <= 12 then
+                    return true
+                end
+            end
+
+            return false
+        end
+
+        local SPACING = 3.5
+
+        local function slotCF(idx)
+            local base = state.itemCF.Position - Vector3.new(0, 2.5, 0)
+            local col = idx % 4
+            local row = math.floor(idx / 4) % 4
+            local layer = math.floor(idx / 16)
+
+            return CFrame.new(base + Vector3.new(col * SPACING, layer * 3, row * SPACING))
+        end
+
+        local function slotTaken(idx, cf)
+            if state.reserved[idx] then
+                return true
+            end
+
+            for _, model in ipairs(pmFolder:GetChildren()) do
+                if isNewItem(model) then
+                    local pos = pivotPos(model)
+
+                    if pos then
+                        local dx = Vector3.new(pos.X - cf.Position.X, 0, pos.Z - cf.Position.Z).Magnitude
+
+                        if dx <= 2 and math.abs(pos.Y - cf.Position.Y) <= 4 then
+                            return true
+                        end
+                    end
+                end
+            end
+
+            return false
+        end
+
+        -- Compact grid next to the pin (world axes, 4x4 per layer). Reuses free
+        -- slots instead of walking further and further away from the pin.
+        local function reserveSlot()
+            for idx = 0, 200 do
+                local cf = slotCF(idx)
+
+                if not slotTaken(idx, cf) then
+                    state.reserved[idx] = true
+
+                    return idx, cf
+                end
+            end
+
+            return nil
+        end
+
+        local function moveItem(item, dest, idx)
+            local rec = { dest = dest, untilT = tick() + 10 }
+
+            table.insert(state.moves, rec)
+
+            for _ = 1, 3 do
+                if not item.Parent then
+                    break
+                end
+
+                pcall(function()
+                    RS.PlaceStructure.ClientPlacedStructure:FireServer(item.ItemName.Value, dest, item.Owner.Value, nil, item, true)
+                end)
+                task.wait(0.7)
+
+                local pos = item.Parent and pivotPos(item)
+
+                if not item.Parent or (pos and (pos - dest.Position).Magnitude <= 6) then
+                    break
+                end
+            end
+
+            -- Fallback only if the item is still alive and clearly not at the target.
+            if item.Parent then
+                local pos = pivotPos(item)
+
+                if pos and (pos - dest.Position).Magnitude > 6 then
+                    pcall(value6, item, dest)
+                end
+            end
+
+            task.wait(1)
+            state.reserved[idx] = nil
+
+            for i, m in ipairs(state.moves) do
+                if m == rec then
+                    table.remove(state.moves, i)
+
+                    break
+                end
+            end
+        end
+
+        _PPos:Toggle('Auto TP After Open', false, function(enabled)
+            state.moveRun = state.moveRun + 1
+
+            local run = state.moveRun
+
+            if not enabled or not pmFolder then
+                return
+            end
+
+            if not state.itemCF then
+                _G['提醒']('Set item position first')
+            end
+
+            -- Everything that exists right now is ignored.
+            for _, model in ipairs(pmFolder:GetChildren()) do
+                if isNewItem(model) then
+                    state.handled[model] = true
+                end
+            end
+
+            task.spawn(function()
+                while state.moveRun == run and not u.IsUnloaded() do
+                    -- keep box positions fresh so we know where a box was when it vanishes
+                    for _, model in ipairs(pmFolder:GetChildren()) do
+                        if isMyBox(model) then
+                            local pos = pivotPos(model)
+
+                            if pos then
+                                state.boxPos[model] = pos
+                            end
+                        end
+                    end
+
+                    if state.itemCF then
+                        for _, model in ipairs(pmFolder:GetChildren()) do
+                            if not state.handled[model] and isNewItem(model) then
+                                state.firstSeen[model] = state.firstSeen[model] or tick()
+
+                                local fromDrop = false
+
+                                if isMoveReplacement(model) then
+                                    -- server re-created an item we just moved: leave it alone
+                                    state.handled[model] = true
+                                else
+                                    fromDrop = claimDrop(model)
+
+                                    -- Box-removal tracking is only a preference. If no drop matched
+                                    -- after a short wait, still move it (every instance is moved at
+                                    -- most once, so it can't loop). This is what stopped it working.
+                                    if fromDrop or tick() - state.firstSeen[model] >= 1.5 then
+                                        state.handled[model] = true
+
+                                        local idx, dest = reserveSlot()
+
+                                        if idx then
+                                            task.spawn(moveItem, model, dest, idx)
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+
+                    task.wait(0.25)
+                end
+            end)
+        end)
+
+        task.spawn(function()
+            while not u.IsUnloaded() do
+                task.wait(1)
+            end
+
+            if state.openConn then
+                pcall(function() state.openConn:Disconnect() end)
+            end
+
+            if state.marker then
+                pcall(function() state.marker:Destroy() end)
+            end
+        end)
+    end
+
     local _Items = window:CreateTab('Items', '6035030083')
     local _Position = _Items:Section('Position')
 
@@ -7216,102 +7826,132 @@ do
             end
         end
     end)
-    _Item:Button('Tp All Selected Item', function()
-        if game.Workspace:FindFirstChild('darkx') then
-            _G['传送的东西'] = {}
+    u.TpSelectedItems = function(targetCF, spread)
+        _G['传送的东西'] = {}
 
-            local nextFn3 = next
-            local models, startKey3 = _G.SelectModels()
+        local nextFn3 = next
+        local models, startKey3 = _G.SelectModels()
 
-            for _, model in nextFn3, models, startKey3 do
-                if model:FindFirstChild('Owner') then
-                    if tostring(model.Owner.Value) == _G['菜单']['传送的玩家'] then
-                        if model:FindFirstChild('SelectionBox') then
-                            if not model.PrimaryPart then
-                                model.PrimaryPart = model:FindFirstChildOfClass('Part')
-                            end
-
-                            table.insert(_G['传送的东西'], model)
+        for _, model in nextFn3, models, startKey3 do
+            if model:FindFirstChild('Owner') then
+                if tostring(model.Owner.Value) == _G['菜单']['传送的玩家'] then
+                    if model:FindFirstChild('SelectionBox') then
+                        if not model.PrimaryPart then
+                            model.PrimaryPart = model:FindFirstChildOfClass('Part')
                         end
+
+                        table.insert(_G['传送的东西'], model)
                     end
                 end
             end
+        end
 
-            _G['菜单']['传送停止'] = false
+        _G['菜单']['传送停止'] = false
 
-            local _CFrame11 = _G['自己的方块'].CFrame
-            local __continue_break_4 = false
+        local _CFrame11 = _G['自己的方块'].CFrame
+        local __continue_break_4 = false
 
-            for _, item in next, _G['传送的东西']do
-                if _G['菜单']['传送停止'] ~= true then
-                    item:FindFirstChild('SelectionBox'):Destroy()
+        for idx, item in next, _G['传送的东西'] do
+            if _G['菜单']['传送停止'] ~= true then
+                local dest = targetCF
 
+                if spread then
+                    dest = targetCF * CFrame.new(((idx - 1) % 5) * 4 - 8, 0, math.floor((idx - 1) / 5) * 4)
+                end
+
+                item:FindFirstChild('SelectionBox'):Destroy()
+
+                item.PrimaryPart.Anchored = false
+
+                if item:FindFirstChildOfClass('Part') and item:FindFirstChild('WoodSection') or item:FindFirstChild('PurchasedBoxItemName') then
                     item.PrimaryPart.Anchored = false
 
-                    if item:FindFirstChildOfClass('Part') and item:FindFirstChild('WoodSection') or item:FindFirstChild('PurchasedBoxItemName') then
-                        item.PrimaryPart.Anchored = false
+                    _G['传送'](CFrame.new(item.PrimaryPart.Position.X, _G['自己的方块'].Position.Y, item.PrimaryPart.Position.Z) + Vector3.new(1, 0, 0))
 
-                        _G['传送'](CFrame.new(item.PrimaryPart.Position.X, _G['自己的方块'].Position.Y, item.PrimaryPart.Position.Z) + Vector3.new(1, 0, 0))
+                    item.PrimaryPart.Velocity = Vector3.new(0, 0, 0)
+                    item.PrimaryPart.RotVelocity = Vector3.new(0, 0, 0)
 
-                        item.PrimaryPart.Velocity = Vector3.new(0, 0, 0)
-                        item.PrimaryPart.RotVelocity = Vector3.new(0, 0, 0)
-
-                        if item:FindFirstChild('WoodSection') then
-                            if _G['木头竖着传送'] then
-                                value6(item, game.Workspace.darkx.CFrame)
-                            else
-                                value6(item, game.Workspace.darkx.CFrame * CFrame.Angles(-90, 0, 90))
-                            end
+                    if item:FindFirstChild('WoodSection') then
+                        if _G['木头竖着传送'] then
+                            value6(item, dest)
                         else
-                            value6(item, game.Workspace.darkx.CFrame)
+                            value6(item, dest * CFrame.Angles(-90, 0, 90))
                         end
-
-                        game:GetService('RunService').Stepped:wait()
-                        task.wait()
-                        task.wait()
-                        pcall(function()
-                            item:FindFirstChild('SelectionBox'):Destroy()
-                        end)
                     else
-                        pcall(function()
-                            item:FindFirstChild('SelectionBox'):Destroy()
-                        end)
-                        pcall(function()
-                            if item:FindFirstChild('ItemName') then
-                                local _p3 = game.Workspace.darkx.CFrame.p
-                                local value
-
-                                repeat
-                                    game:GetService('ReplicatedStorage').PlaceStructure.ClientPlacedStructure:FireServer(item.ItemName.Value, game.Workspace.darkx.CFrame, item.Owner.Value, nil, item, true)
-
-                                    value = item.PrimaryPart.CFrame.p
-
-                                    task.wait(0.1)
-                                until (value - _p3).Magnitude <= 5
-                            end
-                        end)
-                        wait()
+                        value6(item, dest)
                     end
+
+                    game:GetService('RunService').Stepped:wait()
+                    task.wait()
+                    task.wait()
+                    pcall(function()
+                        item:FindFirstChild('SelectionBox'):Destroy()
+                    end)
                 else
-                    break
+                    pcall(function()
+                        item:FindFirstChild('SelectionBox'):Destroy()
+                    end)
+                    pcall(function()
+                        if item:FindFirstChild('ItemName') then
+                            local _p3 = dest.p
+                            local value
+
+                            repeat
+                                game:GetService('ReplicatedStorage').PlaceStructure.ClientPlacedStructure:FireServer(item.ItemName.Value, dest, item.Owner.Value, nil, item, true)
+
+                                value = item.PrimaryPart.CFrame.p
+
+                                task.wait(0.1)
+                            until (value - _p3).Magnitude <= 5
+                        end
+                    end)
+                    wait()
                 end
+            else
+                break
             end
+        end
 
-            _G['传送'](_CFrame11)
+        _G['传送'](_CFrame11)
 
-            _G['菜单']['飞行'] = false
+        _G['菜单']['飞行'] = false
 
-            spawn(function()
-                _G['飞行'](false)
-            end)
-            _G['穿墙'](false)
+        spawn(function()
+            _G['飞行'](false)
+        end)
+        _G['穿墙'](false)
 
-            _G['菜单']['飞行速度'] = _G['旧的飞行速度']
+        _G['菜单']['飞行速度'] = _G['旧的飞行速度']
 
-            return
-        else
+    end
+
+    _Item:Button('Tp All Selected Item', function()
+        local marker = game.Workspace:FindFirstChild('darkx')
+
+        if not marker then
             return _G['提醒']('Please Set Position')
         end
+
+        u.TpSelectedItems(marker.CFrame, false)
+    end)
+    _Item:Button('Tp Selected Items To Base', function()
+        local baseCF = nil
+
+        for _, land in ipairs(_G['土地']:GetChildren()) do
+            local owner = land:FindFirstChild('Owner')
+
+            if owner and owner.Value == _G['自己'] and land:FindFirstChild('OriginSquare') then
+                baseCF = land.OriginSquare.CFrame + Vector3.new(0, 4, 0)
+
+                break
+            end
+        end
+
+        if not baseCF then
+            return _G['提醒']('You dont have a base')
+        end
+
+        u.TpSelectedItems(baseCF, true)
     end)
     _Item:Toggle('Standing Wood', false, function(enabled)
         _G['菜单']['木头竖着传送'] = enabled
@@ -7322,12 +7962,12 @@ do
 
     local _BoxSort = _Items:Section('Box Sort')
 
-    _BoxSort:TextBox('X', '5', function(text)
-        _G['菜单']['整理物品X'] = tonumber(text)
-    end)
-    _BoxSort:TextBox('Z', '5', function(text)
-        _G['菜单']['整理物品Z'] = tonumber(text)
-    end)
+    _BoxSort:NumberInput('X', 5, 1, 100, function(n)
+        _G['菜单']['整理物品X'] = n
+    end, 1)
+    _BoxSort:NumberInput('Z', 5, 1, 100, function(n)
+        _G['菜单']['整理物品Z'] = n
+    end, 1)
     _BoxSort:Button('Start', function()
         local tbl = {}
         local tbl2 = {}
@@ -8745,6 +9385,7 @@ do
 
     local _Settings = window:CreateTab('Settings', '6031280882')
     local _Util = _Settings:Section('Utility')
+    Library:CreateConfigTab()
     Library:CreateThemeTab()
 
     
@@ -8968,66 +9609,6 @@ do
 
     u.BuildSettings()
     _G['提醒']('Rndm load success')
-
-    local origNamecall = nil
-    local hooked = false
-    local wrap = newcclosure or function(f) return f end
-
-    _G['EnsureNamecallHook'] = function()
-        if hooked then
-            return
-        end
-
-        if not (hookmetamethod and getnamecallmethod) then
-            _G['提醒']('Executor has no hookmetamethod, Water God Mode and Wire Mod will not work')
-            return
-        end
-
-        local installed = pcall(function()
-            origNamecall = hookmetamethod(game, '__namecall', wrap(function(obj, ...)
-                local method = getnamecallmethod()
-
-                if method == 'FireServer' or method == 'fireServer' then
-                    if _G['菜单']['水中无敌'] and typeof(obj) == 'Instance' and obj.Name == 'DamageHumanoid' then
-                        return
-                    end
-                elseif method == 'FindPartOnRayWithIgnoreList' then
-                    if _G['菜单']['超级电线'] then
-                        local _, ignoreList = ...
-
-                        if type(ignoreList) == 'table' and ignoreList[2] then
-                            setnamecallmethod(method)
-
-                            return origNamecall(obj, Ray.new(Vector3.new(0, 0, 0), Vector3.new(0, 0, 0)), select(2, ...))
-                        end
-                    end
-                end
-
-                return origNamecall(obj, ...)
-            end))
-        end)
-
-        if not installed then
-            _G['提醒']('Failed to hook namecall, Water God Mode and Wire Mod will not work')
-            return
-        end
-
-        hooked = true
-
-        if hookfunction then
-            pcall(function()
-                local fireRemote = Instance.new('RemoteEvent')
-                local origFire
-                origFire = hookfunction(fireRemote.FireServer, wrap(function(self, ...)
-                    if _G['菜单']['水中无敌'] and typeof(self) == 'Instance' and self.Name == 'DamageHumanoid' then
-                        return
-                    end
-
-                    return origFire(self, ...)
-                end))
-            end)
-        end
-    end
 
     return
 end
