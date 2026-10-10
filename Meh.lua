@@ -1,4 +1,6 @@
 print('loading')
+-- If you trying to skid, please give credit into your ui or your Script pages.
+-- I can take down ur script if u just skid and didn't give any credit for it.
 -- It is indeed from Dark X V5.0, but revamped. Feel free to take the script if u want. but gip me some credit too? :>
 repeat
     wait(0.1)
