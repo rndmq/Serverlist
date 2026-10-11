@@ -1,5 +1,17 @@
 print('loading')
+-- If you trying to skid, please give credit into your ui or your Script pages.
+-- I can take down ur script if u just skid and didn't give any credit for it.
 -- It is indeed from Dark X V5.0, but revamped. Feel free to take the script if u want. but gip me some credit too? :>
+
+--[[
+Copyright (c) 2026 Rndm.
+software and associated documentation files.
+
+THE FOLLOWING CONDITIONS MUST BE MET:
+1. You must include the original copyright notice and permission notice in all copies or substantial portions of the Software.
+2. Credit must be placed anywhere within the script, user interface, or documentation, provided it is CLEARLY VISIBLE to the end-user.
+]]
+
 repeat
     wait(0.1)
 until game:IsLoaded()
@@ -6061,6 +6073,11 @@ do
         local rep = game:GetService('ReplicatedStorage')
         local drag = rep.Interaction.ClientIsDragging
         local invoke = rep.NPCDialog.PlayerChatted
+        local track = _G.BuyTrack
+
+        if not track then
+            track = { total = 0, list = {}, seen = {}, carried = {}, credit = function() end }
+        end
 
         local function stopped()
             return menu['自动购买停止'] == true
@@ -6208,10 +6225,15 @@ do
         end
 
         local function ping()
-            local ok = pcall(function() rep.TestPing:InvokeServer() end)
-            if not ok then
+            local done = false
+            task.spawn(function()
+                pcall(function() rep.TestPing:InvokeServer() end)
+                done = true
+            end)
+            local t0 = tick()
+            repeat
                 RS.Heartbeat:Wait()
-            end
+            until done or tick() - t0 > 1
         end
 
         local function owns(part)
@@ -6266,50 +6288,89 @@ do
             _G['提醒']('Buying ' .. tostring(arg) .. ' at ' .. storeName .. ' (' .. tostring(npc.Name) .. ' #' .. tostring(npc.ID) .. ')')
         end
 
-        local invoking, lastInvoke = false, 0
-        local function confirm()
-            if invoking and tick() - lastInvoke < 1.5 then
-                return
-            end
-            invoking = true
-            lastInvoke = tick()
-            task.spawn(function()
-                pcall(function() invoke:InvokeServer(npc, 'Initiate') end)
-                pcall(function() invoke:InvokeServer(npc, 'ConfirmPurchase') end)
-                invoking = false
-            end)
-        end
-
-        local arrived = {}
-        local arrivalConn = game.Workspace.PlayerModels.ChildAdded:Connect(function(child)
-            task.spawn(function()
-                local ov = child:WaitForChild('Owner', 5)
-                if ov and ov.Value == _G['自己'] then
-                    arrived[child] = true
-                end
-            end)
-        end)
-
-        local function validArrivals()
-            local list = {}
-            for child in pairs(arrived) do
-                local pv = child:FindFirstChild('PurchasedBoxItemName')
-                if child.Parent == game.Workspace.PlayerModels and pv and pv.Value == arg then
-                    list[#list + 1] = child
-                end
-            end
-            return list
-        end
+        local startTotal = track.total
+        local boughtSet, boughtN = {}, 0
 
         local function boughtCount()
-            local c = 0
             for _, it in ipairs(batch) do
-                if isBought(it) then
-                    c = c + 1
+                if not boughtSet[it] and isBought(it) then
+                    boughtSet[it] = true
+                    boughtN = boughtN + 1
                 end
             end
-            return math.max(c, #validArrivals())
+            return math.max(boughtN, track.total - startTotal)
         end
+
+        local function settle()
+            local deadline = tick() + 3
+            repeat
+                local ready = true
+                for i, it in ipairs(batch) do
+                    if not isBought(it) then
+                        local p = partOf(it)
+                        if p then
+                            if (p.Position - counter.Position).Magnitude > 8 then
+                                put(it, i)
+                                ready = false
+                            elseif not owns(p) then
+                                pcall(function() drag:FireServer(it) end)
+                                ready = false
+                            end
+                        end
+                    end
+                end
+                if ready or stopped() then
+                    return
+                end
+                ping()
+            until tick() > deadline
+        end
+
+        settle()
+
+        local active = true
+        local inflight = false
+        local session = 0
+
+        local function attempt()
+            session = session + 1
+            local mine = session
+            inflight = true
+            pcall(function() invoke:InvokeServer(npc, 'Initiate') end)
+            if active and session == mine then
+                pcall(function() invoke:InvokeServer(npc, 'ConfirmPurchase') end)
+            end
+            if session == mine then
+                inflight = false
+            end
+        end
+
+        task.spawn(function()
+            while active and not stopped() do
+                task.spawn(attempt)
+                local t0 = tick()
+                repeat
+                    task.wait(0.05)
+                until not inflight or not active or tick() - t0 > 4
+                if not active then
+                    break
+                end
+                local before = boughtCount()
+                local t1 = tick()
+                repeat
+                    task.wait(0.1)
+                until not active or boughtCount() > before or tick() - t1 > 1.5
+                if not active then
+                    break
+                end
+                if boughtCount() <= before then
+                    task.spawn(function()
+                        pcall(function() invoke:InvokeServer(npc, 'EndChat') end)
+                    end)
+                    task.wait(0.3)
+                end
+            end
+        end)
 
         local reason = nil
         local lastCount = 0
@@ -6322,7 +6383,6 @@ do
                 break
             end
 
-            confirm()
             RS.Heartbeat:Wait()
 
             local count = boughtCount()
@@ -6368,6 +6428,14 @@ do
             end
         end
 
+        active = false
+
+        local drainEnd = tick() + 1.5
+        while inflight and tick() < drainEnd do
+            task.wait(0.05)
+        end
+        endChat()
+
         if reason == 'fail' then
             task.wait(1)
         end
@@ -6377,8 +6445,19 @@ do
             pcall(function() base = _G['自己的方块'].CFrame end)
         end
         local startIdx = _G['数量'] or 0
-        local carried = {}
         local carriedCount = 0
+
+        local function validArrivals()
+            local list, keep = {}, {}
+            for _, child in ipairs(track.list) do
+                if child.Parent == game.Workspace.PlayerModels and not track.carried[child] then
+                    list[#list + 1] = child
+                    keep[#keep + 1] = child
+                end
+            end
+            track.list = keep
+            return list
+        end
 
         local function carryNew()
             if not base then
@@ -6387,10 +6466,10 @@ do
 
             local pending = {}
             local function consider(it)
-                if carried[it] or not it.Parent then
+                if track.carried[it] or not it.Parent then
                     return
                 end
-                carried[it] = true
+                track.carried[it] = true
                 carriedCount = carriedCount + 1
                 local i = carriedCount
                 local dest
@@ -6466,14 +6545,17 @@ do
 
         local total = carryNew()
         total = total + carryNew()
-        pcall(function() arrivalConn:Disconnect() end)
 
-        if total > 0 and _G['已确认商店ID'][storeName] ~= npc.ID then
+        local seenArrivals = track.total - startTotal
+        local made = math.max(boughtN, seenArrivals)
+        if boughtN > seenArrivals then
+            track.credit(boughtN - seenArrivals)
+        end
+
+        if made > 0 and _G['已确认商店ID'][storeName] ~= npc.ID then
             npc.Verified = true
             _G['存商店ID'](storeName, npc.ID)
         end
-
-        endChat()
 
         return total, reason
     end
@@ -6517,7 +6599,57 @@ do
         end
         show()
 
+        local me = _G['自己']
+        local track = {
+            item = arg1,
+            total = 0,
+            list = {},
+            seen = setmetatable({}, { __mode = 'k' }),
+            carried = setmetatable({}, { __mode = 'k' }),
+        }
+
+        function track.credit(k)
+            prog.bought = prog.bought + k
+            show()
+        end
+
+        local watcher = nil
+        local folder = game.Workspace:FindFirstChild('PlayerModels')
+        if folder then
+            watcher = folder.ChildAdded:Connect(function(child)
+                task.spawn(function()
+                    local ov = child:WaitForChild('Owner', 5)
+                    if not ov or (ov.Value ~= nil and ov.Value ~= me) then
+                        return
+                    end
+                    local pv = child:WaitForChild('PurchasedBoxItemName', 5)
+                    if not pv then
+                        return
+                    end
+                    for _ = 1, 20 do
+                        local name = tostring(pv.Value)
+                        if (ov.Value ~= nil and ov.Value ~= me) or (name ~= '' and name ~= tostring(arg1)) then
+                            return
+                        end
+                        if ov.Value == me and name == tostring(arg1) then
+                            if not track.seen[child] then
+                                track.seen[child] = true
+                                track.total = track.total + 1
+                                track.list[#track.list + 1] = child
+                                track.credit(1)
+                            end
+                            return
+                        end
+                        task.wait(0.1)
+                    end
+                end)
+            end)
+        end
+
+        _G.BuyTrack = track
+
         local reason = nil
+        local failStreak = 0
         local loopOk, loopErr = pcall(function()
             while prog.bought < prog.target do
                 if menu['自动购买停止'] == true then
@@ -6525,24 +6657,39 @@ do
                     break
                 end
 
-                local got, why = _G.BuyBatch(arg1, prog.target - prog.bought, prog.store)
-                prog.bought = prog.bought + got
+                local before = prog.bought
+                local _, why = _G.BuyBatch(arg1, prog.target - prog.bought, prog.store)
                 _G['数量'] = prog.bought
                 show()
 
-                if why then
+                if why and why ~= 'fail' then
                     reason = why
                     break
                 end
-                if got == 0 then
-                    reason = 'fail'
-                    break
+
+                if prog.bought > before then
+                    failStreak = 0
+                else
+                    failStreak = failStreak + 1
+                    if failStreak >= 3 then
+                        reason = 'fail'
+                        break
+                    end
+                    _G['提醒'](string.format('Stuck buying %s, retrying (%d/3)...', tostring(arg1), failStreak))
+                    task.wait(1)
                 end
             end
         end)
         if not loopOk then
             reason = 'error'
             _G['提醒']('Buy error: ' .. tostring(loopErr))
+        end
+
+        if watcher then
+            pcall(function() watcher:Disconnect() end)
+        end
+        if _G.BuyTrack == track then
+            _G.BuyTrack = nil
         end
 
         pcall(function()
@@ -7451,15 +7598,26 @@ do
             return ok and pos or nil
         end
 
-        -- Remember where each of my boxes was; when a box disappears (= opened),
-        -- the pumpkin that spawns there belongs to that "drop".
         if pmFolder then
             pmFolder.ChildRemoved:Connect(function(child)
-                local pos = state.boxPos[child]
+                if not isMyBox(child) then
+                    return
+                end
+
+                local pos = pivotPos(child) or state.boxPos[child]
+
+                state.boxPos[child] = nil
 
                 if pos then
-                    state.boxPos[child] = nil
-                    table.insert(state.boxDrops, { pos = pos, t = tick(), used = false })
+                    local now = tick()
+
+                    for i = #state.boxDrops, 1, -1 do
+                        if now - state.boxDrops[i].t > 30 then
+                            table.remove(state.boxDrops, i)
+                        end
+                    end
+
+                    table.insert(state.boxDrops, { pos = pos, t = now, used = false })
                 end
             end)
         end
@@ -7589,10 +7747,7 @@ do
             return itemName ~= nil and owner ~= nil and itemName.Value == ITEM and owner.Value == _G['自己'] and not model:FindFirstChild('PurchasedBoxItemName')
         end
 
-        -- A pumpkin counts as "fresh from my box" only if it appeared right where
-        -- one of my boxes just got opened. Pumpkins riding a conveyor, or ones the
-        -- server re-creates after a move, are never picked up again.
-        local function claimDrop(model)
+        local function claimDrop(model, seenAt)
             local pos = pivotPos(model)
 
             if not pos then
@@ -7602,15 +7757,28 @@ do
             local now = tick()
 
             for i = #state.boxDrops, 1, -1 do
-                local d = state.boxDrops[i]
-
-                if now - d.t > 20 then
+                if now - state.boxDrops[i].t > 20 then
                     table.remove(state.boxDrops, i)
-                elseif not d.used and (Vector3.new(pos.X, 0, pos.Z) - Vector3.new(d.pos.X, 0, d.pos.Z)).Magnitude <= 30 then
-                    d.used = true
-
-                    return true
                 end
+            end
+
+            local best, bestDist = nil, math.huge
+
+            for _, d in ipairs(state.boxDrops) do
+                if not d.used then
+                    local dt = seenAt - d.t
+                    local dist = (Vector3.new(pos.X, 0, pos.Z) - Vector3.new(d.pos.X, 0, d.pos.Z)).Magnitude
+
+                    if dt >= -2 and dt <= 6 and dist <= 30 and dist < bestDist then
+                        best, bestDist = d, dist
+                    end
+                end
+            end
+
+            if best then
+                best.used = true
+
+                return true
             end
 
             return false
@@ -7645,22 +7813,32 @@ do
             return CFrame.new(base + Vector3.new(col * SPACING, layer * 3, row * SPACING))
         end
 
-        local function slotTaken(idx, cf)
-            if state.reserved[idx] then
-                return true
-            end
+        local function occupiedList()
+            local list = {}
 
             for _, model in ipairs(pmFolder:GetChildren()) do
                 if isNewItem(model) then
                     local pos = pivotPos(model)
 
                     if pos then
-                        local dx = Vector3.new(pos.X - cf.Position.X, 0, pos.Z - cf.Position.Z).Magnitude
-
-                        if dx <= 2 and math.abs(pos.Y - cf.Position.Y) <= 4 then
-                            return true
-                        end
+                        list[#list + 1] = pos
                     end
+                end
+            end
+
+            return list
+        end
+
+        local function slotTaken(idx, cf, occupied)
+            if state.reserved[idx] then
+                return true
+            end
+
+            for _, pos in ipairs(occupied) do
+                local dx = Vector3.new(pos.X - cf.Position.X, 0, pos.Z - cf.Position.Z).Magnitude
+
+                if dx <= 2 and math.abs(pos.Y - cf.Position.Y) <= 4 then
+                    return true
                 end
             end
 
@@ -7670,10 +7848,12 @@ do
         -- Compact grid next to the pin (world axes, 4x4 per layer). Reuses free
         -- slots instead of walking further and further away from the pin.
         local function reserveSlot()
+            local occupied = occupiedList()
+
             for idx = 0, 200 do
                 local cf = slotCF(idx)
 
-                if not slotTaken(idx, cf) then
+                if not slotTaken(idx, cf, occupied) then
                     state.reserved[idx] = true
 
                     return idx, cf
@@ -7764,26 +7944,18 @@ do
                             if not state.handled[model] and isNewItem(model) then
                                 state.firstSeen[model] = state.firstSeen[model] or tick()
 
-                                local fromDrop = false
-
                                 if isMoveReplacement(model) then
-                                    -- server re-created an item we just moved: leave it alone
                                     state.handled[model] = true
-                                else
-                                    fromDrop = claimDrop(model)
+                                elseif claimDrop(model, state.firstSeen[model]) then
+                                    state.handled[model] = true
 
-                                    -- Box-removal tracking is only a preference. If no drop matched
-                                    -- after a short wait, still move it (every instance is moved at
-                                    -- most once, so it can't loop). This is what stopped it working.
-                                    if fromDrop or tick() - state.firstSeen[model] >= 1.5 then
-                                        state.handled[model] = true
+                                    local idx, dest = reserveSlot()
 
-                                        local idx, dest = reserveSlot()
-
-                                        if idx then
-                                            task.spawn(moveItem, model, dest, idx)
-                                        end
+                                    if idx then
+                                        task.spawn(moveItem, model, dest, idx)
                                     end
+                                elseif tick() - state.firstSeen[model] >= 3 then
+                                    state.handled[model] = true
                                 end
                             end
                         end
