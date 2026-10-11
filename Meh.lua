@@ -1,16 +1,5 @@
 print('loading')
--- If you trying to skid, please give credit into your ui or your Script pages.
--- I can take down ur script if u just skid and didn't give any credit for it.
 -- It is indeed from Dark X V5.0, but revamped. Feel free to take the script if u want. but gip me some credit too? :>
-
---[[
-Copyright (c) 2026 Rndm.
-software and associated documentation files.
-
-THE FOLLOWING CONDITIONS MUST BE MET:
-1. You must include the original copyright notice and permission notice in all copies or substantial portions of the Software.
-2. Credit must be placed anywhere within the script, user interface, or documentation, provided it is CLEARLY VISIBLE to the end-user.
-]]
 repeat
     wait(0.1)
 until game:IsLoaded()
@@ -3512,10 +3501,8 @@ do
         end)
     end
 
-    local UISvc = game:GetService('UserInputService')
-    local isPhone = UISvc.TouchEnabled and not UISvc.KeyboardEnabled
-
-    _Player2:Toggle('Fly Panel (phone buttons)', isPhone, function(enabled)
+    -- Panel only exists while this toggle is ON (default OFF, never auto-created).
+    _Player2:Toggle('Fly Panel (phone buttons)', false, function(enabled)
         if enabled then
             createFlyPanel()
         else
@@ -3523,9 +3510,6 @@ do
         end
     end)
 
-    if isPhone then
-        createFlyPanel()
-    end
     _Player2:Toggle('NoClip', false, function(enabled)
         _G['穿墙'](enabled)
     end)
