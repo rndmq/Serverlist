@@ -309,8 +309,10 @@ local function MakeDraggable(topbarobject, object)
             DragStart = input.Position
             StartPosition = object.Position
 
-            input.Changed:Connect(function()
+            local endConn
+            endConn = input.Changed:Connect(function()
                 if input.UserInputState == Enum.UserInputState.End then
+                    endConn:Disconnect()
                     Dragging = false
                 end
             end)
@@ -665,6 +667,10 @@ MinimizeBtn.MouseButton1Click:Connect(function()
     end
 end)
 
+Library.ToggleUI = function()
+    if Minimized then MaximizeUI() else MinimizeUI() end
+end
+
 local function MakeDraggableWithTracking(gui)
     local UserInputService = game:GetService("UserInputService")
     local dragging
@@ -687,16 +693,19 @@ local function MakeDraggableWithTracking(gui)
     gui.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = true
-            dragStart = input.Position
+            local pressStart = input.Position
+            dragStart = pressStart
             startPos = gui.Position
             isDragging = true
 
-            input.Changed:Connect(function()
+            local endConn
+            endConn = input.Changed:Connect(function()
                 if input.UserInputState == Enum.UserInputState.End then
+                    endConn:Disconnect()
                     dragging = false
                     isDragging = false
 
-                    if (input.Position - dragStart).Magnitude < 5 then
+                    if (input.Position - pressStart).Magnitude < 5 then
                         if Minimized then MaximizeUI() else MinimizeUI() end
                     end
                 end
@@ -1014,6 +1023,31 @@ local CustomIcons = {
 for name, id in pairs(CustomIcons) do
     IconAssets[name] = "rbxassetid://" .. id
 end
+do
+    local seen = {}
+    for _, id in pairs(CustomIcons) do
+        local old = "rbxassetid://" .. id
+        if not seen[old] then
+            seen[old] = true
+            task.spawn(function()
+                local tex
+                pcall(function()
+                    local o = game:GetObjects(old)[1]
+                    if o and (o:IsA("Decal") or o:IsA("Texture")) and o.Texture ~= "" then tex = o.Texture end
+                end)
+                if not tex then return end
+                for n, v in pairs(IconAssets) do
+                    if v == old then IconAssets[n] = tex end
+                end
+                for _, d in ipairs(UILibrary:GetDescendants()) do
+                    if d:IsA("ImageLabel") or d:IsA("ImageButton") then
+                        if d.Image == old then d.Image = tex end
+                    end
+                end
+            end)
+        end
+    end
+end
 local IconNames = {}
 for name in pairs(IconAssets) do table.insert(IconNames, name) end
 table.sort(IconNames)
@@ -1039,7 +1073,22 @@ local IconAliases = {
 local function ResolveIcon(icon)
     if icon == nil or icon == false or icon == "" then return nil end
     local s = tostring(icon)
-    if s:match("^%d+$") then return "rbxassetid://" .. s end
+    if s:match("^%d+$") then
+        local url = "rbxassetid://" .. s
+        task.spawn(function()
+            local tex
+            pcall(function()
+                local o = game:GetObjects(url)[1]
+                if o and (o:IsA("Decal") or o:IsA("Texture")) and o.Texture ~= "" then tex = o.Texture end
+            end)
+            if tex then
+                for _, d in ipairs(UILibrary:GetDescendants()) do
+                    if (d:IsA("ImageLabel") or d:IsA("ImageButton")) and d.Image == url then d.Image = tex end
+                end
+            end
+        end)
+        return url
+    end
     if s:match("^rbxassetid://") or s:match("^rbxasset://") or s:match("^https?://") then return s end
 
     local key = s:lower():gsub("^lucide[%-_ ]", ""):gsub("[%s_]+", "-")
@@ -4552,6 +4601,33 @@ do
         return true
     end
 
+    local DEFAULT_TOGGLE_KEY = "RightShift"
+    local rebinding = false
+    local function getToggleKey()
+        local k = Settings.__ToggleKey
+        if k == nil then return DEFAULT_TOGGLE_KEY end
+        if k == false or k == "None" then return nil end
+        return k
+    end
+    function Library:SetToggleKey(key)
+        local name
+        if typeof(key) == "EnumItem" then name = key.Name elseif type(key) == "string" and key ~= "" then name = key end
+        Settings.__ToggleKey = name or "None"
+        SaveSettings()
+    end
+    function Library:GetToggleKey()
+        return getToggleKey()
+    end
+    UserInputService.InputBegan:Connect(function(input, processed)
+        if processed or rebinding then return end
+        if input.UserInputType ~= Enum.UserInputType.Keyboard then return end
+        if UserInputService:GetFocusedTextBox() then return end
+        local k = getToggleKey()
+        if k and input.KeyCode.Name == k and Library.ToggleUI then
+            Library.ToggleUI()
+        end
+    end)
+
     function Library:CreateConfigTab(tabName, icon)
         tabName = tabName or "Config"
         local gs = gameSettings()
@@ -4636,6 +4712,39 @@ do
             importBox.Text = ""
             gameSettings()["Import JSON"] = nil
             notify("Config", "Imported as '" .. n .. "'")
+        end)
+
+        local Short = Tab:CreateSection("Shortcut")
+        local keyPara = Short:CreateParagraph("Minimize / Maximize Key", "")
+        local function refreshKey()
+            local k = getToggleKey()
+            keyPara.SetText("Current key: " .. (k or "none") .. "\nPC only. Press the key to minimize or maximize the window.")
+        end
+        refreshKey()
+        Short:CreateButton("Change Shortcut Key", function()
+            if rebinding then return end
+            rebinding = true
+            keyPara.SetText("Press a key... (Backspace or Delete disables the shortcut)")
+            local conn
+            conn = UserInputService.InputBegan:Connect(function(input)
+                if input.UserInputType ~= Enum.UserInputType.Keyboard then return end
+                conn:Disconnect()
+                local n = input.KeyCode.Name
+                if n == "Backspace" or n == "Delete" then
+                    Library:SetToggleKey(nil)
+                elseif n ~= "Unknown" then
+                    Library:SetToggleKey(input.KeyCode)
+                end
+                task.delay(0.1, function()
+                    rebinding = false
+                    refreshKey()
+                end)
+            end)
+        end)
+        Short:CreateButton("Reset Shortcut Key", function()
+            Settings.__ToggleKey = nil
+            SaveSettings()
+            refreshKey()
         end)
 
         local Acc = Tab:CreateSection("Account")
