@@ -3610,6 +3610,13 @@ end
             local LoadFromPreset = false
             local JustBinded = false
 
+            local kbGameId = tostring(game.PlaceId)
+            if not Settings[kbGameId] then Settings[kbGameId] = {} end
+            local savedBind = Settings[kbGameId][name]
+            if type(savedBind) == "string" and savedBind ~= "" then
+                OldBind = savedBind
+            end
+
             local NotAllowedKeys = {
                 Return = true,
                 Space = true,
@@ -3726,6 +3733,24 @@ end
                 KeybindButton.Text = "None"
             end
 
+            local function applyBind(bindName)
+                OldBind = bindName
+                if bindName == "Unknown" then
+                    KeybindButton.Text = "None"
+                else
+                    KeybindButton.Text = ShortenedNames[bindName] or bindName
+                end
+            end
+
+            local function saveBind()
+                Settings[kbGameId][name] = OldBind
+                SaveSettings()
+            end
+
+            if type(savedBind) == "string" and savedBind ~= "" then
+                applyBind(savedBind)
+            end
+
             KeybindButton.MouseButton1Click:Connect(function()
                 if Library.CurrentlyBinding then return end
 
@@ -3739,6 +3764,7 @@ end
                     OldBind = Enum.KeyCode.Unknown.Name
                     Library.CurrentlyBinding = false
                     JustBinded = false
+                    saveBind()
                     return
                 end
 
@@ -3748,6 +3774,7 @@ end
                     OldBind = BindName
                     Library.CurrentlyBinding = false
                     JustBinded = true
+                    saveBind()
                 else
                     KeybindButton.Text = ShortenedNames[OldBind] or OldBind
                     Library.CurrentlyBinding = false
@@ -3798,6 +3825,26 @@ end
                     end
                 end)
             end
+
+            if Library._RegSetter then
+                Library._RegSetter(kbGameId, name, function(v)
+                    if type(v) == "string" and v ~= "" then
+                        applyBind(v)
+                        JustBinded = false
+                    end
+                end)
+            end
+
+            return {
+                SetKey = function(k)
+                    local n = (typeof(k) == "EnumItem" and k.Name) or tostring(k)
+                    applyBind(n)
+                    JustBinded = false
+                    saveBind()
+                end,
+                GetKey = function() return OldBind end,
+                Frame = NameKeybind,
+            }
         end
 
         return SectionElements
