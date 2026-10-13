@@ -1653,6 +1653,442 @@ function SectionElements:CreateParagraph(title, text)
     return { SetText = SetText, SetTitle = SetTitle, Frame = Paragraph }
 end
 
+function SectionElements:CreateEmbed(source, imageUrl, width, height, title, card)
+    source = tostring(source or "")
+    local link, img, w, h, alt = source, imageUrl, tonumber(width), tonumber(height), title
+    if source:find("<a", 1, true) or source:find("<img", 1, true) then
+        local function unesc(x) return x and (x:gsub("&amp;", "&"):gsub("&quot;", '"'):gsub("&#39;", "'")) end
+        link = unesc(source:match('href%s*=%s*"([^"]+)"') or source:match("href%s*=%s*'([^']+)'")) or ""
+        img = img or unesc(source:match('src%s*=%s*"([^"]+)"') or source:match("src%s*=%s*'([^']+)'"))
+        w = w or tonumber(source:match('width%s*=%s*"?(%d+)'))
+        h = h or tonumber(source:match('height%s*=%s*"?(%d+)'))
+        alt = alt or unesc(source:match('alt%s*=%s*"([^"]*)"'))
+    end
+    w = (w and w > 0) and w or 360
+    h = (h and h > 0) and h or 132
+    alt = (alt and alt ~= "") and alt or link
+
+    local Holder = Instance.new("Frame")
+    Holder.Name = tostring(alt) .. "Embed"
+    Holder.Parent = SectionContent
+    Holder.BackgroundTransparency = 1
+    Holder.BorderSizePixel = 0
+    Holder.AutomaticSize = Enum.AutomaticSize.Y
+    Holder.Size = UDim2.new(1, 0, 0, 0)
+    Holder.ZIndex = 5
+
+    local pad = Instance.new("UIPadding")
+    pad.PaddingTop = UDim.new(0, 6)
+    pad.PaddingBottom = UDim.new(0, 6)
+    pad.PaddingLeft = UDim.new(0, 10)
+    pad.PaddingRight = UDim.new(0, 10)
+    pad.Parent = Holder
+
+    local Card = Instance.new("TextButton")
+    Card.Name = "EmbedCard"
+    Card.Parent = Holder
+    Card.AutoButtonColor = false
+    Card.Text = ""
+    Card.AutomaticSize = Enum.AutomaticSize.Y
+    Card.Size = UDim2.new(1, 0, 0, 0)
+    Card.BackgroundColor3 = Color3.fromRGB(46, 46, 52)
+    Card.BackgroundTransparency = 0.35
+    Card.BorderSizePixel = 0
+    Card.ZIndex = 6
+    local cc = Instance.new("UICorner")
+    cc.CornerRadius = UDim.new(0, 8)
+    cc.Parent = Card
+    local maxc = Instance.new("UISizeConstraint")
+    maxc.MaxSize = Vector2.new(w, math.huge)
+    maxc.Parent = Card
+    local cl = Instance.new("UIListLayout")
+    cl.SortOrder = Enum.SortOrder.LayoutOrder
+    cl.Padding = UDim.new(0, 0)
+    cl.Parent = Card
+
+    local Img = Instance.new("ImageLabel")
+    Img.Name = "EmbedImage"
+    Img.Parent = Card
+    Img.LayoutOrder = 1
+    Img.BackgroundTransparency = 1
+    Img.Size = UDim2.new(1, 0, 0, 0)
+    Img.AutomaticSize = Enum.AutomaticSize.None
+    Img.Image = ""
+    Img.ScaleType = Enum.ScaleType.Fit
+    Img.ZIndex = 7
+    Img.Visible = false
+    local ar = Instance.new("UIAspectRatioConstraint")
+    ar.AspectRatio = w / h
+    ar.DominantAxis = Enum.DominantAxis.Width
+    ar.Parent = Img
+    local ic = Instance.new("UICorner")
+    ic.CornerRadius = UDim.new(0, 8)
+    ic.Parent = Img
+
+    local Info = Instance.new("TextLabel")
+    Info.Name = "EmbedText"
+    Info.Parent = Card
+    Info.LayoutOrder = 2
+    Info.BackgroundTransparency = 1
+    Info.AutomaticSize = Enum.AutomaticSize.Y
+    Info.Size = UDim2.new(1, 0, 0, 0)
+    Info.Font = Library.Theme.TextFont
+    Info.TextSize = 14
+    Info.TextColor3 = Library.Theme.TextColor
+    Info.TextWrapped = true
+    Info.RichText = true
+    Info.TextXAlignment = Enum.TextXAlignment.Left
+    Info.TextYAlignment = Enum.TextYAlignment.Top
+    Info.ZIndex = 7
+    local ip = Instance.new("UIPadding")
+    ip.PaddingTop = UDim.new(0, 8)
+    ip.PaddingBottom = UDim.new(0, 8)
+    ip.PaddingLeft = UDim.new(0, 10)
+    ip.PaddingRight = UDim.new(0, 10)
+    ip.Parent = Info
+    table.insert(Library.LibraryColorTable, Info)
+
+    local Native = Instance.new("Frame")
+    Native.Name = "EmbedNative"
+    Native.Parent = Card
+    Native.LayoutOrder = 1
+    Native.BackgroundColor3 = Color3.fromRGB(28, 28, 34)
+    Native.BorderSizePixel = 0
+    Native.Size = UDim2.new(1, 0, 0, 128)
+    Native.ClipsDescendants = true
+    Native.Visible = false
+    Native.ZIndex = 7
+    local nc = Instance.new("UICorner")
+    nc.CornerRadius = UDim.new(0, 10)
+    nc.Parent = Native
+    local ns = Instance.new("UIStroke")
+    ns.Color = Color3.fromRGB(62, 62, 72)
+    ns.Thickness = 1
+    ns.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    ns.Parent = Native
+
+    local Bar = Instance.new("Frame")
+    Bar.Name = "AccentBar"
+    Bar.Parent = Native
+    Bar.BorderSizePixel = 0
+    Bar.BackgroundColor3 = Color3.fromRGB(79, 110, 255)
+    Bar.Size = UDim2.new(1, 0, 0, 4)
+    Bar.ZIndex = 8
+
+    local Avatar = Instance.new("Frame")
+    Avatar.Name = "Avatar"
+    Avatar.Parent = Native
+    Avatar.BorderSizePixel = 0
+    Avatar.BackgroundColor3 = Color3.fromRGB(0, 140, 125)
+    Avatar.Position = UDim2.new(0, 14, 0, 22)
+    Avatar.Size = UDim2.new(0, 56, 0, 56)
+    Avatar.ZIndex = 8
+    local avc = Instance.new("UICorner")
+    avc.CornerRadius = UDim.new(1, 0)
+    avc.Parent = Avatar
+    local avs = Instance.new("UIStroke")
+    avs.Color = Color3.fromRGB(110, 150, 140)
+    avs.Thickness = 1
+    avs.Parent = Avatar
+    local AvatarLetter = Instance.new("TextLabel")
+    AvatarLetter.Name = "Letter"
+    AvatarLetter.Parent = Avatar
+    AvatarLetter.BackgroundTransparency = 1
+    AvatarLetter.Size = UDim2.new(1, 0, 1, 0)
+    AvatarLetter.Font = Enum.Font.GothamBold
+    AvatarLetter.TextSize = 28
+    AvatarLetter.TextColor3 = Color3.fromRGB(255, 255, 255)
+    AvatarLetter.ZIndex = 9
+    local AvatarImg = Instance.new("ImageLabel")
+    AvatarImg.Name = "AvatarImage"
+    AvatarImg.Parent = Avatar
+    AvatarImg.BackgroundTransparency = 1
+    AvatarImg.Size = UDim2.new(1, 0, 1, 0)
+    AvatarImg.ZIndex = 10
+    AvatarImg.Visible = false
+    local aic = Instance.new("UICorner")
+    aic.CornerRadius = UDim.new(1, 0)
+    aic.Parent = AvatarImg
+
+    local function mk(name, y, size, font, color)
+        local t = Instance.new("TextLabel")
+        t.Name = name
+        t.Parent = Native
+        t.BackgroundTransparency = 1
+        t.Position = UDim2.new(0, 82, 0, y)
+        t.Size = UDim2.new(1, -94, 0, size + 4)
+        t.Font = font
+        t.TextSize = size
+        t.TextColor3 = color
+        t.TextXAlignment = Enum.TextXAlignment.Left
+        t.TextTruncate = Enum.TextTruncate.AtEnd
+        t.ZIndex = 8
+        return t
+    end
+    local NName = mk("Name", 20, 19, Enum.Font.GothamBold, Color3.fromRGB(255, 255, 255))
+    local NBio = mk("Bio", 45, 13, Enum.Font.Gotham, Color3.fromRGB(190, 190, 200))
+    local NStats = mk("Stats", 66, 13, Enum.Font.Gotham, Color3.fromRGB(140, 140, 152))
+
+    local Line = Instance.new("Frame")
+    Line.Name = "Line"
+    Line.Parent = Native
+    Line.BorderSizePixel = 0
+    Line.BackgroundColor3 = Color3.fromRGB(52, 52, 60)
+    Line.Position = UDim2.new(0, 14, 0, 94)
+    Line.Size = UDim2.new(1, -28, 0, 1)
+    Line.ZIndex = 8
+
+    local function foot(name, align, px)
+        local t = Instance.new("TextLabel")
+        t.Name = name
+        t.Parent = Native
+        t.BackgroundTransparency = 1
+        t.Position = UDim2.new(0, 14, 0, 101)
+        t.Size = UDim2.new(1, -28, 0, 20)
+        t.Font = Enum.Font.GothamBold
+        t.TextSize = px
+        t.TextColor3 = Color3.fromRGB(160, 160, 172)
+        t.TextXAlignment = align
+        t.ZIndex = 8
+        return t
+    end
+    local NFootL = foot("FooterLeft", Enum.TextXAlignment.Left, 12)
+    local NFootR = foot("FooterRight", Enum.TextXAlignment.Right, 13)
+
+    local function showNative(d)
+        d = d or {}
+        local nm = tostring(d.Name or alt or "")
+        local rich = nm:gsub("&", "&amp;"):gsub("<", "&lt;"):gsub(">", "&gt;")
+        if d.Verified then rich = rich .. ' <font color="#4396fa">✔</font>' end
+        if d.Tier then rich = rich .. ' <font color="#f59e0b">⚡</font>' end
+        NName.RichText = true
+        NName.Text = rich
+        local bg = typeof(d.Bg) == "Color3" and d.Bg or Color3.fromRGB(28, 28, 34)
+        Native.BackgroundColor3 = bg
+        if typeof(d.TextColor) == "Color3" then
+            NName.TextColor3 = d.TextColor
+            NBio.TextColor3 = d.TextColor:Lerp(bg, 0.35)
+            NStats.TextColor3 = d.TextColor:Lerp(bg, 0.54)
+            NFootL.TextColor3 = d.TextColor:Lerp(bg, 0.46)
+            NFootR.TextColor3 = d.TextColor:Lerp(bg, 0.35)
+            Line.BackgroundColor3 = d.TextColor:Lerp(bg, 0.9)
+        end
+        if type(d.Gradient) == "table" and typeof(d.Gradient[1]) == "Color3" and typeof(d.Gradient[2]) == "Color3" then
+            Bar.BackgroundColor3 = Color3.new(1, 1, 1)
+            local ug = Bar:FindFirstChildOfClass("UIGradient") or Instance.new("UIGradient")
+            ug.Color = ColorSequence.new(d.Gradient[1], d.Gradient[2])
+            ug.Parent = Bar
+        end
+        NBio.Text = tostring(d.Bio or "")
+        NStats.Text = tostring(d.Stats or "")
+        NFootL.Text = tostring(d.Footer or "")
+        NFootR.Text = tostring(d.Action or "View profile  >")
+        AvatarLetter.Text = (nm ~= "" and nm:sub(1, 1):lower()) or "?"
+        if typeof(d.Accent) == "Color3" then Bar.BackgroundColor3 = d.Accent end
+        if typeof(d.AvatarColor) == "Color3" then Avatar.BackgroundColor3 = d.AvatarColor end
+        if d.Avatar and tostring(d.Avatar) ~= "" then
+            local a = tostring(d.Avatar)
+            if a:match("^%d+$") then a = "rbxassetid://" .. a end
+            AvatarImg.Image = a
+            AvatarImg.Visible = true
+        else
+            AvatarImg.Visible = false
+        end
+        Native.Visible = true
+    end
+
+    local B64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+    local b64map = {}
+    for i = 1, 64 do b64map[B64:sub(i, i)] = i - 1 end
+    local function b64dec(data)
+        data = data:gsub("[^%w%+/=]", "")
+        local out, buf, bits = {}, 0, 0
+        for i = 1, #data do
+            local c = data:sub(i, i)
+            if c == "=" then break end
+            buf = buf * 64 + b64map[c]
+            bits = bits + 6
+            if bits >= 8 then
+                bits = bits - 8
+                local byte = math.floor(buf / 2 ^ bits)
+                out[#out + 1] = string.char(byte)
+                buf = buf % 2 ^ bits
+            end
+        end
+        return table.concat(out)
+    end
+
+    local function parseSvg(svg)
+        local texts = {}
+        for body in svg:gmatch("<text[^>]*>(.-)</text>") do
+            local t = body:gsub("<[^>]+>", ""):gsub("&amp;", "&"):gsub("&lt;", "<"):gsub("&gt;", ">"):gsub("&quot;", '"'):gsub("&#39;", "'")
+            t = t:gsub("^%s+", ""):gsub("%s+$", "")
+            if t ~= "" then table.insert(texts, t) end
+        end
+        if #texts == 0 then return nil end
+        local d = { Footer = "RSCRIPTS", Action = "View profile  >" }
+        local rest = {}
+        for _, t in ipairs(texts) do
+            local low = t:lower()
+            if low == "rscripts" then d.Footer = t
+            elseif low:find("^view ") then d.Action = (t:gsub("→", ">"):gsub("➜", ">"))
+            elseif t:find("·", 1, true) or low:find("views") or low:find("followers") then d.Stats = d.Stats or t
+            else table.insert(rest, t) end
+        end
+        d.Name = rest[1]
+        d.Bio = rest[2]
+        if not d.Name then return nil end
+        local m, data = svg:match('data:image/(%a+);base64,([%w%+/=]+)')
+        if m and data and writefile and getcustomasset then
+            pcall(function()
+                local raw = b64dec(data)
+                local ext = (raw:sub(1, 4) == "\137PNG") and "png" or ((raw:sub(1, 2) == "\255\216") and "jpg" or nil)
+                if ext then
+                    if makefolder and isfolder and not isfolder("RndmEmbeds") then makefolder("RndmEmbeds") end
+                    local path = "RndmEmbeds/avatar_" .. #raw .. "_" .. tostring(d.Name or "x"):gsub("%W", "") .. "." .. ext
+                    writefile(path, raw)
+                    d.Avatar = getcustomasset(path)
+                end
+            end)
+        end
+        local function hex(h)
+            if not h then return nil end
+            h = h:gsub("#", "")
+            if #h == 3 then h = h:sub(1, 1):rep(2) .. h:sub(2, 2):rep(2) .. h:sub(3, 3):rep(2) end
+            if #h ~= 6 then return nil end
+            local r, g, b = tonumber(h:sub(1, 2), 16), tonumber(h:sub(3, 4), 16), tonumber(h:sub(5, 6), 16)
+            if r and g and b then return Color3.fromRGB(r, g, b) end
+        end
+        d.Bg = hex(svg:match('<rect x="0" y="0" width="%d+" height="%d+" fill="(#%x+)"'))
+        d.TextColor = hex(svg:match('font%-weight="700" fill="(#%x+)"'))
+        local g1, g2 = svg:match('id="top%-bar".-stop%-color="(#%x+)".-stop%-color="(#%x+)"')
+        if g1 and g2 then d.Gradient = { hex(g1), hex(g2) } end
+        d.Verified = svg:find("#4396fa", 1, true) ~= nil
+        d.Tier = svg:find("creator%-tier%-badge") ~= nil
+        return d
+    end
+
+    local hasImage = false
+    local function refreshText(state)
+        local base = "<b>" .. tostring(alt):gsub("<", "&lt;") .. "</b>"
+        local hint = '<font size="12" color="rgb(160,160,170)">Tap to copy link</font>'
+        if state == "loading" then
+            Info.Text = base .. "\n" .. '<font size="12" color="rgb(160,160,170)">Loading preview...</font>'
+        elseif hasImage then
+            Info.Text = hint
+        else
+            Info.Text = base .. "\n" .. hint
+        end
+    end
+    refreshText("loading")
+
+    local function readFile(url)
+        local data
+        local ok = pcall(function() data = game:HttpGet(url) end)
+        if ok and data and #data > 0 then return data end
+        local req = (syn and syn.request) or http_request or request or (http and http.request)
+        if req then
+            local ok2, res = pcall(req, { Url = url, Method = "GET" })
+            if ok2 and res and res.Body and #res.Body > 0 then return res.Body end
+        end
+        return nil
+    end
+
+    local token = 0
+    local function loadImage(url)
+        token = token + 1
+        local my = token
+        hasImage = false
+        Img.Visible = false
+        Native.Visible = false
+        refreshText("loading")
+        if not url or url == "" then refreshText() return end
+        task.spawn(function()
+            local asset
+            local u = tostring(url)
+            if u:match("^%d+$") then
+                asset = "rbxassetid://" .. u
+            elseif u:match("^rbxassetid://") or u:match("^rbxasset://") then
+                asset = u
+            else
+                local data = readFile(u)
+                if data then
+                    local ext
+                    if data:sub(1, 4) == "\137PNG" then ext = "png"
+                    elseif data:sub(1, 2) == "\255\216" then ext = "jpg" end
+                    if not ext and data:find("<svg", 1, true) then
+                        local d = parseSvg(data)
+                        if d and my == token then
+                            showNative(d)
+                            hasImage = true
+                            refreshText()
+                            return
+                        end
+                    end
+                    if ext and writefile and getcustomasset then
+                        pcall(function()
+                            if makefolder and isfolder and not isfolder("RndmEmbeds") then makefolder("RndmEmbeds") end
+                            local key = 0
+                            for i = 1, #u do key = (key * 31 + u:byte(i)) % 4294967296 end
+                            local path = "RndmEmbeds/" .. key .. "_" .. #data .. "." .. ext
+                            writefile(path, data)
+                            asset = getcustomasset(path)
+                        end)
+                    end
+                end
+            end
+            if my ~= token then return end
+            if asset and asset ~= "" then
+                Img.Image = asset
+                Img.Visible = true
+                hasImage = true
+            end
+            refreshText()
+        end)
+    end
+
+    local function copyLink()
+        if link == "" then return end
+        local ok = pcall(function() setclipboard(link) end)
+        if Library.CreateNotification then
+            Library:CreateNotification("Link", ok and ("Copied: " .. link) or link, 4)
+        end
+    end
+    Card.MouseButton1Click:Connect(copyLink)
+    Card.MouseEnter:Connect(function()
+        TweenService:Create(Card, TweenInfo.new(0.15), { BackgroundTransparency = 0.15 }):Play()
+    end)
+    Card.MouseLeave:Connect(function()
+        TweenService:Create(Card, TweenInfo.new(0.15), { BackgroundTransparency = 0.35 }):Play()
+    end)
+
+    if type(card) == "table" then
+        showNative(card)
+        hasImage = true
+        refreshText()
+    else
+        loadImage(img)
+    end
+
+    return {
+        SetCard = function(a, b)
+            local v = (type(a) == "table" and a.Frame == nil and b == nil) and a or b
+            if type(v) == "table" then
+                token = token + 1
+                Img.Visible = false
+                showNative(v)
+                hasImage = true
+                refreshText()
+            end
+        end,
+        SetLink = function(a, b) local v = (type(a) == "table") and b or a link = tostring(v or "") end,
+        SetImage = function(a, b) local v = (type(a) == "table") and b or a loadImage(v) end,
+        Reload = function() loadImage(img) end,
+        Copy = copyLink,
+        Frame = Holder,
+    }
+end
+
 function SectionElements:CreateProgressBar(name, minimumvalue, maximumvalue, presetvalue, suffix)
     minimumvalue = tonumber(minimumvalue) or 0
     maximumvalue = tonumber(maximumvalue) or 100
@@ -4366,7 +4802,7 @@ do
     EmptyLabel.TextSize = 14
     EmptyLabel.Visible = false
 
-    local SUFFIXES = { "NumberInput", "MultiDropdown", "ColorPicker", "ProgressBar", "Dropdown", "TextBox", "Keybind", "Toggle", "Slider", "Button", "Label", "Paragraph" }
+    local SUFFIXES = { "NumberInput", "Embed", "MultiDropdown", "ColorPicker", "ProgressBar", "Dropdown", "TextBox", "Keybind", "Toggle", "Slider", "Button", "Label", "Paragraph" }
     local function ElementInfo(child)
         local n = child.Name
         if n:match("Divider$") or n:match("_ImageHolder$") then return nil end
