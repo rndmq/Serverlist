@@ -8804,12 +8804,37 @@ do
     local _Vehicle = window:CreateTab('Vehicle', '6034754441')
     local _Vehicle2 = _Vehicle:Section('Vehicle')
 
+    local vehicleLoopRunId = 0
+    local vehicleLoopSpeed = 1
+    local vehicleLoopSteer = 0.7
+
     _Vehicle2:Slider('Vehicle Speed', 1, 1, 5, false, function(value)
+        vehicleLoopSpeed = value
         _G['修改汽车的属性'](value, 'MaxSpeed')
     end, 'VehicleSpeed')
     _Vehicle2:Slider('Steer Angle', 0.7, 0.7, 5, true, function(value)
+        vehicleLoopSteer = value
         _G['修改汽车的属性'](value, 'SteerAngle')
     end, 'SteerAngle')
+    _Vehicle2:Toggle('Loop Vehicle Settings', false, function(enabled)
+        vehicleLoopRunId = vehicleLoopRunId + 1
+
+        if not enabled then
+            return
+        end
+
+        local myRun = vehicleLoopRunId
+
+        task.spawn(function()
+            while vehicleLoopRunId == myRun do
+                pcall(function()
+                    _G['修改汽车的属性'](vehicleLoopSpeed, 'MaxSpeed')
+                    _G['修改汽车的属性'](vehicleLoopSteer, 'SteerAngle')
+                end)
+                task.wait(0.5)
+            end
+        end)
+    end)
     _Vehicle2:Button('Flip Vehicle', function()
         if _G['自己身体'].SeatPart or _G['自己身体'].SeatPart == 'DriveSeat' then
             _G['自己身体'].SeatPart.Parent:PivotTo(_G['自己身体'].SeatPart.Parent.PrimaryPart.CFrame * CFrame.Angles(math.rad(-180), 0, 0) + Vector3.new(0, 5, 0))
