@@ -187,7 +187,32 @@ do
             getgenv().SaveFile = 'DarkX.json'
         end
 
-        local Library = loadstring(game:HttpGet('https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/source_lua_sidebar.lua'))()
+        local function Null()
+            local n
+            n = setmetatable({}, {
+                __index = function() return function() return n end end,
+                __call = function() return n end,
+            })
+            return n
+        end
+
+        local Library
+        for attempt = 1, 3 do
+            local ok, res = pcall(function()
+                return loadstring(game:HttpGet('https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/source_lua_sidebar.lua'))()
+            end)
+            if ok and type(res) == 'table' then
+                Library = res
+                break
+            end
+            warn('[Rndm] UI library load failed (' .. attempt .. '/3): ' .. tostring(res))
+            task.wait(1)
+        end
+        if not Library then
+            warn('[Rndm] UI library unavailable, continuing without UI')
+            Library = Null()
+        end
+
 
         
         local libGui = nil
@@ -195,8 +220,8 @@ do
             libGui = CoreGui:FindFirstChild('Rndm.')
         end)
 
-        Library:CreateWindow('Rndm - Dark X Revamped')
-        Library:SetLogo('Rndm')
+        pcall(function() Library:CreateWindow('Rndm - Dark X Revamped') end)
+        pcall(function() Library:SetLogo('Rndm') end)
 
         local TabIcons = {
             ['Home'] = 'home',
@@ -275,6 +300,21 @@ do
                     table.insert(panicStoppers, { cb = cb, when = opts.when })
                 end
             end
+
+            function S:CreateEmbed(source, imageUrl, width, height, title, card)
+                breathe()
+                if type(container.CreateEmbed) ~= 'function' then
+                    local link = tostring(source):match('href%s*=%s*"([^"]+)"') or tostring(source)
+                    return S:Label(link)
+                end
+                local ok, obj = pcall(function()
+                    return container:CreateEmbed(source, imageUrl, width, height, title, card)
+                end)
+                if ok then return obj end
+                warn('[Rndm] CreateEmbed failed: ' .. tostring(obj))
+            end
+
+            S.Embed = S.CreateEmbed
 
             function S:Label(text)
                 breathe()
@@ -523,6 +563,17 @@ do
                 return obj
             end
 
+            for k, v in pairs(S) do
+                if type(v) == 'function' then
+                    S[k] = function(...)
+                        local r = table.pack(pcall(v, ...))
+                        if r[1] then return table.unpack(r, 2, r.n) end
+                        warn('[Rndm] ' .. tostring(k) .. ' failed: ' .. tostring(r[2]))
+                        return Null()
+                    end
+                end
+            end
+
             return S
         end
 
@@ -592,13 +643,26 @@ do
             function Tabs:CreateTab(title, _icon)
                 title = tostring(title):gsub('%s+$', '')
                 print('[Rndm] building tab: ' .. title)
-                local raw = Library:CreateTab(title, TabIcons[title])
+                local okTab, raw = pcall(function()
+                    return Library:CreateTab(title, TabIcons[title])
+                end)
+                if not okTab or raw == nil then
+                    warn('[Rndm] tab "' .. title .. '" failed: ' .. tostring(raw))
+                    return Null()
+                end
                 if title == 'Settings' then
                     settingsTab = raw
                 end
                 local T = {}
                 function T:Section(name, collapsible, startClosed)
-                    return makeSection(raw:CreateSection(name, collapsible, startClosed), title)
+                    local okSec, sec = pcall(function()
+                        return raw:CreateSection(name, collapsible, startClosed)
+                    end)
+                    if not okSec or sec == nil then
+                        warn('[Rndm] section "' .. tostring(name) .. '" failed: ' .. tostring(sec))
+                        return Null()
+                    end
+                    return makeSection(sec, title)
                 end
                 return T
             end
@@ -785,70 +849,84 @@ do
     local value3 = function(obj, arg2)
         arg2 = arg2 or _G['自己'].Character.HumanoidRootPart.CFrame
         value2(obj)
+
+        if not obj.PrimaryPart then
+            local section = obj:FindFirstChild('WoodSection')
+
+            if not section then
+                return
+            end
+
+            obj.PrimaryPart = section
+        end
+
         spawn(function()
             for _ = 1, 10 do
-                obj.PrimaryPart.Velocity = Vector3.new(0, 0, 0)
-                obj.PrimaryPart.RotVelocity = Vector3.new(0, 0, 0)
+                pcall(function()
+                    obj.PrimaryPart.Velocity = Vector3.new(0, 0, 0)
+                    obj.PrimaryPart.RotVelocity = Vector3.new(0, 0, 0)
 
-                game.ReplicatedStorage.TestPing:InvokeServer()
+                    game.ReplicatedStorage.TestPing:InvokeServer()
+                end)
                 task.wait()
             end
         end)
 
-        if identifyexecutor() ~= 'Krampus' then
-            if tostring(obj.Parent) ~= 'Plank' then
-                for _ = 1, 5 do
-                    game.ReplicatedStorage.Interaction.ClientIsDragging:FireServer(obj)
-                    game.ReplicatedStorage.TestPing:InvokeServer()
+        local okEx, executor = pcall(identifyexecutor)
 
-                    if obj:FindFirstChild('WoodSection') then
-                        obj:PivotTo(arg2)
-                    else
-                        value2(obj)
-
-                        obj.PrimaryPart.CFrame = arg2
-                    end
-
-                    game.ReplicatedStorage.TestPing:InvokeServer()
-                    task.wait(0.05)
-                end
-
-                return
-            else
-                for _ = 1, 8 do
-                    game.ReplicatedStorage.Interaction.ClientIsDragging:FireServer(obj)
-                    game.ReplicatedStorage.TestPing:InvokeServer()
-                    value2(obj)
-
-                    obj.PrimaryPart.CFrame = arg2
-
-                    game.ReplicatedStorage.TestPing:InvokeServer()
-                    task.wait(0.05)
-                end
-
-                return
-            end
-        else
-            print(obj.PrimaryPart)
+        if okEx and executor == 'Krampus' then
+            local deadline = tick() + 5
 
             repeat
                 game.ReplicatedStorage.Interaction.ClientIsDragging:FireServer(obj)
                 task.wait(0.2)
-            until isnetworkowner(obj.PrimaryPart)
+            until not obj.Parent or isnetworkowner(obj.PrimaryPart) or tick() > deadline
 
             game.ReplicatedStorage.Interaction.ClientIsDragging:FireServer(obj)
 
-            local obj2 = obj
-
-            if obj.FindFirstChild(obj2, 'WoodSection') then
-                local obj3 = obj
-
-                obj.PivotTo(obj3, arg2)
+            if obj:FindFirstChild('WoodSection') then
+                obj:PivotTo(arg2)
             else
                 obj.PrimaryPart.CFrame = arg2
             end
 
             return
+        end
+
+        local isWood = obj:FindFirstChild('WoodSection') ~= nil
+
+        local function moveOnce()
+            pcall(function()
+                game.ReplicatedStorage.Interaction.ClientIsDragging:FireServer(obj)
+                game.ReplicatedStorage.TestPing:InvokeServer()
+
+                if isWood then
+                    obj:PivotTo(arg2)
+                else
+                    obj.PrimaryPart.CFrame = arg2
+                end
+
+                game.ReplicatedStorage.TestPing:InvokeServer()
+            end)
+            task.wait(0.05)
+        end
+
+        for _ = 1, 8 do
+            if not obj.Parent then
+                return
+            end
+
+            moveOnce()
+        end
+
+        for _ = 1, 20 do
+            local primary = obj.Parent and obj.PrimaryPart
+
+            if not primary or (primary.Position - arg2.Position).Magnitude <= 8 then
+                return
+            end
+
+            moveOnce()
         end
     end
 
@@ -2148,6 +2226,7 @@ do
         Credits:Label('Updated by rndm')
         Credits:Label('Remake of Dark V5')
         Credits:Label("Didn't put any discord link because his link alrd expired")
+        Credits:CreateEmbed([[<a href="https://rscripts.net/user/Rndm" target="_blank"><img alt="Rndm, From Rscripts" loading="lazy" width="360" height="132" src="https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/rscripts_rndm.svg" /></a>]], nil, nil, nil, { Bio = "If you enjoy this script, please leave a like on RScripts. It really helps and keeps me motivated!" })
 
         local Status = Home:Section('Server Status')
         local labels, lastText, lastNotify, esp = {}, {}, {}, {}
@@ -3936,212 +4015,320 @@ do
     end)]]
 
     _G['处理树'] = function(tree)
-        local globals = _G
-        local globals2 = _G
-        local axe, axe2 = _G['检查斧头'](tree.TreeClass.Value)
+        local treeClass = tree:FindFirstChild('TreeClass')
+        local sawmill = _G['菜单']['选择的锯木机']
+        local sawParticles = sawmill and sawmill.Parent and sawmill:FindFirstChild('Particles')
 
-        globals2['伤害'] = axe2
-        globals['斧头'] = axe
+        if not treeClass then
+            return _G['提醒']('cant mod this wood')
+        end
+        if not sawParticles then
+            return _G['提醒']('select Sawmail At First')
+        end
 
-        if _G['伤害'] then
-            _G['锯木机'] = _G['菜单']['选择的锯木机'].Particles.CFrame + Vector3.new(0.7, 0, 0)
-            _G['保留'] = nil
+        local axe, axe2 = _G['检查斧头'](treeClass.Value)
 
-            local _CFrame4 = _G['自己'].Character.HumanoidRootPart.CFrame
-            local nextFn3 = next
-            local children2, startKey3 = tree:GetChildren()
+        _G['伤害'] = axe2
+        _G['斧头'] = axe
 
-            for _, child in nextFn3, children2, startKey3 do
-                if tostring(tree.TreeClass.Value) == 'Pine' or tostring(tree.TreeClass.Value) == 'Fir' then
-                    local children3 = child:GetChildren()
-                    local count = 0
+        if not _G['伤害'] then
+            return _G['提醒']('you need one axe')
+        end
 
-                    for _, child2 in next, children3 do
-                        if child2.Name == 'WoodSection' then
-                            count = count + 1
-                        end
+        _G['锯木机'] = sawParticles.CFrame + Vector3.new(0.7, 0, 0)
+        _G['保留'] = nil
+
+        local heartbeat = game:GetService('RunService').Heartbeat
+        local lavaHome = CFrame.new(-1675.2002, 255.002533, 1284.19983, 0.866007268, 0, 0.500031412, 0, 1, 0, -0.500031412, 0, 0.866007268)
+        local startCFrame = _G['自己'].Character.HumanoidRootPart.CFrame
+        local isConifer = tostring(treeClass.Value) == 'Pine' or tostring(treeClass.Value) == 'Fir'
+
+        local function sectionInfo(part)
+            return part:WaitForChild('ID', 2), part:FindFirstChild('ChildIDs'), part:FindFirstChild('ParentID')
+        end
+
+        for _, child in ipairs(tree:GetChildren()) do
+            if isConifer then
+                local grandChildren = child:GetChildren()
+                local count = 0
+
+                for _, part in ipairs(grandChildren) do
+                    if part.Name == 'WoodSection' then
+                        count = count + 1
                     end
+                end
 
-                    if count >= 2 then
-                        for _, child2 in next, children3 do
-                            if child2.Name == 'WoodSection' then
-                                if child2:WaitForChild('ID').Value ~= 1 then
-                                    if #child2:FindFirstChild('ChildIDs'):GetChildren() == 0 then
-                                        if child2:FindFirstChild('ParentID') then
-                                            if child2.ParentID.Value == 1 then
-                                                local globals3 = _G
+                if count >= 2 then
+                    for _, part in ipairs(grandChildren) do
+                        if part.Name == 'WoodSection' and not _G['保留'] then
+                            local id, childIds, parentId = sectionInfo(part)
 
-                                                if _G['保留'] or not child2 then
-                                                    child2 = _G['保留']
-                                                end
-
-                                                globals3['保留'] = child2
-                                            end
-                                        end
-                                    end
-                                end
-                            end
-                        end
-                    end
-                elseif child.Name == 'WoodSection' then
-                    if child:WaitForChild('ID').Value ~= 1 then
-                        if #child:FindFirstChild('ChildIDs'):GetChildren() == 0 then
-                            if child:FindFirstChild('ParentID') then
-                                if child.ParentID.Value ~= 1 then
-                                    local globals3 = _G
-                                    local keepPart
-
-                                    if _G['保留'] or not child then
-                                        keepPart = _G['保留']
-                                    else
-                                        keepPart = child
-                                    end
-
-                                    globals3['保留'] = keepPart
-
-                                    if child.Size.Z < _G['保留'].Size.Z then
-                                        wait()
-
-                                        _G['保留'] = child
-                                    end
-                                end
+                            if id and id.Value ~= 1 and childIds and #childIds:GetChildren() == 0 and parentId and parentId.Value == 1 then
+                                _G['保留'] = part
                             end
                         end
                     end
                 end
+            elseif child.Name == 'WoodSection' then
+                local id, childIds, parentId = sectionInfo(child)
+
+                if id and id.Value ~= 1 and childIds and #childIds:GetChildren() == 0 and parentId and parentId.Value ~= 1 then
+                    if not _G['保留'] or child.Size.Z < _G['保留'].Size.Z then
+                        _G['保留'] = child
+                    end
+                end
             end
+        end
 
-            _G['烧毁'] = nil
+        local keep = _G['保留']
 
-            local nextFn4 = next
-            local children3, startKey4 = _G['保留'].Parent:GetChildren()
+        if not keep or not keep.Parent then
+            return _G['提醒']('cant mod this wood')
+        end
 
-            for _, child in nextFn4, children3, startKey4 do
+        local keepParentId = keep:FindFirstChild('ParentID')
+
+        _G['烧毁'] = nil
+
+        if keepParentId then
+            for _, child in ipairs(keep.Parent:GetChildren()) do
                 if child.Name == 'WoodSection' then
-                    if child:WaitForChild('ID').Value == _G['保留'].ParentID.Value then
-                        wait()
+                    local id = child:FindFirstChild('ID')
 
+                    if id and id.Value == keepParentId.Value then
                         _G['烧毁'] = child
                     end
                 end
             end
+        end
 
-            if _G['烧毁'] and _G['保留'] then
-                local _BoxHandleAdornment = Instance.new('BoxHandleAdornment', _G['保留'])
+        local burn = _G['烧毁']
 
-                _BoxHandleAdornment.Name = 'Selection'
-                _BoxHandleAdornment.Adornee = _BoxHandleAdornment.Parent
-                _BoxHandleAdornment.AlwaysOnTop = true
-                _BoxHandleAdornment.ZIndex = 0
-                _BoxHandleAdornment.Size = _BoxHandleAdornment.Parent.Size
-                _BoxHandleAdornment.Transparency = 0
-                _BoxHandleAdornment.Color = BrickColor.new('Lime green')
-                _G['菜单']['飞行'] = true
+        if not burn then
+            return _G['提醒']('cant mod this wood')
+        end
 
-                spawn(function()
-                    _G['飞行'](true)
+        local anchorSection = tree:FindFirstChild('WoodSection')
+
+        if not anchorSection then
+            return _G['提醒']('cant mod this wood')
+        end
+
+        local _BoxHandleAdornment = Instance.new('BoxHandleAdornment', keep)
+
+        _BoxHandleAdornment.Name = 'Selection'
+        _BoxHandleAdornment.Adornee = _BoxHandleAdornment.Parent
+        _BoxHandleAdornment.AlwaysOnTop = true
+        _BoxHandleAdornment.ZIndex = 0
+        _BoxHandleAdornment.Size = _BoxHandleAdornment.Parent.Size
+        _BoxHandleAdornment.Transparency = 0
+        _BoxHandleAdornment.Color = BrickColor.new('Lime green')
+
+        if _G['菜单']['飞行速度'] ~= 0 or not _G['旧的飞行速度'] then
+            _G['旧的飞行速度'] = _G['菜单']['飞行速度']
+        end
+
+        _G['菜单']['飞行'] = true
+
+        spawn(function()
+            _G['飞行'](true)
+        end)
+
+        _G['菜单']['飞行速度'] = 0
+
+        local doneConn = nil
+        local split = false
+        local pulling = false
+
+        local function stopFly()
+            _G['菜单']['飞行'] = false
+
+            spawn(function()
+                _G['飞行'](false)
+            end)
+
+            if _G['旧的飞行速度'] then
+                _G['菜单']['飞行速度'] = _G['旧的飞行速度']
+            end
+        end
+
+        local function finish(success, message)
+            pulling = false
+
+            pcall(function()
+                _G['岩浆'].CFrame = lavaHome
+            end)
+
+            if doneConn then
+                pcall(function()
+                    doneConn:Disconnect()
                 end)
 
-                _G['旧的飞行速度'] = _G['菜单']['飞行速度']
-                _G['菜单']['飞行速度'] = 0
+                doneConn = nil
+            end
 
-                _G['传送'](tree.WoodSection.CFrame)
+            stopFly()
+            _G['传送'](startCFrame)
 
-                repeat
-                    spawn(function()
-                        _G['拉东西']:FireServer(tree)
-                        tree:PivotTo(CFrame.new(-1665.86548, 355.800415, 1478.47742))
-                        pcall(function()
-                            spawn(function()
-                                _G['岩浆'].Size = Vector3.new(0, 0, 0)
-                                _G['岩浆'].Size = Vector3.new(0, 0, 0)
-                            end)
+            if message then
+                _G['提醒'](message)
+            end
 
-                            _G['岩浆'].CFrame = _G['烧毁'].CFrame
-                            _G['岩浆'].Size = Vector3.new(0, 0, 0)
-                            _G['岩浆'].Size = Vector3.new(0, 0, 0)
-                            _G['岩浆'].Size = Vector3.new(0, 0, 0)
-                        end)
-                    end)
-                    game['Run Service'].Heartbeat:wait()
-                until _G['烧毁']:FindFirstChild('LavaFire')
+            return success
+        end
 
-                _G['岩浆'].CFrame = CFrame.new(-1675.2002, 255.002533, 1284.19983, 0.866007268, 0, 0.500031412, 0, 1, 0, -0.500031412, 0, 0.866007268)
+        local lastNotice = tick()
 
-                _G['烧毁']:FindFirstChild('LavaFire'):Destroy()
+        _G['提醒']('Mod Wood: setting the section on fire...')
 
-                local flag = false
+        _G['传送'](anchorSection.CFrame)
 
-                _G['烧毁'].AncestryChanged:Connect(function()
-                    flag = true
-                end)
+        local burnDeadline = tick() + 180
+
+        repeat
+            spawn(function()
                 _G['拉东西']:FireServer(tree)
+                tree:PivotTo(CFrame.new(-1665.86548, 355.800415, 1478.47742))
+                pcall(function()
+                    spawn(function()
+                        _G['岩浆'].Size = Vector3.new(0, 0, 0)
+                        _G['岩浆'].Size = Vector3.new(0, 0, 0)
+                    end)
 
-                for _ = 1, 30 do
-                    _G['拉东西']:FireServer(tree)
+                    _G['岩浆'].CFrame = burn.CFrame
+                    _G['岩浆'].Size = Vector3.new(0, 0, 0)
+                    _G['岩浆'].Size = Vector3.new(0, 0, 0)
+                    _G['岩浆'].Size = Vector3.new(0, 0, 0)
+                end)
+            end)
+            if tick() - lastNotice > 15 then
+                lastNotice = tick()
+                _G['提醒']('Mod Wood: still waiting for the fire...')
+            end
+            heartbeat:wait()
+        until burn:FindFirstChild('LavaFire') or not burn.Parent or not tree.Parent or tick() > burnDeadline
 
-                    tree.WoodSection.Velocity = Vector3.new(0, 0, 0)
-                    tree.WoodSection.RotVelocity = Vector3.new(0, 0, 0)
+        if not burn:FindFirstChild('LavaFire') then
+            return finish(false, 'mod wood failed: section did not catch fire')
+        end
 
-                    tree:PivotTo(CFrame.new(-904, 150, -3396))
-                    _G['拉东西']:FireServer(tree)
-                    task.wait()
+        pcall(function()
+            _G['岩浆'].CFrame = lavaHome
+        end)
+
+        burn:FindFirstChild('LavaFire'):Destroy()
+
+        _G['提醒']('Mod Wood: selling the burned section...')
+
+        doneConn = game:GetService('Workspace').LogModels.ChildAdded:Connect(function(child)
+            local owner = child:WaitForChild('Owner', 5)
+
+            if owner and owner.Value == _G['自己'] then
+                split = true
+            end
+        end)
+
+        local function isSplit()
+            return split or keep.Parent ~= tree
+        end
+
+        _G['拉东西']:FireServer(tree)
+
+        for _ = 1, 30 do
+            _G['拉东西']:FireServer(tree)
+
+            pcall(function()
+                local section = tree:FindFirstChild('WoodSection')
+
+                if section then
+                    section.Velocity = Vector3.new(0, 0, 0)
+                    section.RotVelocity = Vector3.new(0, 0, 0)
                 end
 
-                _G['传送'](_G['烧毁'].CFrame)
-
-                repeat
-                    _G['拉东西']:FireServer(tree)
-                    _G['烧毁']:PivotTo(CFrame.new(315, 5, 85.4999924))
-                    _G['拉东西']:FireServer(tree)
-                    game['Run Service'].Heartbeat:wait()
-                until flag
-
-                _G['完成'] = false
-
-                local conn = game:GetService('Workspace').LogModels.ChildAdded:Connect(function(child)
-                    if child:WaitForChild('Owner', 1).Value == _G['自己'] then
-                        _G['完成'] = true
-                    end
-                end)
-
-                _G['菜单']['飞行'] = false
-
-                spawn(function()
-                    _G['飞行'](false)
-                end)
-
-                _G['菜单']['飞行速度'] = _G['旧的飞行速度']
-
-                _G['传送'](CFrame.new(tree.WoodSection.CFrame.p) + Vector3.new(3, 0, 0))
-                spawn(function()
-                    repeat
-                        _G['拉东西']:FireServer(tree)
-
-                        _G['保留'].Velocity = Vector3.new()
-                        _G['保留'].RotVelocity = Vector3.new()
-
-                        _G['保留']:PivotTo(_G['锯木机'])
-                        game['Run Service'].Heartbeat:wait()
-                    until _G['完成'] == true
-                end)
-
-                repeat
-                    _G['传送'](CFrame.new(tree.WoodSection.CFrame.p) + Vector3.new(5, 0, 0))
-                    _G['砍'](tree.CutEvent, _G['斧头'], 1, 0.3, _G['伤害'])
-                    game['Run Service'].Heartbeat:wait()
-                until _G['完成'] == true or tree.Parent == nil
-
-                conn:Disconnect()
-                _G['传送'](_CFrame4)
-
-                return
-            else
-                return _G['提醒']('cant mod this wood')
-            end
-        else
-            return _G['提醒']('you need one axe')
+                tree:PivotTo(CFrame.new(-904, 150, -3396))
+            end)
+            _G['拉东西']:FireServer(tree)
+            task.wait()
         end
+
+        _G['传送'](burn.CFrame)
+
+        local sellDeadline = tick() + 120
+
+        repeat
+            pcall(function()
+                _G['拉东西']:FireServer(tree)
+                burn:PivotTo(CFrame.new(315, 5, 85.4999924))
+                _G['拉东西']:FireServer(tree)
+            end)
+            if tick() - lastNotice > 15 then
+                lastNotice = tick()
+                _G['提醒']('Mod Wood: still selling the section...')
+            end
+            heartbeat:wait()
+        until not burn.Parent or tick() > sellDeadline
+
+        if burn.Parent then
+            return finish(false, 'mod wood timed out while selling the section')
+        end
+
+        stopFly()
+
+        _G['提醒']('Mod Wood: cutting the tree...')
+
+        local treeSection = tree:FindFirstChild('WoodSection')
+
+        if treeSection then
+            _G['传送'](CFrame.new(treeSection.CFrame.p) + Vector3.new(3, 0, 0))
+        end
+
+        pulling = true
+
+        spawn(function()
+            repeat
+                pcall(function()
+                    _G['拉东西']:FireServer(tree)
+
+                    keep.Velocity = Vector3.new()
+                    keep.RotVelocity = Vector3.new()
+
+                    keep:PivotTo(_G['锯木机'])
+                end)
+                heartbeat:wait()
+            until not pulling
+        end)
+
+        local finishDeadline = tick() + 180
+
+        repeat
+            local section = tree:FindFirstChild('WoodSection')
+
+            if not section then
+                break
+            end
+
+            _G['传送'](CFrame.new(section.CFrame.p) + Vector3.new(5, 0, 0))
+
+            local cutEvent = tree:FindFirstChild('CutEvent')
+
+            if cutEvent then
+                _G['砍'](cutEvent, _G['斧头'], 1, 0.3, _G['伤害'])
+            end
+
+            if tick() - lastNotice > 15 then
+                lastNotice = tick()
+                _G['提醒']('Mod Wood: still cutting the tree...')
+            end
+            heartbeat:wait()
+        until isSplit() or not tree.Parent or tick() > finishDeadline
+
+        if not isSplit() and tree.Parent then
+            return finish(false, 'mod wood timed out while cutting')
+        end
+
+        task.wait(0.5)
+
+        return finish(true, 'Mod Wood: done')
     end
 
     local _Wood = window:CreateTab('Wood', '6034503369')
@@ -4392,13 +4579,16 @@ do
                 done = true
             end)
             local t1 = tick()
-            while alive(my) and not done and tick() - t1 < (farmSize == 'big' and 300 or 150) do
+            while alive(my) and not done and tick() - t1 < (farmSize == 'big' and 700 or 550) do
                 task.wait(0.3)
             end
             if not done then
                 pcall(function() task.cancel(th) end)
                 _G['菜单']['飞行'] = false
                 pcall(function() _G['飞行'](false) end)
+                if _G['旧的飞行速度'] then
+                    _G['菜单']['飞行速度'] = _G['旧的飞行速度']
+                end
                 setStatus('mod wood stuck, selling logs...')
                 pcall(_G['卖木头'])
                 pcall(function() _G['传送'](SELL_CF) end)
@@ -4530,45 +4720,66 @@ do
         _G['菜单']['选择的锯木机'] = _G['选择锯木机']()
         _G['处理树锯木机'].Text = 'Selected'
     end)
+    local modSelecting = false
+    local modCancel = false
+
     _Mod:Button('Mod Wood', function()
-        if _G['菜单']['选择的锯木机'] ~= nil then
-            local value = nil
-
-            if _G['菜单']['正在处理树'] ~= true then
-                _G['菜单']['正在处理树'] = true
-
-                _G['提醒']('Click one Wood ')
-
-                local conn = _G['鼠标'].Button1Up:Connect(function()
-                    wait()
-
-                    local _Parent2 = _G['鼠标'].Target.Parent
-
-                    if _Parent2:FindFirstChild('Owner') and (_Parent2.Owner.Value == _G['自己'] and _Parent2:FindFirstChild('WoodSection')) and not (_Parent2:FindFirstAncestor('TreeRegion') or _Parent2:FindFirstChild('RootCut')) then
-                        wait()
-
-                        value = _Parent2
-
-                        _G['提醒']('Wood Selected')
-                    end
-                end)
-
-                repeat
-                    task.wait(0.1)
-                until value ~= nil
-
-                conn:Disconnect()
-                _G['处理树'](value)
-
-                _G['菜单']['正在处理树'] = false
-
-                return
-            else
-                return _G['提醒']('you are using this feature')
-            end
-        else
+        if _G['菜单']['选择的锯木机'] == nil then
             return _G['提醒']('select Sawmail At First')
         end
+
+        if modSelecting then
+            modCancel = true
+
+            return
+        end
+
+        if _G['菜单']['正在处理树'] == true then
+            return _G['提醒']('you are using this feature')
+        end
+
+        _G['菜单']['正在处理树'] = true
+        modSelecting = true
+        modCancel = false
+
+        _G['提醒']('Click one Wood (press Mod Wood again to cancel)')
+
+        local value = nil
+
+        local conn = _G['鼠标'].Button1Up:Connect(function()
+            task.wait()
+
+            local target = _G['鼠标'].Target
+            local parent = target and target.Parent
+
+            if parent and parent:FindFirstChild('Owner') and parent.Owner.Value == _G['自己'] and parent:FindFirstChild('WoodSection') and not (parent:FindFirstAncestor('TreeRegion') or parent:FindFirstChild('RootCut')) then
+                value = parent
+
+                _G['提醒']('Wood Selected')
+            end
+        end)
+
+        local waitDeadline = tick() + 60
+
+        repeat
+            task.wait(0.1)
+        until value ~= nil or modCancel or tick() > waitDeadline
+
+        conn:Disconnect()
+
+        modSelecting = false
+
+        if value then
+            local ok, err = pcall(_G['处理树'], value)
+
+            if not ok then
+                _G['提醒']('Mod Wood failed: ' .. tostring(err))
+            end
+        else
+            _G['提醒']('Mod Wood cancelled')
+        end
+
+        _G['菜单']['正在处理树'] = false
     end)
 
     _Mod:Button('Max Sawmill Settings', function()
@@ -5017,67 +5228,96 @@ do
             _G['鼠标移动'] = nil
         end
     end)
+    u.BringWoodModel = function(model, targetCF)
+        local section = model:FindFirstChild('WoodSection')
+
+        if not section then
+            return false
+        end
+
+        for _ = 1, 3 do
+            if not model.Parent then
+                return true
+            end
+
+            pcall(function()
+                _G['传送'](section.CFrame)
+            end)
+            task.wait(0.15)
+
+            for _ = 1, 25 do
+                if not model.Parent then
+                    return true
+                end
+
+                pcall(function()
+                    _G['拉东西']:FireServer(model)
+                    model:PivotTo(targetCF)
+                end)
+                game:GetService('RunService').Stepped:Wait()
+            end
+
+            local ok, pos = pcall(function()
+                return model:GetPivot().Position
+            end)
+
+            if ok and (pos - targetCF.Position).Magnitude <= 12 then
+                return true
+            end
+        end
+
+        return not model.Parent
+    end
+
     _Misc:Button('Bring All Tree', function()
-        local _CFrame7 = _G['自己的方块'].CFrame
-        local nextFn3 = next
-        local logs, startKey3 = game:GetService('Workspace').LogModels:GetChildren()
+        local startCFrame = _G['自己的方块'].CFrame
+        local moved, failed = 0, 0
 
-        for _, log in nextFn3, logs, startKey3 do
-            if log:FindFirstChild('Owner') then
-                if log.Owner.Value == _G['自己'] then
-                    _G['传送'](log.WoodSection.CFrame)
+        pcall(function()
+            for _, log in ipairs(game:GetService('Workspace').LogModels:GetChildren()) do
+                local owner = log:FindFirstChild('Owner')
 
-                    for _ = 1, 20 do
-                        _G['拉东西']:FireServer(log)
-                        log:PivotTo(_CFrame7)
-                        game:GetService('RunService').Stepped:wait()
+                if owner and owner.Value == _G['自己'] and log:FindFirstChild('WoodSection') then
+                    if u.BringWoodModel(log, startCFrame) then
+                        moved = moved + 1
+                    else
+                        failed = failed + 1
                     end
                 end
 
                 task.wait()
             end
-        end
+        end)
 
-        task.wait()
-        _G['传送'](_CFrame7)
-        _G['提醒']('Done')
+        _G['传送'](startCFrame)
+        _G['提醒']('Done (' .. moved .. ' moved, ' .. failed .. ' failed)')
     end)
     _Misc:Button('Sell All Tree', function()
         _G['卖木头']()
         _G['提醒']('Done')
     end)
     _Misc:Button('Bring All Plank', function()
-        local _CFrame8 = _G['自己的方块'].CFrame
-        local nextFn3 = next
-        local models, startKey3 = game.Workspace.PlayerModels:GetChildren()
+        local startCFrame = _G['自己的方块'].CFrame
+        local moved, failed = 0, 0
 
-        for _, model in nextFn3, models, startKey3 do
-            if model.Name == 'Plank' then
-                if model:findFirstChild('Owner') then
-                    if model.Owner.Value == _G['自己'] then
-                        local nextFn4 = next
-                        local children2, startKey4 = model:GetChildren()
+        pcall(function()
+            for _, model in ipairs(game.Workspace.PlayerModels:GetChildren()) do
+                local owner = model:FindFirstChild('Owner')
 
-                        for _, child in nextFn4, children2, startKey4 do
-                            if child.Name == 'WoodSection' then
-                                _G['传送'](child.CFrame)
-
-                                for _ = 1, 30 do
-                                    _G['拉东西']:FireServer(model)
-                                    model:PivotTo(_CFrame8)
-                                    game:GetService('RunService').Stepped:wait()
-                                end
-                            end
-                        end
-
-                        task.wait()
+                if model.Name == 'Plank' and owner and owner.Value == _G['自己'] and model:FindFirstChild('WoodSection') then
+                    if u.BringWoodModel(model, startCFrame) then
+                        moved = moved + 1
+                    else
+                        failed = failed + 1
                     end
                 end
-            end
-        end
 
-        _G['传送'](_CFrame8)
-        _G['提醒']('Done')
+                task.wait()
+            end
+        end)
+
+        _G['传送'](startCFrame)
+        _G['提醒']('Done (' .. moved .. ' moved, ' .. failed .. ' failed)')
     end)
     _Misc:Button('Sell All Plank', function()
         local _CFrame9 = _G['自己的方块'].CFrame
@@ -8266,93 +8506,138 @@ do
             end
         end
     end)
+    u.GetItemRoot = function(model)
+        local root = model.PrimaryPart
+
+        if root and root.Parent then
+            return root
+        end
+
+        root = model:FindFirstChild('WoodSection') or model:FindFirstChild('Main') or model:FindFirstChildWhichIsA('BasePart', true)
+
+        if root then
+            pcall(function()
+                model.PrimaryPart = root
+            end)
+        end
+
+        return root
+    end
+
     u.TpSelectedItems = function(targetCF, spread)
         _G['传送的东西'] = {}
 
-        local nextFn3 = next
-        local models, startKey3 = _G.SelectModels()
+        for _, model in ipairs(_G.SelectModels()) do
+            local owner = model:FindFirstChild('Owner')
 
-        for _, model in nextFn3, models, startKey3 do
-            if model:FindFirstChild('Owner') then
-                if tostring(model.Owner.Value) == _G['菜单']['传送的玩家'] then
-                    if model:FindFirstChild('SelectionBox') then
-                        if not model.PrimaryPart then
-                            model.PrimaryPart = model:FindFirstChildOfClass('Part')
-                        end
-
-                        table.insert(_G['传送的东西'], model)
-                    end
+            if owner and tostring(owner.Value) == _G['菜单']['传送的玩家'] and model:FindFirstChild('SelectionBox') then
+                if u.GetItemRoot(model) then
+                    table.insert(_G['传送的东西'], model)
                 end
             end
         end
 
         _G['菜单']['传送停止'] = false
 
-        local _CFrame11 = _G['自己的方块'].CFrame
-        local __continue_break_4 = false
+        local returnCFrame = _G['自己的方块'].CFrame
+        local failed = 0
 
-        for idx, item in next, _G['传送的东西'] do
-            if _G['菜单']['传送停止'] ~= true then
+        for idx, item in ipairs(_G['传送的东西']) do
+            if _G['菜单']['传送停止'] == true then
+                break
+            end
+
+            local ok, success = pcall(function()
+                if not item.Parent then
+                    return true
+                end
+
                 local dest = targetCF
 
                 if spread then
                     dest = targetCF * CFrame.new(((idx - 1) % 5) * 4 - 8, 0, math.floor((idx - 1) / 5) * 4)
                 end
 
-                item:FindFirstChild('SelectionBox'):Destroy()
+                local root = u.GetItemRoot(item)
 
-                item.PrimaryPart.Anchored = false
+                if not root then
+                    return false
+                end
 
-                if item:FindFirstChildOfClass('Part') and item:FindFirstChild('WoodSection') or item:FindFirstChild('PurchasedBoxItemName') then
-                    item.PrimaryPart.Anchored = false
+                root.Anchored = false
 
-                    _G['传送'](CFrame.new(item.PrimaryPart.Position.X, _G['自己的方块'].Position.Y, item.PrimaryPart.Position.Z) + Vector3.new(1, 0, 0))
+                local isWood = item:FindFirstChild('WoodSection') ~= nil
+                local isBox = item:FindFirstChild('PurchasedBoxItemName') ~= nil
+                local arrived = false
 
-                    item.PrimaryPart.Velocity = Vector3.new(0, 0, 0)
-                    item.PrimaryPart.RotVelocity = Vector3.new(0, 0, 0)
+                if isWood or isBox then
+                    local moveCF = dest
 
-                    if item:FindFirstChild('WoodSection') then
-                        if _G['木头竖着传送'] then
-                            value6(item, dest)
-                        else
-                            value6(item, dest * CFrame.Angles(-90, 0, 90))
-                        end
-                    else
-                        value6(item, dest)
+                    if isWood and not _G['木头竖着传送'] then
+                        moveCF = dest * CFrame.Angles(-90, 0, 90)
                     end
 
-                    game:GetService('RunService').Stepped:wait()
-                    task.wait()
-                    task.wait()
-                    pcall(function()
-                        item:FindFirstChild('SelectionBox'):Destroy()
-                    end)
-                else
-                    pcall(function()
-                        item:FindFirstChild('SelectionBox'):Destroy()
-                    end)
-                    pcall(function()
-                        if item:FindFirstChild('ItemName') then
-                            local _p3 = dest.p
-                            local value
+                    for attempt = 1, 3 do
+                        local rootPos = root.Position
+                        local standY = attempt == 1 and _G['自己的方块'].Position.Y or rootPos.Y + 3
 
-                            repeat
-                                game:GetService('ReplicatedStorage').PlaceStructure.ClientPlacedStructure:FireServer(item.ItemName.Value, dest, item.Owner.Value, nil, item, true)
+                        _G['传送'](CFrame.new(rootPos.X, standY, rootPos.Z) + Vector3.new(1, 0, 0))
+                        task.wait(0.1)
 
-                                value = item.PrimaryPart.CFrame.p
+                        root.Velocity = Vector3.new(0, 0, 0)
+                        root.RotVelocity = Vector3.new(0, 0, 0)
 
-                                task.wait(0.1)
-                            until (value - _p3).Magnitude <= 5
+                        value6(item, moveCF)
+
+                        if not item.Parent or (root.Parent and (root.Position - dest.Position).Magnitude <= 10) then
+                            arrived = true
+
+                            break
                         end
-                    end)
-                    wait()
+
+                        if _G['菜单']['传送停止'] == true then
+                            break
+                        end
+                    end
+                else
+                    local itemName = item:FindFirstChild('ItemName')
+                    local owner = item:FindFirstChild('Owner')
+
+                    if itemName and owner then
+                        for _ = 1, 40 do
+                            game:GetService('ReplicatedStorage').PlaceStructure.ClientPlacedStructure:FireServer(itemName.Value, dest, owner.Value, nil, item, true)
+                            task.wait(0.1)
+
+                            if not item.Parent or (root.Position - dest.Position).Magnitude <= 5 then
+                                arrived = true
+
+                                break
+                            end
+
+                            if _G['菜单']['传送停止'] == true then
+                                break
+                            end
+                        end
+                    end
                 end
-            else
-                break
+
+                if arrived then
+                    local box = item:FindFirstChild('SelectionBox')
+
+                    if box then
+                        box:Destroy()
+                    end
+                end
+
+                return arrived
+            end)
+
+            if not ok or not success then
+                failed = failed + 1
             end
         end
 
-        _G['传送'](_CFrame11)
+        _G['传送'](returnCFrame)
 
         _G['菜单']['飞行'] = false
 
@@ -8361,8 +8646,13 @@ do
         end)
         _G['穿墙'](false)
 
-        _G['菜单']['飞行速度'] = _G['旧的飞行速度']
+        if _G['旧的飞行速度'] then
+            _G['菜单']['飞行速度'] = _G['旧的飞行速度']
+        end
 
+        if failed > 0 then
+            _G['提醒'](tostring(failed) .. ' item(s) failed and are still selected, try again')
+        end
     end
 
     _Item:Button('Tp All Selected Item', function()
@@ -8487,7 +8777,9 @@ do
         end)
         _G['穿墙'](false)
 
-        _G['菜单']['飞行速度'] = _G['旧的飞行速度']
+        if _G['旧的飞行速度'] then
+            _G['菜单']['飞行速度'] = _G['旧的飞行速度']
+        end
     end, { stopper = true, when = function() return _G['菜单']['正在整理物品'] == true end })
 
     _G['修改汽车的属性'] = function(arg1, key)

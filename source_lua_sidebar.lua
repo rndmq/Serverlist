@@ -1854,15 +1854,91 @@ function SectionElements:CreateEmbed(source, imageUrl, width, height, title, car
     end
     local NFootL = foot("FooterLeft", Enum.TextXAlignment.Left, 12)
     local NFootR = foot("FooterRight", Enum.TextXAlignment.Right, 13)
+    NFootL.Position = UDim2.new(0, 31, 0, 101)
+    NFootL.Size = UDim2.new(0.5, 0, 0, 20)
+
+    local Logo = Instance.new("ImageLabel")
+    Logo.Name = "RscriptsLogo"
+    Logo.Parent = Native
+    Logo.BackgroundTransparency = 1
+    Logo.Position = UDim2.new(0, 15, 0, 106)
+    Logo.Size = UDim2.new(0, 12, 0, 12)
+    Logo.ZIndex = 8
+    Logo.Image = ""
+    Logo.Visible = false
+
+    local BadgeImgs = {}
+    for i = 1, 4 do
+        local im = Instance.new("ImageLabel")
+        im.Name = "Badge" .. i
+        im.Parent = Native
+        im.BackgroundTransparency = 1
+        im.Size = UDim2.new(0, 18, 0, 18)
+        im.ZIndex = 9
+        im.Visible = false
+        BadgeImgs[i] = im
+    end
+
+    local VerBadge = Instance.new("ImageLabel")
+    VerBadge.Name = "VerifiedBadge"
+    VerBadge.Parent = Native
+    VerBadge.BackgroundTransparency = 1
+    VerBadge.Size = UDim2.new(0, 18, 0, 18)
+    VerBadge.ImageColor3 = Color3.fromRGB(67, 150, 250)
+    VerBadge.ZIndex = 9
+    VerBadge.Visible = false
+    VerBadge.Image = (Library.ResolveIcon and Library.ResolveIcon("verified")) or ""
+
+    local TierBadge = Instance.new("TextLabel")
+    TierBadge.Name = "TierBadge"
+    TierBadge.Parent = Native
+    TierBadge.BackgroundTransparency = 1
+    TierBadge.Size = UDim2.new(0, 18, 0, 18)
+    TierBadge.Font = Enum.Font.GothamBold
+    TierBadge.TextSize = 16
+    TierBadge.Text = "⚡"
+    TierBadge.TextColor3 = Color3.fromRGB(245, 158, 11)
+    TierBadge.ZIndex = 9
+    TierBadge.Visible = false
 
     local function showNative(d)
         d = d or {}
         local nm = tostring(d.Name or alt or "")
-        local rich = nm:gsub("&", "&amp;"):gsub("<", "&lt;"):gsub(">", "&gt;")
-        if d.Verified then rich = rich .. ' <font color="#4396fa">✔</font>' end
-        if d.Tier then rich = rich .. ' <font color="#f59e0b">⚡</font>' end
-        NName.RichText = true
-        NName.Text = rich
+        NName.RichText = false
+        NName.Text = nm
+        local nameW = 0
+        pcall(function()
+            nameW = game:GetService("TextService"):GetTextSize(nm, 19, Enum.Font.GothamBold, Vector2.new(1000, 40)).X
+        end)
+        local bx = 82 + nameW + 6
+        for _, im in ipairs(BadgeImgs) do im.Visible = false end
+        if type(d.Badges) == "table" and #d.Badges > 0 then
+            VerBadge.Visible = false
+            TierBadge.Visible = false
+            for i, asset in ipairs(d.Badges) do
+                local im = BadgeImgs[i]
+                if im then
+                    im.Image = asset
+                    im.Position = UDim2.new(0, bx, 0, 21)
+                    im.Visible = true
+                    bx = bx + 22
+                end
+            end
+        else
+            VerBadge.Visible = d.Verified and true or false
+            VerBadge.Position = UDim2.new(0, bx, 0, 21)
+            if d.Verified then bx = bx + 22 end
+            TierBadge.Visible = d.Tier and true or false
+            TierBadge.Position = UDim2.new(0, bx, 0, 21)
+        end
+        if d.LogoAsset then
+            Logo.Image = d.LogoAsset
+            Logo.Visible = true
+            NFootL.Position = UDim2.new(0, 31, 0, 101)
+        else
+            Logo.Visible = false
+            NFootL.Position = UDim2.new(0, 14, 0, 101)
+        end
         local bg = typeof(d.Bg) == "Color3" and d.Bg or Color3.fromRGB(28, 28, 34)
         Native.BackgroundColor3 = bg
         if typeof(d.TextColor) == "Color3" then
@@ -1881,6 +1957,28 @@ function SectionElements:CreateEmbed(source, imageUrl, width, height, title, car
         end
         NBio.Text = tostring(d.Bio or "")
         NStats.Text = tostring(d.Stats or "")
+        NFootL.Text = tostring(d.Footer or "")
+        do
+            NBio.TextWrapped = true
+            NBio.TextTruncate = Enum.TextTruncate.None
+            NBio.TextYAlignment = Enum.TextYAlignment.Top
+            local avail = Native.AbsoluteSize.X
+            if not avail or avail < 100 then avail = math.max(120, w - 20) end
+            local bw = math.max(80, avail - 94)
+            local bh = 17
+            pcall(function()
+                bh = game:GetService("TextService"):GetTextSize(NBio.Text, 13, Enum.Font.Gotham, Vector2.new(bw, 1000)).Y + 4
+            end)
+            bh = math.clamp(bh, 17, 72)
+            local extra = bh - 17
+            NBio.Size = UDim2.new(1, -94, 0, bh)
+            NStats.Position = UDim2.new(0, 82, 0, 66 + extra)
+            Line.Position = UDim2.new(0, 14, 0, 94 + extra)
+            NFootL.Position = UDim2.new(0, d.LogoAsset and 31 or 14, 0, 101 + extra)
+            NFootR.Position = UDim2.new(0, 14, 0, 101 + extra)
+            Logo.Position = UDim2.new(0, 15, 0, 106 + extra)
+            Native.Size = UDim2.new(1, 0, 0, 128 + extra)
+        end
         NFootL.Text = tostring(d.Footer or "")
         NFootR.Text = tostring(d.Action or "View profile  >")
         AvatarLetter.Text = (nm ~= "" and nm:sub(1, 1):lower()) or "?"
@@ -1921,7 +2019,7 @@ function SectionElements:CreateEmbed(source, imageUrl, width, height, title, car
     local function parseSvg(svg)
         local texts = {}
         for body in svg:gmatch("<text[^>]*>(.-)</text>") do
-            local t = body:gsub("<[^>]+>", ""):gsub("&amp;", "&"):gsub("&lt;", "<"):gsub("&gt;", ">"):gsub("&quot;", '"'):gsub("&#39;", "'")
+            local t = body:gsub("&#10;", "\n"):gsub("</tspan>%s*<tspan", "</tspan>\n<tspan"):gsub("<[^>]+>", ""):gsub("&amp;", "&"):gsub("&lt;", "<"):gsub("&gt;", ">"):gsub("&quot;", '"'):gsub("&#39;", "'")
             t = t:gsub("^%s+", ""):gsub("%s+$", "")
             if t ~= "" then table.insert(texts, t) end
         end
@@ -1938,18 +2036,32 @@ function SectionElements:CreateEmbed(source, imageUrl, width, height, title, car
         d.Name = rest[1]
         d.Bio = rest[2]
         if not d.Name then return nil end
-        local m, data = svg:match('data:image/(%a+);base64,([%w%+/=]+)')
-        if m and data and writefile and getcustomasset then
-            pcall(function()
-                local raw = b64dec(data)
-                local ext = (raw:sub(1, 4) == "\137PNG") and "png" or ((raw:sub(1, 2) == "\255\216") and "jpg" or nil)
-                if ext then
-                    if makefolder and isfolder and not isfolder("RndmEmbeds") then makefolder("RndmEmbeds") end
-                    local path = "RndmEmbeds/avatar_" .. #raw .. "_" .. tostring(d.Name or "x"):gsub("%W", "") .. "." .. ext
-                    writefile(path, raw)
-                    d.Avatar = getcustomasset(path)
+        if writefile and getcustomasset then
+            d.Badges = {}
+            local badgeList = {}
+            for attrs in svg:gmatch("<image%s+([^>]-)/>") do
+                local mime, data = attrs:match("data:image/(%a+);base64,([%w%+/=]+)")
+                if data then
+                    local ix = tonumber(attrs:match('%sx="([%d%.]+)"')) or 0
+                    local iy = tonumber(attrs:match('%sy="([%d%.]+)"')) or 0
+                    local iw = tonumber(attrs:match('%swidth="([%d%.]+)"')) or 0
+                    pcall(function()
+                        local raw = b64dec(data)
+                        local ext = (raw:sub(1, 4) == "\137PNG") and "png" or ((raw:sub(1, 2) == "\255\216") and "jpg" or nil)
+                        if not ext then return end
+                        if makefolder and isfolder and not isfolder("RndmEmbeds") then makefolder("RndmEmbeds") end
+                        local kind = (iw >= 40 and "avatar") or (iy < 40 and "badge") or "logo"
+                        local path = "RndmEmbeds/" .. kind .. "_" .. #raw .. "_" .. tostring(d.Name or "x"):gsub("%W", "") .. "_" .. math.floor(ix) .. "." .. ext
+                        writefile(path, raw)
+                        local asset = getcustomasset(path)
+                        if kind == "avatar" then d.Avatar = d.Avatar or asset
+                        elseif kind == "logo" then d.LogoAsset = d.LogoAsset or asset
+                        else table.insert(badgeList, { x = ix, asset = asset }) end
+                    end)
                 end
-            end)
+            end
+            table.sort(badgeList, function(p, q) return p.x < q.x end)
+            for _, bdg in ipairs(badgeList) do table.insert(d.Badges, bdg.asset) end
         end
         local function hex(h)
             if not h then return nil end
@@ -1995,6 +2107,7 @@ function SectionElements:CreateEmbed(source, imageUrl, width, height, title, car
     end
 
     local token = 0
+    local overrides = (type(card) == "table") and card or nil
     local function loadImage(url)
         token = token + 1
         local my = token
@@ -2019,6 +2132,9 @@ function SectionElements:CreateEmbed(source, imageUrl, width, height, title, car
                     if not ext and data:find("<svg", 1, true) then
                         local d = parseSvg(data)
                         if d and my == token then
+                            if overrides then
+                                for k, v in pairs(overrides) do d[k] = v end
+                            end
                             showNative(d)
                             hasImage = true
                             refreshText()
@@ -2038,6 +2154,12 @@ function SectionElements:CreateEmbed(source, imageUrl, width, height, title, car
                 end
             end
             if my ~= token then return end
+            if not asset and overrides and overrides.Name then
+                showNative(overrides)
+                hasImage = true
+                refreshText()
+                return
+            end
             if asset and asset ~= "" then
                 Img.Image = asset
                 Img.Visible = true
@@ -2062,7 +2184,7 @@ function SectionElements:CreateEmbed(source, imageUrl, width, height, title, car
         TweenService:Create(Card, TweenInfo.new(0.15), { BackgroundTransparency = 0.35 }):Play()
     end)
 
-    if type(card) == "table" then
+    if type(card) == "table" and not (img and img ~= "") then
         showNative(card)
         hasImage = true
         refreshText()
