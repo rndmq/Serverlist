@@ -3181,7 +3181,9 @@ end
 function SectionElements:CreateTextBox(name, characterLimit, placeholderText, callback)
             local NameTextBox = Instance.new("Frame")
             local Title = Instance.new("TextLabel")
+            local Field = Instance.new("Frame")
             local InputBox = Instance.new("TextBox")
+            local limit = tonumber(characterLimit) or 1000000
 
             local gameId = self.GameId
             if not Settings[gameId] then Settings[gameId] = {} end
@@ -3189,45 +3191,131 @@ function SectionElements:CreateTextBox(name, characterLimit, placeholderText, ca
 
             NameTextBox.Name = name .. "TextBox"
             NameTextBox.Parent = SectionContent
-            NameTextBox.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
             NameTextBox.BackgroundTransparency = 1.000
-            NameTextBox.Size = UDim2.new(1, 0, 0, 50)
+            NameTextBox.Size = UDim2.new(1, 0, 0, 56)
             NameTextBox.ZIndex = 5
 
             Title.Name = "Title"
             Title.Parent = NameTextBox
-            Title.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
             Title.BackgroundTransparency = 1.000
-            Title.Position = UDim2.new(0, 10, 0, 0)
-            Title.Size = UDim2.new(1, -24, 0, 20)
+            Title.Position = UDim2.new(0, 13, 0, 2)
+            Title.Size = UDim2.new(1, -26, 0, 18)
             Title.ZIndex = 5
             Title.Font = Library.Theme.TextFont
             Title.Text = name
             Title.TextColor3 = Library.Theme.TextColor
             Title.TextSize = 15.000
             Title.TextXAlignment = Enum.TextXAlignment.Left
+            Title.TextTruncate = Enum.TextTruncate.AtEnd
+            table.insert(Library.LibraryColorTable, Title)
+
+            local IDLE_BG = Color3.fromRGB(30, 30, 34)
+            local HOVER_BG = Color3.fromRGB(36, 36, 41)
+            local IDLE_STROKE = Color3.fromRGB(58, 58, 66)
+            local tweenInfo = TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+
+            Field.Name = "Field"
+            Field.Parent = NameTextBox
+            Field.BackgroundColor3 = IDLE_BG
+            Field.BorderSizePixel = 0
+            Field.Position = UDim2.new(0, 12, 0, 23)
+            Field.Size = UDim2.new(1, -24, 0, 30)
+            Field.ZIndex = 5
+            local fieldCorner = Instance.new("UICorner")
+            fieldCorner.CornerRadius = UDim.new(0, 8)
+            fieldCorner.Parent = Field
+            local fieldStroke = Instance.new("UIStroke")
+            fieldStroke.Color = IDLE_STROKE
+            fieldStroke.Thickness = 1
+            fieldStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+            fieldStroke.Parent = Field
 
             InputBox.Name = "InputBox"
-            InputBox.Parent = NameTextBox
-            InputBox.BackgroundColor3 = Color3.fromRGB(65, 65, 65)
-            InputBox.BackgroundTransparency = 0.100
-            InputBox.Position = UDim2.new(0, 10, 0, 20)
-            InputBox.Size = UDim2.new(1, -20, 0, 22)
-            InputBox.ZIndex = 5
+            InputBox.Parent = Field
+            InputBox.BackgroundTransparency = 1
+            InputBox.BorderSizePixel = 0
+            InputBox.Position = UDim2.new(0, 11, 0, 0)
+            InputBox.Size = UDim2.new(1, -62, 1, 0)
+            InputBox.ZIndex = 6
             InputBox.Font = Library.Theme.TextFont
             InputBox.PlaceholderText = placeholderText or "message..."
+            InputBox.PlaceholderColor3 = Color3.fromRGB(120, 120, 130)
             InputBox.Text = SavedText
-            InputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+            InputBox.TextColor3 = Color3.fromRGB(235, 235, 240)
             InputBox.TextSize = 14.000
             InputBox.TextXAlignment = Enum.TextXAlignment.Left
+            InputBox.ClearTextOnFocus = false
+            InputBox.ClipsDescendants = true
+
+            local Counter = Instance.new("TextLabel")
+            Counter.Name = "Counter"
+            Counter.Parent = Field
+            Counter.BackgroundTransparency = 1
+            Counter.AnchorPoint = Vector2.new(1, 0.5)
+            Counter.Position = UDim2.new(1, -28, 0.5, 0)
+            Counter.Size = UDim2.new(0, 44, 0, 14)
+            Counter.ZIndex = 6
+            Counter.Font = Enum.Font.Gotham
+            Counter.TextSize = 11
+            Counter.TextColor3 = Color3.fromRGB(120, 120, 130)
+            Counter.TextXAlignment = Enum.TextXAlignment.Right
+            Counter.Visible = false
+
+            local Clear = Instance.new("TextButton")
+            Clear.Name = "Clear"
+            Clear.Parent = Field
+            Clear.AnchorPoint = Vector2.new(1, 0.5)
+            Clear.Position = UDim2.new(1, -5, 0.5, 0)
+            Clear.Size = UDim2.new(0, 20, 0, 20)
+            Clear.BackgroundColor3 = Color3.fromRGB(52, 52, 60)
+            Clear.BackgroundTransparency = 1
+            Clear.BorderSizePixel = 0
+            Clear.AutoButtonColor = false
+            Clear.ZIndex = 7
+            Clear.Font = Enum.Font.GothamBold
+            Clear.Text = "x"
+            Clear.TextSize = 12
+            Clear.TextColor3 = Color3.fromRGB(130, 130, 142)
+            Clear.Visible = false
+            local clearCorner = Instance.new("UICorner")
+            clearCorner.CornerRadius = UDim.new(1, 0)
+            clearCorner.Parent = Clear
+
+            local hovering, focused = false, false
+            local function refreshVisual()
+                local accent = (Library.Theme and Library.Theme.MainColor) or Color3.fromRGB(100, 100, 110)
+                TweenService:Create(fieldStroke, tweenInfo, { Color = focused and accent or IDLE_STROKE, Thickness = focused and 1.5 or 1 }):Play()
+                TweenService:Create(Field, tweenInfo, { BackgroundColor3 = (focused or hovering) and HOVER_BG or IDLE_BG }):Play()
+                Clear.Visible = InputBox.Text ~= "" and (focused or hovering)
+                Counter.Visible = focused and limit <= 1000
+                Counter.Text = #InputBox.Text .. "/" .. limit
+                Counter.TextColor3 = (#InputBox.Text >= limit) and Color3.fromRGB(235, 110, 110) or Color3.fromRGB(120, 120, 130)
+                InputBox.Size = UDim2.new(1, (Counter.Visible and -108 or -62), 1, 0)
+            end
+
+            Field.MouseEnter:Connect(function() hovering = true refreshVisual() end)
+            Field.MouseLeave:Connect(function() hovering = false refreshVisual() end)
+            InputBox.Focused:Connect(function() focused = true refreshVisual() end)
+            InputBox.FocusLost:Connect(function() focused = false refreshVisual() end)
+            Clear.MouseEnter:Connect(function()
+                TweenService:Create(Clear, tweenInfo, { BackgroundTransparency = 0, TextColor3 = Color3.fromRGB(235, 235, 240) }):Play()
+            end)
+            Clear.MouseLeave:Connect(function()
+                TweenService:Create(Clear, tweenInfo, { BackgroundTransparency = 1, TextColor3 = Color3.fromRGB(130, 130, 142) }):Play()
+            end)
+            Clear.MouseButton1Click:Connect(function()
+                InputBox.Text = ""
+                InputBox:CaptureFocus()
+            end)
 
             InputBox:GetPropertyChangedSignal("Text"):Connect(function()
-                if #InputBox.Text > characterLimit then
-                    InputBox.Text = InputBox.Text:sub(1, characterLimit)
+                if #InputBox.Text > limit then
+                    InputBox.Text = InputBox.Text:sub(1, limit)
                 end
                 if not Settings[gameId] then Settings[gameId] = {} end
                 Settings[gameId][name] = InputBox.Text ~= "" and InputBox.Text or placeholderText
                 SaveSettings()
+                refreshVisual()
                 if callback then
                     callback(InputBox.Text ~= "" and InputBox.Text or placeholderText)
                 end
@@ -3239,6 +3327,7 @@ function SectionElements:CreateTextBox(name, characterLimit, placeholderText, ca
                 end)
             end
 
+            refreshVisual()
             return NameTextBox, InputBox
         end
 function SectionElements:CreateImage(name, imageId, size)
