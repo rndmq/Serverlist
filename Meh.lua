@@ -295,10 +295,20 @@ do
             function S:Button(title, cb, opts)
                 breathe()
                 cb = cb or function() end
-                container:CreateButton(tostring(title), cb)
+                local libOpts
+                if type(opts) == 'table' and (opts.cooldown or opts.loading or opts.tooltip) then
+                    libOpts = { Cooldown = opts.cooldown, Loading = opts.loading, Tooltip = opts.tooltip }
+                end
+                local btn = container:CreateButton(tostring(title), cb, libOpts)
                 if opts and opts.stopper then
                     table.insert(panicStoppers, { cb = cb, when = opts.when })
                 end
+                return btn
+            end
+
+            function S:Paragraph(title, text, copyable)
+                breathe()
+                return container:CreateParagraph(title, text, copyable and true or nil)
             end
 
             function S:CreateEmbed(source, imageUrl, width, height, title, card)
@@ -363,7 +373,7 @@ do
                 }
             end
 
-            function S:Slider(title, default, min, max, precise, cb, bind)
+            function S:Slider(title, default, min, max, precise, cb, bind, tooltip)
                 breathe()
                 cb = cb or function() end
                 min = min or 1
@@ -372,7 +382,7 @@ do
                 local ready = false
                 local obj = container:CreateSlider(tostring(title), min, max, default, precise and true or false, function(v)
                     if ready then cb(tonumber(v)) end
-                end, bind)
+                end, bind, tooltip)
                 ready = true
                 
                 return {
@@ -482,7 +492,7 @@ do
                 }
             end
 
-            function S:MultiDropDown(title, list, cb, default, minSel, maxSel)
+            function S:MultiDropDown(title, list, cb, default, minSel, maxSel, extra)
                 breathe()
                 cb = cb or function() end
                 local values = {}
@@ -495,10 +505,10 @@ do
                     local copy = {}
                     for _, v in ipairs(sel or {}) do table.insert(copy, v) end
                     cb(copy)
-                end)
+                end, type(extra) == 'table' and { Icons = extra.icons, Tooltip = extra.tooltip } or nil)
             end
 
-            function S:DropDown(title, list, isPlayers, _, cb, default)
+            function S:DropDown(title, list, isPlayers, _, cb, default, extra)
                 breathe()
                 cb = cb or function() end
                 local values = {}
@@ -524,7 +534,7 @@ do
                 local ready = not isPlayers 
                 local dd = container:CreateDropdown(uniq(title), withNone(values), preset, function(v)
                     if ready and v ~= nil and v ~= 'None' then cb(v) end
-                end)
+                end, { NoNone = true, Icons = type(extra) == 'table' and extra.icons or nil, Tooltip = type(extra) == 'table' and extra.tooltip or nil })
                 ready = true
 
                 if isPlayers then
@@ -577,21 +587,47 @@ do
             return S
         end
 
-        u.Notify = function(_, title, text, confirm, cb)
+        local function guessKind(text)
+            local t = string.lower(tostring(text or ''))
+            local function has(...)
+                for _, w in ipairs({ ... }) do
+                    if string.find(t, w, 1, true) then return true end
+                end
+                return false
+            end
+            if has('done') and has('fail') then return 'warning' end
+            if has('fail', 'error', 'cannot', 'cant ', "can't", 'not find', 'not found', 'gone', 'invalid',
+                'no http', 'not enough', 'stuck', 'too much', 'has left', 'didnt have', 'dont have', 'no queue',
+                'not set', 'is off') then
+                return 'error'
+            end
+            if has('first', 'need', 'please', 'pls ', 'wait', 'already', 'at least', 'set position', 'set item',
+                'sit in', 'are you sure', 'seated', 'only ') then
+                return 'warning'
+            end
+            if has('success', 'done', 'saved', 'selected', 'found', 'exists', 'bought', 'reset', 'ready') then
+                return 'success'
+            end
+            return 'info'
+        end
+
+        u.Notify = function(_, title, text, confirm, cb, kind)
             if confirm then
                 Library:CreateNotification(title, text, 15,
                     { 'Yes', 'Cancel' },
-                    { function() if cb then cb() end end, function() end }
+                    { function() if cb then cb() end end, function() end },
+                    kind or 'warning'
                 )
             else
-                Library:CreateNotification(title, text, 5)
+                Library:CreateNotification(title, text, 5, nil, nil, kind or guessKind(text))
             end
         end
 
-        u.NotifyAction = function(_, title, text, duration, btnText, cb)
+        u.NotifyAction = function(_, title, text, duration, btnText, cb, kind)
             Library:CreateNotification(title, text, duration or 5,
                 { btnText },
-                { function() if cb then cb() end end }
+                { function() if cb then cb() end end },
+                kind or 'info'
             )
         end
 
@@ -689,8 +725,8 @@ do
     local ui = u
     local window, _, _ = u.Create(ui, 'Rndm')
 
-    _G['提醒'] = function(msg)
-        u:Notify('Rndm', msg, false)
+    _G['提醒'] = function(msg, kind)
+        u:Notify('Rndm', msg, false, nil, kind)
     end
     _G['鼠标'] = _G['自己']:GetMouse()
     _G['飞行'] = function(flag)
@@ -2226,7 +2262,7 @@ do
         Credits:Label('Updated by rndm')
         Credits:Label('Remake of Dark V5')
         Credits:Label("Didn't put any discord link because his link alrd expired")
-        Credits:CreateEmbed([[<a href="https://rscripts.net/user/Rndm" target="_blank"><img alt="Rndm, From Rscripts" loading="lazy" width="360" height="132" src="https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/rscripts_rndm.svg" /></a>]], nil, nil, nil, { Bio = "If you enjoy this script, please leave a like on RScripts. It really helps and keeps me motivated!" })
+        Credits:CreateEmbed([[<a href="https://rscripts.net/user/Rndm" target="_blank"><img alt="Rndm, From Rscripts" loading="lazy" width="360" height="132" src="https://raw.githubusercontent.com/rndmq/Serverlist/refs/heads/main/rscripts_rndm.svg" /></a>]], nil, nil, nil, nil, { Bio = "If you enjoy this script, please leave a like on RScripts. It really helps and keeps me motivated!" })
 
         local Status = Home:Section('Server Status')
         local labels, lastText, lastNotify, esp = {}, {}, {}, {}
@@ -5291,11 +5327,11 @@ do
 
         _G['传送'](startCFrame)
         _G['提醒']('Done (' .. moved .. ' moved, ' .. failed .. ' failed)')
-    end)
+    end, { loading = true, tooltip = 'Moves all your logs to your position' })
     _Misc:Button('Sell All Tree', function()
         _G['卖木头']()
         _G['提醒']('Done')
-    end)
+    end, { loading = true })
     _Misc:Button('Bring All Plank', function()
         local startCFrame = _G['自己的方块'].CFrame
         local moved, failed = 0, 0
@@ -5318,7 +5354,7 @@ do
 
         _G['传送'](startCFrame)
         _G['提醒']('Done (' .. moved .. ' moved, ' .. failed .. ' failed)')
-    end)
+    end, { loading = true })
     _Misc:Button('Sell All Plank', function()
         local _CFrame9 = _G['自己的方块'].CFrame
         local nextFn3 = next
@@ -5352,7 +5388,7 @@ do
 
         _G['传送'](_CFrame9)
         _G['提醒']('Done')
-    end)
+    end, { loading = true })
 
     _G['获得土地'] = function()
         local nextFn3 = next
@@ -10262,7 +10298,7 @@ do
         else
             TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, _G['自己'])
         end
-    end)
+    end, { cooldown = 5 })
 
     local hopping = false
     _Server:Button('Server Hop', function()
@@ -10321,10 +10357,11 @@ do
 
             hopping = false
         end)
-    end)
+    end, { cooldown = 5, tooltip = 'Hop to another public server' })
 
     do
         local Srv = _Settings:Section('Server ID', true)
+        Srv:Paragraph('Job ID (tap to copy)', game.JobId, true)
         Srv:Button('Copy Server ID', function()
             local id = u.EncodeServerId(game.JobId) or game.JobId
             if setclipboard then
