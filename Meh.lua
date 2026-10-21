@@ -982,7 +982,7 @@ do
         local t0 = tick()
         local stable, frame = 0, 0
 
-        while obj.Parent and tick() - t0 < 4 do
+        while obj.Parent and tick() - t0 < 8 do
             local pp = obj.PrimaryPart or obj:FindFirstChild('WoodSection')
             if pp then
                 frame = frame + 1
@@ -4122,6 +4122,7 @@ do
             return _G['提醒']('cant mod this wood')
         end
 
+        local keepContainer = keep.Parent
         local keepParentId = keep:FindFirstChild('ParentID')
 
         _G['烧毁'] = nil
@@ -4173,6 +4174,7 @@ do
         _G['菜单']['飞行速度'] = 0
 
         local doneConn = nil
+        local burnConn = nil
         local split = false
         local pulling = false
 
@@ -4203,6 +4205,14 @@ do
                 doneConn = nil
             end
 
+            if burnConn then
+                pcall(function()
+                    burnConn:Disconnect()
+                end)
+
+                burnConn = nil
+            end
+
             stopFly()
             _G['传送'](startCFrame)
 
@@ -4214,29 +4224,58 @@ do
         end
 
         local lastNotice = tick()
+        local burnSpot = CFrame.new(-1665.86548, 355.800415, 1478.47742)
+
+        local function findLava()
+            local current = _G['岩浆']
+
+            if current and current.Parent then
+                return current
+            end
+
+            local volcano = Workspace:FindFirstChild('Region_Volcano')
+
+            if volcano then
+                for _, region in ipairs(volcano:GetChildren()) do
+                    local candidate = region:FindFirstChild('Lava')
+
+                    if candidate and (candidate.Position - lavaHome.Position).Magnitude < 5 then
+                        _G['岩浆'] = candidate
+
+                        return candidate
+                    end
+                end
+            end
+        end
+
+        local lava = findLava()
+
+        if not lava then
+            return finish(false, 'mod wood failed: lava not found')
+        end
 
         _G['提醒']('Mod Wood: setting the section on fire...')
 
         _G['传送'](anchorSection.CFrame)
 
-        local burnDeadline = tick() + 180
+        local burnStart = tick()
+        local burnDeadline = burnStart + 60
 
         repeat
-            spawn(function()
-                _G['拉东西']:FireServer(tree)
-                tree:PivotTo(CFrame.new(-1665.86548, 355.800415, 1478.47742))
-                pcall(function()
-                    spawn(function()
-                        _G['岩浆'].Size = Vector3.new(0, 0, 0)
-                        _G['岩浆'].Size = Vector3.new(0, 0, 0)
-                    end)
+            lava = findLava() or lava
 
-                    _G['岩浆'].CFrame = burn.CFrame
-                    _G['岩浆'].Size = Vector3.new(0, 0, 0)
-                    _G['岩浆'].Size = Vector3.new(0, 0, 0)
-                    _G['岩浆'].Size = Vector3.new(0, 0, 0)
-                end)
+            pcall(function()
+                _G['拉东西']:FireServer(tree)
+                tree:PivotTo(burnSpot)
+
+                lava.CFrame = burn.CFrame
+                lava.Size = Vector3.new(0, 0, 0)
+
+                if tick() - burnStart > 3 then
+                    _G['传送'](burn.CFrame + Vector3.new(0, 12, 0))
+                end
             end)
+
             if tick() - lastNotice > 15 then
                 lastNotice = tick()
                 _G['提醒']('Mod Wood: still waiting for the fire...')
@@ -4244,28 +4283,28 @@ do
             heartbeat:wait()
         until burn:FindFirstChild('LavaFire') or not burn.Parent or not tree.Parent or tick() > burnDeadline
 
-        if not burn:FindFirstChild('LavaFire') then
+        local fire = burn:FindFirstChild('LavaFire')
+
+        if not fire then
             return finish(false, 'mod wood failed: section did not catch fire')
         end
 
         pcall(function()
-            _G['岩浆'].CFrame = lavaHome
+            lava.CFrame = lavaHome
         end)
 
-        burn:FindFirstChild('LavaFire'):Destroy()
+        fire:Destroy()
 
         _G['提醒']('Mod Wood: selling the burned section...')
 
-        doneConn = game:GetService('Workspace').LogModels.ChildAdded:Connect(function(child)
-            local owner = child:WaitForChild('Owner', 5)
+        local burnGone = false
 
-            if owner and owner.Value == _G['自己'] then
-                split = true
-            end
+        burnConn = burn.AncestryChanged:Connect(function()
+            burnGone = true
         end)
 
         local function isSplit()
-            return split or keep.Parent ~= tree
+            return split or keep.Parent ~= keepContainer
         end
 
         _G['拉东西']:FireServer(tree)
@@ -4289,7 +4328,7 @@ do
 
         _G['传送'](burn.CFrame)
 
-        local sellDeadline = tick() + 120
+        local sellDeadline = tick() + 60
 
         repeat
             pcall(function()
@@ -4302,9 +4341,9 @@ do
                 _G['提醒']('Mod Wood: still selling the section...')
             end
             heartbeat:wait()
-        until not burn.Parent or tick() > sellDeadline
+        until burnGone or tick() > sellDeadline
 
-        if burn.Parent then
+        if not burnGone then
             return finish(false, 'mod wood timed out while selling the section')
         end
 
@@ -4317,6 +4356,14 @@ do
         if treeSection then
             _G['传送'](CFrame.new(treeSection.CFrame.p) + Vector3.new(3, 0, 0))
         end
+
+        doneConn = game:GetService('Workspace').LogModels.ChildAdded:Connect(function(child)
+            local owner = child:WaitForChild('Owner', 5)
+
+            if owner and owner.Value == _G['自己'] then
+                split = true
+            end
+        end)
 
         pulling = true
 
@@ -4331,10 +4378,10 @@ do
                     keep:PivotTo(_G['锯木机'])
                 end)
                 heartbeat:wait()
-            until not pulling
+            until not pulling or not keep.Parent
         end)
 
-        local finishDeadline = tick() + 180
+        local finishDeadline = tick() + 90
 
         repeat
             local section = tree:FindFirstChild('WoodSection')
@@ -4565,7 +4612,8 @@ do
             local planks = {}
             conns[#conns + 1] = LogModels.ChildAdded:Connect(function(m)
                 local o = m:WaitForChild('Owner', 10)
-                if o and o.Value == _G['自己'] and not myLog then myLog = m end
+                local tc = m:WaitForChild('TreeClass', 10)
+                if o and tc and o.Value == _G['自己'] and tostring(tc.Value) == treeType and not myLog then myLog = m end
             end)
             conns[#conns + 1] = PlayerModels.ChildAdded:Connect(function(m)
                 local o = m:WaitForChild('Owner', 5)
