@@ -726,6 +726,12 @@ do
     local lastTick = 0
     local total, stepN = 0, 0
     Library.LoadingTimeout = 45
+    Library.LoadingTips = {
+        "Press the star in the top bar to pin your favorite features",
+        "Use the search box to find any option quickly",
+        "Drag the top bar to move the window",
+        "Minimize the UI to keep it out of the way",
+    }
     Library.Loading = false
 
     local function build(title)
@@ -748,7 +754,7 @@ do
         T.Parent = LW
         T.BackgroundTransparency = 1
         T.AnchorPoint = Vector2.new(0.5, 0.5)
-        T.Position = UDim2.new(0.5, 0, 0.36, 0)
+        T.Position = UDim2.new(0.5, 0, 0.42, 0)
         T.Size = UDim2.new(0.84, 0, 0, 30)
         T.ZIndex = 401
         T.Font = Library.Theme.TextFont
@@ -761,7 +767,7 @@ do
         Track.Name = "LoadTrack"
         Track.Parent = LW
         Track.AnchorPoint = Vector2.new(0.5, 0.5)
-        Track.Position = UDim2.new(0.5, 0, 0.52, 0)
+        Track.Position = UDim2.new(0.5, 0, 0.60, 0)
         Track.Size = UDim2.new(0.62, 0, 0, 8)
         Track.BackgroundColor3 = Color3.fromRGB(46, 46, 52)
         Track.BorderSizePixel = 0
@@ -781,7 +787,7 @@ do
         Stat.Name = "LoadStatus"
         Stat.Parent = LW
         Stat.BackgroundTransparency = 1
-        Stat.Position = UDim2.new(0.19, 0, 0.52, 10)
+        Stat.Position = UDim2.new(0.19, 0, 0.60, 10)
         Stat.Size = UDim2.new(0.46, 0, 0, 16)
         Stat.ZIndex = 401
         Stat.Font = Enum.Font.SourceSans
@@ -796,7 +802,7 @@ do
         Pct.Parent = LW
         Pct.BackgroundTransparency = 1
         Pct.AnchorPoint = Vector2.new(1, 0)
-        Pct.Position = UDim2.new(0.81, 0, 0.52, 10)
+        Pct.Position = UDim2.new(0.81, 0, 0.60, 10)
         Pct.Size = UDim2.new(0.16, 0, 0, 16)
         Pct.ZIndex = 401
         Pct.Font = Library.Theme.TextFont
@@ -809,6 +815,107 @@ do
         nv.Value = 0
         nv.Changed:Connect(function(v)
             if Pct and Pct.Parent then Pct.Text = math.floor(v + 0.5) .. "%" end
+        end)
+
+        -- background gradient
+        local bg = Instance.new("UIGradient")
+        bg.Rotation = 90
+        bg.Color = ColorSequence.new(Color3.fromRGB(255, 255, 255), Color3.fromRGB(190, 190, 205))
+        bg.Parent = LW
+
+        -- pulsing logo badge
+        local Badge = Instance.new("Frame")
+        Badge.Name = "LoadBadge"
+        Badge.Parent = LW
+        Badge.AnchorPoint = Vector2.new(0.5, 0.5)
+        Badge.Position = UDim2.new(0.5, 0, 0.2, 0)
+        Badge.Size = UDim2.new(0, 50, 0, 50)
+        Badge.BackgroundColor3 = Library.Theme.MainColor
+        Badge.BorderSizePixel = 0
+        Badge.ZIndex = 401
+        Instance.new("UICorner", Badge).CornerRadius = UDim.new(1, 0)
+        local ring = Instance.new("UIStroke")
+        ring.Color = Library.Theme.MainColor
+        ring.Thickness = 3
+        ring.Transparency = 0.4
+        ring.Parent = Badge
+        local bscale = Instance.new("UIScale")
+        bscale.Parent = Badge
+        local letter = Instance.new("TextLabel")
+        letter.Parent = Badge
+        letter.BackgroundTransparency = 1
+        letter.Size = UDim2.new(1, 0, 1, 0)
+        letter.ZIndex = 402
+        letter.Font = Enum.Font.GothamBold
+        letter.TextSize = 26
+        letter.TextColor3 = Color3.fromRGB(255, 255, 255)
+        letter.Text = string.upper(string.sub(tostring(title or "R"), 1, 1))
+        TweenService:Create(bscale, TweenInfo.new(0.9, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), { Scale = 1.12 }):Play()
+        TweenService:Create(ring, TweenInfo.new(0.9, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), { Transparency = 0.9, Thickness = 6 }):Play()
+
+        -- subtitle with bouncing dots
+        local Sub = Instance.new("TextLabel")
+        Sub.Name = "LoadSub"
+        Sub.Parent = LW
+        Sub.BackgroundTransparency = 1
+        Sub.AnchorPoint = Vector2.new(0.5, 0.5)
+        Sub.Position = UDim2.new(0.5, 0, 0.42, 26)
+        Sub.Size = UDim2.new(0.8, 0, 0, 16)
+        Sub.ZIndex = 401
+        Sub.Font = Enum.Font.SourceSans
+        Sub.TextSize = 14
+        Sub.TextColor3 = Color3.fromRGB(190, 190, 198)
+        Sub.Text = "Preparing your script"
+        task.spawn(function()
+            local n = 0
+            while Sub.Parent do
+                Sub.Text = "Preparing your script" .. string.rep(".", n % 4)
+                n = n + 1
+                task.wait(0.4)
+            end
+        end)
+
+        -- shimmer on the bar
+        local shine = Instance.new("UIGradient")
+        local mc = Library.Theme.MainColor
+        shine.Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, mc),
+            ColorSequenceKeypoint.new(0.5, mc:Lerp(Color3.fromRGB(255, 255, 255), 0.55)),
+            ColorSequenceKeypoint.new(1, mc),
+        })
+        shine.Offset = Vector2.new(-1, 0)
+        shine.Parent = Fill
+        TweenService:Create(shine, TweenInfo.new(1.1, Enum.EasingStyle.Linear, Enum.EasingDirection.In, -1), { Offset = Vector2.new(1, 0) }):Play()
+
+        -- rotating tips
+        local Tip = Instance.new("TextLabel")
+        Tip.Name = "LoadTip"
+        Tip.Parent = LW
+        Tip.BackgroundTransparency = 1
+        Tip.AnchorPoint = Vector2.new(0.5, 1)
+        Tip.Position = UDim2.new(0.5, 0, 1, -12)
+        Tip.Size = UDim2.new(0.86, 0, 0, 16)
+        Tip.ZIndex = 401
+        Tip.Font = Enum.Font.SourceSansItalic
+        Tip.TextSize = 13
+        Tip.TextColor3 = Color3.fromRGB(150, 150, 160)
+        Tip.TextTransparency = 1
+        Tip.TextTruncate = Enum.TextTruncate.AtEnd
+        task.spawn(function()
+            local i = 0
+            while Tip.Parent do
+                local tips = Library.LoadingTips
+                if type(tips) == "table" and #tips > 0 then
+                    i = i % #tips + 1
+                    Tip.Text = "Tip: " .. tostring(tips[i])
+                    TweenService:Create(Tip, TweenInfo.new(0.3), { TextTransparency = 0 }):Play()
+                    task.wait(2.4)
+                    TweenService:Create(Tip, TweenInfo.new(0.3), { TextTransparency = 1 }):Play()
+                    task.wait(0.35)
+                else
+                    task.wait(1)
+                end
+            end
         end)
 
         pcall(MakeDraggable, LW, Main)
@@ -2063,6 +2170,7 @@ local function SelectThisTab()
     TweenService:Create(NameTab, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
         Position = UDim2.new(0, 0, 0, 0)
     }):Play()
+    if Library._OnTabSelect then pcall(Library._OnTabSelect, NameTab) end
     if Library._StageIn then pcall(Library._StageIn, SectionScrollingFrame) end
 end
 NameTabButton.MouseButton1Click:Connect(SelectThisTab)
@@ -6182,6 +6290,28 @@ do
         end
     end
 
+    local favOpen = false
+    local function pull(info)
+        if info.pulled or not favContent then return end
+        info.pulled = true
+        info.el.LayoutOrder = info.favOrder or 1
+        info.el.Parent = favContent
+    end
+    local function push(info)
+        if not info.pulled then return end
+        info.pulled = false
+        info.el.LayoutOrder = info.order
+        if info.home and info.home.Parent then info.el.Parent = info.home end
+    end
+    function Library._OnTabSelect(tabFrame)
+        if not favOn then return end
+        favOpen = (tabFrame.Name == favTabName .. "Tab")
+        for _, info in pairs(registry) do
+            if favOpen and info.faved then pull(info)
+            elseif not favOpen then push(info) end
+        end
+    end
+
     local function setFav(info, on, silent)
         if on == info.faved then return end
         if on then
@@ -6193,13 +6323,11 @@ do
                 favCounter = favCounter + 1
                 info.favOrder = favCounter
             end
-            info.el.LayoutOrder = info.favOrder
-            info.el.Parent = favContent
             saved[info.key] = true
+            if favOpen then pull(info) end
         else
             info.faved = false
-            info.el.LayoutOrder = info.order
-            if info.home and info.home.Parent then info.el.Parent = info.home end
+            push(info)
             saved[info.key] = nil
             savedIndex[info.key] = nil
         end
@@ -6208,14 +6336,33 @@ do
         if not silent then persist() end
     end
 
+    local function hideOriginal(info, on)
+        local el = info.el
+        if el.AutomaticSize ~= Enum.AutomaticSize.None then return end
+        if on then
+            info.hidden = {}
+            for _, c in ipairs(el:GetChildren()) do
+                if c:IsA("GuiObject") and c ~= info.ov then
+                    info.hidden[c] = c.Visible
+                    c.Visible = false
+                end
+            end
+        elseif info.hidden then
+            for c, v in pairs(info.hidden) do
+                if c.Parent then c.Visible = v end
+            end
+            info.hidden = nil
+        end
+    end
+
     local function ensureOverlay(info)
         if info.ov or not info.el.Parent then return info.ov end
         local ov = Instance.new("TextButton")
         ov.Name = "FavOverlay"
         ov.Text = ""
         ov.AutoButtonColor = false
-        ov.BackgroundColor3 = Color3.fromRGB(14, 14, 18)
-        ov.BackgroundTransparency = 0.12
+        ov.BackgroundColor3 = Color3.fromRGB(38, 38, 46)
+        ov.BackgroundTransparency = 0
         ov.BorderSizePixel = 0
         ov.Size = UDim2.new(1, 0, 1, 0)
         ov.ZIndex = 60
@@ -6252,6 +6399,7 @@ do
         star.Parent = ov
         info.ov, info.star = ov, star
         refreshStar(info)
+        if favMode then info.applyHide(true) end
         ov.MouseButton1Click:Connect(function()
             setFav(info, not info.faved)
         end)
@@ -6265,6 +6413,7 @@ do
         local key = tabName .. "\t" .. secName .. "\t" .. el.Name
         if registry[key] then return end
         local info = { el = el, key = key, home = home, order = el.LayoutOrder }
+        info.applyHide = function(on) hideOriginal(info, on) end
         registry[key] = info
         byInst[el] = info
         if favOn then
@@ -6283,8 +6432,14 @@ do
             ModeLbl.TextColor3 = favMode and Color3.fromRGB(30, 24, 8) or Color3.fromRGB(235, 235, 240)
         end
         for _, info in pairs(registry) do
-            if favMode then ensureOverlay(info) end
-            if info.ov then info.ov.Visible = favMode end
+            if favMode then
+                ensureOverlay(info)
+                if info.ov then info.ov.Visible = true end
+                if not info.hidden then hideOriginal(info, true) end
+            else
+                if info.ov then info.ov.Visible = false end
+                hideOriginal(info, false)
+            end
         end
         if Library.Notify and favMode then
             pcall(function() Library:Notify("info", "Favorite mode", "Tap an element to pin / unpin it.", 2.5) end)
