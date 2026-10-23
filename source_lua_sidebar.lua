@@ -2313,6 +2313,9 @@ function TabElements:CreateSection(name, collapsible, startClosed)
             if Library._RegFav and child:IsA("Frame") then
                 pcall(Library._RegFav, child, tabNameForFav, name, SectionContent)
             end
+            if Library._RegBind and child:IsA("Frame") then
+                pcall(Library._RegBind, child, tabNameForFav, name, SectionContent)
+            end
         end)
     end)
 
@@ -3536,7 +3539,7 @@ table.insert(Library.LibraryColorTable, Button)
                 end
             end
 
-            Button.MouseButton1Click:Connect(function()
+            local function press()
                 if state ~= "idle" then return end
                 if confirmOpt and Library.Confirm then
                     local c = type(confirmOpt) == "table" and confirmOpt or {}
@@ -3545,7 +3548,10 @@ table.insert(Library.LibraryColorTable, Button)
                 else
                     runAction()
                 end
-            end)
+            end
+            Button.MouseButton1Click:Connect(press)
+            Library._Triggers = Library._Triggers or {}
+            Library._Triggers[NameButton] = press
 
             Button.MouseButton1Up:Connect(function()
                 TweenService:Create(ButtonRounded, TweenInfo.new(0.25, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {ImageColor3 = Library.Theme.MainColor}):Play()
@@ -3802,6 +3808,8 @@ function SectionElements:CreateToggle(name, ...)
             if type(v) == "boolean" then ToggleAPI.SetState(v) end
         end)
     end
+    Library._Triggers = Library._Triggers or {}
+    Library._Triggers[NameToggle] = function() ToggleAPI.SetState(not Toggled) end
     return ToggleAPI
 end
 local TweenService = game:GetService("TweenService")
@@ -6425,6 +6433,7 @@ do
     function Library:SetFavoriteMode(on)
         if not favOn then return end
         favMode = on and true or false
+        if favMode and Library._OnFavMode then Library._OnFavMode() end
         if ModeBtn then
             TweenService:Create(ModeBtn, TweenInfo.new(0.15), {
                 BackgroundColor3 = favMode and Color3.fromRGB(240, 190, 60) or Color3.fromRGB(58, 58, 66)
@@ -6505,6 +6514,291 @@ do
             if saved[info.key] then setFav(info, true, true) end
         end
         updateEmpty()
+    end
+end
+
+-- ===== Per-element hotkeys (toggles & buttons) =====
+do
+    local UIS = game:GetService("UserInputService")
+    local bindOn, bindMode = false, false
+    local registry, byInst = {}, {}
+    local binds = {}
+    local listening
+    local ModeBtn, ModeLbl
+
+    local function gid() return tostring(game.PlaceId) end
+    local function load()
+        binds = {}
+        local all = Settings.__Binds
+        local t = type(all) == "table" and all[gid()] or nil
+        if type(t) == "table" then
+            for k, v in pairs(t) do if type(v) == "string" then binds[k] = v end end
+        end
+    end
+    local function persist()
+        if type(Settings.__Binds) ~= "table" then Settings.__Binds = {} end
+        local copy = {}
+        for k, v in pairs(binds) do copy[k] = v end
+        Settings.__Binds[gid()] = copy
+        pcall(SaveSettings)
+    end
+
+    local function chipText(info)
+        return binds[info.key] or nil
+    end
+    local function refresh(info)
+        local kn = chipText(info)
+        if info.badge then
+            info.badge.Visible = kn ~= nil and not bindMode
+            info.badge.Text = kn or ""
+        end
+        if info.chip then
+            if listening == info then
+                info.chip.Text = "Press a key..."
+                info.chip.TextColor3 = Color3.fromRGB(250, 200, 70)
+            else
+                info.chip.Text = kn or "Tap to bind"
+                info.chip.TextColor3 = kn and Color3.fromRGB(235, 235, 240) or Color3.fromRGB(150, 150, 160)
+            end
+        end
+    end
+
+    local function hideOriginal(info, on)
+        local el = info.el
+        if on then
+            info.hidden = {}
+            for _, c in ipairs(el:GetChildren()) do
+                if c:IsA("GuiObject") and c ~= info.ov then
+                    info.hidden[c] = c.Visible
+                    c.Visible = false
+                end
+            end
+        elseif info.hidden then
+            for c, v in pairs(info.hidden) do
+                if c.Parent then c.Visible = v end
+            end
+            info.hidden = nil
+        end
+    end
+
+    local function stopListening()
+        local prev = listening
+        listening = nil
+        if prev then refresh(prev) end
+    end
+
+    local function setBind(info, keyName)
+        if keyName then
+            for k, v in pairs(binds) do
+                if v == keyName and k ~= info.key then
+                    binds[k] = nil
+                    local other = registry[k]
+                    if other then refresh(other) end
+                    pcall(function() Library:Notify("warning", "Hotkey moved", keyName .. " was used by \"" .. tostring(other and other.display or "another element") .. "\".", 3) end)
+                end
+            end
+        end
+        binds[info.key] = keyName
+        persist()
+        refresh(info)
+    end
+
+    local function ensureBadge(info)
+        if info.badge then return end
+        local b = Instance.new("TextLabel")
+        b.Name = "BindBadge"
+        b.AnchorPoint = Vector2.new(1, 0.5)
+        b.Position = UDim2.new(1, info.kind == "Toggle" and -58 or -8, 0.5, 0)
+        b.Size = UDim2.new(0, 0, 0, 16)
+        b.AutomaticSize = Enum.AutomaticSize.X
+        b.BackgroundColor3 = Color3.fromRGB(20, 20, 26)
+        b.BackgroundTransparency = 0.2
+        b.BorderSizePixel = 0
+        b.ZIndex = 30
+        b.Font = Enum.Font.GothamBold
+        b.TextSize = 11
+        b.TextColor3 = Color3.fromRGB(235, 235, 240)
+        b.Visible = false
+        local pad = Instance.new("UIPadding")
+        pad.PaddingLeft = UDim.new(0, 6)
+        pad.PaddingRight = UDim.new(0, 6)
+        pad.Parent = b
+        Instance.new("UICorner", b).CornerRadius = UDim.new(0, 4)
+        local st = Instance.new("UIStroke")
+        st.Color = Library.Theme.MainColor
+        st.Transparency = 0.4
+        st.Parent = b
+        b.Parent = info.el
+        info.badge = b
+    end
+
+    local function ensureOverlay(info)
+        if info.ov or not info.el.Parent then return end
+        local ov = Instance.new("TextButton")
+        ov.Name = "BindOverlay"
+        ov.Text = ""
+        ov.AutoButtonColor = false
+        ov.BackgroundColor3 = Color3.fromRGB(38, 38, 46)
+        ov.BorderSizePixel = 0
+        ov.Size = UDim2.new(1, 0, 1, 0)
+        ov.ZIndex = 60
+        ov.Visible = bindMode
+        ov.Parent = info.el
+        Instance.new("UICorner", ov).CornerRadius = UDim.new(0, 6)
+        local st = Instance.new("UIStroke")
+        st.Color = Library.Theme.MainColor
+        st.Transparency = 0.5
+        st.Parent = ov
+        local nameL = Instance.new("TextLabel")
+        nameL.BackgroundTransparency = 1
+        nameL.Position = UDim2.new(0, 12, 0, 0)
+        nameL.Size = UDim2.new(1, -130, 1, 0)
+        nameL.ZIndex = 61
+        nameL.Font = Library.Theme.TextFont
+        nameL.Text = info.display
+        nameL.TextColor3 = Color3.fromRGB(225, 225, 232)
+        nameL.TextSize = 14
+        nameL.TextXAlignment = Enum.TextXAlignment.Left
+        nameL.TextTruncate = Enum.TextTruncate.AtEnd
+        nameL.Parent = ov
+        local chip = Instance.new("TextLabel")
+        chip.AnchorPoint = Vector2.new(1, 0.5)
+        chip.Position = UDim2.new(1, -8, 0.5, 0)
+        chip.Size = UDim2.new(0, 112, 0, 22)
+        chip.BackgroundColor3 = Color3.fromRGB(20, 20, 26)
+        chip.BorderSizePixel = 0
+        chip.ZIndex = 61
+        chip.Font = Enum.Font.GothamBold
+        chip.TextSize = 12
+        chip.Parent = ov
+        Instance.new("UICorner", chip).CornerRadius = UDim.new(0, 6)
+        info.ov, info.chip = ov, chip
+        refresh(info)
+        ov.MouseButton1Click:Connect(function()
+            local prev = listening
+            listening = info
+            if prev then refresh(prev) end
+            refresh(info)
+        end)
+        if bindMode then hideOriginal(info, true) end
+    end
+
+    function Library._RegBind(el, tabName, secName, home)
+        if byInst[el] then return end
+        local trig = Library._Triggers and Library._Triggers[el]
+        if not trig then return end
+        local display, kind = Library._ElementInfo(el)
+        local key = tabName .. "\t" .. secName .. "\t" .. el.Name
+        if registry[key] then return end
+        local info = { el = el, key = key, display = tostring(display or el.Name), kind = kind }
+        registry[key] = info
+        byInst[el] = info
+        if bindOn then
+            ensureBadge(info)
+            refresh(info)
+            if bindMode then ensureOverlay(info) end
+        end
+    end
+
+    function Library:SetBindMode(on)
+        if not bindOn then return end
+        on = on and true or false
+        if on and Library.SetFavoriteMode then Library:SetFavoriteMode(false) end
+        bindMode = on
+        if not on then stopListening() end
+        if ModeBtn then
+            TweenService:Create(ModeBtn, TweenInfo.new(0.15), {
+                BackgroundColor3 = on and Color3.fromRGB(90, 160, 250) or Color3.fromRGB(58, 58, 66)
+            }):Play()
+            ModeLbl.TextColor3 = on and Color3.fromRGB(10, 20, 40) or Color3.fromRGB(235, 235, 240)
+        end
+        for _, info in pairs(registry) do
+            if on then
+                ensureOverlay(info)
+                info.ov.Visible = true
+                if not info.hidden then hideOriginal(info, true) end
+            else
+                if info.ov then info.ov.Visible = false end
+                hideOriginal(info, false)
+            end
+            refresh(info)
+        end
+        if on then
+            pcall(function() Library:Notify("info", "Hotkey mode", "Tap a toggle or button, then press a key. Esc cancels, Backspace clears.", 4) end)
+        end
+    end
+    -- favorites mode turns this off
+    Library._OnFavMode = function() if bindMode then Library:SetBindMode(false) end end
+
+    function Library:GetBind(tabName, secName, elName)
+        return binds[tostring(tabName) .. "\t" .. tostring(secName) .. "\t" .. tostring(elName)]
+    end
+
+    function Library:EnableBinds()
+        if bindOn then return end
+        bindOn = true
+        load()
+
+        ModeBtn = Instance.new("TextButton")
+        ModeBtn.Name = "BindModeBtn"
+        ModeBtn.Parent = Topbar
+        ModeBtn.Position = UDim2.new(1, -68, 0, 7)
+        ModeBtn.Size = UDim2.new(0, 15, 0, 15)
+        ModeBtn.BackgroundColor3 = Color3.fromRGB(58, 58, 66)
+        ModeBtn.BorderSizePixel = 0
+        ModeBtn.AutoButtonColor = false
+        ModeBtn.Text = ""
+        ModeBtn.ZIndex = 10
+        Instance.new("UICorner", ModeBtn).CornerRadius = UDim.new(0, 4)
+        ModeLbl = Instance.new("TextLabel")
+        ModeLbl.Parent = ModeBtn
+        ModeLbl.BackgroundTransparency = 1
+        ModeLbl.Size = UDim2.new(1, 0, 1, 0)
+        ModeLbl.ZIndex = 11
+        ModeLbl.Font = Enum.Font.GothamBold
+        ModeLbl.TextSize = 10
+        ModeLbl.Text = "K"
+        ModeLbl.TextColor3 = Color3.fromRGB(235, 235, 240)
+        ModeBtn.MouseButton1Click:Connect(function()
+            Library:SetBindMode(not bindMode)
+        end)
+
+        for _, info in pairs(registry) do
+            ensureBadge(info)
+            refresh(info)
+        end
+
+        UIS.InputBegan:Connect(function(input, gp)
+            if input.UserInputType ~= Enum.UserInputType.Keyboard then return end
+            local kn = input.KeyCode.Name
+            if kn == "Unknown" then return end
+            if listening then
+                local info = listening
+                if kn == "Escape" then
+                    stopListening()
+                elseif kn == "Backspace" or kn == "Delete" then
+                    listening = nil
+                    setBind(info, nil)
+                else
+                    listening = nil
+                    setBind(info, kn)
+                end
+                return
+            end
+            if gp or UIS:GetFocusedTextBox() then return end
+            for k, v in pairs(binds) do
+                if v == kn then
+                    local info = registry[k]
+                    local trig = info and Library._Triggers[info.el]
+                    if trig and info.el.Parent then
+                        task.spawn(function()
+                            local ok, err = pcall(trig)
+                            if not ok then warn(err) end
+                        end)
+                    end
+                end
+            end
+        end)
     end
 end
 
