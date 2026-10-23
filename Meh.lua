@@ -222,6 +222,7 @@ do
 
         pcall(function() Library:CreateWindow('Rndm - Dark X Revamped') end)
         pcall(function() Library:SetLogo('Rndm') end)
+        pcall(function() Library:StartLoading('Rndm - Dark X Revamped', 'Starting...', 16) end)
 
         local TabIcons = {
             ['Home'] = 'home',
@@ -296,8 +297,8 @@ do
                 breathe()
                 cb = cb or function() end
                 local libOpts
-                if type(opts) == 'table' and (opts.cooldown or opts.loading or opts.tooltip) then
-                    libOpts = { Cooldown = opts.cooldown, Loading = opts.loading, Tooltip = opts.tooltip }
+                if type(opts) == 'table' and (opts.cooldown or opts.loading or opts.tooltip or opts.confirm) then
+                    libOpts = { Cooldown = opts.cooldown, Loading = opts.loading, Tooltip = opts.tooltip, Confirm = opts.confirm }
                 end
                 local btn = container:CreateButton(tostring(title), cb, libOpts)
                 if opts and opts.stopper then
@@ -679,6 +680,7 @@ do
             function Tabs:CreateTab(title, _icon)
                 title = tostring(title):gsub('%s+$', '')
                 print('[Rndm] building tab: ' .. title)
+                pcall(function() Library:LoadingStep('Building tab: ' .. title) end)
                 local okTab, raw = pcall(function()
                     return Library:CreateTab(title, TabIcons[title])
                 end)
@@ -982,7 +984,7 @@ do
         local t0 = tick()
         local stable, frame = 0, 0
 
-        while obj.Parent and tick() - t0 < 8 do
+        while obj.Parent and tick() - t0 < 4 do
             local pp = obj.PrimaryPart or obj:FindFirstChild('WoodSection')
             if pp then
                 frame = frame + 1
@@ -4122,7 +4124,6 @@ do
             return _G['提醒']('cant mod this wood')
         end
 
-        local keepContainer = keep.Parent
         local keepParentId = keep:FindFirstChild('ParentID')
 
         _G['烧毁'] = nil
@@ -4174,7 +4175,6 @@ do
         _G['菜单']['飞行速度'] = 0
 
         local doneConn = nil
-        local burnConn = nil
         local split = false
         local pulling = false
 
@@ -4205,14 +4205,6 @@ do
                 doneConn = nil
             end
 
-            if burnConn then
-                pcall(function()
-                    burnConn:Disconnect()
-                end)
-
-                burnConn = nil
-            end
-
             stopFly()
             _G['传送'](startCFrame)
 
@@ -4224,58 +4216,29 @@ do
         end
 
         local lastNotice = tick()
-        local burnSpot = CFrame.new(-1665.86548, 355.800415, 1478.47742)
-
-        local function findLava()
-            local current = _G['岩浆']
-
-            if current and current.Parent then
-                return current
-            end
-
-            local volcano = Workspace:FindFirstChild('Region_Volcano')
-
-            if volcano then
-                for _, region in ipairs(volcano:GetChildren()) do
-                    local candidate = region:FindFirstChild('Lava')
-
-                    if candidate and (candidate.Position - lavaHome.Position).Magnitude < 5 then
-                        _G['岩浆'] = candidate
-
-                        return candidate
-                    end
-                end
-            end
-        end
-
-        local lava = findLava()
-
-        if not lava then
-            return finish(false, 'mod wood failed: lava not found')
-        end
 
         _G['提醒']('Mod Wood: setting the section on fire...')
 
         _G['传送'](anchorSection.CFrame)
 
-        local burnStart = tick()
-        local burnDeadline = burnStart + 60
+        local burnDeadline = tick() + 180
 
         repeat
-            lava = findLava() or lava
-
-            pcall(function()
+            spawn(function()
                 _G['拉东西']:FireServer(tree)
-                tree:PivotTo(burnSpot)
+                tree:PivotTo(CFrame.new(-1665.86548, 355.800415, 1478.47742))
+                pcall(function()
+                    spawn(function()
+                        _G['岩浆'].Size = Vector3.new(0, 0, 0)
+                        _G['岩浆'].Size = Vector3.new(0, 0, 0)
+                    end)
 
-                lava.CFrame = burn.CFrame
-                lava.Size = Vector3.new(0, 0, 0)
-
-                if tick() - burnStart > 3 then
-                    _G['传送'](burn.CFrame + Vector3.new(0, 12, 0))
-                end
+                    _G['岩浆'].CFrame = burn.CFrame
+                    _G['岩浆'].Size = Vector3.new(0, 0, 0)
+                    _G['岩浆'].Size = Vector3.new(0, 0, 0)
+                    _G['岩浆'].Size = Vector3.new(0, 0, 0)
+                end)
             end)
-
             if tick() - lastNotice > 15 then
                 lastNotice = tick()
                 _G['提醒']('Mod Wood: still waiting for the fire...')
@@ -4283,28 +4246,28 @@ do
             heartbeat:wait()
         until burn:FindFirstChild('LavaFire') or not burn.Parent or not tree.Parent or tick() > burnDeadline
 
-        local fire = burn:FindFirstChild('LavaFire')
-
-        if not fire then
+        if not burn:FindFirstChild('LavaFire') then
             return finish(false, 'mod wood failed: section did not catch fire')
         end
 
         pcall(function()
-            lava.CFrame = lavaHome
+            _G['岩浆'].CFrame = lavaHome
         end)
 
-        fire:Destroy()
+        burn:FindFirstChild('LavaFire'):Destroy()
 
         _G['提醒']('Mod Wood: selling the burned section...')
 
-        local burnGone = false
+        doneConn = game:GetService('Workspace').LogModels.ChildAdded:Connect(function(child)
+            local owner = child:WaitForChild('Owner', 5)
 
-        burnConn = burn.AncestryChanged:Connect(function()
-            burnGone = true
+            if owner and owner.Value == _G['自己'] then
+                split = true
+            end
         end)
 
         local function isSplit()
-            return split or keep.Parent ~= keepContainer
+            return split or keep.Parent ~= tree
         end
 
         _G['拉东西']:FireServer(tree)
@@ -4328,7 +4291,7 @@ do
 
         _G['传送'](burn.CFrame)
 
-        local sellDeadline = tick() + 60
+        local sellDeadline = tick() + 120
 
         repeat
             pcall(function()
@@ -4341,9 +4304,9 @@ do
                 _G['提醒']('Mod Wood: still selling the section...')
             end
             heartbeat:wait()
-        until burnGone or tick() > sellDeadline
+        until not burn.Parent or tick() > sellDeadline
 
-        if not burnGone then
+        if burn.Parent then
             return finish(false, 'mod wood timed out while selling the section')
         end
 
@@ -4356,14 +4319,6 @@ do
         if treeSection then
             _G['传送'](CFrame.new(treeSection.CFrame.p) + Vector3.new(3, 0, 0))
         end
-
-        doneConn = game:GetService('Workspace').LogModels.ChildAdded:Connect(function(child)
-            local owner = child:WaitForChild('Owner', 5)
-
-            if owner and owner.Value == _G['自己'] then
-                split = true
-            end
-        end)
 
         pulling = true
 
@@ -4378,10 +4333,10 @@ do
                     keep:PivotTo(_G['锯木机'])
                 end)
                 heartbeat:wait()
-            until not pulling or not keep.Parent
+            until not pulling
         end)
 
-        local finishDeadline = tick() + 90
+        local finishDeadline = tick() + 180
 
         repeat
             local section = tree:FindFirstChild('WoodSection')
@@ -4612,8 +4567,7 @@ do
             local planks = {}
             conns[#conns + 1] = LogModels.ChildAdded:Connect(function(m)
                 local o = m:WaitForChild('Owner', 10)
-                local tc = m:WaitForChild('TreeClass', 10)
-                if o and tc and o.Value == _G['自己'] and tostring(tc.Value) == treeType and not myLog then myLog = m end
+                if o and o.Value == _G['自己'] and not myLog then myLog = m end
             end)
             conns[#conns + 1] = PlayerModels.ChildAdded:Connect(function(m)
                 local o = m:WaitForChild('Owner', 5)
@@ -6025,7 +5979,7 @@ do
     end)
     _Wipe:Button('Wipe', function()
         _G['擦除选择的物品']()
-    end)
+    end, { confirm = 'This permanently removes the selected items.' })
 
     _G['点击删除物品'] = nil
 
@@ -8332,7 +8286,7 @@ do
         pcall(function()
             game.Workspace.darkx:Destroy()
         end)
-    end)
+    end, { confirm = 'Delete the saved position marker?' })
 
     local _selectItem = _Items:Section('select Item')
 
@@ -10216,7 +10170,7 @@ do
     end)
     _Player3:Button('Kill!', function()
         _G['搞玩家']()
-    end)
+    end, { confirm = 'Kill the selected player?' })
     _Player3:Toggle('Delete all Shop items', false, function(enabled)
         _G['菜单']['删除商店物品'] = enabled
     end)
@@ -10450,6 +10404,9 @@ do
     end
 
     u.BuildSettings()
+    pcall(function() Library:LoadingStep('Favorites') end)
+    pcall(function() Library:EnableFavorites('Favorites', 'star') end)
+    pcall(function() Library:FinishLoading('Ready') end)
     _G['提醒']('Rndm load success')
 
     return

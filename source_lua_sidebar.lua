@@ -720,6 +720,334 @@ Library.ToggleUI = function()
     if Minimized then MaximizeUI() else MinimizeUI() end
 end
 
+-- ===== Loading window =====
+do
+    local LW, Fill, Pct, Stat, nv
+    local lastTick = 0
+    local total, stepN = 0, 0
+    Library.LoadingTimeout = 45
+    Library.Loading = false
+
+    local function build(title)
+        if LW and LW.Parent then return end
+        local ok, grp = pcall(Instance.new, "CanvasGroup")
+        LW = ok and grp or Instance.new("Frame")
+        LW.Name = "LoadingWindow"
+        LW.Parent = Main
+        LW.Size = UDim2.new(1, 0, 1, 0)
+        LW.BackgroundColor3 = Library.Theme.BackgroundColor
+        LW.BackgroundTransparency = 0
+        LW.BorderSizePixel = 0
+        LW.ZIndex = 400
+        LW.Active = true
+        LW.ClipsDescendants = true
+        Instance.new("UICorner", LW).CornerRadius = UDim.new(0, 10)
+
+        local T = Instance.new("TextLabel")
+        T.Name = "LoadTitle"
+        T.Parent = LW
+        T.BackgroundTransparency = 1
+        T.AnchorPoint = Vector2.new(0.5, 0.5)
+        T.Position = UDim2.new(0.5, 0, 0.36, 0)
+        T.Size = UDim2.new(0.84, 0, 0, 30)
+        T.ZIndex = 401
+        T.Font = Library.Theme.TextFont
+        T.Text = tostring(title or "Loading")
+        T.TextColor3 = Library.Theme.TextColor
+        T.TextSize = 24
+        T.TextTruncate = Enum.TextTruncate.AtEnd
+
+        local Track = Instance.new("Frame")
+        Track.Name = "LoadTrack"
+        Track.Parent = LW
+        Track.AnchorPoint = Vector2.new(0.5, 0.5)
+        Track.Position = UDim2.new(0.5, 0, 0.52, 0)
+        Track.Size = UDim2.new(0.62, 0, 0, 8)
+        Track.BackgroundColor3 = Color3.fromRGB(46, 46, 52)
+        Track.BorderSizePixel = 0
+        Track.ZIndex = 401
+        Instance.new("UICorner", Track).CornerRadius = UDim.new(1, 0)
+
+        Fill = Instance.new("Frame")
+        Fill.Name = "LoadFill"
+        Fill.Parent = Track
+        Fill.Size = UDim2.new(0, 0, 1, 0)
+        Fill.BackgroundColor3 = Library.Theme.MainColor
+        Fill.BorderSizePixel = 0
+        Fill.ZIndex = 402
+        Instance.new("UICorner", Fill).CornerRadius = UDim.new(1, 0)
+
+        Stat = Instance.new("TextLabel")
+        Stat.Name = "LoadStatus"
+        Stat.Parent = LW
+        Stat.BackgroundTransparency = 1
+        Stat.Position = UDim2.new(0.19, 0, 0.52, 10)
+        Stat.Size = UDim2.new(0.46, 0, 0, 16)
+        Stat.ZIndex = 401
+        Stat.Font = Enum.Font.SourceSans
+        Stat.TextSize = 13
+        Stat.TextColor3 = Color3.fromRGB(190, 190, 198)
+        Stat.TextXAlignment = Enum.TextXAlignment.Left
+        Stat.TextTruncate = Enum.TextTruncate.AtEnd
+        Stat.Text = "Starting..."
+
+        Pct = Instance.new("TextLabel")
+        Pct.Name = "LoadPercent"
+        Pct.Parent = LW
+        Pct.BackgroundTransparency = 1
+        Pct.AnchorPoint = Vector2.new(1, 0)
+        Pct.Position = UDim2.new(0.81, 0, 0.52, 10)
+        Pct.Size = UDim2.new(0.16, 0, 0, 16)
+        Pct.ZIndex = 401
+        Pct.Font = Library.Theme.TextFont
+        Pct.TextSize = 13
+        Pct.TextColor3 = Library.Theme.TextColor
+        Pct.TextXAlignment = Enum.TextXAlignment.Right
+        Pct.Text = "0%"
+
+        nv = Instance.new("NumberValue")
+        nv.Value = 0
+        nv.Changed:Connect(function(v)
+            if Pct and Pct.Parent then Pct.Text = math.floor(v + 0.5) .. "%" end
+        end)
+
+        pcall(MakeDraggable, LW, Main)
+    end
+
+    local function setPct(p)
+        p = math.clamp(tonumber(p) or 0, 0, 100)
+        Library.LoadingPercent = p
+        if Fill and Fill.Parent then
+            TweenService:Create(Fill, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Size = UDim2.new(p / 100, 0, 1, 0) }):Play()
+        end
+        if nv then
+            TweenService:Create(nv, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Value = p }):Play()
+        end
+    end
+
+    function Library:StartLoading(title, status, totalSteps)
+        build(title)
+        total = tonumber(totalSteps) or 0
+        stepN = 0
+        lastTick = os.clock()
+        Library.Loading = true
+        if Stat and status then Stat.Text = tostring(status) end
+        setPct(0)
+        task.spawn(function()
+            while Library.Loading and LW and LW.Parent do
+                task.wait(1)
+                if os.clock() - lastTick > (Library.LoadingTimeout or 45) then
+                    Library:FinishLoading("Timed out")
+                    break
+                end
+            end
+        end)
+    end
+
+    function Library:SetLoading(percent, status)
+        if not (LW and LW.Parent) then return end
+        lastTick = os.clock()
+        if status and Stat then Stat.Text = tostring(status) end
+        if percent ~= nil then setPct(percent) end
+    end
+
+    function Library:LoadingStep(status, n)
+        if not (LW and LW.Parent) then return end
+        stepN = stepN + (tonumber(n) or 1)
+        lastTick = os.clock()
+        local text = tostring(status or "")
+        if total > 0 then
+            text = text .. "  (" .. math.min(stepN, total) .. "/" .. total .. ")"
+            setPct(math.min(stepN / total * 100, 99))
+        end
+        if Stat then Stat.Text = text end
+    end
+
+    function Library:FinishLoading(status)
+        if not (LW and LW.Parent) then Library.Loading = false return end
+        Library.Loading = false
+        local win = LW
+        if Stat and status then Stat.Text = tostring(status) elseif Stat then Stat.Text = "Done" end
+        setPct(100)
+        task.delay(0.45, function()
+            if not win.Parent then return end
+            if win:IsA("CanvasGroup") then
+                local tw = TweenService:Create(win, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { GroupTransparency = 1 })
+                tw:Play()
+                tw.Completed:Wait()
+            end
+            if win.Parent then win:Destroy() end
+            if LW == win then LW = nil end
+        end)
+    end
+end
+
+-- ===== Confirm dialog =====
+do
+    local current
+    function Library:Confirm(title, message, onYes, onNo, opts)
+        opts = type(opts) == "table" and opts or {}
+        if current and current.Parent then current:Destroy() end
+        local Dim = Instance.new("TextButton")
+        Dim.Name = "ConfirmDialog"
+        Dim.Parent = Main
+        Dim.Size = UDim2.new(1, 0, 1, 0)
+        Dim.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+        Dim.BackgroundTransparency = 1
+        Dim.AutoButtonColor = false
+        Dim.Text = ""
+        Dim.ZIndex = 450
+        Dim.Active = true
+        Instance.new("UICorner", Dim).CornerRadius = UDim.new(0, 10)
+        current = Dim
+
+        local font = Library.Theme.TextFont
+        local width = 290
+        local msgH = 0
+        message = tostring(message or "")
+        if message ~= "" then
+            local okS, sz = pcall(function()
+                return game:GetService("TextService"):GetTextSize(message, 13, Enum.Font.SourceSans, Vector2.new(width - 28, 1000))
+            end)
+            msgH = okS and math.max(sz.Y, 16) or 32
+        end
+        local height = 16 + 20 + (msgH > 0 and (6 + msgH) or 0) + 16 + 32 + 14
+
+        local Box = Instance.new("Frame")
+        Box.Name = "Box"
+        Box.Parent = Dim
+        Box.AnchorPoint = Vector2.new(0.5, 0.5)
+        Box.Position = UDim2.new(0.5, 0, 0.5, 0)
+        Box.Size = UDim2.new(0, width, 0, height)
+        Box.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
+        Box.BorderSizePixel = 0
+        Box.ZIndex = 451
+        Instance.new("UICorner", Box).CornerRadius = UDim.new(0, 10)
+        local bs = Instance.new("UIStroke")
+        bs.Color = Color3.fromRGB(235, 85, 85)
+        bs.Transparency = 0.35
+        bs.Thickness = 1.5
+        bs.Parent = Box
+        local sc = Instance.new("UIScale")
+        sc.Scale = 0.9
+        sc.Parent = Box
+
+        local T = Instance.new("TextLabel")
+        T.Parent = Box
+        T.BackgroundTransparency = 1
+        T.Position = UDim2.new(0, 14, 0, 14)
+        T.Size = UDim2.new(1, -28, 0, 20)
+        T.ZIndex = 452
+        T.Font = font
+        T.Text = tostring(title or "Are you sure?")
+        T.TextColor3 = Color3.fromRGB(245, 245, 250)
+        T.TextSize = 17
+        T.TextXAlignment = Enum.TextXAlignment.Left
+        T.TextTruncate = Enum.TextTruncate.AtEnd
+
+        if msgH > 0 then
+            local M = Instance.new("TextLabel")
+            M.Parent = Box
+            M.BackgroundTransparency = 1
+            M.Position = UDim2.new(0, 14, 0, 40)
+            M.Size = UDim2.new(1, -28, 0, msgH)
+            M.ZIndex = 452
+            M.Font = Enum.Font.SourceSans
+            M.Text = message
+            M.TextColor3 = Color3.fromRGB(190, 190, 198)
+            M.TextSize = 13
+            M.TextWrapped = true
+            M.TextXAlignment = Enum.TextXAlignment.Left
+            M.TextYAlignment = Enum.TextYAlignment.Top
+        end
+
+        local closed = false
+        local function close(result)
+            if closed then return end
+            closed = true
+            TweenService:Create(Dim, TweenInfo.new(0.15), { BackgroundTransparency = 1 }):Play()
+            TweenService:Create(sc, TweenInfo.new(0.15), { Scale = 0.9 }):Play()
+            task.delay(0.16, function()
+                if Dim.Parent then Dim:Destroy() end
+                if current == Dim then current = nil end
+            end)
+            local cb = result and onYes or onNo
+            if type(cb) == "function" then
+                task.spawn(function()
+                    local ok, err = pcall(cb)
+                    if not ok then warn(err) end
+                end)
+            end
+        end
+
+        local function makeBtn(text, color, xScale, xOff, result)
+            local B = Instance.new("TextButton")
+            B.Parent = Box
+            B.AnchorPoint = Vector2.new(0, 1)
+            B.Position = UDim2.new(xScale, xOff, 1, -14)
+            B.Size = UDim2.new(0.5, -19, 0, 32)
+            B.BackgroundColor3 = color
+            B.BorderSizePixel = 0
+            B.AutoButtonColor = true
+            B.ZIndex = 452
+            B.Font = font
+            B.Text = text
+            B.TextColor3 = Color3.fromRGB(255, 255, 255)
+            B.TextSize = 14
+            Instance.new("UICorner", B).CornerRadius = UDim.new(0, 7)
+            B.MouseButton1Click:Connect(function() close(result) end)
+            return B
+        end
+        makeBtn(opts.No or "Cancel", Color3.fromRGB(58, 58, 66), 0, 14, false)
+        makeBtn(opts.Yes or "Confirm", Color3.fromRGB(214, 69, 69), 0.5, 5, true)
+        Dim.MouseButton1Click:Connect(function() close(false) end)
+        -- clicks inside the box must not close it
+        local Shield = Instance.new("TextButton")
+        Shield.Parent = Box
+        Shield.Size = UDim2.new(1, 0, 1, 0)
+        Shield.BackgroundTransparency = 1
+        Shield.Text = ""
+        Shield.ZIndex = 451
+        Shield.AutoButtonColor = false
+
+        TweenService:Create(Dim, TweenInfo.new(0.18), { BackgroundTransparency = 0.45 }):Play()
+        TweenService:Create(sc, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
+        return Dim
+    end
+end
+
+-- ===== Staged appearance on tab switch =====
+Library.TabAnimation = true
+function Library._StageIn(sf)
+    if Library.TabAnimation == false or not sf then return end
+    local list = {}
+    for _, sec in ipairs(sf:GetChildren()) do
+        if sec:IsA("Frame") and sec.Name:match("Section$") then
+            local content = sec:FindFirstChild("SectionContent")
+            if content and content.Visible then
+                for _, el in ipairs(content:GetChildren()) do
+                    if #list >= 14 then break end
+                    if el:IsA("Frame") and not el:FindFirstChildOfClass("UIPadding") then
+                        table.insert(list, el)
+                    end
+                end
+            end
+        end
+    end
+    for i, el in ipairs(list) do
+        local pad = Instance.new("UIPadding")
+        pad.PaddingLeft = UDim.new(0, 18)
+        pad.Parent = el
+        task.delay((i - 1) * 0.03, function()
+            if not pad.Parent then return end
+            local tw = TweenService:Create(pad, TweenInfo.new(0.28, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { PaddingLeft = UDim.new(0, 0) })
+            tw.Completed:Connect(function() pad:Destroy() end)
+            tw:Play()
+        end)
+        task.delay(1, function() if pad.Parent then pad:Destroy() end end)
+    end
+end
+
 local function MakeDraggableWithTracking(gui)
     local UserInputService = game:GetService("UserInputService")
     local dragging
@@ -1735,6 +2063,7 @@ local function SelectThisTab()
     TweenService:Create(NameTab, TweenInfo.new(0.5, Library.Theme.EasingStyle, Enum.EasingDirection.Out), {
         Position = UDim2.new(0, 0, 0, 0)
     }):Play()
+    if Library._StageIn then pcall(Library._StageIn, SectionScrollingFrame) end
 end
 NameTabButton.MouseButton1Click:Connect(SelectThisTab)
 Library.TabSelectors = Library.TabSelectors or {}
@@ -1855,14 +2184,26 @@ function TabElements:CreateSection(name, collapsible, startClosed)
     end
     SectionContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(ResizeSection)
 
+    local childCounter = 0
+    local tabNameForFav = NameTab.Name:sub(1, #NameTab.Name - 3)
     SectionContent.ChildAdded:Connect(function(child)
         task.defer(function()
+            if child.Parent ~= SectionContent then return end
+            if child:IsA("GuiObject") and child.LayoutOrder == 0 then
+                childCounter = childCounter + 1
+                child.LayoutOrder = childCounter
+            end
             if child:IsA("Frame") and not child.Name:match("_ImageHolder$") and not child.Name:match("Button$") and not child.Name:match("Divider$") then
                 child.BackgroundColor3 = Color3.fromRGB(46, 46, 52)
                 child.BackgroundTransparency = 0.45
-                local corner = Instance.new("UICorner")
-                corner.CornerRadius = UDim.new(0, 6)
-                corner.Parent = child
+                if not child:FindFirstChildOfClass("UICorner") then
+                    local corner = Instance.new("UICorner")
+                    corner.CornerRadius = UDim.new(0, 6)
+                    corner.Parent = child
+                end
+            end
+            if Library._RegFav and child:IsA("Frame") then
+                pcall(Library._RegFav, child, tabNameForFav, name, SectionContent)
             end
         end)
     end)
@@ -3066,7 +3407,8 @@ table.insert(Library.LibraryColorTable, Button)
                 RippleEffect(Button)
             end)
 
-            Button.MouseButton1Click:Connect(function()
+            local confirmOpt = opts.Confirm
+            local function runAction()
                 if state ~= "idle" then return end
                 if type(callback) ~= "function" then return end
                 if loadingMode then
@@ -3083,6 +3425,17 @@ table.insert(Library.LibraryColorTable, Button)
                     local ok, err = pcall(callback, Button)
                     if not ok then warn(err) end
                     if cooldown > 0 then startCooldown(cooldown) end
+                end
+            end
+
+            Button.MouseButton1Click:Connect(function()
+                if state ~= "idle" then return end
+                if confirmOpt and Library.Confirm then
+                    local c = type(confirmOpt) == "table" and confirmOpt or {}
+                    local msg = type(confirmOpt) == "string" and confirmOpt or c.Message or c.Text
+                    Library:Confirm(c.Title or name, msg or ("Run \"" .. name .. "\"?"), runAction, nil, { Yes = c.Yes, No = c.No })
+                else
+                    runAction()
                 end
             end)
 
@@ -4954,6 +5307,8 @@ end
             }
         end
 
+        SectionElements.Content = SectionContent
+        SectionElements.Frame = NameSection
         return SectionElements
     end
 
@@ -5486,6 +5841,8 @@ do
         return nil
     end
 
+    Library._ElementInfo = ElementInfo
+
     local function Highlight(target)
         if not target or not target.Parent then return end
         local stroke = Instance.new("UIStroke")
@@ -5567,7 +5924,89 @@ do
         end
     end
 
+    local MAX_HISTORY = 8
+    local function getHistory()
+        if type(Settings.__SearchHistory) ~= "table" then Settings.__SearchHistory = {} end
+        return Settings.__SearchHistory
+    end
+    local function addHistory(q)
+        q = tostring(q or ""):gsub("^%s+", ""):gsub("%s+$", "")
+        if #q < 2 then return end
+        local h = getHistory()
+        for i = #h, 1, -1 do
+            if tostring(h[i]):lower() == q:lower() then table.remove(h, i) end
+        end
+        table.insert(h, 1, q)
+        while #h > MAX_HISTORY do table.remove(h) end
+        pcall(SaveSettings)
+    end
+    local showingHistory = false
+
+    local ClearHist = Instance.new("TextButton")
+    ClearHist.Name = "ClearHistory"
+    ClearHist.Parent = Results
+    ClearHist.BackgroundTransparency = 1
+    ClearHist.AnchorPoint = Vector2.new(1, 0)
+    ClearHist.Position = UDim2.new(1, -10, 0, 6)
+    ClearHist.Size = UDim2.new(0, 60, 0, 22)
+    ClearHist.ZIndex = 52
+    ClearHist.Font = Enum.Font.SourceSans
+    ClearHist.Text = "Clear"
+    ClearHist.TextColor3 = Color3.fromRGB(190, 190, 198)
+    ClearHist.TextSize = 14
+    ClearHist.Visible = false
+
+    local function RenderHistory()
+        ClearList()
+        local h = getHistory()
+        showingHistory = true
+        ResultsTitle.Text = "Recent searches"
+        ClearHist.Visible = #h > 0
+        EmptyLabel.Text = "No recent searches"
+        EmptyLabel.Visible = #h == 0
+        for i, q in ipairs(h) do
+            local Item = Instance.new("TextButton")
+            Item.Name = "Result"
+            Item.LayoutOrder = i
+            Item.Parent = List
+            Item.AutoButtonColor = false
+            Item.Text = ""
+            Item.BackgroundColor3 = Color3.fromRGB(46, 46, 52)
+            Item.BackgroundTransparency = 0.35
+            Item.BorderSizePixel = 0
+            Item.Size = UDim2.new(1, 0, 0, 30)
+            Item.ZIndex = 52
+            Instance.new("UICorner", Item).CornerRadius = UDim.new(0, 6)
+            local L = Instance.new("TextLabel")
+            L.BackgroundTransparency = 1
+            L.Position = UDim2.new(0, 12, 0, 0)
+            L.Size = UDim2.new(1, -24, 1, 0)
+            L.ZIndex = 53
+            L.Font = Library.Theme.TextFont
+            L.Text = tostring(q)
+            L.TextColor3 = Library.Theme.TextColor
+            L.TextSize = 14
+            L.TextXAlignment = Enum.TextXAlignment.Left
+            L.TextTruncate = Enum.TextTruncate.AtEnd
+            L.Parent = Item
+            Item.MouseButton1Click:Connect(function()
+                SearchBox.Text = tostring(q)
+                SearchBox:CaptureFocus()
+            end)
+        end
+    end
+
+    ClearHist.MouseButton1Click:Connect(function()
+        Settings.__SearchHistory = {}
+        pcall(SaveSettings)
+        RenderHistory()
+    end)
+
     local function Render(query)
+        showingHistory = false
+        ResultsTitle.Text = "Search"
+        ClearHist.Visible = false
+        EmptyLabel.Text = "No results"
         ClearList()
         local items = Collect(query)
         EmptyLabel.Visible = #items == 0
@@ -5626,6 +6065,7 @@ do
             KindL.Parent = Item
 
             Item.MouseButton1Click:Connect(function()
+                addHistory(query)
                 GoTo(it.tab, it.section, it.target)
             end)
         end
@@ -5634,6 +6074,8 @@ do
     function Library._CloseSearch()
         SearchBox.Text = ""
         Results.Visible = false
+        showingHistory = false
+        ClearHist.Visible = false
         ClearList()
     end
 
@@ -5643,8 +6085,15 @@ do
         local my = token
         local q = SearchBox.Text
         if q:match("^%s*$") then
-            Results.Visible = false
-            ClearList()
+            if SearchBox:IsFocused() and Library.RememberSearch ~= false and #getHistory() > 0 then
+                Results.Visible = true
+                RenderHistory()
+            else
+                Results.Visible = false
+                showingHistory = false
+                ClearHist.Visible = false
+                ClearList()
+            end
             return
         end
         task.delay(0.12, function()
@@ -5654,8 +6103,253 @@ do
         end)
     end)
 
+    Library.RememberSearch = true
+    SearchBox.Focused:Connect(function()
+        if Library.RememberSearch == false then return end
+        if SearchBox.Text:match("^%s*$") and #getHistory() > 0 then
+            Results.Visible = true
+            RenderHistory()
+        end
+    end)
+    SearchBox.FocusLost:Connect(function(enterPressed)
+        if enterPressed then addHistory(SearchBox.Text) end
+        if showingHistory then
+            task.delay(0.25, function()
+                if showingHistory and SearchBox.Text:match("^%s*$") and not SearchBox:IsFocused() then
+                    Results.Visible = false
+                    showingHistory = false
+                    ClearHist.Visible = false
+                    ClearList()
+                end
+            end)
+        end
+    end)
+
     function Library:Search(text)
         SearchBox.Text = tostring(text or "")
+    end
+    function Library:GetSearchHistory()
+        local out = {}
+        for i, v in ipairs(getHistory()) do out[i] = v end
+        return out
+    end
+end
+
+-- ===== Favorites =====
+do
+    local favOn, favMode = false, false
+    local registry, byInst = {}, {}
+    local saved, savedIndex = {}, {}
+    local favCounter = 0
+    local favContent, favTabName, emptyLabel, ModeBtn, ModeLbl
+
+    local function gid() return tostring(game.PlaceId) end
+    local function loadSaved()
+        saved, savedIndex = {}, {}
+        local all = Settings.__Favorites
+        local list = type(all) == "table" and all[gid()] or nil
+        if type(list) == "table" then
+            for i, k in ipairs(list) do
+                saved[k] = true
+                savedIndex[k] = i
+                if i > favCounter then favCounter = i end
+            end
+        end
+    end
+    local function persist()
+        local arr = {}
+        for k in pairs(saved) do table.insert(arr, k) end
+        table.sort(arr, function(a, b)
+            local ia = (registry[a] and registry[a].favOrder) or savedIndex[a] or 1e9
+            local ib = (registry[b] and registry[b].favOrder) or savedIndex[b] or 1e9
+            return ia < ib
+        end)
+        if type(Settings.__Favorites) ~= "table" then Settings.__Favorites = {} end
+        Settings.__Favorites[gid()] = arr
+        pcall(SaveSettings)
+    end
+    local function updateEmpty()
+        if not emptyLabel then return end
+        local any = false
+        for _, info in pairs(registry) do if info.faved then any = true break end end
+        emptyLabel.Visible = not any
+        emptyLabel.Size = UDim2.new(1, 0, 0, any and 0 or 44)
+    end
+    local function refreshStar(info)
+        if info.star then
+            info.star.Text = info.faved and "★" or "☆"
+            info.star.TextColor3 = info.faved and Color3.fromRGB(250, 200, 70) or Color3.fromRGB(180, 180, 190)
+        end
+    end
+
+    local function setFav(info, on, silent)
+        if on == info.faved then return end
+        if on then
+            if not favContent then return end
+            info.faved = true
+            if savedIndex[info.key] then
+                info.favOrder = savedIndex[info.key]
+            else
+                favCounter = favCounter + 1
+                info.favOrder = favCounter
+            end
+            info.el.LayoutOrder = info.favOrder
+            info.el.Parent = favContent
+            saved[info.key] = true
+        else
+            info.faved = false
+            info.el.LayoutOrder = info.order
+            if info.home and info.home.Parent then info.el.Parent = info.home end
+            saved[info.key] = nil
+            savedIndex[info.key] = nil
+        end
+        refreshStar(info)
+        updateEmpty()
+        if not silent then persist() end
+    end
+
+    local function ensureOverlay(info)
+        if info.ov or not info.el.Parent then return info.ov end
+        local ov = Instance.new("TextButton")
+        ov.Name = "FavOverlay"
+        ov.Text = ""
+        ov.AutoButtonColor = false
+        ov.BackgroundColor3 = Color3.fromRGB(14, 14, 18)
+        ov.BackgroundTransparency = 0.12
+        ov.BorderSizePixel = 0
+        ov.Size = UDim2.new(1, 0, 1, 0)
+        ov.ZIndex = 60
+        ov.Visible = favMode
+        ov.Parent = info.el
+        Instance.new("UICorner", ov).CornerRadius = UDim.new(0, 6)
+        local st = Instance.new("UIStroke")
+        st.Color = Library.Theme.MainColor
+        st.Transparency = 0.5
+        st.Thickness = 1
+        st.Parent = ov
+        local display, kind = Library._ElementInfo(info.el)
+        local nameL = Instance.new("TextLabel")
+        nameL.BackgroundTransparency = 1
+        nameL.Position = UDim2.new(0, 12, 0, 0)
+        nameL.Size = UDim2.new(1, -52, 1, 0)
+        nameL.ZIndex = 61
+        nameL.Font = Library.Theme.TextFont
+        nameL.Text = tostring(display or info.el.Name) .. "  ·  " .. tostring(kind or "")
+        nameL.TextColor3 = Color3.fromRGB(225, 225, 232)
+        nameL.TextSize = 14
+        nameL.TextXAlignment = Enum.TextXAlignment.Left
+        nameL.TextTruncate = Enum.TextTruncate.AtEnd
+        nameL.Parent = ov
+        local star = Instance.new("TextLabel")
+        star.BackgroundTransparency = 1
+        star.AnchorPoint = Vector2.new(1, 0.5)
+        star.Position = UDim2.new(1, -10, 0.5, 0)
+        star.Size = UDim2.new(0, 30, 0, 30)
+        star.ZIndex = 61
+        star.Font = Enum.Font.SourceSansBold
+        star.TextSize = 26
+        star.Text = "☆"
+        star.Parent = ov
+        info.ov, info.star = ov, star
+        refreshStar(info)
+        ov.MouseButton1Click:Connect(function()
+            setFav(info, not info.faved)
+        end)
+        return ov
+    end
+
+    function Library._RegFav(el, tabName, secName, home)
+        if byInst[el] then return end
+        if not Library._ElementInfo or not Library._ElementInfo(el) then return end
+        if favTabName and tabName == favTabName then return end
+        local key = tabName .. "\t" .. secName .. "\t" .. el.Name
+        if registry[key] then return end
+        local info = { el = el, key = key, home = home, order = el.LayoutOrder }
+        registry[key] = info
+        byInst[el] = info
+        if favOn then
+            if favMode then ensureOverlay(info) end
+            if saved[key] then setFav(info, true, true) end
+        end
+    end
+
+    function Library:SetFavoriteMode(on)
+        if not favOn then return end
+        favMode = on and true or false
+        if ModeBtn then
+            TweenService:Create(ModeBtn, TweenInfo.new(0.15), {
+                BackgroundColor3 = favMode and Color3.fromRGB(240, 190, 60) or Color3.fromRGB(58, 58, 66)
+            }):Play()
+            ModeLbl.TextColor3 = favMode and Color3.fromRGB(30, 24, 8) or Color3.fromRGB(235, 235, 240)
+        end
+        for _, info in pairs(registry) do
+            if favMode then ensureOverlay(info) end
+            if info.ov then info.ov.Visible = favMode end
+        end
+        if Library.Notify and favMode then
+            pcall(function() Library:Notify("info", "Favorite mode", "Tap an element to pin / unpin it.", 2.5) end)
+        end
+    end
+
+    function Library:IsFavorite(tabName, secName, elName)
+        local info = registry[tostring(tabName) .. "\t" .. tostring(secName) .. "\t" .. tostring(elName)]
+        return info and info.faved or false
+    end
+
+    function Library:EnableFavorites(tabName, icon)
+        if favOn then return end
+        favOn = true
+        favTabName = tostring(tabName or "Favorites")
+        loadSaved()
+
+        local Tab = Library:CreateTab(favTabName, icon or "star")
+        local btn = TabScrollingFrame:FindFirstChild(favTabName .. "TabButton")
+        if btn then btn.LayoutOrder = 980 end
+        local Sec = Tab:CreateSection("Pinned")
+        favContent = Sec.Content
+
+        emptyLabel = Instance.new("TextLabel")
+        emptyLabel.Name = "FavHint"
+        emptyLabel.Parent = favContent
+        emptyLabel.LayoutOrder = -1
+        emptyLabel.BackgroundTransparency = 1
+        emptyLabel.Size = UDim2.new(1, 0, 0, 44)
+        emptyLabel.ZIndex = 5
+        emptyLabel.Font = Enum.Font.SourceSans
+        emptyLabel.TextSize = 14
+        emptyLabel.TextWrapped = true
+        emptyLabel.TextColor3 = Color3.fromRGB(190, 190, 198)
+        emptyLabel.Text = "No favorites yet. Tap the star button in the top bar, then tap any element to pin it here."
+
+        ModeBtn = Instance.new("TextButton")
+        ModeBtn.Name = "FavModeBtn"
+        ModeBtn.Parent = Topbar
+        ModeBtn.Position = UDim2.new(1, -46, 0, 7)
+        ModeBtn.Size = UDim2.new(0, 15, 0, 15)
+        ModeBtn.BackgroundColor3 = Color3.fromRGB(58, 58, 66)
+        ModeBtn.BorderSizePixel = 0
+        ModeBtn.AutoButtonColor = false
+        ModeBtn.Text = ""
+        ModeBtn.ZIndex = 10
+        Instance.new("UICorner", ModeBtn).CornerRadius = UDim.new(0, 4)
+        ModeLbl = Instance.new("TextLabel")
+        ModeLbl.Parent = ModeBtn
+        ModeLbl.BackgroundTransparency = 1
+        ModeLbl.Size = UDim2.new(1, 0, 1, 0)
+        ModeLbl.ZIndex = 11
+        ModeLbl.Font = Enum.Font.SourceSansBold
+        ModeLbl.TextSize = 14
+        ModeLbl.Text = "★"
+        ModeLbl.TextColor3 = Color3.fromRGB(235, 235, 240)
+        ModeBtn.MouseButton1Click:Connect(function()
+            Library:SetFavoriteMode(not favMode)
+        end)
+        pcall(function() Library.AttachTooltip(ModeBtn, ModeBtn, "Favorite mode") end)
+
+        for _, info in pairs(registry) do
+            if saved[info.key] then setFav(info, true, true) end
+        end
+        updateEmpty()
     end
 end
 
