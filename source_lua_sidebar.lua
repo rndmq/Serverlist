@@ -6253,6 +6253,70 @@ do
     end
 end
 
+-- ===== Overlay animation helper =====
+Library._ovOrig = setmetatable({}, { __mode = "k" })
+function Library._AnimOverlay(ov, show, delay, onDone)
+    local orig = Library._ovOrig[ov]
+    if not orig then
+        orig = {}
+        local function add(o)
+            if o:IsA("UIStroke") then
+                orig[o] = { Transparency = o.Transparency }
+            elseif o:IsA("TextLabel") or o:IsA("TextButton") then
+                orig[o] = { TextTransparency = o.TextTransparency, BackgroundTransparency = o.BackgroundTransparency }
+            elseif o:IsA("GuiObject") then
+                orig[o] = { BackgroundTransparency = o.BackgroundTransparency }
+            end
+        end
+        add(ov)
+        for _, d in ipairs(ov:GetDescendants()) do add(d) end
+        Library._ovOrig[ov] = orig
+    end
+    local ti = TweenInfo.new(0.24, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    task.delay(delay or 0, function()
+        if not ov.Parent then return end
+        local token = (ov:GetAttribute("AnimTok") or 0) + 1
+        ov:SetAttribute("AnimTok", token)
+        if show then
+            for o, props in pairs(orig) do
+                for k in pairs(props) do o[k] = 1 end
+            end
+            ov.Position = UDim2.new(0, 18, 0, 0)
+            ov.Visible = true
+            for o, props in pairs(orig) do TweenService:Create(o, ti, props):Play() end
+            TweenService:Create(ov, ti, { Position = UDim2.new(0, 0, 0, 0) }):Play()
+        else
+            for o, props in pairs(orig) do
+                local t = {}
+                for k in pairs(props) do t[k] = 1 end
+                TweenService:Create(o, ti, t):Play()
+            end
+            TweenService:Create(ov, ti, { Position = UDim2.new(0, 18, 0, 0) }):Play()
+        end
+        task.delay(0.26, function()
+            if ov:GetAttribute("AnimTok") ~= token or not ov.Parent then return end
+            if not show then
+                ov.Visible = false
+                for o, props in pairs(orig) do
+                    for k, v in pairs(props) do o[k] = v end
+                end
+                ov.Position = UDim2.new(0, 0, 0, 0)
+            end
+            if onDone then onDone() end
+        end)
+    end)
+end
+
+function Library._Pop(obj)
+    pcall(function()
+        local sc = obj:FindFirstChild("PopScale") or Instance.new("UIScale")
+        sc.Name = "PopScale"
+        sc.Parent = obj
+        sc.Scale = 1.35
+        TweenService:Create(sc, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
+    end)
+end
+
 -- ===== Favorites =====
 do
     local favOn, favMode = false, false
@@ -6260,6 +6324,7 @@ do
     local saved, savedIndex = {}, {}
     local favCounter = 0
     local favContent, favTabName, emptyLabel, ModeBtn, ModeLbl
+    local panelHost = nil
 
     local function gid() return tostring(game.PlaceId) end
     local function loadSaved()
@@ -6290,9 +6355,17 @@ do
         if not emptyLabel then return end
         local any = false
         for _, info in pairs(registry) do if info.faved then any = true break end end
-        emptyLabel.Visible = not any
-        emptyLabel.Size = UDim2.new(1, 0, 0, any and 0 or 44)
+        if any and panelHost then
+            emptyLabel.Text = "These are shown in the pinned panel while it is visible."
+            emptyLabel.Visible = true
+            emptyLabel.Size = UDim2.new(1, 0, 0, 28)
+        else
+            emptyLabel.Text = "No favorites yet. Tap the star button in the top bar, then tap any element to pin it here."
+            emptyLabel.Visible = not any
+            emptyLabel.Size = UDim2.new(1, 0, 0, any and 0 or 44)
+        end
     end
+    Library._RefreshFavHint = function() updateEmpty() end
     local function refreshStar(info)
         if info.star then
             info.star.Text = info.faved and "★" or "☆"
@@ -6301,25 +6374,40 @@ do
     end
 
     local favOpen = false
-    local function pull(info)
-        if info.pulled or not favContent then return end
-        info.pulled = true
-        info.el.LayoutOrder = info.favOrder or 1
-        info.el.Parent = favContent
-    end
     local function push(info)
         if not info.pulled then return end
         info.pulled = false
         info.el.LayoutOrder = info.order
         if info.home and info.home.Parent then info.el.Parent = info.home end
     end
+    local function place(info)
+        if not info.faved then push(info) return end
+        local target
+        if panelHost and info.kind ~= "Embed" then target = panelHost
+        elseif favOpen then target = favContent end
+        if not target then push(info) return end
+        info.pulled = true
+        info.el.LayoutOrder = info.favOrder or 1
+        if info.el.Parent ~= target then info.el.Parent = target end
+    end
     function Library._OnTabSelect(tabFrame)
         if not favOn then return end
         favOpen = (tabFrame.Name == favTabName .. "Tab")
+        for _, info in pairs(registry) do place(info) end
+    end
+    function Library._SetPanelHost(container)
+        panelHost = container
         for _, info in pairs(registry) do
-            if favOpen and info.faved then pull(info)
-            elseif not favOpen then push(info) end
+            if info.faved or info.pulled then place(info) end
         end
+        if Library._RefreshFavHint then Library._RefreshFavHint() end
+    end
+    function Library._CountFavorites()
+        local n = 0
+        for _, info in pairs(registry) do
+            if info.faved and info.kind ~= "Embed" then n = n + 1 end
+        end
+        return n
     end
 
     local function setFav(info, on, silent)
@@ -6334,7 +6422,7 @@ do
                 info.favOrder = favCounter
             end
             saved[info.key] = true
-            if favOpen then pull(info) end
+            place(info)
         else
             info.faved = false
             push(info)
@@ -6389,7 +6477,7 @@ do
         ov.BorderSizePixel = 0
         ov.Size = UDim2.new(1, 0, 1, 0)
         ov.ZIndex = 60
-        ov.Visible = favMode
+        ov.Visible = false
         ov.Parent = info.el
         Instance.new("UICorner", ov).CornerRadius = UDim.new(0, 6)
         local st = Instance.new("UIStroke")
@@ -6422,9 +6510,9 @@ do
         star.Parent = ov
         info.ov, info.star = ov, star
         refreshStar(info)
-        if favMode then info.applyHide(true) end
         ov.MouseButton1Click:Connect(function()
             setFav(info, not info.faved)
+            Library._Pop(star)
         end)
         return ov
     end
@@ -6435,12 +6523,26 @@ do
         if favTabName and tabName == favTabName then return end
         local key = tabName .. "\t" .. secName .. "\t" .. el.Name
         if registry[key] then return end
-        local info = { el = el, key = key, home = home, order = el.LayoutOrder }
-        info.applyHide = function(on) hideOriginal(info, on) end
+        local _, ekind = Library._ElementInfo(el)
+        local info = { el = el, key = key, home = home, order = el.LayoutOrder, kind = ekind }
+        info.showOv = function(delay)
+            ensureOverlay(info)
+            if not info.ov or info.ovShown then return end
+            info.ovShown = true
+            Library._AnimOverlay(info.ov, true, delay, function()
+                if info.ovShown then hideOriginal(info, true) end
+            end)
+        end
+        info.hideOv = function(delay)
+            if not info.ovShown then return end
+            info.ovShown = false
+            hideOriginal(info, false)
+            Library._AnimOverlay(info.ov, false, delay)
+        end
         registry[key] = info
         byInst[el] = info
         if favOn then
-            if favMode then ensureOverlay(info) end
+            if favMode then info.showOv(0) end
             if saved[key] then setFav(info, true, true) end
         end
     end
@@ -6456,15 +6558,9 @@ do
             ModeLbl.TextColor3 = favMode and Color3.fromRGB(30, 24, 8) or Color3.fromRGB(235, 235, 240)
         end
         for _, info in pairs(registry) do
-            if favMode then
-                ensureOverlay(info)
-                if info.ov then info.ov.Visible = true end
-                if not info.hidden then hideOriginal(info, true) end
-            else
-                if info.ov then info.ov.Visible = false end
-                hideOriginal(info, false)
-            end
+            if favMode then info.showOv(math.random() * 0.18) else info.hideOv(math.random() * 0.12) end
         end
+        if ModeBtn then Library._Pop(ModeBtn) end
         if Library.Notify and favMode then
             pcall(function() Library:Notify("info", "Favorite mode", "Tap an element to pin / unpin it.", 2.5) end)
         end
@@ -6617,6 +6713,7 @@ do
         binds[info.key] = keyName
         persist()
         refresh(info)
+        if info.chip then Library._Pop(info.chip) end
     end
 
     local function ensureBadge(info)
@@ -6658,7 +6755,7 @@ do
         ov.BorderSizePixel = 0
         ov.Size = UDim2.new(1, 0, 1, 0)
         ov.ZIndex = 60
-        ov.Visible = bindMode
+        ov.Visible = false
         ov.Parent = info.el
         Instance.new("UICorner", ov).CornerRadius = UDim.new(0, 6)
         local st = Instance.new("UIStroke")
@@ -6696,7 +6793,6 @@ do
             if prev then refresh(prev) end
             refresh(info)
         end)
-        if bindMode then hideOriginal(info, true) end
     end
 
     function Library._RegBind(el, tabName, secName, home)
@@ -6709,10 +6805,24 @@ do
         local info = { el = el, key = key, display = tostring(display or el.Name), kind = kind }
         registry[key] = info
         byInst[el] = info
+        info.showOv = function(delay)
+            ensureOverlay(info)
+            if not info.ov or info.ovShown then return end
+            info.ovShown = true
+            Library._AnimOverlay(info.ov, true, delay, function()
+                if info.ovShown then hideOriginal(info, true) end
+            end)
+        end
+        info.hideOv = function(delay)
+            if not info.ovShown then return end
+            info.ovShown = false
+            hideOriginal(info, false)
+            Library._AnimOverlay(info.ov, false, delay)
+        end
         if bindOn then
             ensureBadge(info)
             refresh(info)
-            if bindMode then ensureOverlay(info) end
+            if bindMode then info.showOv(0) end
         end
     end
 
@@ -6729,16 +6839,10 @@ do
             ModeLbl.TextColor3 = on and Color3.fromRGB(10, 20, 40) or Color3.fromRGB(235, 235, 240)
         end
         for _, info in pairs(registry) do
-            if on then
-                ensureOverlay(info)
-                info.ov.Visible = true
-                if not info.hidden then hideOriginal(info, true) end
-            else
-                if info.ov then info.ov.Visible = false end
-                hideOriginal(info, false)
-            end
+            if on then info.showOv(math.random() * 0.18) else info.hideOv(math.random() * 0.12) end
             refresh(info)
         end
+        if ModeBtn then Library._Pop(ModeBtn) end
         if on then
             pcall(function() Library:Notify("info", "Hotkey mode", "Tap a toggle or button, then press a key. Esc cancels, Backspace clears.", 4) end)
         end
@@ -6821,99 +6925,39 @@ end
 -- ===== Pinned mini panel =====
 do
     Library.PinPanelMode = "minimized" -- "minimized" | "always" | "off"
-    local Panel, Rows, built = nil, nil, false
-    local rowStates = {}
-
-    local function accent() return Library.Theme.MainColor end
-
-    local function rebuild()
-        if not Panel then return end
-        for _, c in ipairs(Rows:GetChildren()) do
-            if c:IsA("GuiObject") then c:Destroy() end
-        end
-        rowStates = {}
-        local list = Library._GetFavorites and Library._GetFavorites() or {}
-        local n = 0
-        for _, f in ipairs(list) do
-            local trig = Library._Triggers and Library._Triggers[f.el]
-            if trig then
-                n = n + 1
-                local getState = Library._States and Library._States[f.el]
-                local Row = Instance.new("TextButton")
-                Row.Name = "PinRow"
-                Row.LayoutOrder = n
-                Row.Parent = Rows
-                Row.AutoButtonColor = false
-                Row.Text = ""
-                Row.Size = UDim2.new(1, 0, 0, 26)
-                Row.BackgroundColor3 = getState and Color3.fromRGB(46, 46, 52) or accent()
-                Row.BackgroundTransparency = getState and 0.2 or 0.35
-                Row.BorderSizePixel = 0
-                Row.ZIndex = 47
-                Instance.new("UICorner", Row).CornerRadius = UDim.new(0, 6)
-                local L = Instance.new("TextLabel")
-                L.BackgroundTransparency = 1
-                L.Position = UDim2.new(0, 8, 0, 0)
-                L.Size = UDim2.new(1, getState and -46 or -16, 1, 0)
-                L.ZIndex = 48
-                L.Font = Library.Theme.TextFont
-                L.Text = f.display
-                L.TextColor3 = Color3.fromRGB(235, 235, 240)
-                L.TextSize = 13
-                L.TextXAlignment = getState and Enum.TextXAlignment.Left or Enum.TextXAlignment.Center
-                L.TextTruncate = Enum.TextTruncate.AtEnd
-                L.Parent = Row
-                local pill, knob
-                if getState then
-                    pill = Instance.new("Frame")
-                    pill.AnchorPoint = Vector2.new(1, 0.5)
-                    pill.Position = UDim2.new(1, -8, 0.5, 0)
-                    pill.Size = UDim2.new(0, 28, 0, 14)
-                    pill.BorderSizePixel = 0
-                    pill.ZIndex = 48
-                    pill.Parent = Row
-                    Instance.new("UICorner", pill).CornerRadius = UDim.new(1, 0)
-                    knob = Instance.new("Frame")
-                    knob.Size = UDim2.new(0, 10, 0, 10)
-                    knob.AnchorPoint = Vector2.new(0, 0.5)
-                    knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-                    knob.BorderSizePixel = 0
-                    knob.ZIndex = 49
-                    knob.Parent = pill
-                    Instance.new("UICorner", knob).CornerRadius = UDim.new(1, 0)
-                    rowStates[#rowStates + 1] = { getState = getState, pill = pill, knob = knob, last = nil }
-                end
-                Row.MouseButton1Click:Connect(function()
-                    task.spawn(function() pcall(trig) end)
-                    if not getState then
-                        Row.BackgroundTransparency = 0
-                        task.delay(0.12, function() if Row.Parent then Row.BackgroundTransparency = 0.35 end end)
-                    end
-                end)
-            end
-        end
-        Panel:SetAttribute("Count", n)
-    end
+    local Panel, Rows, Gui
+    local built, lastShow = false, false
 
     local function build()
         if built then return end
         built = true
-        local gui = Main.Parent
+        pcall(function()
+            local o = CoreGui:FindFirstChild("RndmPin")
+            if o then o:Destroy() end
+        end)
+        Gui = Instance.new("ScreenGui")
+        Gui.Name = "RndmPin"
+        Gui.DisplayOrder = 2
+        Gui.ZIndexBehavior = Enum.ZIndexBehavior.Global
+        Gui.ResetOnSpawn = false
+        Gui.Parent = CoreGui
+        pcall(function() UILibrary.Destroying:Connect(function() Gui:Destroy() end) end)
+
         Panel = Instance.new("Frame")
         Panel.Name = "PinPanel"
-        Panel.Parent = gui
+        Panel.Parent = Gui
         Panel.AnchorPoint = Vector2.new(1, 0)
-        Panel.Position = UDim2.new(1, -12, 0.3, 0)
-        Panel.Size = UDim2.new(0, 178, 0, 0)
+        Panel.Position = UDim2.new(1, -12, 0.25, 0)
+        Panel.Size = UDim2.new(0, 250, 0, 0)
         Panel.AutomaticSize = Enum.AutomaticSize.Y
         Panel.BackgroundColor3 = Color3.fromRGB(24, 24, 30)
-        Panel.BackgroundTransparency = 0.1
+        Panel.BackgroundTransparency = 0.08
         Panel.BorderSizePixel = 0
-        Panel.ZIndex = 45
+        Panel.ZIndex = 1
         Panel.Visible = false
         Instance.new("UICorner", Panel).CornerRadius = UDim.new(0, 9)
         local st = Instance.new("UIStroke")
-        st.Color = accent()
+        st.Color = Library.Theme.MainColor
         st.Transparency = 0.5
         st.Parent = Panel
         local lay = Instance.new("UIListLayout")
@@ -6925,64 +6969,78 @@ do
         pad.PaddingLeft, pad.PaddingRight = UDim.new(0, 8), UDim.new(0, 8)
         pad.Parent = Panel
 
-        local Head = Instance.new("TextLabel")
+        local Head = Instance.new("Frame")
         Head.Name = "PinHead"
-        Head.LayoutOrder = 0
+        Head.LayoutOrder = -100
         Head.Parent = Panel
         Head.BackgroundTransparency = 1
-        Head.Size = UDim2.new(1, 0, 0, 20)
-        Head.ZIndex = 46
-        Head.Font = Library.Theme.TextFont
-        Head.Text = "★ Pinned"
-        Head.TextColor3 = Color3.fromRGB(250, 200, 70)
-        Head.TextSize = 14
-        Head.TextXAlignment = Enum.TextXAlignment.Left
+        Head.Size = UDim2.new(1, 0, 0, 22)
+        Head.ZIndex = 2
         Head.Active = true
+        local HL = Instance.new("TextLabel")
+        HL.Parent = Head
+        HL.BackgroundTransparency = 1
+        HL.Size = UDim2.new(1, -26, 1, 0)
+        HL.ZIndex = 3
+        HL.Font = Library.Theme.TextFont
+        HL.Text = "★ Pinned"
+        HL.TextColor3 = Color3.fromRGB(250, 200, 70)
+        HL.TextSize = 14
+        HL.TextXAlignment = Enum.TextXAlignment.Left
+        local X = Instance.new("TextButton")
+        X.Parent = Head
+        X.AnchorPoint = Vector2.new(1, 0.5)
+        X.Position = UDim2.new(1, 0, 0.5, 0)
+        X.Size = UDim2.new(0, 22, 0, 18)
+        X.BackgroundTransparency = 1
+        X.ZIndex = 4
+        X.Font = Enum.Font.GothamBold
+        X.Text = "×"
+        X.TextSize = 18
+        X.TextColor3 = Color3.fromRGB(190, 190, 198)
+        X.MouseButton1Click:Connect(function()
+            Library:SetPinPanelMode("off")
+            pcall(function() Library:Notify("info", "Pinned panel hidden", "Turn it back on in Config > Pinned panel.", 4) end)
+        end)
         pcall(MakeDraggable, Head, Panel)
 
         Rows = Instance.new("Frame")
         Rows.Name = "PinRows"
-        Rows.LayoutOrder = 1
+        Rows.LayoutOrder = 0
         Rows.Parent = Panel
         Rows.BackgroundTransparency = 1
         Rows.Size = UDim2.new(1, 0, 0, 0)
         Rows.AutomaticSize = Enum.AutomaticSize.Y
         local rl = Instance.new("UIListLayout")
         rl.SortOrder = Enum.SortOrder.LayoutOrder
-        rl.Padding = UDim.new(0, 4)
+        rl.Padding = UDim.new(0, 3)
         rl.Parent = Rows
 
         task.spawn(function()
-            while Panel and Panel.Parent do
+            while Gui.Parent do
                 local mode = Library.PinPanelMode
-                local count = Panel:GetAttribute("Count") or 0
+                local count = Library._CountFavorites and Library._CountFavorites() or 0
                 local show = count > 0 and (mode == "always" or (mode == "minimized" and Minimized))
-                if Panel.Visible ~= show then Panel.Visible = show end
-                if show then
-                    for _, r in ipairs(rowStates) do
-                        local ok, v = pcall(r.getState)
-                        v = ok and v and true or false
-                        if r.last ~= v and r.pill.Parent then
-                            r.last = v
-                            r.pill.BackgroundColor3 = v and accent() or Color3.fromRGB(70, 70, 80)
-                            TweenService:Create(r.knob, TweenInfo.new(0.12), { Position = UDim2.new(0, v and 15 or 3, 0.5, 0) }):Play()
-                        end
-                    end
+                if show ~= lastShow then
+                    lastShow = show
+                    Panel.Visible = show
+                    if Library._SetPanelHost then Library._SetPanelHost(show and Rows or nil) end
                 end
                 task.wait(0.25)
             end
         end)
-        rebuild()
     end
 
-    function Library:EnablePinPanel(mode)
-        if mode then Library.PinPanelMode = mode end
-        build()
-        Library._OnFavChanged = rebuild
-        rebuild()
-    end
     function Library:SetPinPanelMode(mode)
+        if mode ~= "always" and mode ~= "off" then mode = "minimized" end
         Library.PinPanelMode = mode
+        Settings.__PinPanelMode = mode
+        pcall(SaveSettings)
+    end
+    function Library:EnablePinPanel(mode)
+        local saved = Settings.__PinPanelMode
+        Library.PinPanelMode = (saved == "always" or saved == "off" or saved == "minimized") and saved or (mode or "minimized")
+        build()
     end
 end
 
@@ -7228,6 +7286,17 @@ do
             SaveSettings()
             refreshKey()
         end)
+
+        local PinSec = Tab:CreateSection("Pinned panel")
+        local pinNames = { "Minimized only", "Always", "Off" }
+        local pinMap = { ["Minimized only"] = "minimized", ["Always"] = "always", ["Off"] = "off" }
+        local pinPreset = 1
+        for i, n in ipairs(pinNames) do
+            if pinMap[n] == Settings.__PinPanelMode then pinPreset = i end
+        end
+        PinSec:CreateDropdown("Pinned panel", pinNames, pinPreset, function(v)
+            Library:SetPinPanelMode(pinMap[v] or "minimized")
+        end, { NoNone = true, Tooltip = "Floating panel with your favorite elements" })
 
         local Acc = Tab:CreateSection("Account")
         local accPara = Acc:CreateParagraph("Account", "")

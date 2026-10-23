@@ -10331,11 +10331,6 @@ do
         _G['提醒']('Panic: everything stopped (' .. tostring(n) .. ' features turned off)')
     end)
 
-    _Util:DropDown('Pinned panel', { 'Minimized only', 'Always', 'Off' }, false, false, function(v)
-        local map = { ['Minimized only'] = 'minimized', ['Always'] = 'always', ['Off'] = 'off' }
-        pcall(function() Library:SetPinPanelMode(map[v] or 'minimized') end)
-    end, 'Minimized only', { tooltip = 'Floating panel with your favorite toggles and buttons' })
-
     local _Credits = _Settings:Section('Credits')
     _Credits:Label('Made by Rndm')
 
