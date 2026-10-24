@@ -169,6 +169,30 @@ do
     }
 
     local u = {}
+    u.Version = '2026.10.24'
+    u.Changelog = {
+        {
+            Title = 'UI',
+            Items = {
+                'Favorites: pin any element, shown in the Favorites tab',
+                'Pinned panel: floating panel with your favorites (Config > Pinned panel)',
+                'Hotkeys: bind a key to any toggle or button (K button in the top bar)',
+                'Smarter search that tolerates typos and reads dropdown options',
+                'Confirmation dialog for dangerous buttons, warning icon on risky features',
+                'New loading screen, Stats section and a Copy debug info button',
+            },
+        },
+        {
+            Title = 'Script',
+            Items = {
+                'Bring / Sell buttons show a loading state while they run',
+                'Rejoin and Server Hop have a short cooldown',
+                'Job ID can be copied by tapping it',
+                'Notifications are color-coded (success, error, warning, info)',
+                'Mod wood: sturdier lava detection and shorter timeouts',
+            },
+        },
+    }
 
     do
         local Players = game:GetService('Players')
@@ -222,6 +246,7 @@ do
 
         pcall(function() Library:CreateWindow('Rndm - Dark X Revamped') end)
         pcall(function() Library:SetLogo('Rndm') end)
+        pcall(function() Library:SetScriptInfo('Rndm - Dark X Revamped', '2026.10.24') end)
         pcall(function() Library:StartLoading('Rndm - Dark X Revamped', 'Starting...', 16) end)
 
         local TabIcons = {
@@ -297,8 +322,8 @@ do
                 breathe()
                 cb = cb or function() end
                 local libOpts
-                if type(opts) == 'table' and (opts.cooldown or opts.loading or opts.tooltip or opts.confirm) then
-                    libOpts = { Cooldown = opts.cooldown, Loading = opts.loading, Tooltip = opts.tooltip, Confirm = opts.confirm }
+                if type(opts) == 'table' and (opts.cooldown or opts.loading or opts.tooltip or opts.confirm or opts.risky) then
+                    libOpts = { Cooldown = opts.cooldown, Loading = opts.loading, Tooltip = opts.tooltip, Confirm = opts.confirm, Risky = opts.risky }
                 end
                 local btn = container:CreateButton(tostring(title), cb, libOpts)
                 if opts and opts.stopper then
@@ -344,7 +369,7 @@ do
                 })
             end
 
-            function S:Toggle(title, default, cb, tooltip)
+            function S:Toggle(title, default, cb, tooltip, risky)
                 breathe()
                 cb = cb or function() end
                 local muted = false
@@ -352,7 +377,7 @@ do
                 local tg = container:CreateToggle(uniq(title), default and true or false, function(v)
                     entry.state = v and true or false
                     if not muted then cb(v) end
-                end, tooltip)
+                end, tooltip, risky and { Risky = risky } or nil)
                 
                 if not default and not panicSkipTabs[tabTitle or ''] then
                     entry.off = function()
@@ -691,7 +716,7 @@ do
                 if title == 'Settings' then
                     settingsTab = raw
                 end
-                local T = {}
+                local T = { Raw = raw }
                 function T:Section(name, collapsible, startClosed)
                     local okSec, sec = pcall(function()
                         return raw:CreateSection(name, collapsible, startClosed)
@@ -2259,6 +2284,7 @@ do
         }
 
         local Home = window:CreateTab('Home', '')
+        u.HomeRaw = Home.Raw
 
         local Credits = Home:Section('Credits')
         Credits:Label('Updated by rndm')
@@ -6047,7 +6073,7 @@ do
 
             _G['点击删除物品'] = nil
         end
-    end)
+    end, nil, 'Deletes other players\' structures. Use carefully.')
 
     _G['获得商场id'] = {
         WoodRus = {
@@ -10221,10 +10247,10 @@ do
     end, { confirm = 'Kill the selected player?' })
     _Player3:Toggle('Delete all Shop items', false, function(enabled)
         _G['菜单']['删除商店物品'] = enabled
-    end)
+    end, nil, 'Affects the whole server and is easy for other players to notice.')
     _Player3:Toggle('Tomahawk Axe Fling', false, function(enabled)
         _G['斧头飞行'](enabled)
-    end)
+    end, nil, 'Visible to other players and may get you reported.')
 
     local _Settings = window:CreateTab('Settings', '6031280882')
     local _Util = _Settings:Section('Utility')
@@ -10330,6 +10356,10 @@ do
         local n = u.PanicAll()
         _G['提醒']('Panic: everything stopped (' .. tostring(n) .. ' features turned off)')
     end)
+
+    _Util:Button('Copy debug info', function()
+        Library:CopyDebugInfo()
+    end, { tooltip = 'Copy version, game and recent errors for bug reports' })
 
     local _Credits = _Settings:Section('Credits')
     _Credits:Label('Made by Rndm')
@@ -10456,6 +10486,16 @@ do
     pcall(function() Library:EnableFavorites('Favorites', 'star') end)
     pcall(function() Library:EnableBinds() end)
     pcall(function() Library:EnablePinPanel('minimized') end)
+    pcall(function()
+        local subs = Library:CreateSubTabs(u.HomeRaw, 'Info')
+        if subs then
+            Library:CreateWhatsNew(subs:Add("What's new"), u.Version, u.Changelog, { Top = false })
+            Library:EnableStats(subs:Add('Stats'))
+        else
+            Library:CreateWhatsNew(u.HomeRaw, u.Version, u.Changelog)
+            Library:EnableStats(u.HomeRaw)
+        end
+    end)
     pcall(function() Library:FinishLoading('Ready') end)
     _G['提醒']('Rndm load success')
 

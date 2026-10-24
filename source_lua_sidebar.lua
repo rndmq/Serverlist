@@ -2122,6 +2122,8 @@ function Library:CreateTab(name, icon)
     table.insert(Library.LibraryColorTable, PageTitle)
 
     local sectionOrder = 0
+    TabElements.Scroll = SectionScrollingFrame
+    TabElements.Frame = NameTab
 
     NameTab.Visible = false
 
@@ -3519,9 +3521,14 @@ table.insert(Library.LibraryColorTable, Button)
             end)
 
             local confirmOpt = opts.Confirm
+            if opts.Risky then
+                local msg = type(opts.Risky) == "string" and opts.Risky or Library.DefaultRiskMessage
+                Library._MakeRiskIcon(NameButton, Button, msg, 10)
+            end
             local function runAction()
                 if state ~= "idle" then return end
                 if type(callback) ~= "function" then return end
+                if Library._StatUse then pcall(Library._StatUse, name) end
                 if loadingMode then
                     startLoading()
                     local my = token
@@ -3588,16 +3595,19 @@ table.insert(Library.LibraryColorTable, Button)
             }
         end
 function SectionElements:CreateToggle(name, ...)
-    local args = {...}
-    local presetToggle, callback, tooltipText = nil, nil, nil
+    local args = table.pack(...)
+    local presetToggle, callback, tooltipText, toggleOpts = nil, nil, nil, nil
 
-    for i, v in ipairs(args) do
+    for i = 1, args.n do
+        local v = args[i]
         if type(v) == "boolean" then
             presetToggle = v
         elseif type(v) == "function" and not callback then
             callback = v
         elseif type(v) == "string" and not tooltipText then
             tooltipText = v
+        elseif type(v) == "table" and not toggleOpts then
+            toggleOpts = v
         end
     end
     callback = callback or function() end
@@ -3649,6 +3659,12 @@ function SectionElements:CreateToggle(name, ...)
     Title.TextSize = 15.000
     Title.TextXAlignment = Enum.TextXAlignment.Left
     Title.TextTruncate = Enum.TextTruncate.AtEnd
+    if toggleOpts and toggleOpts.Risky then
+        Title.Position = UDim2.new(0, 33, 0, 0)
+        Title.Size = UDim2.new(1, -92, 0, 35)
+        local msg = type(toggleOpts.Risky) == "string" and toggleOpts.Risky or Library.DefaultRiskMessage
+        Library._MakeRiskIcon(NameToggle, NameToggle, msg, 13)
+    end
 
     Toggle.Name = "Toggle"
     Toggle.Parent = NameToggle
@@ -3761,6 +3777,7 @@ function SectionElements:CreateToggle(name, ...)
     end
 
     local function safeCallback(state)
+        if Library._StatToggle then pcall(Library._StatToggle, name, state) end
         if type(callback) == "function" and UIReferences.Toggles[name].EnabledDuringLoad then
             local success, err = pcall(callback, state)
             if not success then
@@ -5982,6 +5999,8 @@ do
         Library._CloseSearch()
         local selector = Library.TabSelectors and Library.TabSelectors[tabFrame]
         if selector then selector() end
+        local subName = section and section:GetAttribute("SubTab")
+        if subName and Library._SelectSub then pcall(Library._SelectSub, tabFrame, subName) end
         local toggler = Library.SectionToggles and Library.SectionToggles[section]
         if toggler then toggler(false) end
         task.delay(0.4, function()
@@ -5996,18 +6015,92 @@ do
         end)
     end
 
+    local function lev(a, b, maxd)
+        local la, lb = #a, #b
+        if math.abs(la - lb) > maxd then return maxd + 1 end
+        local prev, cur = {}, {}
+        for j = 0, lb do prev[j] = j end
+        for i = 1, la do
+            cur[0] = i
+            local rowMin = cur[0]
+            for j = 1, lb do
+                local cost = (a:byte(i) == b:byte(j)) and 0 or 1
+                local v = math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + cost)
+                cur[j] = v
+                if v < rowMin then rowMin = v end
+            end
+            if rowMin > maxd then return maxd + 1 end
+            prev, cur = cur, prev
+        end
+        return prev[lb]
+    end
+    local function subseq(w, t)
+        local i = 1
+        for c = 1, #t do
+            if i <= #w and t:byte(c) == w:byte(i) then i = i + 1 end
+        end
+        return i > #w
+    end
+    local function tokenize(str)
+        local out = {}
+        for t in str:lower():gmatch("[%w]+") do out[#out + 1] = t end
+        return out
+    end
+    -- returns nil (no match) or a score: 0 exact, 1-2 typo, 3 loose
+    local function wordScore(w, hay, tokens)
+        if hay:find(w, 1, true) then return 0 end
+        if #w < 3 then return nil end
+        local maxd = #w >= 7 and 2 or 1
+        if #w >= 4 then
+            for _, t in ipairs(tokens) do
+                if lev(t, w, maxd) <= maxd then return 1 end
+                if #t > #w and lev(t:sub(1, #w), w, maxd) <= maxd then return 2 end
+            end
+        end
+        for _, t in ipairs(tokens) do
+            if subseq(w, t) and #w >= 3 and #w >= #t * 0.6 then return 3 end
+        end
+        return nil
+    end
+
+    local EXTRA_KINDS = { Dropdown = true, MultiDropdown = true, Paragraph = true, Label = true }
+    local function extraTexts(el, kind)
+        if not EXTRA_KINDS[kind] then return "" end
+        local parts, n = {}, 0
+        for _, d in ipairs(el:GetDescendants()) do
+            if (d:IsA("TextButton") or d:IsA("TextLabel")) and d.Name ~= "Tooltip" and d.Text ~= "" and #d.Text < 80 then
+                n = n + 1
+                parts[n] = d.Text
+                if n >= 60 then break end
+            end
+        end
+        return table.concat(parts, " ")
+    end
+
     local function Collect(query)
         local words = {}
         for w in query:lower():gmatch("%S+") do table.insert(words, w) end
         local found = {}
         if #words == 0 then return found end
-        local function matches(...)
+        local function score(extra, ...)
             local hay = table.concat({ ... }, " "):lower()
+            local full = extra ~= "" and (hay .. " " .. extra:lower()) or hay
+            local tokens = tokenize(full)
+            local total = 0
             for _, w in ipairs(words) do
-                if not hay:find(w, 1, true) then return false end
+                local sc = wordScore(w, full, tokens)
+                if not sc then return nil end
+                total = total + sc
             end
-            return true
+            local viaExtra = extra ~= "" and (function()
+                for _, w in ipairs(words) do
+                    if not hay:find(w, 1, true) then return true end
+                end
+                return false
+            end)()
+            return total, viaExtra
         end
+        local order = 0
         for _, tabFrame in ipairs(Tabs:GetChildren()) do
             if tabFrame:IsA("Frame") and tabFrame.Name:match("Tab$") then
                 local tabName = tabFrame.Name:sub(1, #tabFrame.Name - 3)
@@ -6017,14 +6110,22 @@ do
                         if sec:IsA("Frame") and sec.Name:match("Section$") then
                             local secName = sec.Name:sub(1, #sec.Name - 7)
                             local content = sec:FindFirstChild("SectionContent")
-                            if matches(secName) and #found < 60 then
-                                table.insert(found, { name = secName, kind = "Section", path = tabName, tab = tabFrame, section = sec, target = sec })
+                            local sc = score("", secName)
+                            if sc and #found < 200 then
+                                order = order + 1
+                                table.insert(found, { name = secName, kind = "Section", path = tabName, tab = tabFrame, section = sec, target = sec, score = sc + 0.5, order = order })
                             end
                             if content then
                                 for _, child in ipairs(content:GetChildren()) do
                                     local display, kind = ElementInfo(child)
-                                    if display and matches(display, kind, secName, tabName) and #found < 60 then
-                                        table.insert(found, { name = display, kind = kind, path = tabName .. "  >  " .. secName, tab = tabFrame, section = sec, target = child })
+                                    if display and #found < 200 then
+                                        local sc2, viaExtra = score(extraTexts(child, kind), display, kind, secName, tabName)
+                                        if sc2 then
+                                            order = order + 1
+                                            local path = tabName .. "  >  " .. secName
+                                            if viaExtra then path = path .. "  (option match)" end
+                                            table.insert(found, { name = display, kind = kind, path = path, tab = tabFrame, section = sec, target = child, score = sc2 + (viaExtra and 0.25 or 0), order = order })
+                                        end
                                     end
                                 end
                             end
@@ -6033,6 +6134,11 @@ do
                 end
             end
         end
+        table.sort(found, function(a, b)
+            if a.score ~= b.score then return a.score < b.score end
+            return a.order < b.order
+        end)
+        while #found > 60 do table.remove(found) end
         return found
     end
 
@@ -6251,6 +6357,475 @@ do
         for i, v in ipairs(getHistory()) do out[i] = v end
         return out
     end
+end
+
+-- ===== Risky marker =====
+function Library._MakeRiskIcon(holder, parent, msg, x)
+    local I
+    local id = ResolveIcon("triangle-alert") or ResolveIcon("alert-triangle")
+    if id then
+        I = Instance.new("ImageLabel")
+        I.Image = id
+        I.ImageColor3 = Color3.fromRGB(240, 175, 60)
+        I.ScaleType = Enum.ScaleType.Fit
+    else
+        I = Instance.new("TextLabel")
+        I.Text = "!"
+        I.Font = Enum.Font.GothamBold
+        I.TextSize = 15
+        I.TextColor3 = Color3.fromRGB(240, 175, 60)
+    end
+    I.Name = "RiskIcon"
+    I.BackgroundTransparency = 1
+    I.AnchorPoint = Vector2.new(0, 0.5)
+    I.Position = UDim2.new(0, x or 12, 0.5, 0)
+    I.Size = UDim2.new(0, 16, 0, 16)
+    I.ZIndex = 8
+    I.Parent = parent
+    Library.AttachTooltip(holder, I, tostring(msg))
+    return I
+end
+Library.DefaultRiskMessage = "Risky: may get you flagged or kicked."
+
+-- ===== Session stats =====
+do
+    local S = { start = os.clock(), uses = {}, onSince = {}, onTotal = {} }
+    Library._Stats = S
+    local function clean(n) return (tostring(n):gsub("%s+$", "")) end
+    function Library._StatToggle(name, state)
+        name = clean(name)
+        if state then
+            if not S.onSince[name] then
+                S.onSince[name] = os.clock()
+                if not Library.Loading then S.uses[name] = (S.uses[name] or 0) + 1 end
+            end
+        elseif S.onSince[name] then
+            S.onTotal[name] = (S.onTotal[name] or 0) + (os.clock() - S.onSince[name])
+            S.onSince[name] = nil
+        end
+    end
+    function Library._StatUse(name)
+        name = clean(name)
+        S.uses[name] = (S.uses[name] or 0) + 1
+    end
+    local function fmt(sec)
+        sec = math.floor(sec)
+        local h, m = math.floor(sec / 3600), math.floor(sec % 3600 / 60)
+        if h > 0 then return h .. "h " .. m .. "m" end
+        if m > 0 then return m .. "m " .. (sec % 60) .. "s" end
+        return sec .. "s"
+    end
+    local function onTime(name)
+        return (S.onTotal[name] or 0) + (S.onSince[name] and (os.clock() - S.onSince[name]) or 0)
+    end
+    local function top(list, n)
+        table.sort(list, function(a, b) return a.v > b.v end)
+        local out = {}
+        for i = 1, math.min(n, #list) do out[i] = list[i] end
+        return out
+    end
+    function Library:GetStatsText()
+        local active = 0
+        for _ in pairs(S.onSince) do active = active + 1 end
+        local total = 0
+        for _, v in pairs(S.uses) do total = total + v end
+        local session = "Session time: " .. fmt(os.clock() - S.start) .. "\nActive features: " .. active .. "\nTotal uses: " .. total
+        local ul = {}
+        for k, v in pairs(S.uses) do ul[#ul + 1] = { k = k, v = v } end
+        local lines = {}
+        for _, e in ipairs(top(ul, 8)) do lines[#lines + 1] = e.k .. "  x" .. e.v end
+        local usedText = #lines > 0 and table.concat(lines, "\n") or "Nothing used yet."
+        local tl = {}
+        local seen = {}
+        for k in pairs(S.onTotal) do seen[k] = true end
+        for k in pairs(S.onSince) do seen[k] = true end
+        for k in pairs(seen) do tl[#tl + 1] = { k = k, v = onTime(k) } end
+        local tlines = {}
+        for _, e in ipairs(top(tl, 8)) do
+            tlines[#tlines + 1] = e.k .. "  " .. fmt(e.v) .. (S.onSince[e.k] and "  (on)" or "")
+        end
+        local timeText = #tlines > 0 and table.concat(tlines, "\n") or "No toggles used yet."
+        return session, usedText, timeText
+    end
+    function Library:ResetStats()
+        S.start = os.clock()
+        S.uses, S.onTotal = {}, {}
+        local now = os.clock()
+        for k in pairs(S.onSince) do S.onSince[k] = now end
+    end
+    function Library:EnableStats(tabOrName, icon)
+        if Library._statsOn then return end
+        Library._statsOn = true
+        local Tab
+        if type(tabOrName) == "table" and tabOrName.CreateSection then
+            Tab = tabOrName
+        else
+            local tabName = tostring(tabOrName or "Stats")
+            Tab = Library:CreateTab(tabName, icon or "bar-chart")
+            local btn = TabScrollingFrame:FindFirstChild(tabName .. "TabButton")
+            if btn then btn.LayoutOrder = 982 end
+        end
+        local A = Tab:CreateSection("Session")
+        local pA = A:CreateParagraph("Overview", "")
+        local B = Tab:CreateSection("Most used")
+        local pB = B:CreateParagraph("Button presses and toggle activations", "")
+        local C = Tab:CreateSection("Longest active")
+        local pC = C:CreateParagraph("Time spent turned on", "")
+        local R = Tab:CreateSection("Reset")
+        R:CreateButton("Reset stats", function()
+            Library:ResetStats()
+        end, { Confirm = "Clear this session's statistics?" })
+        local function refresh()
+            local a, b, c = Library:GetStatsText()
+            pA.SetText(a)
+            pB.SetText(b)
+            pC.SetText(c)
+        end
+        refresh()
+        local function tabVisible()
+            local f = pA.Frame
+            while f and f.Parent and f.Parent ~= Tabs do f = f.Parent end
+            if not f or f.Parent ~= Tabs then return nil end
+            return f.Visible
+        end
+        task.spawn(function()
+            while true do
+                task.wait(1)
+                local vis = tabVisible()
+                if vis == nil then break end
+                if vis then pcall(refresh) end
+            end
+        end)
+    end
+end
+
+-- ===== Debug info =====
+do
+    local LogService = game:GetService("LogService")
+    local buf = {}
+    pcall(function()
+        LogService.MessageOut:Connect(function(msg, mtype)
+            local tag
+            if mtype == Enum.MessageType.MessageError then tag = "[E] "
+            elseif mtype == Enum.MessageType.MessageWarning then tag = "[W] " end
+            if tag then
+                buf[#buf + 1] = tag .. tostring(msg):sub(1, 220)
+                if #buf > 12 then table.remove(buf, 1) end
+            end
+        end)
+    end)
+    Library.ScriptInfo = { Name = "", Version = "" }
+    function Library:SetScriptInfo(name, version)
+        Library.ScriptInfo = { Name = tostring(name or ""), Version = tostring(version or "") }
+    end
+    function Library:GetDebugInfo()
+        local exec = "unknown"
+        pcall(function() if identifyexecutor then exec = tostring(identifyexecutor()) end end)
+        local platform = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled and "mobile" or "pc"
+        local lines = {
+            "Script: " .. (Library.ScriptInfo.Name ~= "" and Library.ScriptInfo.Name or "?") .. " " .. Library.ScriptInfo.Version,
+            "PlaceId: " .. tostring(game.PlaceId) .. "  GameId: " .. tostring(game.GameId),
+            "JobId: " .. tostring(game.JobId),
+            "Executor: " .. exec .. "  Platform: " .. platform,
+            "Players: " .. tostring(#game:GetService("Players"):GetPlayers()),
+            "Session: " .. math.floor(os.clock() - (Library._Stats and Library._Stats.start or os.clock())) .. "s",
+            "Favorites: " .. tostring(Library._CountFavorites and Library._CountFavorites() or 0),
+            "Recent errors/warnings:",
+        }
+        if #buf == 0 then lines[#lines + 1] = "  (none)" end
+        for _, l in ipairs(buf) do lines[#lines + 1] = "  " .. l end
+        return table.concat(lines, "\n")
+    end
+    function Library:CopyDebugInfo()
+        local text = Library:GetDebugInfo()
+        local ok = false
+        pcall(function()
+            if setclipboard then setclipboard(text) ok = true end
+        end)
+        pcall(function()
+            if ok then Library:Notify("success", "Debug info copied", "Paste it when you report a bug.", 3)
+            else Library:Notify("warning", "Clipboard unavailable", "Your executor has no setclipboard.", 3) end
+        end)
+        return text
+    end
+end
+
+-- ===== Sub-tabs inside a tab =====
+-- local subs = Library:CreateSubTabs(tab, "Info")   -- existing sections become the "Info" page
+-- local page = subs:Add("What's new")               -- page:CreateSection(...) works like tab:CreateSection
+function Library:CreateSubTabs(tab, firstName)
+    local scroll = tab and tab.Scroll
+    if not scroll then return nil end
+    firstName = tostring(firstName or "Main")
+    local subs = { current = nil, buttons = {} }
+
+    local Strip = Instance.new("Frame")
+    Strip.Name = "SubTabStrip"
+    Strip.Parent = scroll
+    Strip.LayoutOrder = 0
+    Strip.BackgroundTransparency = 1
+    Strip.Size = UDim2.new(1, 0, 0, 30)
+    Strip.ZIndex = 5
+    local lay = Instance.new("UIListLayout")
+    lay.FillDirection = Enum.FillDirection.Horizontal
+    lay.SortOrder = Enum.SortOrder.LayoutOrder
+    lay.Padding = UDim.new(0, 6)
+    lay.VerticalAlignment = Enum.VerticalAlignment.Center
+    lay.Parent = Strip
+    local pad = Instance.new("UIPadding")
+    pad.PaddingLeft = UDim.new(0, 4)
+    pad.Parent = Strip
+
+    local function style(b, on)
+        TweenService:Create(b, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            BackgroundColor3 = on and Library.Theme.MainColor or Color3.fromRGB(46, 46, 52),
+            BackgroundTransparency = on and 0.1 or 0.35,
+            TextTransparency = on and 0 or 0.25,
+        }):Play()
+    end
+    local function select(name)
+        subs.current = name
+        for _, c in ipairs(scroll:GetChildren()) do
+            if c:IsA("Frame") and c.Name:match("Section$") then
+                local t = c:GetAttribute("SubTab")
+                if t then c.Visible = (t == name) end
+            end
+        end
+        for n, b in pairs(subs.buttons) do style(b, n == name) end
+        scroll.CanvasPosition = Vector2.new(0, 0)
+        if Library._StageIn then pcall(Library._StageIn, scroll) end
+    end
+    subs.select = select
+
+    local count = 0
+    local function addButton(name)
+        count = count + 1
+        local b = Instance.new("TextButton")
+        b.Name = "SubTab_" .. name
+        b.LayoutOrder = count
+        b.Parent = Strip
+        b.AutoButtonColor = false
+        b.AutomaticSize = Enum.AutomaticSize.X
+        b.Size = UDim2.new(0, 0, 0, 26)
+        b.BackgroundColor3 = Color3.fromRGB(46, 46, 52)
+        b.BackgroundTransparency = 0.35
+        b.BorderSizePixel = 0
+        b.ZIndex = 6
+        b.Font = Library.Theme.TextFont
+        b.Text = name
+        b.TextColor3 = Library.Theme.TextColor
+        b.TextSize = 13
+        local bp = Instance.new("UIPadding")
+        bp.PaddingLeft, bp.PaddingRight = UDim.new(0, 12), UDim.new(0, 12)
+        bp.Parent = b
+        Instance.new("UICorner", b).CornerRadius = UDim.new(0, 7)
+        b.MouseButton1Click:Connect(function() select(name) end)
+        subs.buttons[name] = b
+    end
+
+    for _, c in ipairs(scroll:GetChildren()) do
+        if c:IsA("Frame") and c.Name:match("Section$") then c:SetAttribute("SubTab", firstName) end
+    end
+    addButton(firstName)
+
+    function subs:Add(name)
+        name = tostring(name)
+        if not subs.buttons[name] then addButton(name) end
+        local handle = setmetatable({}, { __index = tab })
+        function handle:CreateSection(...)
+            local sec = tab:CreateSection(...)
+            if sec and sec.Frame then
+                sec.Frame:SetAttribute("SubTab", name)
+                sec.Frame.Visible = (subs.current == name)
+            end
+            return sec
+        end
+        return handle
+    end
+
+    Library._Subs = Library._Subs or {}
+    Library._Subs[tab.Frame] = subs
+    Library._SelectSub = function(tabFrame, name)
+        local sb = Library._Subs[tabFrame]
+        if sb and sb.buttons[name] and sb.current ~= name then sb.select(name) end
+    end
+    select(firstName)
+    return subs
+end
+
+-- ===== What's new in a tab (grouped sections) =====
+-- groups = { { Title = "UI", Items = { ... } }, { Title = "Script", Items = { ... } } }
+function Library:CreateWhatsNew(tab, version, groups, opts)
+    opts = type(opts) == "table" and opts or {}
+    version = tostring(version or "")
+    local made = {}
+    for _, g in ipairs(groups or {}) do
+        local lines = {}
+        for _, line in ipairs(g.Items or {}) do lines[#lines + 1] = "•  " .. tostring(line) end
+        if #lines > 0 then
+            local sec = tab:CreateSection("What's new · " .. tostring(g.Title or ""), true, opts.StartClosed and true or false)
+            sec:CreateParagraph(version ~= "" and ("Version " .. version) or "Changes", table.concat(lines, "\n"))
+            if sec.Frame then made[#made + 1] = sec.Frame end
+        end
+    end
+    if opts.Top ~= false and #made > 0 then
+        local isNew = {}
+        for _, f in ipairs(made) do isNew[f] = true end
+        local parent = made[1].Parent
+        if parent then
+            for _, c in ipairs(parent:GetChildren()) do
+                if c:IsA("Frame") and c.Name:match("Section$") and not isNew[c] then
+                    c.LayoutOrder = c.LayoutOrder + #made
+                end
+            end
+            for i, f in ipairs(made) do f.LayoutOrder = i end
+        end
+    end
+    if opts.Notify ~= false and version ~= "" and Settings.__WhatsNew ~= version then
+        Settings.__WhatsNew = version
+        pcall(SaveSettings)
+        task.spawn(function()
+            while Library.Loading do task.wait(0.2) end
+            pcall(function()
+                Library:Notify("info", "Updated to " .. version, "See what's new on the Home tab.", 5)
+            end)
+        end)
+    end
+end
+
+-- ===== What's new card =====
+function Library:ShowWhatsNew(version, items, opts)
+    opts = type(opts) == "table" and opts or {}
+    version = tostring(version or "")
+    if not opts.Force and Settings.__WhatsNew == version then return false end
+    task.spawn(function()
+        while Library.Loading do task.wait(0.2) end
+        local Dim = Instance.new("TextButton")
+        Dim.Name = "WhatsNew"
+        Dim.Parent = Main
+        Dim.Size = UDim2.new(1, 0, 1, 0)
+        Dim.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+        Dim.BackgroundTransparency = 1
+        Dim.AutoButtonColor = false
+        Dim.Text = ""
+        Dim.ZIndex = 440
+        Dim.Active = true
+        Instance.new("UICorner", Dim).CornerRadius = UDim.new(0, 10)
+        local text = {}
+        for _, it in ipairs(items or {}) do
+            if type(it) == "table" then
+                text[#text + 1] = string.upper(tostring(it.Title or ""))
+                for _, line in ipairs(it.Items or {}) do text[#text + 1] = "•  " .. tostring(line) end
+            else
+                text[#text + 1] = "•  " .. tostring(it)
+            end
+        end
+        local body = table.concat(text, "\n")
+        local width = 310
+        local okS, sz = pcall(function()
+            return game:GetService("TextService"):GetTextSize(body, 13, Enum.Font.SourceSans, Vector2.new(width - 44, 2000))
+        end)
+        local bodyH = okS and sz.Y + 6 or 120
+        local viewH = math.min(bodyH, 150)
+        local height = 14 + 22 + 18 + 8 + viewH + 14 + 32 + 14
+        local Box = Instance.new("Frame")
+        Box.Parent = Dim
+        Box.AnchorPoint = Vector2.new(0.5, 0.5)
+        Box.Position = UDim2.new(0.5, 0, 0.5, 0)
+        Box.Size = UDim2.new(0, width, 0, height)
+        Box.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
+        Box.BorderSizePixel = 0
+        Box.ZIndex = 441
+        Instance.new("UICorner", Box).CornerRadius = UDim.new(0, 10)
+        local bs = Instance.new("UIStroke")
+        bs.Color = Library.Theme.MainColor
+        bs.Transparency = 0.35
+        bs.Thickness = 1.5
+        bs.Parent = Box
+        local sc = Instance.new("UIScale")
+        sc.Scale = 0.9
+        sc.Parent = Box
+        local T = Instance.new("TextLabel")
+        T.Parent = Box
+        T.BackgroundTransparency = 1
+        T.Position = UDim2.new(0, 16, 0, 14)
+        T.Size = UDim2.new(1, -32, 0, 22)
+        T.ZIndex = 442
+        T.Font = Library.Theme.TextFont
+        T.Text = tostring(opts.Title or "What's new")
+        T.TextColor3 = Color3.fromRGB(245, 245, 250)
+        T.TextSize = 18
+        T.TextXAlignment = Enum.TextXAlignment.Left
+        local V = Instance.new("TextLabel")
+        V.Parent = Box
+        V.BackgroundTransparency = 1
+        V.Position = UDim2.new(0, 16, 0, 36)
+        V.Size = UDim2.new(1, -32, 0, 18)
+        V.ZIndex = 442
+        V.Font = Enum.Font.SourceSans
+        V.Text = version ~= "" and ("Version " .. version) or ""
+        V.TextColor3 = Library.Theme.MainColor
+        V.TextSize = 13
+        V.TextXAlignment = Enum.TextXAlignment.Left
+        local List = Instance.new("ScrollingFrame")
+        List.Parent = Box
+        List.BackgroundTransparency = 1
+        List.BorderSizePixel = 0
+        List.Position = UDim2.new(0, 16, 0, 62)
+        List.Size = UDim2.new(1, -32, 0, viewH)
+        List.CanvasSize = UDim2.new(0, 0, 0, bodyH)
+        List.ScrollBarThickness = 3
+        List.ZIndex = 442
+        local B = Instance.new("TextLabel")
+        B.Parent = List
+        B.BackgroundTransparency = 1
+        B.Size = UDim2.new(1, -8, 0, bodyH)
+        B.ZIndex = 443
+        B.Font = Enum.Font.SourceSans
+        B.Text = body
+        B.TextColor3 = Color3.fromRGB(205, 205, 212)
+        B.TextSize = 13
+        B.TextWrapped = true
+        B.TextXAlignment = Enum.TextXAlignment.Left
+        B.TextYAlignment = Enum.TextYAlignment.Top
+        local Btn = Instance.new("TextButton")
+        Btn.Parent = Box
+        Btn.AnchorPoint = Vector2.new(0.5, 1)
+        Btn.Position = UDim2.new(0.5, 0, 1, -14)
+        Btn.Size = UDim2.new(1, -32, 0, 32)
+        Btn.BackgroundColor3 = Library.Theme.MainColor
+        Btn.BorderSizePixel = 0
+        Btn.ZIndex = 442
+        Btn.Font = Library.Theme.TextFont
+        Btn.Text = "Got it"
+        Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        Btn.TextSize = 14
+        Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 7)
+        local closed = false
+        local function close()
+            if closed then return end
+            closed = true
+            if not opts.Force then
+                Settings.__WhatsNew = version
+                pcall(SaveSettings)
+            end
+            TweenService:Create(Dim, TweenInfo.new(0.15), { BackgroundTransparency = 1 }):Play()
+            TweenService:Create(sc, TweenInfo.new(0.15), { Scale = 0.9 }):Play()
+            task.delay(0.16, function() if Dim.Parent then Dim:Destroy() end end)
+        end
+        Btn.MouseButton1Click:Connect(close)
+        local Shield = Instance.new("TextButton")
+        Shield.Parent = Box
+        Shield.Size = UDim2.new(1, 0, 1, 0)
+        Shield.BackgroundTransparency = 1
+        Shield.Text = ""
+        Shield.ZIndex = 441
+        Shield.AutoButtonColor = false
+        Dim.MouseButton1Click:Connect(close)
+        TweenService:Create(Dim, TweenInfo.new(0.2), { BackgroundTransparency = 0.45 }):Play()
+        TweenService:Create(sc, TweenInfo.new(0.22, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
+    end)
+    return true
 end
 
 -- ===== Overlay animation helper =====
@@ -7297,6 +7872,11 @@ do
         PinSec:CreateDropdown("Pinned panel", pinNames, pinPreset, function(v)
             Library:SetPinPanelMode(pinMap[v] or "minimized")
         end, { NoNone = true, Tooltip = "Floating panel with your favorite elements" })
+
+        local SupSec = Tab:CreateSection("Support")
+        SupSec:CreateButton("Copy debug info", function()
+            Library:CopyDebugInfo()
+        end, { Tooltip = "Copies script version, game, executor and recent errors for bug reports" })
 
         local Acc = Tab:CreateSection("Account")
         local accPara = Acc:CreateParagraph("Account", "")
