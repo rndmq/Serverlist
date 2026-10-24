@@ -322,8 +322,8 @@ do
                 breathe()
                 cb = cb or function() end
                 local libOpts
-                if type(opts) == 'table' and (opts.cooldown or opts.loading or opts.tooltip or opts.confirm or opts.risky) then
-                    libOpts = { Cooldown = opts.cooldown, Loading = opts.loading, Tooltip = opts.tooltip, Confirm = opts.confirm, Risky = opts.risky }
+                if type(opts) == 'table' and (opts.cooldown or opts.loading or opts.tooltip or opts.confirm or opts.risky or opts.hold) then
+                    libOpts = { Cooldown = opts.cooldown, Loading = opts.loading, Tooltip = opts.tooltip, Confirm = opts.confirm, Risky = opts.risky, Hold = opts.hold }
                 end
                 local btn = container:CreateButton(tostring(title), cb, libOpts)
                 if opts and opts.stopper then

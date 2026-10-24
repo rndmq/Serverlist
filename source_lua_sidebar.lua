@@ -3556,7 +3556,44 @@ table.insert(Library.LibraryColorTable, Button)
                     runAction()
                 end
             end
-            Button.MouseButton1Click:Connect(press)
+            local holdTime = opts.Hold and (tonumber(opts.Hold) or 1) or 0
+            if holdTime <= 0 then
+                Button.MouseButton1Click:Connect(press)
+            else
+                local HoldFill = Instance.new("Frame")
+                HoldFill.Name = "HoldFill"
+                HoldFill.Parent = Button
+                HoldFill.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+                HoldFill.BackgroundTransparency = 0.72
+                HoldFill.BorderSizePixel = 0
+                HoldFill.Size = UDim2.new(0, 0, 1, 0)
+                HoldFill.ZIndex = 7
+                Instance.new("UICorner", HoldFill).CornerRadius = UDim.new(0, 6)
+                local holdToken = 0
+                local function isPress(input)
+                    return input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch
+                end
+                Button.InputBegan:Connect(function(input)
+                    if not isPress(input) or state ~= "idle" then return end
+                    holdToken = holdToken + 1
+                    local my = holdToken
+                    TweenService:Create(HoldFill, TweenInfo.new(holdTime, Enum.EasingStyle.Linear), { Size = UDim2.new(1, 0, 1, 0) }):Play()
+                    task.delay(holdTime, function()
+                        if holdToken ~= my then return end
+                        holdToken = holdToken + 1
+                        HoldFill.Size = UDim2.new(0, 0, 1, 0)
+                        runAction()
+                    end)
+                end)
+                Button.InputEnded:Connect(function(input)
+                    if not isPress(input) then return end
+                    holdToken = holdToken + 1
+                    TweenService:Create(HoldFill, TweenInfo.new(0.15), { Size = UDim2.new(0, 0, 1, 0) }):Play()
+                end)
+                if not opts.Tooltip then
+                    Library.AttachTooltip(NameButton, Button, "Hold to activate")
+                end
+            end
             Library._Triggers = Library._Triggers or {}
             Library._Triggers[NameButton] = press
 
@@ -6499,6 +6536,185 @@ do
     end
 end
 
+-- ===== Ghost mode (fade UI while idle) =====
+do
+    Library.GhostMode = false
+    Library.GhostAmount = 0.65
+    Library.GhostDelay = 2.5
+    local lastActive = os.clock()
+    local ghosted = false
+    local items = {}
+    local cur, token = 0, 0
+
+    local function propsFor(o)
+        if o:IsA("TextBox") or o:IsA("TextButton") or o:IsA("TextLabel") then
+            return { "BackgroundTransparency", "TextTransparency" }
+        elseif o:IsA("ImageLabel") or o:IsA("ImageButton") then
+            return { "BackgroundTransparency", "ImageTransparency" }
+        elseif o:IsA("ScrollingFrame") then
+            return { "BackgroundTransparency", "ScrollBarImageTransparency" }
+        elseif o:IsA("Frame") then
+            return { "BackgroundTransparency" }
+        end
+    end
+    local function collect()
+        local out = {}
+        local function add(o)
+            if o:IsA("GuiObject") and o.ZIndex < 300 and o.Name ~= "Tooltip" then
+                local ps = propsFor(o)
+                if ps then
+                    for _, p in ipairs(ps) do out[#out + 1] = { o, p, o[p] } end
+                end
+            end
+        end
+        add(Main)
+        for _, d in ipairs(Main:GetDescendants()) do add(d) end
+        return out
+    end
+
+    local function transition(on)
+        token = token + 1
+        local my = token
+        if on and #items == 0 then items = collect() end
+        local from, to = cur, on and 1 or 0
+        local t0, dur = os.clock(), 0.3
+        local conn
+        conn = RunService.RenderStepped:Connect(function()
+            if token ~= my then conn:Disconnect() return end
+            local a = math.min((os.clock() - t0) / dur, 1)
+            cur = from + (to - from) * a
+            local k = Library.GhostAmount * cur
+            for _, it in ipairs(items) do
+                local o = it[1]
+                if o.Parent then o[it[2]] = it[3] + (1 - it[3]) * k end
+            end
+            if a >= 1 then
+                conn:Disconnect()
+                if not on then items = {} cur = 0 end
+            end
+        end)
+    end
+
+    local function inside(pos)
+        local p, s = Main.AbsolutePosition, Main.AbsoluteSize
+        local inset = game:GetService("GuiService"):GetGuiInset()
+        for _, q in ipairs({ pos, pos - inset }) do
+            if q.X >= p.X and q.X <= p.X + s.X and q.Y >= p.Y and q.Y <= p.Y + s.Y then return true end
+        end
+        return false
+    end
+    UserInputService.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+            if inside(Vector2.new(input.Position.X, input.Position.Y)) then lastActive = os.clock() end
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Touch and inside(Vector2.new(input.Position.X, input.Position.Y)) then
+            lastActive = os.clock()
+        end
+    end)
+
+    function Library:SetGhostMode(on)
+        Library.GhostMode = on and true or false
+        if not Library.GhostMode and ghosted then
+            ghosted = false
+            transition(false)
+        end
+    end
+
+    task.spawn(function()
+        while true do
+            task.wait(0.2)
+            if Library.GhostMode and not Minimized and Main.Visible and not Library.Loading then
+                local active = inside(UserInputService:GetMouseLocation())
+                local box = UserInputService:GetFocusedTextBox()
+                if box and box:IsDescendantOf(Main) then active = true end
+                if active then lastActive = os.clock() end
+                local want = (os.clock() - lastActive) > (Library.GhostDelay or 2.5)
+                if want ~= ghosted then
+                    ghosted = want
+                    transition(want)
+                end
+            elseif ghosted then
+                ghosted = false
+                transition(false)
+            end
+        end
+    end)
+end
+
+-- ===== Streamer mode (mask names / IDs) =====
+do
+    Library.StreamerMode = false
+    local MASK = "••••"
+    local masked = setmetatable({}, { __mode = "k" }) -- obj -> { real = , shown = }
+
+    local function secrets()
+        local list = {}
+        local function add(v)
+            v = tostring(v or "")
+            if #v >= 3 then list[#list + 1] = v end
+        end
+        add(game.JobId)
+        local lp = game:GetService("Players").LocalPlayer
+        add(lp.Name)
+        add(lp.DisplayName)
+        add(lp.UserId)
+        for _, pl in ipairs(game:GetService("Players"):GetPlayers()) do
+            add(pl.Name)
+            add(pl.DisplayName)
+        end
+        table.sort(list, function(a, b) return #a > #b end)
+        return list
+    end
+    local function maskText(text, list)
+        local out, changed = text, false
+        for _, sec in ipairs(list) do
+            if out:find(sec, 1, true) then
+                out = out:gsub(sec:gsub("%p", "%%%0"), MASK)
+                changed = true
+            end
+        end
+        return out, changed
+    end
+    local function scan()
+        local list = secrets()
+        for _, d in ipairs(UILibrary:GetDescendants()) do
+            if d:IsA("TextLabel") or d:IsA("TextButton") or d:IsA("TextBox") then
+                local rec = masked[d]
+                if rec and d.Text == rec.shown then
+                    -- already masked
+                elseif d.Text ~= "" and not (d:IsA("TextBox") and d:IsFocused()) then
+                    local out, changed = maskText(d.Text, list)
+                    if changed then
+                        masked[d] = { real = d.Text, shown = out }
+                        d.Text = out
+                    else
+                        masked[d] = nil
+                    end
+                end
+            end
+        end
+    end
+    local function restore()
+        for d, rec in pairs(masked) do
+            if d.Parent and d.Text == rec.shown then d.Text = rec.real end
+        end
+        masked = setmetatable({}, { __mode = "k" })
+    end
+
+    function Library:SetStreamerMode(on)
+        Library.StreamerMode = on and true or false
+        if Library.StreamerMode then pcall(scan) else restore() end
+    end
+    task.spawn(function()
+        while true do
+            task.wait(1)
+            if Library.StreamerMode then pcall(scan) end
+        end
+    end)
+end
+
 -- ===== Debug info =====
 do
     local LogService = game:GetService("LogService")
@@ -7872,6 +8088,14 @@ do
         PinSec:CreateDropdown("Pinned panel", pinNames, pinPreset, function(v)
             Library:SetPinPanelMode(pinMap[v] or "minimized")
         end, { NoNone = true, Tooltip = "Floating panel with your favorite elements" })
+
+        local UiSec = Tab:CreateSection("Interface")
+        UiSec:CreateToggle("Ghost mode", false, function(v)
+            Library:SetGhostMode(v)
+        end, "Fades the window while you are not using it")
+        UiSec:CreateToggle("Streamer mode", false, function(v)
+            Library:SetStreamerMode(v)
+        end, "Hides Job ID and player names shown in the UI")
 
         local SupSec = Tab:CreateSection("Support")
         SupSec:CreateButton("Copy debug info", function()
